@@ -2,9 +2,9 @@ import zipfile
 import logging
 from pathlib import Path
 from collections import Counter
-
 import cimpy
 from cimpy.cimimport import cim_import
+
 
 # -------------------------------------------------------------------
 # Logging (wie im CIMpy-Beispiel)
@@ -90,3 +90,35 @@ print("\nRelevante Klassen:")
 for cls in interesting:
     print(f"{cls:30s} {class_counter.get(cls, 0)}")
 
+
+def extract_structural_features(import_result):
+    topology = import_result["topology"]
+
+    class_names = [obj.__class__.__name__ for obj in topology.values()]
+    counts = Counter(class_names)
+
+    n_buses = counts.get("TopologicalNode", 0)
+    n_lines = counts.get("ACLineSegment", 0)
+    n_transformers = counts.get("PowerTransformer", 0)
+    n_generators = (
+        counts.get("SynchronousMachine", 0)
+        + counts.get("GeneratingUnit", 0)
+    )
+    n_loads = counts.get("EnergyConsumer", 0) + counts.get("ConformLoad", 0)
+
+    features = {
+        "n_buses": n_buses,
+        "n_lines": n_lines,
+        "n_transformers": n_transformers,
+        "n_generators": n_generators,
+        "n_loads": n_loads,
+        "lines_per_bus": n_lines / n_buses if n_buses else 0,
+        "transformers_per_bus": n_transformers / n_buses if n_buses else 0,
+        "generators_per_bus": n_generators / n_buses if n_buses else 0,
+    }
+
+    return features
+features = extract_structural_features(import_result)
+print("Feature-Vektor:")
+for k, v in features.items():
+    print(f"{k:25s}: {v}")
