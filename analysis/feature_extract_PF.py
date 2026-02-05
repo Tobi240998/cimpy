@@ -1,9 +1,10 @@
 """
 
 
-Extrahiert Features direkt aus einem aktiven PowerFactory-Projekt.
+Extrahiert Features direkt aus einem PowerFactory-Projekt.
 """
-
+import sys
+sys.path.append(r"C:\Program Files\DIgSILENT\PowerFactory 2024 SP7\Python\3.10") #Pfad für PowerFactory
 import powerfactory as pf
 import numpy as np
 
@@ -11,6 +12,10 @@ import numpy as np
 app = pf.GetApplication()
 if app is None:
     raise RuntimeError("PowerFactory konnte nicht gefunden werden. Bitte Projekt öffnen!")
+
+#Projekt aktivieren 
+project_name = "Nine-bus System(2)"
+app.ActivateProject(project_name)
 
 # Aktives Projekt holen
 project = app.GetActiveProject()
@@ -26,7 +31,7 @@ def get_objects(obj_type):
 features = {}
 
 # Struktur-Features
-buses = get_objects("ElmBus")
+buses = get_objects("*.ElmTerm")
 features['n_busbars'] = len(buses)
 
 lines = get_objects("ElmLne")
@@ -41,8 +46,12 @@ features['n_loads'] = len(loads)
 generators = get_objects("ElmGenstat")
 features['n_generators'] = len(generators)
 
+ldf = app.GetFromStudyCase("ComLdf")
+ldf.Execute()
+
+
 # Spannungs-Features
-voltages = np.array([bus.GetAttribute('m:u') for bus in buses if bus.GetAttribute('m:u') is not None])
+voltages = np.array([bus.GetAttribute("m:u") for bus in buses if bus.GetAttribute("m:u") is not None])
 if len(voltages) > 0:
     features['v_min'] = voltages.min()
     features['v_max'] = voltages.max()
@@ -55,7 +64,7 @@ else:
     features['n_undervoltage'] = features['n_overvoltage'] = 0
 
 # Last-Features
-P_loads = np.array([load.GetAttribute('m:P') for load in loads if load.GetAttribute('m:P') is not None])
+P_loads = np.array([load.GetAttribute("plini") for load in loads if load.GetAttribute("plini") is not None])
 if len(P_loads) > 0:
     features['p_mean'] = P_loads.mean()
     features['p_std'] = P_loads.std()
