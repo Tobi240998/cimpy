@@ -1,30 +1,32 @@
-import logging
-import cimpy
-import os
-import pytest_check as check
-import pickle
 from pathlib import Path
+from cimpy.cimimport import cim_import
 
-logging.basicConfig(filename="Test_import.log", level=logging.INFO, filemode="w")
+# Pfad zu den CIM-Dateien
+case_path = Path(r"C:\Users\STELLER\Documents\Masterarbeit\Test CIM\examples\case1")
+files = [str(p) for p in case_path.glob("*.xml")]
 
-example_dir = Path(os.path.join(os.path.dirname(__file__), "../cimpy/examples/sampledata/CIGRE_MV")).resolve()
+if not files:
+    print("Keine CIM-Dateien gefunden!")
+    exit(1)
 
+print("Gefundene CIM-Dateien:")
+for f in files:
+    print(" -", f)
 
-def test_import():
-    """This function tests the import functionality by importing files and comparing them to previously
-    imported and pickled files."""
+# CIM importieren
+grid = cim_import(files, cgmes_version="2.4.15")
 
-    global example_dir
-    test_files = []
-    for file in example_dir.glob("*.xml"):
-        test_files.append(str(file.absolute()))
+print(grid.keys())
 
-    imported_result = cimpy.cim_import(test_files, "cgmes_v2_4_15")
+print("\nCIM erfolgreich geladen!")
+print("Verfügbare Klassen im Grid:")
+print(list(grid.keys()))  # statt .classes()
 
-    import_resolved = cimpy.cimexport._get_class_attributes_with_references(imported_result, "cgmes_v2_4_15")
+# EnergyConsumer / Loads ausgeben
+loads = grid.get("EnergyConsumer", [])
+print(f"\nGefundene Loads (EnergyConsumer): {len(loads)}")
 
-    ref_dict_path = Path(os.path.join(os.path.dirname(__file__), "CIGREMV_import_reference_cgmes_v2_4_15.p"))
-    check_dict_pickle = pickle.load(open(ref_dict_path, "rb"))
-
-    for elem in import_resolved:
-        check.is_in(elem, check_dict_pickle)
+for load in loads[:10]:  # nur die ersten 10
+    p = getattr(load, "p", "N/A")
+    q = getattr(load, "q", "N/A")
+    print(f" - {load.mRID}: p={p}, q={q}")

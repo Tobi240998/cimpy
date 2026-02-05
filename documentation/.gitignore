@@ -1,4 +1,16 @@
-*.rst
-Makefile
-make.bat
-_build
+# Python
+__pycache__/
+*.pyc
+
+# Virtual Environments
+.venv/
+venv/
+
+# Data
+*.zip
+*.xml
+data/
+CIM-Dateien/
+
+# Logs
+*.log
