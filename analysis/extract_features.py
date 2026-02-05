@@ -1,3 +1,8 @@
+"""
+Extrahiert Feature-Vektoren aus CGMES/CIM-ZIP-Dateien
+(kompatibel zu PowerFactory-Features & compare_features).
+"""
+
 import zipfile
 import logging
 from pathlib import Path
@@ -6,7 +11,7 @@ import cimpy
 
 
 # -------------------------------------------------
-# Logging (unterdrückt CIMpy-Spam, aber behält Fehler)
+# Logging (CIMpy ruhigstellen)
 # -------------------------------------------------
 logging.basicConfig(level=logging.ERROR)
 
@@ -38,7 +43,7 @@ def extract_structural_features(import_result: dict) -> dict:
         for obj in topology.values()
     )
 
-    features = {
+    return {
         "n_busbars": class_counter.get("BusbarSection", 0),
         "n_lines": class_counter.get("ACLineSegment", 0),
         "n_transformers": class_counter.get("PowerTransformer", 0),
@@ -54,9 +59,10 @@ def extract_structural_features(import_result: dict) -> dict:
         ),
     }
 
-    return features
 
-
+# -------------------------------------------------
+# Snapshot-Features (SV)
+# -------------------------------------------------
 def extract_snapshot_features(import_result: dict) -> dict:
     topology = import_result["topology"]
 
@@ -81,24 +87,23 @@ def extract_snapshot_features(import_result: dict) -> dict:
         v_min = min(voltages)
         v_max = max(voltages)
         v_mean = sum(voltages) / len(voltages)
-
         variance = sum((v - v_mean) ** 2 for v in voltages) / len(voltages)
         v_std = variance ** 0.5
 
         features.update({
-            "v_min": v_min,
-            "v_max": v_max,
-            "v_mean": v_mean,
-            "v_std": v_std,
-            "n_undervoltage": sum(1 for v in voltages if v < 0.95),
-            "n_overvoltage": sum(1 for v in voltages if v > 1.05),
+            "v_min": float(v_min),
+            "v_max": float(v_max),
+            "v_mean": float(v_mean),
+            "v_std": float(v_std),
+            "n_undervoltage": int(sum(v < 0.95 for v in voltages)),
+            "n_overvoltage": int(sum(v > 1.05 for v in voltages)),
         })
     else:
         features.update({
-            "v_min": None,
-            "v_max": None,
-            "v_mean": None,
-            "v_std": None,
+            "v_min": 0.0,
+            "v_max": 0.0,
+            "v_mean": 0.0,
+            "v_std": 0.0,
             "n_undervoltage": 0,
             "n_overvoltage": 0,
         })
@@ -108,31 +113,36 @@ def extract_snapshot_features(import_result: dict) -> dict:
     # -----------------------------
     if flows_p:
         p_mean = sum(flows_p) / len(flows_p)
-        p_max_abs = max(abs(p) for p in flows_p)
-
         variance = sum((p - p_mean) ** 2 for p in flows_p) / len(flows_p)
         p_std = variance ** 0.5
+        p_max_abs = max(abs(p) for p in flows_p)
 
         features.update({
-            "p_mean": p_mean,
-            "p_std": p_std,
-            "p_max_abs": p_max_abs,
+            "p_mean": float(p_mean),
+            "p_std": float(p_std),
+            "p_max_abs": float(p_max_abs),
         })
     else:
         features.update({
-            "p_mean": None,
-            "p_std": None,
-            "p_max_abs": None,
+            "p_mean": 0.0,
+            "p_std": 0.0,
+            "p_max_abs": 0.0,
         })
 
     return features
 
 
+# -------------------------------------------------
+# Öffentliche API-Funktion (für compare_features)
+# -------------------------------------------------
+def extract_cim_features(zip_path) -> dict:
+    """
+    Extrahiert Feature-Vektor aus einem CIM-ZIP.
+    Akzeptiert str oder Path.
+    """
+    if not isinstance(zip_path, Path):
+        zip_path = Path(zip_path)
 
-# -------------------------------------------------
-# Hauptfunktion: Feature-Extraktion
-# -------------------------------------------------
-def extract_features_from_zip(zip_path: Path) -> dict:
     work_dir = unpack_zip(zip_path)
 
     xml_files = sorted(str(p) for p in work_dir.glob("*.xml"))
@@ -140,8 +150,8 @@ def extract_features_from_zip(zip_path: Path) -> dict:
         raise RuntimeError("Keine XML-Dateien gefunden")
 
     print(f"\nGefundene XML-Dateien: {len(xml_files)}")
+    print("Starte CIMpy-Import ...")
 
-    print("\nStarte CIMpy-Import ...")
     import_result = cimpy.cim_import(xml_files, "cgmes_v2_4_15")
 
     print("CIM erfolgreich importiert.")
@@ -153,16 +163,17 @@ def extract_features_from_zip(zip_path: Path) -> dict:
     return features
 
 
+
 # -------------------------------------------------
-# Testlauf
+# Direkter Testlauf
 # -------------------------------------------------
 if __name__ == "__main__":
     zip_path = Path(
         r"C:\Users\STELLER\Documents\Masterarbeit\CIM-Dateien\tobias_CIM_daten\data\CIM_GridAssist_908.zip"
     )
 
-    features = extract_features_from_zip(zip_path)
+    features = extract_cim_features(zip_path)
 
-    print("\n--- Feature-Vektor ---")
+    print("\n--- Feature-Vektor (CIM) ---")
     for k, v in features.items():
-        print(f"{k:20s}: {v}")
+        print(f"{k:<20}: {v}")

@@ -1,78 +1,124 @@
 """
-
-
-Extrahiert Features direkt aus einem PowerFactory-Projekt.
+Extrahiert Features direkt aus dem aktiven PowerFactory-Projekt
+und gibt sie als Dictionary zurück (für Vergleich mit CIM).
 """
+
 import sys
-sys.path.append(r"C:\Program Files\DIgSILENT\PowerFactory 2024 SP7\Python\3.10") #Pfad für PowerFactory
+sys.path.append(r"C:\Program Files\DIgSILENT\PowerFactory 2024 SP7\Python\3.10")
+
 import powerfactory as pf
 import numpy as np
 
-# Verbindung zu PowerFactory herstellen
-app = pf.GetApplication()
-if app is None:
-    raise RuntimeError("PowerFactory konnte nicht gefunden werden. Bitte Projekt öffnen!")
 
-#Projekt aktivieren 
-project_name = "Nine-bus System(2)"
-app.ActivateProject(project_name)
+def extract_pf_features(project_name=None):
+    """
+    Extrahiert Feature-Vektor aus aktivem PowerFactory-Projekt.
+    Falls project_name gesetzt ist, wird dieses Projekt aktiviert.
+    """
 
-# Aktives Projekt holen
-project = app.GetActiveProject()
-if project is None:
-    raise RuntimeError("Kein aktives Projekt gefunden. Bitte Projekt öffnen!")
+    # -------------------------------------------------
+    # Verbindung zu PowerFactory
+    # -------------------------------------------------
+    app = pf.GetApplication()
+    if app is None:
+        raise RuntimeError("PowerFactory konnte nicht gefunden werden.")
 
-print(f"Aktives Projekt: {project.loc_name}")
+    #Projekt aktivieren 
+    project_name = "Nine-bus System(2)"
+    app.ActivateProject(project_name)
 
-# Funktion, um Objekte aus PowerFactory zu holen
-def get_objects(obj_type):
-    return app.GetCalcRelevantObjects(obj_type)
+    project = app.GetActiveProject()
+    if project is None:
+        raise RuntimeError("Kein aktives Projekt gefunden.")
 
-features = {}
+    print(f"Aktives Projekt: {project.loc_name}")
 
-# Struktur-Features
-buses = get_objects("*.ElmTerm")
-features['n_busbars'] = len(buses)
+    # -------------------------------------------------
+    # Hilfsfunktion
+    # -------------------------------------------------
+    def get_objects(pattern):
+        objs = app.GetCalcRelevantObjects(pattern)
+        return objs if objs is not None else []
 
-lines = get_objects("ElmLne")
-features['n_lines'] = len(lines)
+    # -------------------------------------------------
+    # Lastfluss rechnen (wichtig für m:* Attribute)
+    # -------------------------------------------------
+    ldf = app.GetFromStudyCase("ComLdf")
+    if ldf is None:
+        raise RuntimeError("Kein Load Flow (ComLdf) im Study Case gefunden.")
+    ldf.Execute()
 
-transformers = get_objects("ElmTr2")
-features['n_transformers'] = len(transformers)
+    # -------------------------------------------------
+    # Feature-Dictionary
+    # -------------------------------------------------
+    features = {}
 
-loads = get_objects("ElmLod")
-features['n_loads'] = len(loads)
+    # -------------------------------------------------
+    # Struktur-Features
+    # -------------------------------------------------
+    buses = get_objects("*.ElmTerm")
+    lines = get_objects("*.ElmLne")
+    transformers = get_objects("*.ElmTr2")
+    loads = get_objects("*.ElmLod")
+    generators = get_objects("*.ElmGenstat")
 
-generators = get_objects("ElmGenstat")
-features['n_generators'] = len(generators)
+    features["n_busbars"] = len(buses)
+    features["n_lines"] = len(lines)
+    features["n_transformers"] = len(transformers)
+    features["n_loads"] = len(loads)
+    features["n_generators"] = len(generators)
 
-ldf = app.GetFromStudyCase("ComLdf")
-ldf.Execute()
+    # -------------------------------------------------
+    # Spannungs-Features (Snapshot)
+    # -------------------------------------------------
+    voltages = np.array([
+        bus.GetAttribute("m:u")
+        for bus in buses
+        if bus.GetAttribute("m:u") is not None
+    ])
+
+    if len(voltages) > 0:
+        features["v_min"] = float(voltages.min())
+        features["v_max"] = float(voltages.max())
+        features["v_mean"] = float(voltages.mean())
+        features["v_std"] = float(voltages.std())
+        features["n_undervoltage"] = int((voltages < 0.9 * voltages.mean()).sum())
+        features["n_overvoltage"] = int((voltages > 1.1 * voltages.mean()).sum())
+    else:
+        features["v_min"] = 0.0
+        features["v_max"] = 0.0
+        features["v_mean"] = 0.0
+        features["v_std"] = 0.0
+        features["n_undervoltage"] = 0
+        features["n_overvoltage"] = 0
+
+    # -------------------------------------------------
+    # Last-Features
+    # -------------------------------------------------
+    P_loads = np.array([
+        load.GetAttribute("plini")
+        for load in loads
+        if load.GetAttribute("plini") is not None
+    ])
+
+    if len(P_loads) > 0:
+        features["p_mean"] = float(P_loads.mean())
+        features["p_std"] = float(P_loads.std())
+        features["p_max_abs"] = float(np.abs(P_loads).max())
+    else:
+        features["p_mean"] = 0.0
+        features["p_std"] = 0.0
+        features["p_max_abs"] = 0.0
+
+    return features
 
 
-# Spannungs-Features
-voltages = np.array([bus.GetAttribute("m:u") for bus in buses if bus.GetAttribute("m:u") is not None])
-if len(voltages) > 0:
-    features['v_min'] = voltages.min()
-    features['v_max'] = voltages.max()
-    features['v_mean'] = voltages.mean()
-    features['v_std'] = voltages.std()
-    features['n_undervoltage'] = (voltages < 0.9 * voltages.mean()).sum()
-    features['n_overvoltage'] = (voltages > 1.1 * voltages.mean()).sum()
-else:
-    features['v_min'] = features['v_max'] = features['v_mean'] = features['v_std'] = 0
-    features['n_undervoltage'] = features['n_overvoltage'] = 0
+# -------------------------------------------------
+# Direkter Testlauf
+# -------------------------------------------------
+if __name__ == "__main__":
+    features = extract_pf_features(project_name="Nine-bus System(2)")
 
-# Last-Features
-P_loads = np.array([load.GetAttribute("plini") for load in loads if load.GetAttribute("plini") is not None])
-if len(P_loads) > 0:
-    features['p_mean'] = P_loads.mean()
-    features['p_std'] = P_loads.std()
-    features['p_max_abs'] = np.abs(P_loads).max()
-else:
-    features['p_mean'] = features['p_std'] = features['p_max_abs'] = 0
-
-# Ausgabe
-print("\n--- Feature-Vektor aus aktivem PowerFactory-Projekt ---")
-for k, v in features.items():
-    print(f"{k:<20}: {v}")
+    print("\n--- Feature-Vektor aus PowerFactory ---")
+    for k, v in features.items():
+        print(f"{k:<20}: {v}")
