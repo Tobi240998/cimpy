@@ -1,72 +1,50 @@
-import math
-from extract_features import extract_cim_features
-from feature_extract_PF import extract_pf_features
-
-# ---------------------------------------------------------
-# Feature-Reihenfolge (einheitlich!)
-# ---------------------------------------------------------
-
-FEATURE_ORDER = [
-    "n_busbars",
-    "n_lines",
-    "n_transformers",
-    "n_loads",
-    "n_generators",
-    "v_min",
-    "v_max",
-    "v_mean",
-    "v_std",
-    "n_undervoltage",
-    "n_overvoltage",
-    "p_mean",
-    "p_std",
-    "p_max_abs",
-]
-
-# ---------------------------------------------------------
-# Hilfsfunktionen
-# ---------------------------------------------------------
-
-def dict_to_vector(feature_dict):
-    vector = []
-    for key in FEATURE_ORDER:
-        if key not in feature_dict:
-            raise KeyError(f"Feature fehlt: {key}")
-        vector.append(float(feature_dict[key]))
-    return vector
+import numpy as np
+from feature_extract_pf import PFFeatureExtractor
+from feature_extract_cim import CIMFeatureExtractor
 
 
-def euclidean_distance(v1, v2):
-    return math.sqrt(sum((a - b) ** 2 for a, b in zip(v1, v2)))
+class FeatureComparer:
+    def __init__(self, cim_zip: str, pf_project: str):
+        self.cim_zip = cim_zip
+        self.pf_project = pf_project
+
+        self.features_cim = None
+        self.features_pf = None
+
+    def extract_features(self):
+        self.features_cim = CIMFeatureExtractor(self.cim_zip).extract_features()
+        self.features_pf = PFFeatureExtractor(self.pf_project).create_features()
+
+    def _to_vector(self, feature_dict, keys):
+        return np.array([
+            feature_dict[k] if feature_dict[k] is not None else 0.0
+            for k in keys
+        ], dtype=float)
+
+    def compare(self):
+        keys = sorted(set(self.features_cim) & set(self.features_pf))
+
+        v_cim = self._to_vector(self.features_cim, keys)
+        v_pf = self._to_vector(self.features_pf, keys)
+
+        diff = v_pf - v_cim
+        dist = np.linalg.norm(diff)
+
+        print("\n--- Feature-Vergleich ---")
+        for k, a, b, d in zip(keys, v_cim, v_pf, diff):
+            print(f"{k:20s} CIM={a:8.3f} PF={b:8.3f} Δ={d:8.3f}")
+
+        print("\nEuklidische Distanz:", dist)
 
 
-# ---------------------------------------------------------
-# HAUPTPROGRAMM
-# ---------------------------------------------------------
-
+# -------------------------------------------------
+# Start
+# -------------------------------------------------
 if __name__ == "__main__":
+    comparer = FeatureComparer(
+        cim_zip=r"C:\Users\STELLER\Documents\Masterarbeit\CIM-Dateien\tobias_CIM_daten\data\CIM_GridAssist_908.zip",
+        pf_project="Nine-bus System(2)"
+    )
 
-    # --- 1) CIM-Features ---
-    cim_zip = r"C:/Users/STELLER/Documents/Masterarbeit/CIM-Dateien/tobias_CIM_daten/data/CIM_GridAssist_908.zip"
-    features_cim = extract_cim_features(cim_zip)
-
-    # --- 2) PowerFactory-Features ---
-    features_pf = extract_pf_features()
-
-    # --- 3) Vektoren bauen ---
-    vec_cim = dict_to_vector(features_cim)
-    vec_pf = dict_to_vector(features_pf)
-
-    # --- 4) Vergleich ---
-    distance = euclidean_distance(vec_pf, vec_cim)
-
-    # --- 5) Ergebnis ---
-    print("\n--- Vergleich PF ↔ CIM ---")
-    print(f"Euklidische Distanz: {distance:.3f}")
-
-    if distance < 10:
-        print("→ Sehr ähnliche Netze / Betriebssituationen")
-    elif distance < 50:
-        print("→ Teilweise ähnlich")
-    else:
-        print("→ Deutlich unterschiedliche Netze")
+    comparer.extract_features()
+    comparer.compare()
