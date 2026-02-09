@@ -1,71 +1,83 @@
+"""
+PowerFactory Feature-Extractor
+
+Erzeugt Features als Dictionary, konsistent mit CIM-Extractor.
+Kompatibel mit compare_features.py.
+"""
+
 import sys
-import numpy as np
-
-# PowerFactory Python-Pfad
-sys.path.append(
-    r"C:\Program Files\DIgSILENT\PowerFactory 2024 SP7\Python\3.10"
-)
+sys.path.append(r"C:\Program Files\DIgSILENT\PowerFactory 2024 SP7\Python\3.10")  # Pfad PowerFactory
 import powerfactory as pf
-
+import numpy as np
 
 class PFFeatureExtractor:
     def __init__(self, project_name: str):
-        self.project_name = project_name
+        # Verbindung zu PowerFactory herstellen
         self.app = pf.GetApplication()
         if self.app is None:
-            raise RuntimeError("PowerFactory konnte nicht gefunden werden.")
+            raise RuntimeError("PowerFactory konnte nicht gefunden werden. Bitte Projekt öffnen!")
 
+        # Projekt aktivieren
         self.app.ActivateProject(project_name)
+
+        # Aktives Projekt abrufen
         self.project = self.app.GetActiveProject()
         if self.project is None:
-            raise RuntimeError("Kein aktives Projekt.")
+            raise RuntimeError(f"Kein aktives Projekt gefunden: {project_name}")
+
+        print(f"Aktives Projekt: {self.project.loc_name}")
+
+        # Features-Dictionary vorbereiten
+        self.features = {}
 
     def get_objects(self, obj_type: str):
+        """Holt alle relevanten Objekte eines bestimmten Typs aus dem Projekt."""
         return self.app.GetCalcRelevantObjects(obj_type)
 
     def create_features(self) -> dict:
+        """Erstellt den Feature-Vektor als Dictionary."""
         features = {}
 
         # -----------------------------
-        # Struktur
+        # Objekte abrufen
         # -----------------------------
         buses = self.get_objects("*.ElmTerm")
-        lines = self.get_objects("*.ElmLne")
-        transformers = self.get_objects("*.ElmTr2")
-        loads = self.get_objects("*.ElmLod")
-        generators = self.get_objects("*.ElmGenstat")
+        lines = self.get_objects("ElmLne")
+        transformers = self.get_objects("ElmTr2")
+        loads = self.get_objects("ElmLod")
+        generators = self.get_objects("ElmGenstat")
 
-        features.update({
-            "n_busbars": len(buses),
-            "n_lines": len(lines),
-            "n_transformers": len(transformers),
-            "n_loads": len(loads),
-            "n_generators": len(generators),
-        })
+        # Struktur-Features
+        features['n_busbars'] = len(buses)
+        features['n_lines'] = len(lines)
+        features['n_transformers'] = len(transformers)
+        features['n_loads'] = len(loads)
+        features['n_generators'] = len(generators)
 
         # -----------------------------
-        # Lastflussrechnung
+        # Lastflussberechnung vorbereiten
         # -----------------------------
         ldf = self.app.GetFromStudyCase("ComLdf")
         ldf.Execute()
 
         # -----------------------------
-        # Spannungen
+        # Spannungen (Busbar-Spannungen)
         # -----------------------------
-        voltages = np.array([
+        voltages = [
             bus.GetAttribute("m:u")
             for bus in buses
             if bus.GetAttribute("m:u") is not None
-        ])
+        ]
 
-        if voltages.size > 0:
+        if voltages:
+            v_array = np.array(voltages)
             features.update({
-                "v_min": voltages.min(),
-                "v_max": voltages.max(),
-                "v_mean": voltages.mean(),
-                "v_std": voltages.std(),
-                "n_undervoltage": (voltages < 0.95).sum(),
-                "n_overvoltage": (voltages > 1.05).sum(),
+                "v_min": float(v_array.min()),
+                "v_max": float(v_array.max()),
+                "v_mean": float(v_array.mean()),
+                "v_std": float(v_array.std()),
+                "n_undervoltage": int((v_array < 0.95).sum()),
+                "n_overvoltage": int((v_array > 1.05).sum()),
             })
         else:
             features.update({
@@ -78,19 +90,20 @@ class PFFeatureExtractor:
             })
 
         # -----------------------------
-        # Lasten
+        # Lasten (Leistungsaufnahme)
         # -----------------------------
-        P_loads = np.array([
+        P_loads = [
             load.GetAttribute("plini")
             for load in loads
             if load.GetAttribute("plini") is not None
-        ])
+        ]
 
-        if P_loads.size > 0:
+        if P_loads:
+            P_array = np.array(P_loads)
             features.update({
-                "p_mean": P_loads.mean(),
-                "p_std": P_loads.std(),
-                "p_max_abs": np.abs(P_loads).max(),
+                "p_mean": float(P_array.mean()),
+                "p_std": float(P_array.std()),
+                "p_max_abs": float(np.abs(P_array).max()),
             })
         else:
             features.update({
@@ -99,4 +112,13 @@ class PFFeatureExtractor:
                 "p_max_abs": None,
             })
 
+        self.features = features
         return features
+
+    def get_features(self) -> dict:
+        """Gibt das Features-Dictionary zurück (berechnet es bei Bedarf)."""
+        if not self.features:
+            self.create_features()
+        return self.features
+
+
