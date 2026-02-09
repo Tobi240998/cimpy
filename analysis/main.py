@@ -1,15 +1,23 @@
-from feature_extract_pf import PFFeatureExtractor #Import der Klasse zum Feature Extract von PowerFactory
-from feature_extract_cim import CIMFeatureExtractor #Import der Klasse zum Feature Extract von CIM
 from compare_features import FeatureComparer
 
 # -------------------------------------------------
 # Start
 # -------------------------------------------------
 if __name__ == "__main__":
+    # Ordner, in dem alle entpackten CIM-Fälle liegen
+    cim_folder = r"C:\Users\STELLER\Documents\Masterarbeit\CIM-Dateien\tobias_CIM_daten\data\extracted"
+
+    # Name des aktiven PowerFactory-Projekts
+    pf_project = "Nine-bus System(2)"
+
+    # FeatureComparer initialisieren
     comparer = FeatureComparer(
-        cim_zip=r"C:\Users\STELLER\Documents\Masterarbeit\CIM-Dateien\tobias_CIM_daten\data\CIM_GridAssist_908.zip",
-        pf_project="Nine-bus System(2)"
+        cim_folder=cim_folder,
+        pf_project=pf_project
     )
 
+    # Features aus allen CIM-Fällen und dem PF-Projekt extrahieren
     comparer.extract_features()
+
+    # Vergleich durchführen und bestes CIM-Netz ausgeben
     comparer.compare()
