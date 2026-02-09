@@ -8,7 +8,7 @@ if __name__ == "__main__":
     cim_folder = r"C:\Users\STELLER\Documents\Masterarbeit\CIM-Dateien\tobias_CIM_daten\data\extracted"
 
     # Name des aktiven PowerFactory-Projekts
-    pf_project = "Nine-bus System(2)"
+    pf_project = "39 Bus New England System(1)"
 
     # FeatureComparer initialisieren
     comparer = FeatureComparer(
