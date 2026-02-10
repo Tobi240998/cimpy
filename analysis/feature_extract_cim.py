@@ -3,9 +3,7 @@ from pathlib import Path  # plattformunabhängige Nutzung von Pfaden möglich
 from collections import Counter  # zum Zählen von Objekten 
 import cimpy  # zur Erstellung von Python-Objekten aus XML
 
-
 logging.basicConfig(level=logging.ERROR)  # nur echte Fehler werden angezeigt, Warnungen ausgeblendet 
-
 
 class CIMFeatureExtractor:
     def __init__(self, extracted_folder: str):
@@ -52,7 +50,7 @@ class CIMFeatureExtractor:
             counter = Counter(obj.__class__.__name__ for obj in topology.values())
 
             features["structure"].update({
-                "n_nodes": counter.get("ConnectivityNode", 0),
+                "n_busbars": counter.get("BusbarSection", 0),
                 "n_lines": counter.get("ACLineSegment", 0),
                 "n_transformers": counter.get("PowerTransformer", 0),
                 "n_loads": (
@@ -67,6 +65,36 @@ class CIMFeatureExtractor:
             })
 
             # -----------------------------
+            # Installierte Last
+            # -----------------------------
+            loads_p_inst = [
+                obj.p for obj in topology.values()
+                if obj.__class__.__name__ == "EnergyConsumer" and hasattr(obj, "p")
+            ]
+
+            features["structure"].update({
+                "P_load_installed": sum(loads_p_inst) if loads_p_inst else 0.0
+            })
+
+            # -----------------------------
+            # Verhältnisse für Paket A
+            # -----------------------------
+            n_buses = features["structure"]["n_busbars"] or 1  # Schutz gegen Division durch 0
+            n_lines = features["structure"]["n_lines"]
+            n_transformers = features["structure"]["n_transformers"]
+            n_loads = features["structure"]["n_loads"]
+            n_generators = features["structure"]["n_generators"]
+            P_load_installed = features["structure"]["P_load_installed"]
+
+            features["structure"].update({
+                "lines_per_bus": n_lines / n_buses,
+                "transformers_per_bus": n_transformers / n_buses,
+                "loads_per_bus": n_loads / n_buses,
+                "gens_per_bus": n_generators / n_buses,
+                "P_load_per_bus": P_load_installed / n_buses
+            })
+
+            # -----------------------------
             # Snapshots
             # -----------------------------
             # Sammlung der Spannungen
@@ -75,6 +103,13 @@ class CIMFeatureExtractor:
                 if obj.__class__.__name__ == "SvVoltage" and hasattr(obj, "v")
             ]
 
+            # Sammlung der Leistungen
+            flows_p = [
+                obj.p for obj in topology.values()
+                if obj.__class__.__name__ == "SvPowerFlow" and hasattr(obj, "p")
+            ]
+
+            # Extraktion der Features aus den gesammelten Spannungen / Lasten 
             if voltages:
                 v_mean = sum(voltages) / len(voltages)
                 v_std = (sum((v - v_mean) ** 2 for v in voltages) / len(voltages)) ** 0.5
@@ -87,6 +122,14 @@ class CIMFeatureExtractor:
                     "n_undervoltage": sum(v < 0.95 for v in voltages),
                     "n_overvoltage": sum(v > 1.05 for v in voltages),
                 })
+
+                # Verhältnis-Features für Paket A
+                n_buses_nonzero = len(voltages) or 1
+                features["state"].update({
+                    "share_undervoltage": sum(v < 0.95 for v in voltages) / n_buses_nonzero,
+                    "share_overvoltage": sum(v > 1.05 for v in voltages) / n_buses_nonzero,
+                    "v_range": max(voltages) - min(voltages)
+                })
             else:
                 features["state"].update({
                     "v_min": None,
@@ -95,21 +138,22 @@ class CIMFeatureExtractor:
                     "v_std": None,
                     "n_undervoltage": 0,
                     "n_overvoltage": 0,
+                    "share_undervoltage": 0,
+                    "share_overvoltage": 0,
+                    "v_range": 0
                 })
 
-
-            # -----------------------------
-            # Installierte Leistung
-            # -----------------------------
-            loads_p_inst = [
-                obj.p for obj in topology.values()
-                if obj.__class__.__name__ == "EnergyConsumer" and hasattr(obj, "p")
-            ]
-
-            features["structure"].update({
-                "P_load_installed": sum(loads_p_inst) if loads_p_inst else 0.0
-            })
-
+            if flows_p:
+                p_array = [abs(p) for p in flows_p]
+                features["state"].update({
+                    "p_mean_abs": sum(p_array) / len(p_array),
+                    "p_max_abs": max(p_array)
+                })
+            else:
+                features["state"].update({
+                    "p_mean_abs": None,
+                    "p_max_abs": None
+                })
 
             # Features dieses CIM-Falls speichern
             all_features[case_dir.name] = features

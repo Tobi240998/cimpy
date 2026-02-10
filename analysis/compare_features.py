@@ -29,43 +29,58 @@ class FeatureComparer:
         std[std == 0] = 1.0  #Schutz gegen Division durch 0
         return (matrix - mean) / std
 
+    def _compare_category(self, category_name):
+        #Alle Features, die in CIM und PF vorkommen, werden in die gleiche Reihenfolge sortiert
+        keys = sorted(
+            set(self.features_pf[category_name].keys()) &
+            set(next(iter(self.features_cim_all.values()))[category_name].keys())
+        )
+
+        #Alle CIM-Feature-Vektoren sammeln
+        cim_names = []
+        cim_vectors = []
+
+        for name, features_cim in self.features_cim_all.items():
+            cim_names.append(name)
+            cim_vectors.append(self._to_vector(features_cim[category_name], keys))
+
+        cim_vectors = np.array(cim_vectors) #Erzeugen der Vektor-Matrix
+
+        #PF-Feature-Vektor
+        v_pf = self._to_vector(self.features_pf[category_name], keys)
+
+        #Gemeinsame Normalisierung über alle CIM-Netze und das PF-Netz
+        all_vectors = np.vstack([cim_vectors, v_pf]) #hängt PF-Vektor den CIM-Daten an
+        all_vectors_norm = self._z_score_normalize(all_vectors)
+
+        cim_vectors_norm = all_vectors_norm[:-1] #Rückgabe aller Zeilen außer der letzten -> alle CIM-Vektoren
+        v_pf_norm = all_vectors_norm[-1] #Rückgabe der letzten Zeile -> PF-Vektor
+
+        best_name = None
+        best_dist = None
+
+        print(f"\n--- {category_name.upper()} Feature-Vergleich (normiert) ---")
+
+        for name, v_cim in zip(cim_names, cim_vectors_norm):
+            diff = v_pf_norm - v_cim #Berechnung Differenz der normierten Vektoren -> Ergebnis ist wieder ein Vektor
+            dist = np.linalg.norm(diff) #mathematische Berechnung der Länge des Vektors "diff"
+
+            print(f"{name:30s} Distanz = {dist:.6f}")
+
+            if best_dist is None or dist < best_dist:
+                best_dist = dist
+                best_name = name
+
+        print(f"\nBestes {category_name}-Matching:")
+        print(f"ZIP-Datei mit geringster euklidischer Distanz: {best_name}")
+        print(f"Euklidische Distanz: {best_dist:.6f}")
+
+        return best_name, best_dist
+
     def compare(self):
-        for category in ["structure", "state"]:
-            print(f"\n--- Vergleich Kategorie: {category.upper()} ---")
+        best_structure = self._compare_category("structure")
+        best_state = self._compare_category("state")
 
-            keys = sorted(
-                set(self.features_pf[category].keys()) &
-                set(next(iter(self.features_cim_all.values()))[category].keys())
-            )
-
-            cim_names = []
-            cim_vectors = []
-
-            for name, features_cim in self.features_cim_all.items():
-                cim_names.append(name)
-                cim_vectors.append(self._to_vector(features_cim[category], keys))
-
-            cim_vectors = np.array(cim_vectors)
-            v_pf = self._to_vector(self.features_pf[category], keys)
-
-            all_vectors = np.vstack([cim_vectors, v_pf])
-            all_vectors_norm = self._z_score_normalize(all_vectors)
-
-            cim_vectors_norm = all_vectors_norm[:-1]
-            v_pf_norm = all_vectors_norm[-1]
-
-            best_name = None
-            best_dist = None
-
-            for name, v_cim in zip(cim_names, cim_vectors_norm):
-                diff = v_pf_norm - v_cim
-                dist = np.linalg.norm(diff)
-
-                print(f"{name:30s} Distanz = {dist:.6f}")
-
-                if best_dist is None or dist < best_dist:
-                    best_dist = dist
-                    best_name = name
-
-            print(f"\nBestes Matching ({category}): {best_name}")
-            print(f"Euklidische Distanz: {best_dist:.6f}")
+        print("\n--- Zusammenfassung ---")
+        print(f"Bestes Struktur-Matching: {best_structure[0]}")
+        print(f"Bestes State-Matching:    {best_state[0]}")

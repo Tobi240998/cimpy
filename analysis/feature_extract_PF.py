@@ -2,7 +2,7 @@
 PowerFactory Feature-Extractor
 
 Erzeugt Features als Dictionary, konsistent mit CIM-Extractor.
-Kompatibel mit compare_features.py.
+
 """
 
 import sys
@@ -31,8 +31,12 @@ class PFFeatureExtractor:
         self.features = {}
 
     def get_objects(self, obj_type: str):
-        """Holt alle relevanten Objekte eines bestimmten Typs aus dem Projekt."""
+        # Holt alle kalkulationsrelevanten Objekte eines bestimmten Typs aus dem Projekt - für State-Vergleich 
         return self.app.GetCalcRelevantObjects(obj_type)
+
+    def get_all_objects(self, obj_type: str):
+        # Holt alle Objekte eines bestimmten Typs aus dem Projekt - für Struktur-Vergleich
+        return self.project.GetContents(obj_type, recursive=True)
 
     def create_features(self) -> dict:
         """Erstellt den Feature-Vektor als Dictionary."""
@@ -44,34 +48,60 @@ class PFFeatureExtractor:
         # -----------------------------
         # Objekte abrufen
         # -----------------------------
+        # Struktur: alle Objekte
+        buses_all = self.get_all_objects("*.ElmTerm")
+        lines_all = self.get_all_objects("*.ElmLne")
+        transformers_all = self.get_all_objects("*.ElmTr2")
+        loads_all = self.get_all_objects("*.ElmLod")
+        generators_all = self.get_all_objects("*.ElmGenstat")
+
+        # State: nur calcrelevant Objekte
         buses = self.get_objects("*.ElmTerm")
         lines = self.get_objects("ElmLne")
-        transformers = self.get_objects("ElmTr2")
-        loads = self.get_objects("ElmLod")
-        generators = (
-            self.get_objects("ElmSym") +
-            self.get_objects("ElmAsm") +
-            self.get_objects("ElmGenstat")
-        )
 
         # Struktur-Features
-        features["structure"].update({
-            "n_nodes": len(buses),
-            "n_lines": len(lines),
-            "n_transformers": len(transformers),
-            "n_loads": len(loads),
-            "n_generators": len(generators)
+        features['structure'].update({
+            'n_busbars': len(buses_all),
+            'n_lines': len(lines_all),
+            'n_transformers': len(transformers_all),
+            'n_loads': len(loads_all),
+            'n_generators': len(generators_all)
         })
 
-        # -----------------------------
-        # Lastflussberechnung vorbereiten
-        # -----------------------------
+       
+        # Installierte Last
+        P_load_installed = sum(
+            load.GetAttribute("plini")
+            for load in loads_all
+            if load.GetAttribute("plini") is not None
+        )
+
+        features["structure"].update({
+            "P_load_installed": float(P_load_installed)
+        })
+
+        
+        # Verhältnisse Struktur
+        n_buses = len(buses_all) or 1  # Schutz gegen Division durch 0
+        n_lines = len(lines_all)
+        n_transformers = len(transformers_all)
+        n_loads = len(loads_all)
+        n_generators = len(generators_all)
+
+        features["structure"].update({
+            "lines_per_bus": n_lines / n_buses,
+            "transformers_per_bus": n_transformers / n_buses,
+            "loads_per_bus": n_loads / n_buses,
+            "gens_per_bus": n_generators / n_buses,
+            "P_load_per_bus": P_load_installed / n_buses
+        })
+
+
+        # Lastflussberechnung 
         ldf = self.app.GetFromStudyCase("ComLdf")
         ldf.Execute()
 
-        # -----------------------------
         # Spannungen (Busbar-Spannungen)
-        # -----------------------------
         voltages = [
             bus.GetAttribute("m:u")
             for bus in buses
@@ -87,6 +117,9 @@ class PFFeatureExtractor:
                 "v_std": float(v_array.std()),
                 "n_undervoltage": int((v_array < 0.95).sum()),
                 "n_overvoltage": int((v_array > 1.05).sum()),
+                "share_undervoltage": float((v_array < 0.95).sum()) / len(v_array),
+                "share_overvoltage": float((v_array > 1.05).sum()) / len(v_array),
+                "v_range": float(v_array.max() - v_array.min())
             })
         else:
             features["state"].update({
@@ -96,26 +129,36 @@ class PFFeatureExtractor:
                 "v_std": None,
                 "n_undervoltage": 0,
                 "n_overvoltage": 0,
+                "share_undervoltage": 0,
+                "share_overvoltage": 0,
+                "v_range": 0
             })
 
         # -----------------------------
-        # Installierte Leistung
+        # Leistungsflüsse (Snapshot)
         # -----------------------------
-        P_load_installed = sum(
-            load.GetAttribute("plini")
-            for load in loads
-            if load.GetAttribute("plini") is not None
-        )
+        flows = []
+        for line in lines:
+            p1 = line.GetAttribute("m:P:bus1")
+            p2 = line.GetAttribute("m:P:bus2")
+            if p1 is not None:
+                flows.append(abs(p1))
+            if p2 is not None:
+                flows.append(abs(p2))
 
-        features["structure"].update({
-            "P_load_installed": float(P_load_installed)
-        })
+        if flows:
+            flows_array = np.array(flows)
+            features["state"].update({
+                "p_mean_abs": float(flows_array.mean()),
+                "p_max_abs": float(flows_array.max())
+            })
+        else:
+            features["state"].update({
+                "p_mean_abs": None,
+                "p_max_abs": None
+            })
 
         self.features = features
         return features
 
-    def get_features(self) -> dict:
-        """Gibt das Features-Dictionary zurück (berechnet es bei Bedarf)."""
-        if not self.features:
-            self.create_features()
-        return self.features
+
