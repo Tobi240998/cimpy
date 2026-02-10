@@ -3,6 +3,8 @@
 import os
 import cimpy
 from llm_cim_orchestrator import handle_user_query
+from cim_snapshot_cache import preprocess_snapshots
+
 
 
 def load_cim_snapshots(root_folder):
@@ -33,8 +35,13 @@ if __name__ == "__main__":
 
     cim_snapshots = load_cim_snapshots(cim_root)
 
+    print("📦 Preprocessing CIM-Snapshots ...")
+    snapshot_cache = preprocess_snapshots(cim_snapshots)
+
+
     user_input = "Wie verhält sich die Trafo-Leistung über den Tag?"
 
-    answer = handle_user_query(user_input, cim_snapshots)
+    answer = handle_user_query(user_input, snapshot_cache)
+
     print("\nAntwort:\n")
     print(answer)

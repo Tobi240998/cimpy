@@ -20,11 +20,12 @@ class LLM_resultAgent:
 
     def summarize(self, results, user_input):
         human_prompt = (
-            "Ursprüngliche Nutzeranweisung:\n"
-            f"{user_input}\n\n"
-            "Simulationsergebnisse:\n"
-            f"{results}"
+            f"Nutzerfrage: {user_input}\n"
+            f"Auswertung: {results}\n"
+            "Antworte kurz, technisch korrekt, ohne Wiederholungen."
         )
+
+        
 
         chat_messages = [
             SystemMessage(content=self.system_prompt),

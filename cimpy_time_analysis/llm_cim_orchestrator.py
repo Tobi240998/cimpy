@@ -2,6 +2,7 @@
 
 from llm_object_mapping import interpret_user_query
 from cim_queries import query_total_powerflow_over_time
+from cim_queries import summarize_powerflow
 from llm_result_agent import LLM_resultAgent
 
 
@@ -21,4 +22,7 @@ def handle_user_query(user_input, cim_snapshots):
         return "Es konnten keine passenden CIM-Snapshots ausgewertet werden."
 
     agent = LLM_resultAgent()
-    return agent.summarize(results, user_input)
+    summary = summarize_powerflow(results)
+    return agent.summarize(summary, user_input)
+
+    
