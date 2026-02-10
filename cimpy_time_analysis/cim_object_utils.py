@@ -1,5 +1,3 @@
-# cim_object_utils.py
-
 def collect_all_cim_objects(container):
     """
     Rekursives Einsammeln aller echten CIMpy-Objekte

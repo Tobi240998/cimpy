@@ -1,5 +1,3 @@
-# llm_cim_orchestrator.py
-
 from llm_object_mapping import interpret_user_query
 from cim_queries import query_total_powerflow_over_time
 from cim_queries import summarize_powerflow

@@ -1,5 +1,3 @@
-# cim_queries.py
-
 from cim_object_utils import collect_all_cim_objects
 
 

@@ -1,33 +1,8 @@
-# main.py
-
 import os
 import cimpy
 from llm_cim_orchestrator import handle_user_query
 from cim_snapshot_cache import preprocess_snapshots
-
-
-
-def load_cim_snapshots(root_folder):
-    snapshots = {}
-
-    for case in sorted(os.listdir(root_folder)):
-        case_path = os.path.join(root_folder, case)
-        if not os.path.isdir(case_path):
-            continue
-
-        xml_files = [
-            os.path.join(case_path, f)
-            for f in os.listdir(case_path)
-            if f.lower().endswith(".xml")
-        ]
-
-        if not xml_files:
-            continue
-
-        print(f"Lade Snapshot {case} ({len(xml_files)} XML-Dateien)")
-        snapshots[case] = cimpy.cim_import(xml_files, "cgmes_v2_4_15")
-
-    return snapshots
+from load_cim_data import load_cim_snapshots
 
 
 if __name__ == "__main__":
@@ -35,7 +10,6 @@ if __name__ == "__main__":
 
     cim_snapshots = load_cim_snapshots(cim_root)
 
-    print("📦 Preprocessing CIM-Snapshots ...")
     snapshot_cache = preprocess_snapshots(cim_snapshots)
 
 

@@ -1,5 +1,3 @@
-# llm_object_mapping.py
-
 LLM_OBJECT_MAP = {
     "trafo": "PowerTransformer",
     "transformator": "PowerTransformer",
