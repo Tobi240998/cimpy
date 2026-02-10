@@ -43,6 +43,7 @@ class FeatureComparer:
         for name, features_cim in self.features_cim_all.items():
             cim_names.append(name)
             cim_vectors.append(self._to_vector(features_cim[category_name], keys))
+        
 
         cim_vectors = np.array(cim_vectors) #Erzeugen der Vektor-Matrix
 

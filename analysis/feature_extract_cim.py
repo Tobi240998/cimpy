@@ -7,17 +7,12 @@ logging.basicConfig(level=logging.ERROR)  # nur echte Fehler werden angezeigt, W
 
 class CIMFeatureExtractor:
     def __init__(self, extracted_folder: str):
-        """
-        Initialisiert den CIMFeatureExtractor.
-        extracted_folder: Pfad zum Ordner mit allen entpackten CIM-Daten
-        """
+        
         self.extracted_folder = Path(extracted_folder)
 
     def extract_features(self) -> dict:
-        """
-        Extrahiert die Features aus allen entpackten CIM-Daten.
-        Pro Netz (Ordner) wird ein Feature-Dictionary erzeugt.
-        """
+        
+        # Extrahiert die Features aus allen entpackten CIM-Daten. Pro Netz (Ordner) wird ein Feature-Dictionary erzeugt.
         all_features = {}
 
         # Alle entpackten Netz-Ordner sammeln
@@ -77,7 +72,7 @@ class CIMFeatureExtractor:
             })
 
             # -----------------------------
-            # Verhältnisse für Paket A
+            # Verhältnisse Struktur
             # -----------------------------
             n_buses = features["structure"]["n_busbars"] or 1  # Schutz gegen Division durch 0
             n_lines = features["structure"]["n_lines"]
@@ -123,7 +118,7 @@ class CIMFeatureExtractor:
                     "n_overvoltage": sum(v > 1.05 for v in voltages),
                 })
 
-                # Verhältnis-Features für Paket A
+                # Verhältnis-Features
                 n_buses_nonzero = len(voltages) or 1
                 features["state"].update({
                     "share_undervoltage": sum(v < 0.95 for v in voltages) / n_buses_nonzero,
