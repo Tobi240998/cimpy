@@ -36,7 +36,10 @@ class PFFeatureExtractor:
 
     def create_features(self) -> dict:
         """Erstellt den Feature-Vektor als Dictionary."""
-        features = {}
+        features = {
+            "structure": {},
+            "state": {}
+        }
 
         # -----------------------------
         # Objekte abrufen
@@ -45,14 +48,20 @@ class PFFeatureExtractor:
         lines = self.get_objects("ElmLne")
         transformers = self.get_objects("ElmTr2")
         loads = self.get_objects("ElmLod")
-        generators = self.get_objects("ElmGenstat")
+        generators = (
+            self.get_objects("ElmSym") +
+            self.get_objects("ElmAsm") +
+            self.get_objects("ElmGenstat")
+        )
 
         # Struktur-Features
-        features['n_busbars'] = len(buses)
-        features['n_lines'] = len(lines)
-        features['n_transformers'] = len(transformers)
-        features['n_loads'] = len(loads)
-        features['n_generators'] = len(generators)
+        features["structure"].update({
+            "n_nodes": len(buses),
+            "n_lines": len(lines),
+            "n_transformers": len(transformers),
+            "n_loads": len(loads),
+            "n_generators": len(generators)
+        })
 
         # -----------------------------
         # Lastflussberechnung vorbereiten
@@ -71,7 +80,7 @@ class PFFeatureExtractor:
 
         if voltages:
             v_array = np.array(voltages)
-            features.update({
+            features["state"].update({
                 "v_min": float(v_array.min()),
                 "v_max": float(v_array.max()),
                 "v_mean": float(v_array.mean()),
@@ -80,7 +89,7 @@ class PFFeatureExtractor:
                 "n_overvoltage": int((v_array > 1.05).sum()),
             })
         else:
-            features.update({
+            features["state"].update({
                 "v_min": None,
                 "v_max": None,
                 "v_mean": None,
@@ -90,27 +99,17 @@ class PFFeatureExtractor:
             })
 
         # -----------------------------
-        # Lasten (Leistungsaufnahme)
+        # Installierte Leistung
         # -----------------------------
-        P_loads = [
+        P_load_installed = sum(
             load.GetAttribute("plini")
             for load in loads
             if load.GetAttribute("plini") is not None
-        ]
+        )
 
-        if P_loads:
-            P_array = np.array(P_loads)
-            features.update({
-                "p_mean": float(P_array.mean()),
-                "p_std": float(P_array.std()),
-                "p_max_abs": float(np.abs(P_array).max()),
-            })
-        else:
-            features.update({
-                "p_mean": None,
-                "p_std": None,
-                "p_max_abs": None,
-            })
+        features["structure"].update({
+            "P_load_installed": float(P_load_installed)
+        })
 
         self.features = features
         return features
@@ -120,5 +119,3 @@ class PFFeatureExtractor:
         if not self.features:
             self.create_features()
         return self.features
-
-

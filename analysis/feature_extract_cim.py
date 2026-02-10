@@ -11,13 +11,13 @@ class CIMFeatureExtractor:
     def __init__(self, extracted_folder: str):
         """
         Initialisiert den CIMFeatureExtractor.
-        extracted_folder: Pfad zum Ordner mit allen entpackten CIM-Fällen
+        extracted_folder: Pfad zum Ordner mit allen entpackten CIM-Daten
         """
         self.extracted_folder = Path(extracted_folder)
 
     def extract_features(self) -> dict:
         """
-        Extrahiert die Features aus allen entpackten CIM-Fällen.
+        Extrahiert die Features aus allen entpackten CIM-Daten.
         Pro Netz (Ordner) wird ein Feature-Dictionary erzeugt.
         """
         all_features = {}
@@ -41,15 +41,18 @@ class CIMFeatureExtractor:
             import_result = cimpy.cim_import(xml_files, "cgmes_v2_4_15")
             topology = import_result["topology"]
 
-            features = {}
+            features = {
+                "structure": {},
+                "state": {}
+            }
 
             # -----------------------------
             # Struktur -> Zählen der jeweiligen Anzahl der Objekte 
             # -----------------------------
             counter = Counter(obj.__class__.__name__ for obj in topology.values())
 
-            features.update({
-                "n_busbars": counter.get("BusbarSection", 0),
+            features["structure"].update({
+                "n_nodes": counter.get("ConnectivityNode", 0),
                 "n_lines": counter.get("ACLineSegment", 0),
                 "n_transformers": counter.get("PowerTransformer", 0),
                 "n_loads": (
@@ -72,18 +75,11 @@ class CIMFeatureExtractor:
                 if obj.__class__.__name__ == "SvVoltage" and hasattr(obj, "v")
             ]
 
-            # Sammlung der Leistungen
-            flows_p = [
-                obj.p for obj in topology.values()
-                if obj.__class__.__name__ == "SvPowerFlow" and hasattr(obj, "p")
-            ]
-
-            # Extraktion der Features aus den gesammelten Spannungen / Lasten 
             if voltages:
                 v_mean = sum(voltages) / len(voltages)
                 v_std = (sum((v - v_mean) ** 2 for v in voltages) / len(voltages)) ** 0.5
 
-                features.update({
+                features["state"].update({
                     "v_min": min(voltages),
                     "v_max": max(voltages),
                     "v_mean": v_mean,
@@ -92,7 +88,7 @@ class CIMFeatureExtractor:
                     "n_overvoltage": sum(v > 1.05 for v in voltages),
                 })
             else:
-                features.update({
+                features["state"].update({
                     "v_min": None,
                     "v_max": None,
                     "v_mean": None,
@@ -101,21 +97,19 @@ class CIMFeatureExtractor:
                     "n_overvoltage": 0,
                 })
 
-            if flows_p:
-                p_mean = sum(flows_p) / len(flows_p)
-                p_std = (sum((p - p_mean) ** 2 for p in flows_p) / len(flows_p)) ** 0.5
 
-                features.update({
-                    "p_mean": p_mean,
-                    "p_std": p_std,
-                    "p_max_abs": max(abs(p) for p in flows_p),
-                })
-            else:
-                features.update({
-                    "p_mean": None,
-                    "p_std": None,
-                    "p_max_abs": None,
-                })
+            # -----------------------------
+            # Installierte Leistung
+            # -----------------------------
+            loads_p_inst = [
+                obj.p for obj in topology.values()
+                if obj.__class__.__name__ == "EnergyConsumer" and hasattr(obj, "p")
+            ]
+
+            features["structure"].update({
+                "P_load_installed": sum(loads_p_inst) if loads_p_inst else 0.0
+            })
+
 
             # Features dieses CIM-Falls speichern
             all_features[case_dir.name] = features
