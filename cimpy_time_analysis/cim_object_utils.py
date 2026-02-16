@@ -2,6 +2,7 @@ def collect_all_cim_objects(container):
     """
     Rekursives Einsammeln aller echten CIMpy-Objekte
     (inkl. SvVoltage, SvPowerFlow etc.)
+    Ablauf: Prüfen, ob Objekt ein dict oder eine list ist -> eine Ebene weiter unten von vorne starten -> wenn kein dict oder list -> prüfen, ob aus CIMpy, falls ja, in Objects anhängen 
     """
     objects = []
 
