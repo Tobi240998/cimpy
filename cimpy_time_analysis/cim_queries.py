@@ -1,114 +1,90 @@
-from cim_object_utils import collect_all_cim_objects
+import math
 
-# Berechnet die im Netzmodell vorhandenen Leistungen. Muss noch angepasst werden, dass nur der gefragte Typ (z. B. Trafo) betrachtet wird.
-def query_total_powerflow_over_time(snapshot_cache):
+
+def query_equipment_power_over_time(snapshot_cache, network_index, equipment_type):
+    """
+    Berechnet die maximale Scheinleistung (MVA) pro Equipment und Snapshot.
+    Für Trafos wird das Maximum der Wicklungen verwendet.
+    """
+
     results = []
 
     for snapshot, data in snapshot_cache.items():
-        flows = data.get("SvPowerFlow", [])
-        if not flows:
-            continue
 
-        total_p_mw = sum(obj.p for obj in flows)
-
-        results.append({
-            "snapshot": snapshot,
-            "total_active_power": total_p_mw
-        })
-
-    return results
-
-
-def query_trafo_power_over_time(snapshot_cache):
-    results = []
-
-    for snapshot, data in snapshot_cache.items():
-        flows = data.get("flows", [])
-        trafos = data.get("trafos", [])
-
-        if not flows or not trafos:
-            continue
-
-        trafo_power = {t.name: 0.0 for t in trafos}
+        flows = data["flows"]
+        equipment_loading = {}
 
         for flow in flows:
+
             terminal = getattr(flow, "Terminal", None)
             if not terminal:
                 continue
 
-            terminals = terminal if isinstance(terminal, list) else [terminal]
+            terminal_id = getattr(terminal, "mRID", None)
+            if not terminal_id:
+                continue
 
-            for t in terminals:
-                equipment = getattr(t, "ConductingEquipment", None)
-                if not equipment:
-                    continue
+            equipment = network_index["terminals_to_equipment"].get(terminal_id)
+            if not equipment:
+                continue
 
-                if equipment.__class__.__name__ == "PowerTransformer":
-                    trafo_name = getattr(equipment, "name", "unknown")
-                    trafo_power[trafo_name] += getattr(flow, "p", 0.0)
+            if equipment.__class__.__name__ != equipment_type:
+                continue
 
-        for name, value in trafo_power.items():
+            # Scheinleistung berechnen
+            p = getattr(flow, "p", 0.0)
+            q = getattr(flow, "q", 0.0)
+            s = math.sqrt(p**2 + q**2)
+
+            name = getattr(equipment, "name", equipment.mRID)
+
+            # Maximum über Terminals (wichtig für Trafos)
+            equipment_loading[name] = max(
+                equipment_loading.get(name, 0.0),
+                s
+            )
+
+        for name, value in equipment_loading.items():
             results.append({
                 "snapshot": snapshot,
-                "trafo": name,
-                "total_active_power_MW": value
+                "equipment": name,
+                "apparent_power_MVA": value,
+                "type": equipment_type
             })
 
     return results
 
 
-
-
-
+# -------------------------------------------------------
+# Zusammenfassung für LLM-Ausgabe
+# -------------------------------------------------------
 
 def summarize_powerflow(results):
     """
-    Generische Zusammenfassung von PowerFlow-Ergebnissen.
-    
-    Funktioniert für:
-    1. query_total_powerflow_over_time (gesamt Netz)
-    2. query_trafo_power_over_time (pro Trafo)
-    
-    Ergebnis:
-        dict: Zusammenfassung der min/max/mean und Peak-Snapshot,
-              optional pro Trafo, falls vorhanden.
+    Erstellt eine strukturierte Zusammenfassung der
+    Scheinleistungen über alle Snapshots hinweg.
     """
-    from collections import defaultdict
 
-    # Prüfen, ob es Trafo-Daten sind
-    is_trafo = "trafo" in results[0] if results else False
-
-    if is_trafo:
-        # pro Trafo zusammenfassen
-        summary = {}
-        trafos = defaultdict(list)
-
-        for r in results:
-            trafos[r["trafo"]].append(r)
-
-        for trafo, entries in trafos.items():
-            values = [e["total_active_power_MW"] for e in entries]
-            peak_snapshot = max(entries, key=lambda e: e["total_active_power_MW"])["snapshot"]
-            rated = entries[0].get("rated_MVA", None)
-
-            summary[trafo] = {
-                "min_MW": min(values),
-                "max_MW": max(values),
-                "mean_MW": sum(values)/len(values),
-                "peak_snapshot": peak_snapshot,
-                "rated_MVA": rated
-            }
-
-        return summary
-
-    else:
-        # Gesamt-Netz-Zusammenfassung
-        summary = {
-            "min_MW": min(values),
-            "max_MW": max(values),
-            "mean_MW": sum(values)/len(values),
-            "peak_snapshot": peak_snapshot,
-            "type": "network_total"
+    if not results:
+        return {
+            "type": None,
+            "message": "Keine Daten verfügbar"
         }
-        return summary
 
+    values = [r["apparent_power_MVA"] for r in results]
+
+    peak_entry = max(results, key=lambda r: r["apparent_power_MVA"])
+    min_entry = min(results, key=lambda r: r["apparent_power_MVA"])
+
+    return {
+        "type": results[0]["type"],
+        "unit": "MVA",
+        "min_value": min(values),
+        "max_value": max(values),
+        "mean_value": sum(values) / len(values),
+        "peak_snapshot": peak_entry["snapshot"],
+        "peak_equipment": peak_entry["equipment"],
+        "min_snapshot": min_entry["snapshot"],
+        "min_equipment": min_entry["equipment"],
+        "num_datapoints": len(results)
+    }

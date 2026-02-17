@@ -1,6 +1,7 @@
 from llm_cim_orchestrator import handle_user_query
 from cim_snapshot_cache import preprocess_snapshots
 from load_cim_data import load_cim_snapshots
+from load_cim_data import build_network_index
 
 
 if __name__ == "__main__":
@@ -11,17 +12,19 @@ if __name__ == "__main__":
 
     # Daten einmalig vorverarbeiten
     snapshot_cache = preprocess_snapshots(cim_snapshots)
+    network_index = build_network_index(cim_snapshots)
 
-    for snapshot, cim_result in snapshot_cache.items():
-        print("\nSnapshot:", snapshot)
-        print("Keys in cim_result:", cim_result.keys())
-        break
+   
 
     # Nutzerfrage -> später Umstellung auf LLM
     user_input = "Wie verhält sich die Trafo Leistung über den Tag?"
 
     # Orchestrator aufrufen 
-    answer = handle_user_query(user_input, snapshot_cache)
+    answer = handle_user_query(
+        user_input,
+        snapshot_cache,
+        network_index
+    )
 
     # Ausgabe
     print("\nAntwort:\n")
