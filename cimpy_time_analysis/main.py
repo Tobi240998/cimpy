@@ -14,10 +14,11 @@ if __name__ == "__main__":
     snapshot_cache = preprocess_snapshots(cim_snapshots)
     network_index = build_network_index(cim_snapshots)
 
+
    
 
     # Nutzerfrage -> später Umstellung auf LLM
-    user_input = "Wie verhält sich die Leistung von Transformator 19-20 über den Tag?"
+    user_input = "Wie verhält sich die Spannung von Transformator 19-20 über den Tag?"
 
     # Orchestrator aufrufen 
     answer = handle_user_query(
