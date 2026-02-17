@@ -1,6 +1,7 @@
 LLM_OBJECT_MAP = {
     "trafo": "PowerTransformer",
     "transformator": "PowerTransformer",
+    "trf": "PowerTransformer",
     "leistung": "SvPowerFlow",
     "spannung": "SvVoltage",
     "bus": "BusbarSection",
@@ -11,6 +12,10 @@ LLM_OBJECT_MAP = {
 
 
 def interpret_user_query(user_input: str):
+    """
+    Erkennt nur die CIM-Objekttypen (Intent/Scope).
+    Konkrete Objekte (z.B. welcher Trafo) werden im Backend deterministisch gematcht.
+    """
     user_input = user_input.lower()
     detected = set()
 

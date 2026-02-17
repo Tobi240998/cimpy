@@ -1,21 +1,31 @@
 import math
 
 
-def query_equipment_power_over_time(snapshot_cache, network_index, equipment_type):
+def query_equipment_power_over_time(snapshot_cache, network_index, equipment_obj):
     """
-    Berechnet die maximale Scheinleistung (MVA) pro Equipment und Snapshot.
-    Für Trafos wird das Maximum der Wicklungen verwendet.
+    Berechnet eine Zeitreihe der Scheinleistung (MVA) für EIN konkretes Equipment
+    über alle Snapshots.
+
+    Für Trafos: Maximum über die zugehörigen Terminals (HV/LV-Seite).
     """
+
+    if equipment_obj is None:
+        return []
+
+    equipment_type = equipment_obj.__class__.__name__
+    equipment_name = getattr(equipment_obj, "name", getattr(equipment_obj, "mRID", "UNKNOWN"))
 
     results = []
 
     for snapshot, data in snapshot_cache.items():
 
-        flows = data["flows"]
-        equipment_loading = {}
+        flows = data.get("flows", [])
+        if not flows:
+            continue
+
+        max_s = 0.0
 
         for flow in flows:
-
             terminal = getattr(flow, "Terminal", None)
             if not terminal:
                 continue
@@ -24,45 +34,35 @@ def query_equipment_power_over_time(snapshot_cache, network_index, equipment_typ
             if not terminal_id:
                 continue
 
-            equipment = network_index["terminals_to_equipment"].get(terminal_id)
-            if not equipment:
+            eq = network_index["terminals_to_equipment"].get(terminal_id)
+            if not eq:
                 continue
 
-            if equipment.__class__.__name__ != equipment_type:
+            if eq != equipment_obj:
                 continue
 
-            # Scheinleistung berechnen
             p = getattr(flow, "p", 0.0)
             q = getattr(flow, "q", 0.0)
             s = math.sqrt(p**2 + q**2)
 
-            name = getattr(equipment, "name", equipment.mRID)
+            max_s = max(max_s, s)
 
-            # Maximum über Terminals (wichtig für Trafos)
-            equipment_loading[name] = max(
-                equipment_loading.get(name, 0.0),
-                s
-            )
-
-        for name, value in equipment_loading.items():
+        # Nur wenn in diesem Snapshot überhaupt etwas gefunden wurde
+        if max_s > 0:
             results.append({
                 "snapshot": snapshot,
-                "equipment": name,
-                "apparent_power_MVA": value,
-                "type": equipment_type
+                "equipment": equipment_name,
+                "type": equipment_type,
+                "apparent_power_MVA": max_s
             })
 
     return results
 
 
-# -------------------------------------------------------
-# Zusammenfassung für LLM-Ausgabe
-# -------------------------------------------------------
-
 def summarize_powerflow(results):
     """
-    Erstellt eine strukturierte Zusammenfassung der
-    Scheinleistungen über alle Snapshots hinweg.
+    Strukturierte Summary für LLM/Agent.
+    Erwartet results mit key: apparent_power_MVA
     """
 
     if not results:
@@ -72,7 +72,6 @@ def summarize_powerflow(results):
         }
 
     values = [r["apparent_power_MVA"] for r in results]
-
     peak_entry = max(results, key=lambda r: r["apparent_power_MVA"])
     min_entry = min(results, key=lambda r: r["apparent_power_MVA"])
 
