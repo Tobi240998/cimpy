@@ -18,7 +18,7 @@ if __name__ == "__main__":
    
 
     # Nutzerfrage -> später Umstellung auf LLM
-    user_input = "Wie verhält sich die Leistung von Transformator 19-20 über den Tag?"
+    user_input = "Wie verhält sich die Leistung von Transformator 19-20 über den Tag? Wie verändert sich die Auslastund und wann war sie am höchsten?"
 
     # Orchestrator aufrufen 
     answer = handle_user_query(

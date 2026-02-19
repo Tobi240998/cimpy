@@ -19,12 +19,47 @@ def _canonical_id(value):
     return s.lower()
 
 
+def _get_rated_s_mva(equipment_obj):
+    """
+    Holt die Nennscheinleistung ratedS (MVA) aus dem EQ-Profil.
+    In CGMES liegt ratedS typischerweise am PowerTransformerEnd.
+
+    Hinweis:
+    - Manche Exporte haben ratedS nur an einem Ende oder unterschiedlich pro Ende.
+    - Für Auslastung (%) nehmen wir hier robust das Maximum über alle Enden.
+    """
+    if equipment_obj is None:
+        return None
+
+    ends = getattr(equipment_obj, "PowerTransformerEnd", None)
+    if not ends:
+        return None
+
+    rated_vals = []
+    for end in ends:
+        rated = getattr(end, "ratedS", None)
+        if rated is None:
+            continue
+        try:
+            rated_vals.append(float(rated))
+        except Exception:
+            continue
+
+    rated_vals = [v for v in rated_vals if v > 0]
+    if not rated_vals:
+        return None
+
+    return max(rated_vals)
+
+
 def query_equipment_power_over_time(snapshot_cache, network_index, equipment_obj): #bestimmt maximale Scheinleistung des gewählten Equipments
     if equipment_obj is None:
         return []
 
     equipment_type = equipment_obj.__class__.__name__
     equipment_name = getattr(equipment_obj, "name", getattr(equipment_obj, "mRID", "UNKNOWN")) #gibt Equipment-Namen aus, falls dieser nicht gefunden wird -> mRID
+
+    rated_mva = _get_rated_s_mva(equipment_obj)  #Nennleistung ratedS aus EQ-Profil (für Auslastung)
 
     results = []
 
@@ -53,14 +88,20 @@ def query_equipment_power_over_time(snapshot_cache, network_index, equipment_obj
             s = math.sqrt(p**2 + q**2)
             max_s = max(max_s, s)
 
-        if max_s > 0: #Speichern der Daten, falls Scheinleistung größer null 
+        if max_s > 0: #Speichern der Daten, falls Scheinleistung größer null
+            loading_percent = None
+            if rated_mva is not None:
+                loading_percent = (max_s / rated_mva) * 100.0  #Auslastung in %
+
             results.append({
                 "snapshot": snapshot,
                 "timestamp": ts,
                 "timestamp_str": ts_str,
                 "equipment": equipment_name,
                 "type": equipment_type,
-                "apparent_power_MVA": max_s
+                "apparent_power_MVA": max_s,
+                "rated_MVA": rated_mva,                 #Nennleistung (MVA)
+                "loading_percent": loading_percent      #Auslastung (%)
             })
 
     results.sort(key=lambda r: (r["timestamp"] is None, r["timestamp"])) #zeitliche Sortierung der Ergebnisse
@@ -131,11 +172,26 @@ def summarize_powerflow(results):
     if not results:
         return {"type": None, "message": "Keine Daten verfügbar"}
 
-    values = [r["apparent_power_MVA"] for r in results] #bildet eine Reihe der Scheinleistungen in zeitlich geordneter Reihenfolge 
+    values = [r["apparent_power_MVA"] for r in results] #bildet eine Reihe der Scheinleistungen in zeitlich geordneter Reihenfolge
     peak_entry = max(results, key=lambda r: r["apparent_power_MVA"]) #der Eintrag mit dem Maximalwert wird gespeichert (alle Daten dazu, nicht nur die Leistung)
     min_entry = min(results, key=lambda r: r["apparent_power_MVA"]) #der Eintrag mit dem Minmalwert wird gespeichert (alle Daten dazu, nicht nur die Leistung)
 
-    return {
+    #Auslastung (%) nur auswerten, wenn ratedS vorhanden ist
+    loading_values = [r["loading_percent"] for r in results if r.get("loading_percent") is not None]
+    peak_loading_entry = None
+    min_loading_entry = None
+
+    if loading_values:
+        peak_loading_entry = max(
+            [r for r in results if r.get("loading_percent") is not None],
+            key=lambda r: r["loading_percent"]
+        )
+        min_loading_entry = min(
+            [r for r in results if r.get("loading_percent") is not None],
+            key=lambda r: r["loading_percent"]
+        )
+
+    summary = {
         "type": results[0]["type"],
         "unit": "MVA",
         "min_value": min(values),
@@ -149,8 +205,28 @@ def summarize_powerflow(results):
         "min_snapshot": min_entry["snapshot"],
         "min_timestamp": min_entry.get("timestamp_str"),
         "min_equipment": min_entry["equipment"],
-        "num_datapoints": len(results)
+        "num_datapoints": len(results),
+        "rated_MVA": results[0].get("rated_MVA", None) #Nennleistung, wird für Auslastung genutzt
     }
+
+    #Prozentwerte ergänzen, wenn vorhanden
+    if loading_values:
+        summary.update({
+            "loading_unit": "%",
+            "loading_min_percent": min(loading_values),
+            "loading_max_percent": max(loading_values),
+            "loading_mean_percent": sum(loading_values) / len(loading_values),
+
+            "loading_peak_percent": peak_loading_entry["loading_percent"],
+            "loading_peak_snapshot": peak_loading_entry["snapshot"],
+            "loading_peak_timestamp": peak_loading_entry.get("timestamp_str"),
+
+            "loading_min_percent_at_time": min_loading_entry["loading_percent"],
+            "loading_min_snapshot": min_loading_entry["snapshot"],
+            "loading_min_timestamp": min_loading_entry.get("timestamp_str"),
+        })
+
+    return summary
 
 
 def summarize_voltage(results): #gleiche Vorgehensweise wie bei summarize_powerflow
