@@ -10,7 +10,7 @@ from asset_resolver import resolve_equipment_from_query
 
 
 def handle_user_query(user_input, snapshot_cache, network_index):
-    detected_types = interpret_user_query(user_input)
+    detected_types = interpret_user_query(user_input) #Liste der Objekte / Berechnungen, die aus dem User Input abgeleitet werden
 
     if not detected_types:
         return "Ich konnte keinen Bezug zu Netzobjekten erkennen."
@@ -18,10 +18,10 @@ def handle_user_query(user_input, snapshot_cache, network_index):
     agent = LLM_resultAgent()
 
     # ---------------------------------------------------------
-    # 1) Trafo + Leistung (SvPowerFlow)
+    # 1) falls Trafo + Leistung (SvPowerFlow) in detected types
     # ---------------------------------------------------------
     if "SvPowerFlow" in detected_types and "PowerTransformer" in detected_types:
-
+        #Sucht den richtigen Trafo 
         trafo_obj, debug = resolve_equipment_from_query(
             user_input=user_input,
             equipment_type="PowerTransformer",
@@ -35,7 +35,7 @@ def handle_user_query(user_input, snapshot_cache, network_index):
                 f"(Matching-Methode: {debug.get('method')})"
             )
 
-        results = query_equipment_power_over_time(
+        results = query_equipment_power_over_time( #Sammelt die Scheinleistung zu jedem Zeitpunkt
             snapshot_cache=snapshot_cache,
             network_index=network_index,
             equipment_obj=trafo_obj
@@ -44,14 +44,15 @@ def handle_user_query(user_input, snapshot_cache, network_index):
         if not results:
             return "Keine SV-Leistungswerte für diesen Trafo in den Snapshots gefunden."
 
-        summary = summarize_powerflow(results)
-        return agent.summarize(summary, user_input)
+        summary = summarize_powerflow(results) #bereitet die Ergebnisse auf und gibt Minimum- / Maximumwerte und Durschnitt an 
+        return agent.summarize(summary, user_input) #Zusammenfassung durch LLM-Agenten
 
     # ---------------------------------------------------------
-    # 2) Trafo + Spannung (SvVoltage)
+    # 2) falls Trafo + Spannung (SvVoltage) in detected types - gleicher Aufbau der Funktion wie bei Trafo + Leistung
     # ---------------------------------------------------------
     if "SvVoltage" in detected_types and "PowerTransformer" in detected_types:
 
+        #Sucht den richtigen Trafo
         trafo_obj, debug = resolve_equipment_from_query(
             user_input=user_input,
             equipment_type="PowerTransformer",

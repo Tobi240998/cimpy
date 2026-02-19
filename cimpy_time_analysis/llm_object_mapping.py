@@ -18,7 +18,7 @@ def interpret_user_query(user_input: str):
     """
     user_input = user_input.lower()
     detected = set()
-
+    #LLM_OBJECT_MAP wird durchlaufen und in User_input gesucht -> bei Treffer wird es zu Liste detected hinzugefügt 
     for keyword, cim_type in LLM_OBJECT_MAP.items():
         if keyword in user_input:
             detected.add(cim_type)
