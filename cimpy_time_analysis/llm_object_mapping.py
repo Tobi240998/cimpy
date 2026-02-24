@@ -1,26 +1,59 @@
 LLM_OBJECT_MAP = {
+    # Equipment
     "trafo": "PowerTransformer",
     "transformator": "PowerTransformer",
-    "trf": "PowerTransformer",
-    "leistung": "SvPowerFlow",
+    "transformer": "PowerTransformer",
+
+    # Lasten/Verbraucher 
+    "verbraucher": "ConformLoad",
+    "last": "ConformLoad",
+    "load": "ConformLoad",
+    "conformload": "ConformLoad",
+
+    # State variables / queries
     "spannung": "SvVoltage",
-    "bus": "BusbarSection",
-    "knoten": "BusbarSection",
-    "last": "EnergyConsumer",
-    "verbraucher": "EnergyConsumer"
+    "voltage": "SvVoltage",
+
+    # Leistung: wir nutzen SvPowerFlow als Trigger; Metrik (S/P/Q) wird separat erkannt
+    "leistung": "SvPowerFlow",
+    "power": "SvPowerFlow",
+
+    # Metrik-Hinweise
+    "wirkleistung": "METRIC_P",
+    "p": "METRIC_P",
+
+    "blindleistung": "METRIC_Q",
+    "q": "METRIC_Q",
+
+    "scheinleistung": "METRIC_S",
+    "s": "METRIC_S",
 }
 
 
 def interpret_user_query(user_input: str):
     """
-    Erkennt nur die CIM-Objekttypen (Intent/Scope).
-    Konkrete Objekte (z.B. welcher Trafo) werden im Backend deterministisch gematcht.
+    Liefert Struktur:
+      {
+        "detected_types": [...],    # z.B. ["PowerTransformer","SvPowerFlow"]
+        "metric": "S"/"P"/"Q"/None
+      }
     """
-    user_input = user_input.lower()
+    user_input_l = user_input.lower()
     detected = set()
-    #LLM_OBJECT_MAP wird durchlaufen und in User_input gesucht -> bei Treffer wird es zu Liste detected hinzugefügt 
-    for keyword, cim_type in LLM_OBJECT_MAP.items():
-        if keyword in user_input:
-            detected.add(cim_type)
+    metric = None
 
-    return list(detected)
+    for keyword, cim_type in LLM_OBJECT_MAP.items():
+        if keyword in user_input_l:
+            if cim_type.startswith("METRIC_"):
+                metric = cim_type.split("_", 1)[1]  # "P"/"Q"/"S"
+            else:
+                detected.add(cim_type)
+
+    # Default-Metrik: wenn Leistung gefragt ist, aber keine genaue Art: S
+    if "SvPowerFlow" in detected and metric is None:
+        metric = "S"
+
+    return {
+        "detected_types": list(detected),
+        "metric": metric
+    }

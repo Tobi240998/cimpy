@@ -203,9 +203,6 @@ def build_network_index(cim_snapshots):
     """
     Index aus erstem Snapshot, wird dann für alle Snapshots genutzt.
 
-    WICHTIGER Fix:
-    Terminals eines Equipments werden NICHT über equipment.Terminals bestimmt,
-    sondern über Terminal.ConductingEquipment (robust gegen 'leere' Terminals).
     """
 
     first_snapshot = next(iter(cim_snapshots.values())) #erster Snapshot aus dem Dict wird genommen

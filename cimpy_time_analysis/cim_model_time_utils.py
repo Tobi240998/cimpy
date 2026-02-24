@@ -87,7 +87,6 @@ def choose_snapshot_scenario_time(xml_files: list[str]) -> FullModelTimes | None
     2) Sonst irgendeine Datei mit scenarioTime.
     3) Sonst None.
 
-    Damit bist du unabhängig vom Dateinamen und nutzt ausschließlich CIM-Headerdaten.
     """
     candidates: list[FullModelTimes] = []
     for f in xml_files:
