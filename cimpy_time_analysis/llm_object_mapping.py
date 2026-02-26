@@ -14,7 +14,7 @@ LLM_OBJECT_MAP = {
     "spannung": "SvVoltage",
     "voltage": "SvVoltage",
 
-    # Leistung: wir nutzen SvPowerFlow als Trigger; Metrik (S/P/Q) wird separat erkannt
+    # Leistung: 
     "leistung": "SvPowerFlow",
     "power": "SvPowerFlow",
 
@@ -31,13 +31,7 @@ LLM_OBJECT_MAP = {
 
 
 def interpret_user_query(user_input: str):
-    """
-    Liefert Struktur:
-      {
-        "detected_types": [...],    # z.B. ["PowerTransformer","SvPowerFlow"]
-        "metric": "S"/"P"/"Q"/None
-      }
-    """
+    
     user_input_l = user_input.lower()
     detected = set()
     metric = None
@@ -48,10 +42,6 @@ def interpret_user_query(user_input: str):
                 metric = cim_type.split("_", 1)[1]  # "P"/"Q"/"S"
             else:
                 detected.add(cim_type)
-
-    # Default-Metrik: wenn Leistung gefragt ist, aber keine genaue Art: S
-    if "SvPowerFlow" in detected and metric is None:
-        metric = "S"
 
     return {
         "detected_types": list(detected),

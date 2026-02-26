@@ -1,6 +1,6 @@
 import math
 
-
+#Normalisierung der Terminal ID auf einheitliches Format 
 def _canonical_id(value):
     if value is None:
         return None
@@ -57,19 +57,7 @@ def query_equipment_metric_over_time(
     equipment_obj,
     metric: str = "S"
 ):
-    """
-    Generische Metric-Query für jedes ConductingEquipment, das über Terminals SvPowerFlow-Werte besitzt.
-
-    metric:
-      - "S": Scheinleistung (sqrt(P^2 + Q^2))  -> Ergebnis-Key: apparent_power_MVA
-      - "P": Wirkleistung (p)                  -> Ergebnis-Key: active_power_MW
-      - "Q": Blindleistung (q)                 -> Ergebnis-Key: reactive_power_MVAr
-
-    Aggregation über Terminals:
-      - Wir wählen den Terminal-Eintrag mit größtem Betrag (abs), um Doppelzählung / Vorzeichen-Kompensation
-        (z.B. bei Trafos HV/LV) zu vermeiden.
-      - Für Verbraucher (meist 1 Terminal) ist das identisch mit "der Wert".
-    """
+   
     if equipment_obj is None:
         return []
 
@@ -95,7 +83,7 @@ def query_equipment_metric_over_time(
         ts = data.get("timestamp", None)  #zieht sich die Timestamps aus den Snapshots
         ts_str = data.get("timestamp_str", None)
 
-        # Wir merken uns pro Snapshot den "besten" Terminal-Wert (größter Betrag)
+        # Wir merken uns pro Snapshot den "besten" Terminal-Wert (größter Betrag, wird hier "zurückgesetzt")
         best_val = None
         best_abs = -1.0
 
@@ -112,6 +100,7 @@ def query_equipment_metric_over_time(
             p = getattr(flow, "p", 0.0)
             q = getattr(flow, "q", 0.0)
 
+            #Berechnung bzw. Ausgabe der richtigen Einheit
             if metric == "S":
                 val = math.sqrt(p**2 + q**2)
             elif metric == "P":
@@ -119,6 +108,7 @@ def query_equipment_metric_over_time(
             else:  # metric == "Q"
                 val = float(q)
 
+            #Prüfung, ob größter Wert und falls ja, Speicherung
             a = abs(val)
             if a > best_abs:
                 best_abs = a
@@ -152,12 +142,9 @@ def query_equipment_metric_over_time(
     return results
 
 
-def query_equipment_power_over_time(snapshot_cache, network_index, equipment_obj):  #bestimmt maximale Scheinleistung des gewählten Equipments
-    # Backwards-Compatibility: alte Funktion bleibt und nutzt die generische Metric-Query für S
-    return query_equipment_metric_over_time(snapshot_cache, network_index, equipment_obj, metric="S")
 
 
-def query_equipment_voltage_over_time(snapshot_cache, network_index, equipment_obj):  #bestimmt Spannung des gewählten Equipments; gleicher Aufbau wie bei PowerFlow außer anderem Mapping und Ziehen der Spannung
+def query_equipment_voltage_over_time(snapshot_cache, network_index, equipment_obj):  #bestimmt Spannung des gewählten Equipments; gleicher Aufbau wie bei query equipment metric over time, außer anderem Mapping und Ziehen der Spannung
     """
     FIX: Terminals werden NICHT aus equipment_obj.Terminals gezogen,
     sondern über network_index["equipment_to_terminal_ids"].
@@ -166,7 +153,7 @@ def query_equipment_voltage_over_time(snapshot_cache, network_index, equipment_o
       equipment_id -> terminal_ids -> connectivityNode_id -> topologicalNode_id -> SvVoltage.v
 
     Hinweis:
-    - Diese Query ist typunabhängig: funktioniert für PowerTransformer UND EnergyConsumer,
+    - Diese Query ist typunabhängig: funktioniert für PowerTransformer UND EnergyConsumer -> kann noch erweitert werden,
       solange das Equipment Terminals hat und SvVoltage auf dem zugehörigen TopologicalNode existiert.
     """
 
@@ -222,49 +209,36 @@ def query_equipment_voltage_over_time(snapshot_cache, network_index, equipment_o
 
 
 def summarize_metric(results):
-    """
-    Generische Zusammenfassung für Metrik-Zeitreihen:
-    - S: apparent_power_MVA (mit optionaler Auslastung %)
-    - P: active_power_MW
-    - Q: reactive_power_MVAr
-    """
     if not results:
         return {"type": None, "message": "Keine Daten verfügbar"}
 
-    metric = results[0].get("metric", "S")
+    metric = results[0]["metric"]  # P / Q / S
 
-    if metric == "S":
-        value_key = "apparent_power_MVA"
-        unit = "MVA"
-    elif metric == "P":
-        value_key = "active_power_MW"
+    if metric == "P":
         unit = "MW"
-    else:
-        value_key = "reactive_power_MVAr"
+        key = "active_power_MW"
+    elif metric == "Q":
         unit = "MVAr"
+        key = "reactive_power_MVAr"
+    else:
+        unit = "MVA"
+        key = "apparent_power_MVA"
 
-    values = [r[value_key] for r in results if value_key in r]  #bildet eine Reihe der Werte in zeitlich geordneter Reihenfolge
-    if not values:
-        return {"type": results[0].get("type"), "message": "Keine Werte verfügbar"}
+    values = [r[key] for r in results if key in r]
 
-    peak_entry = max(results, key=lambda r: r.get(value_key, float("-inf")))  #der Eintrag mit dem Maximalwert wird gespeichert
-    min_entry = min(results, key=lambda r: r.get(value_key, float("inf")))    #der Eintrag mit dem Minimalwert wird gespeichert
+    peak_entry = max(results, key=lambda r: r.get(key, float("-inf")))
+    min_entry = min(results, key=lambda r: r.get(key, float("inf")))
 
     summary = {
-        "type": results[0].get("type"),
         "metric": metric,
         "unit": unit,
         "min_value": min(values),
         "max_value": max(values),
         "mean_value": sum(values) / len(values),
-        "peak_value": peak_entry.get(value_key),
-        "peak_snapshot": peak_entry.get("snapshot"),
+        "peak_value": peak_entry.get(key),
         "peak_timestamp": peak_entry.get("timestamp_str"),
-        "peak_equipment": peak_entry.get("equipment"),
-        "min_value_at_time": min_entry.get(value_key),
-        "min_snapshot": min_entry.get("snapshot"),
+        "min_value_at_time": min_entry.get(key),
         "min_timestamp": min_entry.get("timestamp_str"),
-        "min_equipment": min_entry.get("equipment"),
         "num_datapoints": len(values)
     }
 
@@ -298,12 +272,9 @@ def summarize_metric(results):
     return summary
 
 
-def summarize_powerflow(results):
-    # Backwards-Compatibility: alte Funktion bleibt, nutzt generische Summary
-    return summarize_metric(results)
 
 
-def summarize_voltage(results):  #gleiche Vorgehensweise wie bei summarize_powerflow
+def summarize_voltage(results):  #gleiche Vorgehensweise wie bei summarize_metric
     if not results:
         return {"type": None, "message": "Keine Daten verfügbar"}
 

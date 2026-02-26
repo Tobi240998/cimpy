@@ -21,19 +21,16 @@ def handle_user_query(user_input, snapshot_cache, network_index):
 
     # ---------------------------------------------------------
     # 0) Default: wenn ein Equipment erkannt wurde, aber keine StateVariable
-    #    -> wir gehen von Leistungsabfrage (SvPowerFlow) aus
+    #    -> wir gehen von Leistungsabfrage (SvPowerFlow) aus (z. B.: Wie verhält sich die Last xy über den Tag?)
     # ---------------------------------------------------------
     equipment_detected = any(t in detected_types for t in ["PowerTransformer", "ConformLoad"])
     state_detected = any(t in detected_types for t in ["SvPowerFlow", "SvVoltage"])
 
     if equipment_detected and not state_detected:
-        detected_types.append("SvPowerFlow")  #Default auf Leistung, falls User nur "Load 27 ..." schreibt
-        if metric is None:
-            metric = "S"  #Default-Metrik: Scheinleistung
+        detected_types.append("SvPowerFlow")  #Default auf Leistung
 
     # ---------------------------------------------------------
     # 1) Equipment-Typ ableiten (Trafo / Verbraucher)
-    #    Falls kein Typ erkannt wurde, lassen wir den Resolver typfrei suchen.
     # ---------------------------------------------------------
     equipment_type = None
     if "PowerTransformer" in detected_types:
@@ -57,11 +54,23 @@ def handle_user_query(user_input, snapshot_cache, network_index):
 
     # ---------------------------------------------------------
     # 2) falls Leistung (SvPowerFlow) in detected types
-    #    -> Metrik wird aus User Input abgeleitet (S/P/Q); default ist S
     # ---------------------------------------------------------
     if "SvPowerFlow" in detected_types:
 
-        metric = (metric or "S").upper()
+        # -----------------------------------------------------
+        # Unterschiedliche Default-Metrik:
+        # Trafo -> S (MVA)
+        # Load  -> P (MW)
+        # -----------------------------------------------------
+        if metric is None:
+            if equipment_type == "PowerTransformer":
+                metric = "S"
+            elif equipment_type == "ConformLoad":
+                metric = "P"
+            else:
+                metric = "S"
+
+        metric = metric.upper()
 
         results = query_equipment_metric_over_time( #Sammelt die Metrik-Werte zu jedem Zeitpunkt
             snapshot_cache=snapshot_cache,

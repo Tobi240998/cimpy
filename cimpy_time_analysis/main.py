@@ -18,7 +18,7 @@ if __name__ == "__main__":
    
 
     # Nutzerfrage -> später Umstellung auf LLM
-    user_input = "Wie verhält sich die Last 27 über den Tag?"
+    user_input = "Wie verhält sich der Trafo 19 - 20 über den Tag?"
     # Orchestrator aufrufen 
     answer = handle_user_query(
         user_input,
