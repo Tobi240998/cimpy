@@ -1,0 +1,25 @@
+# Python
+__pycache__/
+*.py
+*.pyc
+*.pyo
+*.pyd
+
+# Virtual environments
+.venv/
+env/
+
+# IDEs
+.vscode/
+.idea/
+
+# PowerFactory
+*.log
+*.tmp
+*.bak
+*.pfd
+*.pfs
+
+# OS
+.DS_Store
+Thumbs.db
