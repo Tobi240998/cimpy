@@ -1,4 +1,4 @@
-from LLM_routeAgent import LLM_routeAgent
+from cimpy.llm_routing.LLM_routeAgent import LLM_routeAgent
 
 
 class Orchestrator:

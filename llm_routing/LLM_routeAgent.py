@@ -1,6 +1,6 @@
 import json
 from langchain_core.messages import SystemMessage, HumanMessage
-from langchain_llm import get_llm
+from cimpy.llm_routing.langchain_llm import get_llm
 
 
 class LLM_routeAgent:

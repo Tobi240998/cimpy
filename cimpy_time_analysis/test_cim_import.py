@@ -1,6 +1,6 @@
 import cimpy
 import os
-from cim_object_utils import collect_all_cim_objects
+from cimpy.cimpy_time_analysis.cim_object_utils import collect_all_cim_objects
 
 # Pfad zu EINEM konkreten CIM-Snapshot-Ordner
 cim_case_folder = r"C:\Users\STELLER\Documents\Masterarbeit\CIM-Dateien\tobias_CIM_daten\data\extracted\CIM_GridAssist_8"

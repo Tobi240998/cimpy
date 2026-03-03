@@ -1,5 +1,5 @@
 from langchain_core.messages import HumanMessage, SystemMessage
-from langchain_llm import get_llm
+from cimpy.cimpy_time_analysis.langchain_llm import get_llm
 
 
 class LLM_resultAgent:

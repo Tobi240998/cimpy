@@ -1,10 +1,10 @@
 from pathlib import Path
-import cimpy
+from cimpy.cimpy import cim_import
 from datetime import datetime, timezone
 import xml.etree.ElementTree as ET
 
-from cim_object_utils import collect_all_cim_objects
-from asset_resolver import normalize_text
+from cimpy.cimpy_time_analysis.cim_object_utils import collect_all_cim_objects
+from cimpy.cimpy_time_analysis.asset_resolver import normalize_text
 
 
 def _canonical_id(value):
@@ -181,7 +181,7 @@ def load_cim_snapshots(root_folder):
             print(f"Warnung: Mehrere scenarioTime-Werte in {case_dir.name}: {all_scenario_times}")
 
         try:
-            cim_case = cimpy.cim_import(xml_files_str, "cgmes_v2_4_15")
+            cim_case = cim_import(xml_files_str, "cgmes_v2_4_15")
 
             # Default Zeitinfo (für SV-basierte Queries)
             cim_case["scenario_time"] = default_time

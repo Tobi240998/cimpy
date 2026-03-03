@@ -1,4 +1,4 @@
-from cim_object_utils import collect_all_cim_objects
+from cimpy.cimpy_time_analysis.cim_object_utils import collect_all_cim_objects
 
 
 def _canonical_id(value):

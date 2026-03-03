@@ -1,7 +1,7 @@
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.output_parsers import PydanticOutputParser
 from schemas import LoadChangeInstruction
-from langchain_llm import get_llm
+from test_multiagenten.langchain_llm import get_llm
 
 
 class LLM_interpreterAgent: 

@@ -1,12 +1,12 @@
-from llm_object_mapping import interpret_user_query
-from cim_queries import (
+from cimpy.cimpy_time_analysis.llm_object_mapping import interpret_user_query
+from cimpy.cimpy_time_analysis.cim_queries import (
     query_equipment_metric_over_time,
     query_equipment_voltage_over_time,
     summarize_metric,
     summarize_voltage
 )
-from llm_result_agent import LLM_resultAgent
-from asset_resolver import resolve_equipment_from_query
+from cimpy.cimpy_time_analysis.llm_result_agent import LLM_resultAgent
+from cimpy.cimpy_time_analysis.asset_resolver import resolve_equipment_from_query
 
 
 def handle_user_query(user_input, snapshot_cache, network_index):

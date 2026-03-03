@@ -1,7 +1,7 @@
 import logging
 import cimpy
 from pathlib import Path
-from cim_object_utils import collect_all_cim_objects
+from cimpy.cimpy_time_analysis.cim_object_utils import collect_all_cim_objects
 
 logging.basicConfig(filename='importCIGREMV.log', level=logging.INFO, filemode='w')
 

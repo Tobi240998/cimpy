@@ -1,0 +1,1 @@
+CIM_ROOT = r"C:\Users\STELLER\Documents\Masterarbeit\CIM-Dateien\tobias_CIM_daten\data\extracted"

@@ -1,10 +1,5 @@
-from orchestrator import Orchestrator
-
-def historic_executor(user_input: str):
-    return {"note": "CIM Historie (TODO)", "input": user_input}
-
-def pf_executor(user_input: str):
-    return {"note": "PowerFactory (TODO)", "input": user_input}
+from cimpy.llm_routing.orchestrator import Orchestrator
+from cimpy.llm_routing.registry import historic_executor, pf_executor
 
 if __name__ == "__main__":
     orch = Orchestrator(historic_executor=historic_executor, pf_executor=pf_executor)
@@ -14,5 +9,6 @@ if __name__ == "__main__":
         text = input(">>> ")
         if text.strip().lower() in ("exit", "quit"):
             break
-        print(orch.handle(text))
+        out = orch.handle(text)
+        print(out["answer"] if isinstance(out, dict) and "answer" in out else out)
         print()
