@@ -1,25 +1,63 @@
+# =========================
 # Python
+# =========================
 __pycache__/
-*.py
-*.pyc
-*.pyo
-*.pyd
+*.py[cod]
+*$py.class
 
-# Virtual environments
+# C extensions
+*.so
+
+# =========================
+# Virtual Environment
+# =========================
 .venv/
+venv/
 env/
 
-# IDEs
+# =========================
+# Distribution / Packaging
+# =========================
+build/
+dist/
+*.egg-info/
+.eggs/
+
+# =========================
+# Logs
+# =========================
+*.log
+
+# =========================
+# Jupyter
+# =========================
+.ipynb_checkpoints/
+
+# =========================
+# IDE
+# =========================
 .vscode/
 .idea/
+*.swp
 
-# PowerFactory
-*.log
-*.tmp
-*.bak
-*.pfd
-*.pfs
-
+# =========================
 # OS
+# =========================
 .DS_Store
 Thumbs.db
+
+# =========================
+# Temporary / Generated Files
+# =========================
+*.html
+*.csv
+*.tmp
+*.bak
+
+# =========================
+# Secrets (VERY IMPORTANT)
+# =========================
+.env
+.env.*
+*.key
+*.pem
