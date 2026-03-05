@@ -4,7 +4,7 @@ from typing import Any, Dict, List, Literal, Optional, Union
 from pydantic import BaseModel, Field
 
 
-# --- Argument-Schemas (minimal, später ausbaubar) ---
+# Erzeugung von Struktur der Antworten
 
 class HistoricalArgs(BaseModel):
     # Für den Anfang lassen wir user_input als fallback drin.

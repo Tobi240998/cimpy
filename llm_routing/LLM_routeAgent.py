@@ -20,7 +20,7 @@ class LLM_routeAgent:
             '{ "action": "ask_user", "question": "...", "missing_fields": ["..."], "partial": { ... }, "intended_tool": "historical|powerfactory" }\n\n'
             "Routing-Regeln:\n"
             "- Vergangenheit, Verlauf, Durchschnitt, Maximum, Datum, 'war', 'über den Tag' -> historical.\n"
-            "- Änderungen, Schalten, Last ändern, 'rechne Lastfluss', 'setze', 'ändere' -> powerfactory.\n\n"
+            "- Änderungen, Schalten, Last ändern, 'rechne Lastfluss', 'setze', 'ändere', 'erhöhe', 'reduziere', 'senke', 'steigere' -> powerfactory.\n\n"
             "Args-Minimum:\n"
             "- args muss mindestens {\"user_input\": <Nutzertext>} enthalten.\n\n"
             "Wenn für historical der Zeitraum unklar ist (z.B. 'über den Tag' ohne Angabe wie 'heute/gestern/Datum'), "
@@ -38,7 +38,7 @@ class LLM_routeAgent:
 
         messages = [
             SystemMessage(content=self.system_prompt),
-            HumanMessage(content=user_input + context),
+            HumanMessage(content=user_input + context), # optional Berücksichtigung von Context, falls Rückfragen entstehen
         ]
 
         try:

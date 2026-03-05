@@ -1,37 +1,184 @@
-import logging
-import cimpy
-from pathlib import Path
-from cimpy.cimpy_time_analysis.cim_object_utils import collect_all_cim_objects
+import sys
+import traceback
 
-logging.basicConfig(filename='importCIGREMV.log', level=logging.INFO, filemode='w')
-
-sample_folder = Path(r"C:\Users\STELLER\Documents\Masterarbeit\CIM-Dateien\tobias_CIM_daten\data\extracted\CIM_GridAssist_1")
-
-xml_files = [str(file.absolute()) for file in sample_folder.glob('*.xml')]
-import_result = cimpy.cim_import(xml_files, "cgmes_v2_4_15")
-
-topology = import_result["topology"]
-all_objs = collect_all_cim_objects(import_result)
+# === ANPASSEN ===
+PF_PYTHON_PATH = r"C:\Program Files\DIgSILENT\PowerFactory 2024 SP7\Python\3.10"
+PROJECT_NAME = r"Nine-bus System(2)"  # optional: später exakt aus Liste übernehmen
+# =================
 
 
-# Nach dem xml_files Sammeln:
-from datetime import datetime, timezone
-import xml.etree.ElementTree as ET
+def _to_py_list(obj):
+    """
+    Macht aus typischen PowerFactory Rückgaben eine echte Python-Liste.
+    GetContents(...) liefert je nach Version/Objekt u.a.:
+      - list
+      - [list] (wrapped)
+      - DataObject / Collection-ähnlich (kein len)
+    """
+    if obj is None:
+        return []
 
-def extract_scenario_time(xml_files):
-    ns = {"md": "http://iec.ch/TC57/61970-552/ModelDescription/1#"}
-    for f in xml_files:
+    # Fall 1: bereits eine Python-Liste
+    if isinstance(obj, list):
+        # häufig: [ [objs...] ] oder [objs...]
+        if len(obj) == 1 and isinstance(obj[0], list):
+            return obj[0]
+        return obj
+
+    # Fall 2: PF-Collections manchmal iterierbar
+    try:
+        return list(obj)
+    except Exception:
+        pass
+
+    # Fall 3: manche DataObjects haben GetChildren()
+    try:
+        children = obj.GetChildren()
+        if children is None:
+            return []
+        if isinstance(children, list):
+            return children
         try:
-            root = ET.parse(f).getroot()
-            fm = root.find(".//md:FullModel", ns)
-            if fm is None:
-                continue
-            scen = fm.findtext(".//md:Model.scenarioTime", default=None, namespaces=ns)
-            if scen:
-                s = scen.replace("Z", "+00:00")
-                return datetime.fromisoformat(s).astimezone(timezone.utc)
+            return list(children)
         except Exception:
-            pass
-    return None
+            return []
+    except Exception:
+        pass
 
-print("scenarioTime:", extract_scenario_time(xml_files))
+    # Unbekannt -> leere Liste
+    return []
+
+
+def main():
+    print("== PowerFactory Python Selbsttest ==")
+
+    if PF_PYTHON_PATH not in sys.path:
+        sys.path.append(PF_PYTHON_PATH)
+
+    try:
+        import powerfactory as pf  # type: ignore
+    except Exception as e:
+        print("FEHLER: powerfactory Import fehlgeschlagen")
+        print(e)
+        return
+
+    print("OK: powerfactory Modul importiert")
+
+    # App holen
+    app = None
+    try:
+        if hasattr(pf, "GetApplicationExt"):
+            app = pf.GetApplicationExt()
+            print("Info: pf.GetApplicationExt() verwendet")
+        else:
+            app = pf.GetApplication()
+            print("Info: pf.GetApplication() verwendet")
+    except Exception:
+        print("FEHLER: GetApplication/GetApplicationExt Exception")
+        traceback.print_exc()
+        return
+
+    if app is None:
+        print("FEHLER: Keine PowerFactory Application (app is None)")
+        return
+
+    try:
+        app.Show()
+    except Exception:
+        pass
+
+    print("OK: PowerFactory Anwendung verbunden:", app)
+
+    # Current User
+    try:
+        user = app.GetCurrentUser()
+    except Exception:
+        print("FEHLER: GetCurrentUser() Exception")
+        traceback.print_exc()
+        return
+
+    if user is None:
+        print("FEHLER: GetCurrentUser() liefert None (kein User-Kontext)")
+        return
+
+    print("OK: Current User:", getattr(user, "loc_name", str(user)))
+
+    # Projekte auflisten
+    print("\n--- Projekte unter aktuellem User (*.IntPrj) ---")
+    try:
+        raw = user.GetContents("*.IntPrj", 0)
+    except Exception:
+        print("FEHLER: user.GetContents('*.IntPrj', 0) Exception")
+        traceback.print_exc()
+        return
+
+    projects = _to_py_list(raw)
+
+    if not projects:
+        print("Keine Projekte gefunden (oder Zugriff fehlt).")
+        print("Debug: type(raw) =", type(raw))
+        print("Debug: raw =", raw)
+        return
+
+    print(f"{len(projects)} Projekte gefunden:")
+    for p in projects:
+        print(" -", getattr(p, "loc_name", str(p)))
+
+    # Optional: Projekt aktivieren
+    print(f"\n--- Aktivierungstest: '{PROJECT_NAME}' ---")
+    target = None
+    for p in projects:
+        if getattr(p, "loc_name", None) == PROJECT_NAME:
+            target = p
+            break
+
+    if target is None:
+        print("Hinweis: PROJECT_NAME nicht exakt gefunden.")
+        print("Tipp: Kopiere den Namen 1:1 aus der Liste oben in PROJECT_NAME.")
+        print("Aktives Projekt wird daher NICHT verändert.")
+        return
+
+    try:
+        target.Activate()
+        print("OK: target.Activate() ausgeführt")
+    except Exception:
+        print("FEHLER: target.Activate() Exception")
+        traceback.print_exc()
+        return
+
+    # Prüfen: aktives Projekt
+    try:
+        active_project = app.GetActiveProject()
+    except Exception:
+        print("FEHLER: GetActiveProject() Exception")
+        traceback.print_exc()
+        return
+
+    if active_project is None:
+        print("FEHLER: Nach Activate() ist GetActiveProject() weiterhin None")
+        print("Mögliche Ursachen: Lizenz/Workspace/User-Kontext passt nicht.")
+        return
+
+    print("OK: Aktives Projekt:", getattr(active_project, "loc_name", active_project))
+
+    # Ab hier sollten Projektfolder funktionieren
+    print("\n--- Projektordner-Test (study) ---")
+    try:
+        study_folder = app.GetProjectFolder("study")
+        print("study folder:", study_folder)
+    except Exception:
+        print("Warnung: GetProjectFolder('study') hat eine Exception geworfen")
+        traceback.print_exc()
+
+    # Aktiver Study Case
+    try:
+        sc = app.GetActiveStudyCase()
+    except Exception:
+        sc = None
+    print("Active Study Case:", getattr(sc, "loc_name", sc) if sc else None)
+
+    print("\nSelbsttest abgeschlossen.")
+
+
+if __name__ == "__main__":
+    main()

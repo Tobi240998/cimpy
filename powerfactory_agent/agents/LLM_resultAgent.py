@@ -1,5 +1,5 @@
 from langchain_core.messages import HumanMessage, SystemMessage
-from test_multiagenten.langchain_llm import get_llm
+from cimpy.powerfactory_agent.langchain_llm import get_llm
 
 
 class LLM_resultAgent:
