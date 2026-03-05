@@ -10,13 +10,29 @@ from cimpy.cimpy_time_analysis.asset_resolver import resolve_equipment_from_quer
 
 
 def handle_user_query(user_input, snapshot_cache, network_index):
-    parsed = interpret_user_query(user_input)
+    parsed = interpret_user_query(user_input, network_index=network_index)
 
-    equipment_detected = parsed.get("equipment_types", [])
-    state_detected = parsed.get("state_types", [])
+    equipment_detected = parsed.get("equipment_detected", [])
+    state_detected = parsed.get("state_detected", [])
     metric = parsed.get("metric", None)
+    equipment_obj = parsed.get("equipment_obj", [])
 
     agent = LLM_resultAgent()
+
+    # Jetzt hast du Equipment+State getrennt UND die konkrete Auswahl inkl. ID:
+    # equipment_obj = [{"equipment_type","equipment_key","equipment_name","equipment_id"}, ...]
+
+    # ... ab hier ganz normal weiterverarbeiten, kein early return nötig ...
+    # z.B.:
+    # for sel in equipment_obj:
+    #     equipment_obj = network_index["equipment_name_index"][sel["equipment_type"]][sel["equipment_key"]]
+    #     ...
+
+    # Debug:
+    print("equipment_detected:", equipment_detected)
+    print("state_detected:", state_detected)
+    print("metric:", metric)
+    print("equipment_obj:", equipment_obj)
 
   
 
@@ -29,13 +45,7 @@ def handle_user_query(user_input, snapshot_cache, network_index):
     elif "ConformLoad" in equipment_detected:
         equipment_type = "ConformLoad"
 
-    #Sucht das richtige Equipment (Trafo oder Verbraucher)
-    equipment_obj, debug = resolve_equipment_from_query(
-        user_input=user_input,
-        equipment_type=equipment_type,
-        network_index=network_index
-    )
-
+   
     if not equipment_obj:
         return (
             "Ich konnte das gewünschte Equipment nicht eindeutig zuordnen. "
