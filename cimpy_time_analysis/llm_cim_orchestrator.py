@@ -11,28 +11,22 @@ from cimpy.cimpy_time_analysis.asset_resolver import resolve_equipment_from_quer
 
 def handle_user_query(user_input, snapshot_cache, network_index):
     parsed = interpret_user_query(user_input)
-    detected_types = parsed.get("detected_types", [])
+
+    equipment_detected = parsed.get("equipment_types", [])
+    state_detected = parsed.get("state_types", [])
     metric = parsed.get("metric", None)
 
     agent = LLM_resultAgent()
 
-    # ---------------------------------------------------------
-    # 0) Default: wenn ein Equipment erkannt wurde, aber keine StateVariable
-    #    -> wir gehen von Leistungsabfrage (SvPowerFlow) aus (z. B.: Wie verhält sich die Last xy über den Tag?)
-    # ---------------------------------------------------------
-    equipment_detected = any(t in detected_types for t in ["PowerTransformer", "ConformLoad"])
-    state_detected = any(t in detected_types for t in ["SvPowerFlow", "SvVoltage"])
-
-    if equipment_detected and not state_detected:
-        detected_types.append("SvPowerFlow")  #Default auf Leistung
+  
 
     # ---------------------------------------------------------
     # 1) Equipment-Typ ableiten (Trafo / Verbraucher)
     # ---------------------------------------------------------
     equipment_type = None
-    if "PowerTransformer" in detected_types:
+    if "PowerTransformer" in equipment_detected:
         equipment_type = "PowerTransformer"
-    elif "ConformLoad" in detected_types:
+    elif "ConformLoad" in equipment_detected:
         equipment_type = "ConformLoad"
 
     #Sucht das richtige Equipment (Trafo oder Verbraucher)
@@ -52,7 +46,7 @@ def handle_user_query(user_input, snapshot_cache, network_index):
     # ---------------------------------------------------------
     # 2) falls Leistung (SvPowerFlow) in detected types
     # ---------------------------------------------------------
-    if "SvPowerFlow" in detected_types:
+    if "SvPowerFlow" in state_detected:
 
         # -----------------------------------------------------
         # Unterschiedliche Default-Metrik:
@@ -85,7 +79,7 @@ def handle_user_query(user_input, snapshot_cache, network_index):
     # ---------------------------------------------------------
     # 3) falls Spannung (SvVoltage) in detected types
     # ---------------------------------------------------------
-    if "SvVoltage" in detected_types:
+    if "SvVoltage" in state_detected:
 
         results = query_equipment_voltage_over_time(
             snapshot_cache=snapshot_cache,
@@ -106,4 +100,4 @@ def handle_user_query(user_input, snapshot_cache, network_index):
     # ---------------------------------------------------------
     # Default / nicht unterstützt
     # ---------------------------------------------------------
-    return f"Die erkannten Objekttypen {detected_types} werden aktuell noch nicht unterstützt."
+    return f"Die erkannten Objekttypen {equipment_detected} werden aktuell noch nicht unterstützt."
