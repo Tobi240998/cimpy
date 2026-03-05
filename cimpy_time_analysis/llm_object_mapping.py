@@ -8,6 +8,8 @@ from typing import List, Optional, Literal, Set, Dict, Any, Callable, Tuple
 from pydantic import BaseModel, Field, ValidationError
 from langchain_ollama import ChatOllama
 
+from datetime import datetime, timedelta, timezone
+
 
 # =============================================================================
 # 1) LLM
@@ -122,6 +124,11 @@ class QueryParse(BaseModel):
 
     # Neu: konkrete Selektion(en)
     equipment_selection: List[EquipmentSelection] = Field(default_factory=list)
+    
+    # Zeitfenster (ISO-Strings in UTC), optional
+    time_start: Optional[str] = None
+    time_end: Optional[str] = None
+    time_label: Optional[str] = None
 
 
 def _dedup_keep_order(items: List[str]) -> List[str]:
@@ -142,6 +149,9 @@ def normalize_query(parsed: QueryParse) -> QueryParse:
         state_detected=_dedup_keep_order(st),
         metric=parsed.metric,
         equipment_selection=parsed.equipment_selection or [],
+        time_start=parsed.time_start,
+        time_end=parsed.time_end,
+        time_label=parsed.time_label,
     )
 
 
@@ -384,6 +394,7 @@ def interpret_user_query(
     ask_user: Optional[Callable[[str], str]] = None,
     max_rounds: int = 8,
     default_state_if_equipment_only: str = "SvPowerFlow",
+    require_time_window: bool = True,   # NEU
 ) -> Dict[str, Any]:
     """
     Liefert IMMER:
@@ -513,6 +524,16 @@ def interpret_user_query(
             context_lines += [f"Assistant: {q}", f"User: {a}"]
             continue
 
+        # 4b) Zeitraum bestimmen (optional, aber standardmäßig required)
+        if require_time_window:
+            start_dt, end_dt, label, context2 = _ensure_time_window(context, ask_user)
+            # context2 enthält ggf. die Rückfrage+Antwort, optional fürs Debug/LLM nicht weiter nötig
+            if start_dt and end_dt:
+                parsed.time_start = start_dt.isoformat()
+                parsed.time_end = end_dt.isoformat()
+                parsed.time_label = label
+
+
         # 5) Erfolg: garantierter Output
         parsed.equipment_selection = selections
         parsed = normalize_query(parsed)
@@ -521,11 +542,14 @@ def interpret_user_query(
 
     # Letztes Mittel: gültiges Format
     return {
-        "equipment_detected": [],
-        "state_detected": [],
-        "metric": None,
-        "equipment_selection": [],
-    }
+    "equipment_detected": [],
+    "state_detected": [],
+    "metric": None,
+    "equipment_selection": [],
+    "time_start": None,
+    "time_end": None,
+    "time_label": None,
+}
 
 
 # =============================================================================
@@ -535,6 +559,85 @@ def interpret_user_query(
 # Placeholder, damit das Skript standalone läuft
 class LLM_resultAgent:
     pass
+
+def _parse_yyyy_mm_dd(s: str) -> Optional[datetime]:
+    s = (s or "").strip()
+    m = re.search(r"\b(\d{4})-(\d{2})-(\d{2})\b", s)
+    if not m:
+        return None
+    try:
+        return datetime(int(m.group(1)), int(m.group(2)), int(m.group(3)), tzinfo=timezone.utc)
+    except ValueError:
+        return None
+
+
+def _time_window_from_text(text: str) -> tuple[Optional[datetime], Optional[datetime], Optional[str]]:
+    """
+    Minimal robust:
+    - "heute" / "gestern" / "vorgestern"
+    - explizites Datum YYYY-MM-DD
+    - Wenn nur "über den Tag" ohne Datum -> None (dann fragen wir nach)
+    Zeitfenster ist [start, end) in UTC.
+    """
+    t = (text or "").lower()
+
+    # explizites Datum
+    d = _parse_yyyy_mm_dd(t)
+    if d:
+        start = d.replace(hour=0, minute=0, second=0, microsecond=0)
+        end = start + timedelta(days=1)
+        return start, end, f"am {start.date().isoformat()}"
+
+    # relative Tage (UTC-basierend; gut genug für Snapshots, da scenario_time meist UTC ist)
+    now = datetime.now(timezone.utc)
+    today = now.replace(hour=0, minute=0, second=0, microsecond=0)
+
+    if "vorgestern" in t:
+        start = today - timedelta(days=2)
+        end = today - timedelta(days=1)
+        return start, end, "vorgestern"
+
+    if "gestern" in t:
+        start = today - timedelta(days=1)
+        end = today
+        return start, end, "gestern"
+
+    if "heute" in t:
+        start = today
+        end = today + timedelta(days=1)
+        return start, end, "heute"
+
+    # "über den tag" ist nur ein Hinweis auf "ganzer Tag", aber ohne Datum nicht eindeutig
+    if "über den tag" in t or "ueber den tag" in t or "ganzen tag" in t:
+        return None, None, "ganzer_tag"
+
+    return None, None, None
+
+
+def _ensure_time_window(
+    context: str,
+    ask_user: Callable[[str], str],
+) -> tuple[Optional[datetime], Optional[datetime], Optional[str], str]:
+    """
+    Gibt (start_dt, end_dt, label, final_context) zurück.
+    Wenn nicht extrahierbar, fragt nach (einmal) und hängt die Antwort an den Kontext an.
+    """
+    start, end, label = _time_window_from_text(context)
+    final_context = context
+
+    if start and end:
+        return start, end, label, final_context
+
+    # Wenn kein Datum erkannt wurde: einmal nachfragen
+    q = "Bitte gib den genauen Zeitraum an (z.B. 'heute', 'gestern' oder ein Datum wie '2026-03-02')."
+    a = (ask_user(q) or "").strip()
+    if a:
+        final_context = final_context + f"\nAssistant: {q}\nUser: {a}"
+        start2, end2, label2 = _time_window_from_text(a)
+        return start2, end2, (label2 or label), final_context
+
+    return None, None, label, final_context
+
 
 
 def handle_user_query(user_input, snapshot_cache, network_index):

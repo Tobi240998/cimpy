@@ -7,6 +7,39 @@ from cimpy.cimpy_time_analysis.cim_queries import (
 )
 from cimpy.cimpy_time_analysis.llm_result_agent import LLM_resultAgent
 from cimpy.cimpy_time_analysis.asset_resolver import resolve_equipment_from_query
+from datetime import datetime
+
+def _parse_dt_iso(s: str):
+    if not s:
+        return None
+    try:
+        return datetime.fromisoformat(s)
+    except Exception:
+        return None
+
+
+def _filter_snapshot_cache_by_time(snapshot_cache: dict, start_iso: str | None, end_iso: str | None) -> dict:
+    """
+    Filtert snapshot_cache nach data["timestamp"] oder data["scenario_time"] (falls timestamp fehlt).
+    Erwartet timezone-aware datetimes (ISO).
+    """
+    start_dt = _parse_dt_iso(start_iso) if start_iso else None
+    end_dt = _parse_dt_iso(end_iso) if end_iso else None
+    if not start_dt or not end_dt:
+        return snapshot_cache
+
+    out = {}
+    for snap, data in snapshot_cache.items():
+        ts = data.get("timestamp", None) or data.get("scenario_time", None)
+        # ts kann datetime oder string sein
+        if isinstance(ts, str):
+            ts = _parse_dt_iso(ts)
+        if ts is None:
+            continue
+        if start_dt <= ts < end_dt:
+            out[snap] = data
+    return out
+
 
 
 def handle_user_query(user_input, snapshot_cache, network_index):
@@ -16,6 +49,13 @@ def handle_user_query(user_input, snapshot_cache, network_index):
     state_detected = parsed.get("state_detected", [])
     metric = parsed.get("metric", None)
     equipment_selection = parsed.get("equipment_selection", [])
+    time_start = parsed.get("time_start", None)
+    time_end = parsed.get("time_end", None)
+    time_label = parsed.get("time_label", None)
+
+    # Snapshot-Cache auf Zeitraum reduzieren
+    snapshot_cache = _filter_snapshot_cache_by_time(snapshot_cache, time_start, time_end)
+
 
         # 1) Eine Selection erwarten (aktuell wählst du genau eins)
     if not equipment_selection:
