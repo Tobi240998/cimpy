@@ -10,12 +10,9 @@ from cimpy.cimpy_time_analysis.asset_resolver import resolve_equipment_from_quer
 
 
 def handle_user_query(user_input, snapshot_cache, network_index):
-    parsed = interpret_user_query(user_input) #Liste der Objekte / Berechnungen, die aus dem User Input abgeleitet werden
+    parsed = interpret_user_query(user_input)
     detected_types = parsed.get("detected_types", [])
     metric = parsed.get("metric", None)
-
-    if not detected_types:
-        return "Ich konnte keinen Bezug zu Netzobjekten erkennen."
 
     agent = LLM_resultAgent()
 
