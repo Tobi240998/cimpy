@@ -56,7 +56,7 @@ def query_equipment_metric_over_time(
     network_index,
     equipment_obj,
     metric: str = "S"
-):
+    ):
    
     if equipment_obj is None:
         return []

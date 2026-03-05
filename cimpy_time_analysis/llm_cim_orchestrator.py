@@ -15,7 +15,21 @@ def handle_user_query(user_input, snapshot_cache, network_index):
     equipment_detected = parsed.get("equipment_detected", [])
     state_detected = parsed.get("state_detected", [])
     metric = parsed.get("metric", None)
-    equipment_obj = parsed.get("equipment_obj", [])
+    equipment_selection = parsed.get("equipment_selection", [])
+
+        # 1) Eine Selection erwarten (aktuell wählst du genau eins)
+    if not equipment_selection:
+        return (
+                "Ich konnte das gewünschte Equipment nicht eindeutig zuordnen. "
+                "Bitte prüfe die Schreibweise (z.B. 'Trafo 19 - 20' oder 'Load 27')."
+        )
+
+    sel = equipment_selection[0]
+    equipment_type = sel["equipment_type"]
+    equipment_key = sel["equipment_key"]
+
+    # 2) Hier der wichtige Fix: echtes Objekt aus dem Index holen
+    equipment_obj = network_index["equipment_name_index"][equipment_type][equipment_key]
 
     agent = LLM_resultAgent()
 
@@ -50,7 +64,6 @@ def handle_user_query(user_input, snapshot_cache, network_index):
         return (
             "Ich konnte das gewünschte Equipment nicht eindeutig zuordnen. "
             "Bitte prüfe die Schreibweise (z.B. 'Trafo 19 - 20' oder 'Load 27'). "
-            f"(Matching-Methode: {debug.get('method')})"
         )
 
     # ---------------------------------------------------------
@@ -72,6 +85,13 @@ def handle_user_query(user_input, snapshot_cache, network_index):
                 metric = "S"
 
         metric = metric.upper()
+
+        print("equipment_obj type:", type(equipment_obj))
+        print("equipment_obj name:", getattr(equipment_obj, "name", None))
+        print("equipment_obj id:", getattr(equipment_obj, "mRID", None), getattr(equipment_obj, "rdfId", None))
+
+
+
 
         results = query_equipment_metric_over_time( #Sammelt die Metrik-Werte zu jedem Zeitpunkt
             snapshot_cache=snapshot_cache,

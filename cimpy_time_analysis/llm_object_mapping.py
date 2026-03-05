@@ -121,7 +121,7 @@ class QueryParse(BaseModel):
     metric: Metric = None
 
     # Neu: konkrete Selektion(en)
-    equipment_obj: List[EquipmentSelection] = Field(default_factory=list)
+    equipment_selection: List[EquipmentSelection] = Field(default_factory=list)
 
 
 def _dedup_keep_order(items: List[str]) -> List[str]:
@@ -141,7 +141,7 @@ def normalize_query(parsed: QueryParse) -> QueryParse:
         equipment_detected=_dedup_keep_order(eq),
         state_detected=_dedup_keep_order(st),
         metric=parsed.metric,
-        equipment_obj=parsed.equipment_obj or [],
+        equipment_selection=parsed.equipment_selection or [],
     )
 
 
@@ -439,6 +439,14 @@ def interpret_user_query(
         if parsed.equipment_detected and not parsed.state_detected:
             parsed.state_detected = [default_state_if_equipment_only]
             parsed = normalize_query(parsed)
+        # 2b) Heuristik: "Auslastung" eines Trafos => standardmäßig S (MVA),
+        # außer der User nennt explizit Wirkleistung/Blindleistung/Scheinleistung
+        context_l = context.lower()
+        explicit_metric = any(w in context_l for w in ["wirkleistung", "blindleistung", "scheinleistung", " p ", " q ", " s "])
+
+        if ("PowerTransformer" in parsed.equipment_detected) and ("auslastung" in context_l or "utilization" in context_l or "loading" in context_l):
+            if not explicit_metric:
+                parsed.metric = "S"
 
         # 3) Falls Equipment oder State noch fehlt: Rückfragen
         if not parsed.equipment_detected:
@@ -506,7 +514,7 @@ def interpret_user_query(
             continue
 
         # 5) Erfolg: garantierter Output
-        parsed.equipment_obj = selections
+        parsed.equipment_selection = selections
         parsed = normalize_query(parsed)
 
         return parsed.model_dump()
@@ -516,7 +524,7 @@ def interpret_user_query(
         "equipment_detected": [],
         "state_detected": [],
         "metric": None,
-        "equipment_obj": [],
+        "equipment_selection": [],
     }
 
 
