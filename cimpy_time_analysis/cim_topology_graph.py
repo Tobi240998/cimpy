@@ -488,7 +488,7 @@ def get_connected_component_for_equipment(G, equipment_obj_or_id):
 def find_shortest_path_between_equipments(G, source_equipment_obj_or_id, target_equipment_obj_or_id):
     """
     Kürzester Pfad zwischen zwei Equipments.
-    Funktion ist schon vorbereitet, auch wenn du sie erst später nutzt.
+    .
     """
     source_id = _canonical_id(source_equipment_obj_or_id)
     target_id = _canonical_id(target_equipment_obj_or_id)

@@ -10,7 +10,6 @@ from cimpy.cimpy_time_analysis.cim_queries import (
     summarize_topology_component,
 )
 from cimpy.cimpy_time_analysis.llm_result_agent import LLM_resultAgent
-from cimpy.cimpy_time_analysis.asset_resolver import resolve_equipment_from_query
 from datetime import datetime
 
 
@@ -36,7 +35,6 @@ def _filter_snapshot_cache_by_time(snapshot_cache: dict, start_iso: str | None, 
     out = {}
     for snap, data in snapshot_cache.items():
         ts = data.get("timestamp", None) or data.get("scenario_time", None)
-        # ts kann datetime oder string sein
         if isinstance(ts, str):
             ts = _parse_dt_iso(ts)
         if ts is None:
@@ -46,11 +44,13 @@ def _filter_snapshot_cache_by_time(snapshot_cache: dict, start_iso: str | None, 
     return out
 
 
-def _detect_topology_intent(user_input: str) -> dict:
+def _detect_topology_intent(user_input: str, analysis_plan: dict | None = None) -> dict:
     """
-    Sehr einfache, rein additive Heuristik für Topologiefragen.
-    Verändert die bestehende LLM-Logik nicht, sondern ergänzt nur
-    einen zusätzlichen Pfad für klar topologische Fragen.
+    Einfache Topologie-Erkennung.
+
+    Priorität:
+    1) analysis_plan, falls vorhanden
+    2) Keyword-Heuristik
 
     Returns
     -------
@@ -61,6 +61,18 @@ def _detect_topology_intent(user_input: str) -> dict:
             "graph_level": "connectivity" | "topological",
         }
     """
+    if analysis_plan:
+        topology_scope = analysis_plan.get("topology_scope", "none")
+        needs_topology_graph = bool(analysis_plan.get("needs_topology_graph", False))
+        graph_level = analysis_plan.get("graph_level", "connectivity") or "connectivity"
+
+        if needs_topology_graph and topology_scope in {"neighbors", "component"}:
+            return {
+                "is_topology": True,
+                "intent": topology_scope,
+                "graph_level": graph_level,
+            }
+
     text = (user_input or "").lower()
 
     graph_level = "connectivity"
@@ -116,8 +128,65 @@ def _detect_topology_intent(user_input: str) -> dict:
     }
 
 
-def handle_user_query(user_input, snapshot_cache, network_index):
-    parsed = interpret_user_query(user_input, network_index=network_index)
+def _resolve_equipment_from_selection(parsed: dict, network_index: dict):
+    """
+    Holt das echte CIM-Objekt aus parsed["equipment_selection"][0].
+    """
+    equipment_selection = parsed.get("equipment_selection", []) or []
+    if not equipment_selection:
+        return None, None, None
+
+    sel = equipment_selection[0]
+    equipment_type = sel["equipment_type"]
+    equipment_key = sel["equipment_key"]
+
+    equipment_obj = network_index["equipment_name_index"][equipment_type][equipment_key]
+    return equipment_obj, equipment_type, equipment_key
+
+
+def _default_metric_for_equipment_type(equipment_type: str | None):
+    if equipment_type == "PowerTransformer":
+        return "S"
+    if equipment_type == "ConformLoad":
+        return "P"
+    return "S"
+
+
+def _ensure_parsed_query(
+    user_input: str,
+    network_index: dict,
+    parsed_query: dict | None = None,
+):
+    """
+    Nutzt vorhandenes parsed_query oder führt interpret_user_query(...) aus.
+    """
+    if parsed_query is not None:
+        return parsed_query
+
+    return interpret_user_query(user_input, network_index=network_index)
+
+
+def handle_user_query(
+    user_input,
+    snapshot_cache,
+    network_index,
+    parsed_query=None,
+    analysis_plan=None,
+):
+    """
+    Führt die eigentliche Analyseauswahl und Query-Ausführung aus.
+
+    Neu:
+    - parsed_query optional von außen übergebbar
+    - analysis_plan optional von außen übergebbar
+
+    Dadurch wird der Orchestrator ausführender und weniger planend.
+    """
+    parsed = _ensure_parsed_query(
+        user_input=user_input,
+        network_index=network_index,
+        parsed_query=parsed_query,
+    )
 
     equipment_detected = parsed.get("equipment_detected", [])
     state_detected = parsed.get("state_detected", [])
@@ -130,38 +199,40 @@ def handle_user_query(user_input, snapshot_cache, network_index):
     # Snapshot-Cache auf Zeitraum reduzieren
     snapshot_cache = _filter_snapshot_cache_by_time(snapshot_cache, time_start, time_end)
 
-    # 1) Eine Selection erwarten (aktuell wählst du genau eins)
     if not equipment_selection:
         return (
             "Ich konnte das gewünschte Equipment nicht eindeutig zuordnen. "
             "Bitte prüfe die Schreibweise (z.B. 'Trafo 19 - 20' oder 'Load 27')."
         )
 
-    sel = equipment_selection[0]
-    equipment_type = sel["equipment_type"]
-    equipment_key = sel["equipment_key"]
-
-    # 2) Hier der wichtige Fix: echtes Objekt aus dem Index holen
-    equipment_obj = network_index["equipment_name_index"][equipment_type][equipment_key]
+    equipment_obj, equipment_type, equipment_key = _resolve_equipment_from_selection(
+        parsed=parsed,
+        network_index=network_index,
+    )
 
     agent = LLM_resultAgent()
 
-    # Debug:
+    # Debug
+    print("analysis_plan:", analysis_plan)
     print("equipment_detected:", equipment_detected)
     print("state_detected:", state_detected)
     print("metric:", metric)
     print("equipment_obj:", equipment_obj)
+    print("time_label:", time_label)
 
     if not equipment_obj:
         return (
             "Ich konnte das gewünschte Equipment nicht eindeutig zuordnen. "
-            "Bitte prüfe die Schreibweise (z.B. 'Trafo 19 - 20' oder 'Load 27'). "
+            "Bitte prüfe die Schreibweise (z.B. 'Trafo 19 - 20' oder 'Load 27')."
         )
 
     # ---------------------------------------------------------
-    # Topologie-Intent (neu, additive Ergänzung)
+    # Topologie-Intent
     # ---------------------------------------------------------
-    topology_intent = _detect_topology_intent(user_input)
+    topology_intent = _detect_topology_intent(
+        user_input=user_input,
+        analysis_plan=analysis_plan,
+    )
     print("topology_intent:", topology_intent)
 
     if topology_intent.get("is_topology"):
@@ -202,22 +273,11 @@ def handle_user_query(user_input, snapshot_cache, network_index):
             return agent.summarize(summary, user_input)
 
     # ---------------------------------------------------------
-    # falls Leistung (SvPowerFlow) in detected types
+    # Leistung / Auslastung (SvPowerFlow)
     # ---------------------------------------------------------
     if "SvPowerFlow" in state_detected:
-
-        # -----------------------------------------------------
-        # Unterschiedliche Default-Metrik:
-        # Trafo -> S (MVA)
-        # Load  -> P (MW)
-        # -----------------------------------------------------
         if metric is None:
-            if equipment_type == "PowerTransformer":
-                metric = "S"
-            elif equipment_type == "ConformLoad":
-                metric = "P"
-            else:
-                metric = "S"
+            metric = _default_metric_for_equipment_type(equipment_type)
 
         metric = metric.upper()
 
@@ -225,28 +285,27 @@ def handle_user_query(user_input, snapshot_cache, network_index):
         print("equipment_obj name:", getattr(equipment_obj, "name", None))
         print("equipment_obj id:", getattr(equipment_obj, "mRID", None), getattr(equipment_obj, "rdfId", None))
 
-        results = query_equipment_metric_over_time(  # Sammelt die Metrik-Werte zu jedem Zeitpunkt
+        results = query_equipment_metric_over_time(
             snapshot_cache=snapshot_cache,
             network_index=network_index,
             equipment_obj=equipment_obj,
-            metric=metric
+            metric=metric,
         )
 
         if not results:
             return "Keine SV-Leistungswerte für dieses Equipment in den Snapshots gefunden."
 
-        summary = summarize_metric(results)  # bereitet die Ergebnisse auf und gibt Minimum- / Maximumwerte und Durschnitt an
-        return agent.summarize(summary, user_input)  # Zusammenfassung durch LLM-Agenten
+        summary = summarize_metric(results)
+        return agent.summarize(summary, user_input)
 
     # ---------------------------------------------------------
-    # falls Spannung (SvVoltage) in detected types
+    # Spannung (SvVoltage)
     # ---------------------------------------------------------
     if "SvVoltage" in state_detected:
-
         results = query_equipment_voltage_over_time(
             snapshot_cache=snapshot_cache,
             network_index=network_index,
-            equipment_obj=equipment_obj
+            equipment_obj=equipment_obj,
         )
 
         if not results:
