@@ -168,7 +168,10 @@ Schema:
 {{
   "equipment_detected": ["PowerTransformer" | "ConformLoad", ...],
   "state_detected": ["SvVoltage" | "SvPowerFlow", ...],
-  "metric": "P" | "Q" | "S" | null
+  "metric": "P" | "Q" | "S" | null,
+  "time_start": "ISO-8601 datetime in UTC" | null,
+  "time_end": "ISO-8601 datetime in UTC" | null,
+  "time_label": "kurze Beschreibung des Zeitraums" | null
 }}
 
 Regeln:
@@ -178,7 +181,21 @@ Regeln:
   - P = Wirkleistung
   - Q = Blindleistung
   - S = Scheinleistung
-- Wenn etwas unklar ist: entsprechende Liste leer lassen bzw. metric null.
+- Wenn etwas unklar ist: entsprechende Liste leer lassen bzw. Feld auf null setzen.
+- time_start und time_end müssen, wenn möglich, als UTC-ISO-Strings ausgegeben werden.
+- Für "am 2026-01-09" gilt:
+  - time_start = "2026-01-09T00:00:00+00:00"
+  - time_end   = "2026-01-10T00:00:00+00:00"
+- Für "09.01.2026" gilt dasselbe Datum wie für "2026-01-09".
+- Für "zwischen 09.01.2026 und 11.01.2026" gilt:
+  - start = Beginn des ersten Tages
+  - end   = Beginn des Tages NACH dem letzten Datum
+- Für "vom 09.01.2026 bis 11.01.2026" gilt dasselbe.
+- Für "gestern" / "heute" darfst du relative Zeiträume interpretieren.
+- time_label soll z.B. sein:
+  - "am 2026-01-09"
+  - "zwischen 2026-01-09 und 2026-01-11"
+  - "gestern"
 
 Synonyme:
 - Trafo/Transformator/Transformer => PowerTransformer
@@ -188,6 +205,7 @@ Synonyme:
 - Wirkleistung/P => metric "P"
 - Blindleistung/Q => metric "Q"
 - Scheinleistung/S => metric "S"
+- Auslastung eines Trafos => meist metric "S"
 """.strip()
 
 
@@ -402,7 +420,7 @@ def interpret_user_query(
       "equipment_detected": [...],
       "state_detected": [...],
       "metric": "P|Q|S"|None,
-      "equipment_obj": [
+      "equipment_selection": [
          {"equipment_type": "...", "equipment_key": "...", "equipment_name": "...", "equipment_id": "..."},
          ...
       ]
@@ -421,10 +439,12 @@ def interpret_user_query(
 
     equipment_name_index = (network_index or {}).get("equipment_name_index", {}) or {}
 
+    #Gesprächsverlauf wird gespeichert und als Kontext übergeben
     context_lines: List[str] = [f"User: {user_input}"]
 
     def parse_types_with_llm(context: str) -> Optional[QueryParse]:
-        resp = llm.invoke([("system", SYSTEM_PROMPT_PARSE), ("user", context)])
+        resp = llm.invoke([("system", SYSTEM_PROMPT_PARSE), ("user", context)]) #LLM-Aufruf mit System Prompt und Kontext
+        #TExt wird extrahiert und in richtiger Form übergeben (JSON), anschließend normalisiert übergeben
         text = getattr(resp, "content", str(resp))
         data = extract_json(text)
         parsed = QueryParse(**data)
@@ -436,17 +456,18 @@ def interpret_user_query(
         # 1) Parse equipment/state/metric
         parsed: Optional[QueryParse] = None
         try:
-            parsed = parse_types_with_llm(context)
+            parsed = parse_types_with_llm(context) #Versuch zu parsen gemäß Funktion oben 
         except (ValidationError, ValueError, json.JSONDecodeError):
             parsed = None
 
+        #Falls Parsing fehlschlägt -> Rückfrage
         if parsed is None:
             q = llm.invoke(make_clarify_prompt(context, "general")).content.strip()
             a = (ask_user(q) or "").strip() or "Ich bin mir nicht sicher."
             context_lines += [f"Assistant: {q}", f"User: {a}"]
             continue
 
-        # 2) Default State, wenn Equipment vorhanden aber State fehlt
+        # 2) Default State, wenn Equipment vorhanden aber State fehlt -> wird automatisch auf SvPowerFlow gesetzt
         if parsed.equipment_detected and not parsed.state_detected:
             parsed.state_detected = [default_state_if_equipment_only]
             parsed = normalize_query(parsed)
@@ -481,7 +502,7 @@ def interpret_user_query(
             if eq_type not in equipment_detected_ALLOWED:
                 continue
 
-            # Kandidatenliste aus Index
+            # Kandidatenliste aus Index, deterministisch
             candidates = shortlist_candidates(
                 user_input=context,  # wir nutzen den gesamten Kontext, nicht nur initiale Query
                 network_index=network_index,

@@ -34,16 +34,18 @@ class LLM_interpreterAgent:
         ])
 
     def interpret(self, user_input: str) -> dict:
-        chain = self.prompt | self.llm | self.parser
+        chain = self.prompt | self.llm | self.parser #self.prompt: Prompt, siehe oben; self.llm: LLM, self.parser: geforderter Output 
 
         try:
+            #Übergabe von Informationen
             instruction = chain.invoke({
-            "user_input": user_input,
-            "load_context": self.load_context,
-            "format_instructions": self.parser.get_format_instructions()
+            "user_input": user_input, #User-Input selbst
+            "load_context": self.load_context, #Hilfskatalog (Lasten mit Token)
+            "format_instructions": self.parser.get_format_instructions() #Vorgabe der erforderlichen Struktur der Antwort
         })
             return instruction.dict()
 
+        #Fehler wird angezeigt, falls es fehlschlägt
         except Exception as e:
             return {"error": "cannot_parse", "details": str(e)}
 

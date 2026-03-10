@@ -5,6 +5,7 @@ import xml.etree.ElementTree as ET
 
 from cimpy.cimpy_time_analysis.cim_object_utils import collect_all_cim_objects
 from cimpy.cimpy_time_analysis.asset_resolver import normalize_text
+from cimpy.cimpy_time_analysis.cim_topology_graph import build_cim_topology_graph, summarize_graph_basic
 
 
 def _canonical_id(value):
@@ -278,5 +279,29 @@ def build_network_index(cim_snapshots):
                     cn_id = _canonical_id(cn)
                     if cn_id:
                         network_index["connectivitynode_to_topologicalnode"][cn_id] = tn_id #Zuordnung Connectivity Node und Topological Node
+
+    # 4) Topologie-Graphen ergänzen
+    connectivity_graph = build_cim_topology_graph(
+        first_snapshot=first_snapshot,
+        network_index=network_index,
+        level="connectivity",
+        include_topology_nodes=False,
+    )
+
+    topological_graph = build_cim_topology_graph(
+        first_snapshot=first_snapshot,
+        network_index=network_index,
+        level="topological",
+        include_topology_nodes=False,
+    )
+
+    network_index["topology_graph"] = connectivity_graph
+    network_index["topology_graph_summary"] = summarize_graph_basic(connectivity_graph)
+
+    network_index["topology_graph_connectivity"] = connectivity_graph
+    network_index["topology_graph_connectivity_summary"] = summarize_graph_basic(connectivity_graph)
+
+    network_index["topology_graph_topological"] = topological_graph
+    network_index["topology_graph_topological_summary"] = summarize_graph_basic(topological_graph)
 
     return network_index
