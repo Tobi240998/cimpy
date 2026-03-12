@@ -33,35 +33,103 @@ class LLM_interpreterAgent:
             ("user", "{user_input}")
         ])
 
-    def interpret(self, user_input: str) -> dict:
-        chain = self.prompt | self.llm | self.parser #self.prompt: Prompt, siehe oben; self.llm: LLM, self.parser: geforderter Output 
+    # ------------------------------------------------------------------
+    # INTERPRETATION PART
+    # ------------------------------------------------------------------
+    def build_interpretation_chain(self):
+        return self.prompt | self.llm | self.parser
 
-        try:
-            #Übergabe von Informationen
-            instruction = chain.invoke({
+    def invoke_interpretation_chain(self, user_input: str):
+        chain = self.build_interpretation_chain() #self.prompt: Prompt, siehe oben; self.llm: LLM, self.parser: geforderter Output 
+
+        return chain.invoke({
             "user_input": user_input, #User-Input selbst
             "load_context": self.load_context, #Hilfskatalog (Lasten mit Token)
             "format_instructions": self.parser.get_format_instructions() #Vorgabe der erforderlichen Struktur der Antwort
         })
+
+    def build_interpretation_result(self, instruction) -> dict:
+        if hasattr(instruction, "dict"):
             return instruction.dict()
+        if isinstance(instruction, dict):
+            return instruction
+        raise TypeError("Instruction must be a dict or pydantic model")
+
+    def interpret(self, user_input: str) -> dict:
+        try:
+            #Übergabe von Informationen
+            instruction = self.invoke_interpretation_chain(user_input=user_input)
+            return self.build_interpretation_result(instruction)
 
         #Fehler wird angezeigt, falls es fehlschlägt
         except Exception as e:
             return {"error": "cannot_parse", "details": str(e)}
 
 
-    
-
     # ------------------------------------------------------------------
     # RESOLUTION PART
     # ------------------------------------------------------------------
     #Definition der richtigen Last -> Vergleich Eingabe mit Token
-    def resolve(self, instruction: dict):
-        load_name = instruction["load_name"].lower().replace(" ", "")
+    def normalize_load_name(self, load_name: str) -> str:
+        return (load_name or "").lower().replace(" ", "")
+
+    def resolve_candidates(self, instruction: dict):
+        normalized_load_name = self.normalize_load_name(instruction["load_name"])
+        matches = []
+
         for entry in self.catalog:
-            if load_name in entry["tokens"]:
-                return entry["pf_object"]
-        raise ValueError(f"No matching load for '{instruction['load_name']}'")
+            if normalized_load_name in entry["tokens"]:
+                matches.append(entry)
+
+        return matches
+
+    def build_resolution_result(self, entry: dict) -> dict:
+        return {
+            "loc_name": entry["loc_name"],
+            "full_name": entry["full_name"],
+            "tokens": sorted(entry["tokens"]),
+            "pf_object": entry["pf_object"],
+        }
+
+    def resolve(self, instruction: dict):
+        matches = self.resolve_candidates(instruction)
+
+        if not matches:
+            raise ValueError(f"No matching load for '{instruction['load_name']}'")
+
+        return matches[0]["pf_object"]
+    
+    # ------------------------------------------------------------------
+    # MCP / TOOL HELPERS
+    # ------------------------------------------------------------------
+    def get_load_catalog_metadata(self):
+        results = []
+
+        for entry in self.catalog:
+            results.append({
+                "loc_name": entry["loc_name"],
+                "full_name": entry["full_name"],
+                "tokens": sorted(entry["tokens"]),
+            })
+
+        return results
+
+    def resolve_with_metadata(self, instruction: dict) -> dict:
+        matches = self.resolve_candidates(instruction)
+
+        if not matches:
+            return {
+                "status": "not_found",
+                "requested_load_name": instruction.get("load_name"),
+                "matches": [],
+            }
+
+        return {
+            "status": "ok",
+            "requested_load_name": instruction.get("load_name"),
+            "matches": [self.build_resolution_result(entry) for entry in matches],
+            "selected": self.build_resolution_result(matches[0]),
+        }
     
     # ------------------------------------------------------------------
     # CATALOG HELPERS
@@ -80,6 +148,7 @@ class LLM_interpreterAgent:
             catalog.append(entry)
 
         return catalog
+
     #Generierung der Token
     def _generate_tokens(self, name: str) -> set:
         name = name.lower()
@@ -93,6 +162,7 @@ class LLM_interpreterAgent:
         tokens.add(name_de.replace(" ", ""))
 
         return tokens
+
     #Definition der Lastnamen für LLM zum besseren Verständnis
     def _build_llm_load_context(self) -> str:
         lines = []

@@ -1,7 +1,6 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
-from typing import Any, Dict, Optional
+from typing import Any, Dict
 import sys
 
 from cimpy.powerfactory_agent.config import PF_PYTHON_PATH, DEFAULT_PROJECT_NAME
@@ -79,20 +78,36 @@ def run_powerfactory_change(
     # PowerFactory starten
     app = _get_app(pf)
     if app is None:
-        return {"status": "error", "tool": "powerfactory", "error": "PowerFactory nicht erreichbar (GetApplication/GetApplicationExt ist None)"}
+        return {
+            "status": "error",
+            "tool": "powerfactory",
+            "error": "PowerFactory nicht erreichbar (GetApplication/GetApplicationExt ist None)",
+        }
 
     # Projekt aktivieren (robust)
     ok = _activate_project_by_name(app, project_name)
     if not ok:
-        return {"status": "error", "tool": "powerfactory", "error": f"Projekt konnte nicht aktiviert werden (nicht gefunden/kein Zugriff): {project_name}"}
+        return {
+            "status": "error",
+            "tool": "powerfactory",
+            "error": f"Projekt konnte nicht aktiviert werden (nicht gefunden/kein Zugriff): {project_name}",
+        }
 
     project = app.GetActiveProject()
     if project is None:
-        return {"status": "error", "tool": "powerfactory", "error": "Projekt nicht aktiv (GetActiveProject() None)"}
+        return {
+            "status": "error",
+            "tool": "powerfactory",
+            "error": "Projekt nicht aktiv (GetActiveProject() None)",
+        }
 
     studycase = app.GetActiveStudyCase()
     if studycase is None:
-        return {"status": "error", "tool": "powerfactory", "error": "Kein aktiver Study Case"}
+        return {
+            "status": "error",
+            "tool": "powerfactory",
+            "error": "Kein aktiver Study Case",
+        }
 
     # Lastflusskommando holen/erstellen
     ldf_list = _to_py_list(studycase.GetContents("*.ComLdf", 1))
@@ -101,12 +116,18 @@ def run_powerfactory_change(
     else:
         ldf = ldf_list[0]
 
-    # Agenten importieren (deine bisherigen Klassen)
-    # -> Pfad ggf. anpassen, falls deine Agents woanders liegen
-    from cimpy.powerfactory_agent.agents.PowerFactoryAgent import PowerFactoryAgent
-    from cimpy.powerfactory_agent.agents.LLM_interpreterAgent import LLM_interpreterAgent
-    from cimpy.powerfactory_agent.agents.Result_interpreterAgent import Result_interpreterAgent
-    from cimpy.powerfactory_agent.agents.LLM_resultAgent import LLM_resultAgent
+    # Agenten importieren
+    # Fallback kompatibel für alte und neue Projektstruktur
+    try:
+        from cimpy.powerfactory_agent.agents.PowerFactoryAgent import PowerFactoryAgent
+        from cimpy.powerfactory_agent.agents.LLM_interpreterAgent import LLM_interpreterAgent
+        from cimpy.powerfactory_agent.agents.Result_interpreterAgent import Result_interpreterAgent
+        from cimpy.powerfactory_agent.agents.LLM_resultAgent import LLM_resultAgent
+    except ImportError:
+        from cimpy.powerfactory_agent.agents.PowerFactoryAgent import PowerFactoryAgent
+        from cimpy.powerfactory_agent.agents.LLM_interpreterAgent import LLM_interpreterAgent
+        from cimpy.powerfactory_agent.agents.Result_interpreterAgent import Result_interpreterAgent
+        from cimpy.powerfactory_agent.agents.LLM_resultAgent import LLM_resultAgent
 
     pf_agent = PowerFactoryAgent(project, studycase)
     llm_agent = LLM_interpreterAgent(project, studycase)
@@ -116,6 +137,15 @@ def run_powerfactory_change(
     # Eingabe interpretieren + Last auflösen
     instruction = llm_agent.interpret(user_input)
     print("[DEBUG] instruction:", instruction)
+
+    if isinstance(instruction, dict) and "error" in instruction:
+        return {
+            "status": "error",
+            "tool": "powerfactory",
+            "error": instruction.get("error", "cannot_parse"),
+            "details": instruction.get("details"),
+        }
+
     resolved_load = llm_agent.resolve(instruction)
 
     # Lastfluss vor Änderung
@@ -151,7 +181,7 @@ def run_powerfactory_change(
         if u1 is not None:
             deltas[name] = u1 - u0
 
-    # Faktische Interpretation + LLM Summary (wie bei dir)
+    # Faktische Interpretation + LLM Summary
     messages = result_agent.interpret_voltage_change(u_before, u_after)
     summary = llm_result_agent.summarize(messages, user_input)
 
@@ -168,5 +198,5 @@ def run_powerfactory_change(
             "delta_u": deltas,
         },
         "messages": messages,
-        "answer": summary,  # damit dein Router-Frontend wie bei historical einfach answer drucken kann
+        "answer": summary,
     }
