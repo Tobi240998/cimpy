@@ -30,14 +30,6 @@ def get_llm():
 # =============================================================================
 
 def normalize_text(text: str) -> str:
-    """
-    Normalisierung für Matching:
-    - lower
-    - transformator -> trafo
-    - trf -> trafo
-    - / -> -
-    - Leerzeichen entfernen
-    """
     if not text:
         return ""
     t = text.lower()
@@ -74,9 +66,6 @@ def _number_boundary_match(num: str, norm_name: str) -> bool:
 
 
 def equipment_identifier(eq: Any) -> Optional[str]:
-    """
-    Versucht eine stabile ID zu finden.
-    """
     for attr in ("mRID", "mrid", "rdfId", "rdfid", "id", "uuid", "UID", "uid"):
         v = getattr(eq, attr, None)
         if v:
@@ -110,7 +99,6 @@ Metric = Optional[Literal["P", "Q", "S"]]
 
 class EquipmentSelection(BaseModel):
     equipment_type: str
-    # key ist der normalisierte Name-Key aus network_index["equipment_name_index"][type].keys()
     equipment_key: str
     equipment_name: Optional[str] = None
     equipment_id: Optional[str] = None
@@ -120,13 +108,16 @@ class QueryParse(BaseModel):
     equipment_detected: List[str] = Field(default_factory=list)
     state_detected: List[str] = Field(default_factory=list)
     metric: Metric = None
-
     equipment_selection: List[EquipmentSelection] = Field(default_factory=list)
-
-    # Zeitfenster (ISO-Strings in UTC), optional
     time_start: Optional[str] = None
     time_end: Optional[str] = None
     time_label: Optional[str] = None
+
+
+class CandidateChoice(BaseModel):
+    equipment_key: Optional[str] = None
+    need_clarification: bool = False
+    clarification_question: Optional[str] = None
 
 
 def _dedup_keep_order(items: List[str]) -> List[str]:
@@ -150,7 +141,6 @@ def _normalize_allowed_set(values, fallback: Set[str]) -> Set[str]:
         s = str(v).strip()
         if s:
             out.add(s)
-
     return out if out else set(fallback)
 
 
@@ -225,7 +215,7 @@ Regeln:
   - Q = Blindleistung
   - S = Scheinleistung
 - Wenn etwas unklar ist: entsprechende Liste leer lassen bzw. Feld auf null setzen.
-- time_start und time_end müssen, wenn möglich, als UTC-ISO-Strings ausgegeben werden.
+- time_start und time_end sollen, wenn möglich, als UTC-ISO-Strings ausgegeben werden.
 - Für "am 2026-01-09" gilt:
   - time_start = "2026-01-09T00:00:00+00:00"
   - time_end   = "2026-01-10T00:00:00+00:00"
@@ -235,10 +225,7 @@ Regeln:
   - end   = Beginn des Tages NACH dem letzten Datum
 - Für "vom 09.01.2026 bis 11.01.2026" gilt dasselbe.
 - Für "gestern" / "heute" darfst du relative Zeiträume interpretieren.
-- time_label soll z.B. sein:
-  - "am 2026-01-09"
-  - "zwischen 2026-01-09 und 2026-01-11"
-  - "gestern"
+- time_label soll kurz sein.
 
 Synonyme:
 - Trafo/Transformator/Transformer => PowerTransformer
@@ -265,8 +252,15 @@ Schema:
 }
 
 Regeln:
-- equipment_key muss exakt einem candidate_key entsprechen, wenn du sicher bist.
-- Wenn nicht sicher: equipment_key=null, need_clarification=true und stelle eine kurze Rückfrage.
+1) Wenn der Kontext das Equipment klar genug bestimmt, gib direkt equipment_key zurück.
+2) Stelle KEINE unnötige Bestätigungsfrage.
+3) Wenn der Nutzer im Verlauf bereits etwas Spezifisches wie "Load 27", "Last 27" oder "Trafo 19-20" genannt hat
+   und das klar zu einem Kandidaten passt, wähle direkt diesen Kandidaten.
+4) Nur wenn es wirklich noch mehrdeutig ist:
+   - equipment_key = null
+   - need_clarification = true
+   - kurze Rückfrage
+5) equipment_key muss exakt einem candidate_key entsprechen, wenn gesetzt.
 """.strip()
 
 
@@ -279,7 +273,7 @@ def make_clarify_prompt(context: str, missing: str) -> List[tuple]:
     elif missing == "state":
         goal = "Kläre, welche StateVariable gemeint ist."
     elif missing == "metric":
-        goal = "Kläre welche Metrik gemeint ist: P (Wirkleistung), Q (Blindleistung) oder S (Scheinleistung)."
+        goal = "Kläre, welche Metrik gemeint ist: P (Wirkleistung), Q (Blindleistung) oder S (Scheinleistung)."
     else:
         goal = "Kläre die Anfrage so, dass Equipment und State bestimmt werden können."
 
@@ -328,14 +322,6 @@ def shortlist_candidates(
     limit: int = 30,
     cutoff: float = 0.65,
 ) -> List[str]:
-    """
-    Liefert candidate_keys = normalisierte Namen-Keys aus equipment_name_index[equipment_type].
-    Priorisierung:
-      1) direct substring in user_norm
-      2) two-number match
-      3) one-number boundary match
-      4) fuzzy match
-    """
     equipment_name_index = (network_index or {}).get("equipment_name_index", {})
     name_index: Dict[str, Any] = equipment_name_index.get(equipment_type, {}) or {}
     keys = list(name_index.keys())
@@ -343,7 +329,6 @@ def shortlist_candidates(
         return []
 
     user_norm = normalize_text(user_input)
-
     scored: List[Tuple[int, str]] = []
 
     for k in keys:
@@ -368,13 +353,11 @@ def shortlist_candidates(
         scored.append((700 + len(k), k))
 
     if not scored:
-        fallback = sorted(keys, key=len, reverse=True)[: min(limit, len(keys))]
-        return fallback
+        return sorted(keys, key=len, reverse=True)[: min(limit, len(keys))]
 
     seen: Set[str] = set()
-    scored_sorted = sorted(scored, key=lambda x: x[0], reverse=True)
     out: List[str] = []
-    for _, k in scored_sorted:
+    for _, k in sorted(scored, key=lambda x: x[0], reverse=True):
         if k not in seen:
             out.append(k)
             seen.add(k)
@@ -389,39 +372,40 @@ def llm_choose_equipment_key(
     user_context: str,
     equipment_type: str,
     candidate_keys: List[str],
-) -> Dict[str, Any]:
-    """
-    LLM soll nur aus candidate_keys auswählen oder Rückfrage stellen.
-    """
+) -> CandidateChoice:
     candidates_block = "\n".join(f"- {k}" for k in candidate_keys)
 
     user_prompt = f"""
-Equipment-Typ: {equipment_type}
+Equipment-Typ:
+{equipment_type}
 
-Kontext:
+Gesamter Dialogkontext:
 {user_context}
 
-candidate_keys (du MUSST exakt einen davon wählen, wenn sicher):
+candidate_keys:
 {candidates_block}
 """.strip()
 
-    resp = llm.invoke([("system", SYSTEM_PROMPT_SELECT), ("user", user_prompt)])
-    text = getattr(resp, "content", str(resp))
-    data = extract_json(text)
+    try:
+        resp = llm.invoke([("system", SYSTEM_PROMPT_SELECT), ("user", user_prompt)])
+        text = getattr(resp, "content", str(resp))
+        data = extract_json(text)
+        choice = CandidateChoice(**data)
+    except Exception:
+        return CandidateChoice(
+            equipment_key=None,
+            need_clarification=True,
+            clarification_question=f"Welches konkrete {equipment_type}-Equipment meinst du (Name oder Nummer)?",
+        )
 
-    ek = data.get("equipment_key", None)
-    if ek is not None and ek not in candidate_keys:
-        return {
-            "equipment_key": None,
-            "need_clarification": True,
-            "clarification_question": "Welches konkrete Equipment meinst du (Name/Nummer)?",
-        }
+    if choice.equipment_key is not None and choice.equipment_key not in candidate_keys:
+        return CandidateChoice(
+            equipment_key=None,
+            need_clarification=True,
+            clarification_question=f"Welches konkrete {equipment_type}-Equipment meinst du (Name oder Nummer)?",
+        )
 
-    return {
-        "equipment_key": ek,
-        "need_clarification": bool(data.get("need_clarification", False)) if ek is None else False,
-        "clarification_question": data.get("clarification_question", None),
-    }
+    return choice
 
 
 # =============================================================================
@@ -459,18 +443,8 @@ def _parse_dd_mm_yyyy(s: str) -> Optional[datetime]:
 
 
 def _time_window_from_text(text: str) -> tuple[Optional[datetime], Optional[datetime], Optional[str]]:
-    """
-    Minimal robust:
-    - "heute" / "gestern" / "vorgestern"
-    - explizites Datum YYYY-MM-DD
-    - explizites Datum DD.MM.YYYY
-    - Bereiche "zwischen ... und ..."
-    - Bereiche "vom ... bis ..."
-    Zeitfenster ist [start, end) in UTC.
-    """
     t = (text or "").lower()
 
-    # Bereich mit ISO-Daten
     iso_dates = re.findall(r"\b\d{4}-\d{2}-\d{2}\b", t)
     if len(iso_dates) >= 2:
         d1 = _parse_yyyy_mm_dd(iso_dates[0])
@@ -480,7 +454,6 @@ def _time_window_from_text(text: str) -> tuple[Optional[datetime], Optional[date
             end = d2.replace(hour=0, minute=0, second=0, microsecond=0) + timedelta(days=1)
             return start, end, f"zwischen {start.date().isoformat()} und {d2.date().isoformat()}"
 
-    # Bereich mit deutschem Datumsformat
     de_dates = re.findall(r"\b\d{2}\.\d{2}\.\d{4}\b", t)
     if len(de_dates) >= 2:
         d1 = _parse_dd_mm_yyyy(de_dates[0])
@@ -490,14 +463,12 @@ def _time_window_from_text(text: str) -> tuple[Optional[datetime], Optional[date
             end = d2.replace(hour=0, minute=0, second=0, microsecond=0) + timedelta(days=1)
             return start, end, f"zwischen {start.date().isoformat()} und {d2.date().isoformat()}"
 
-    # einzelnes ISO-Datum
     d = _parse_yyyy_mm_dd(t)
     if d:
         start = d.replace(hour=0, minute=0, second=0, microsecond=0)
         end = start + timedelta(days=1)
         return start, end, f"am {start.date().isoformat()}"
 
-    # einzelnes deutsches Datum
     d = _parse_dd_mm_yyyy(t)
     if d:
         start = d.replace(hour=0, minute=0, second=0, microsecond=0)
@@ -508,22 +479,11 @@ def _time_window_from_text(text: str) -> tuple[Optional[datetime], Optional[date
     today = now.replace(hour=0, minute=0, second=0, microsecond=0)
 
     if "vorgestern" in t:
-        start = today - timedelta(days=2)
-        end = today - timedelta(days=1)
-        return start, end, "vorgestern"
-
+        return today - timedelta(days=2), today - timedelta(days=1), "vorgestern"
     if "gestern" in t:
-        start = today - timedelta(days=1)
-        end = today
-        return start, end, "gestern"
-
+        return today - timedelta(days=1), today, "gestern"
     if "heute" in t:
-        start = today
-        end = today + timedelta(days=1)
-        return start, end, "heute"
-
-    if "über den tag" in t or "ueber den tag" in t or "ganzen tag" in t:
-        return None, None, "ganzer_tag"
+        return today, today + timedelta(days=1), "heute"
 
     return None, None, None
 
@@ -532,10 +492,6 @@ def _ensure_time_window(
     context: str,
     ask_user: Callable[[str], str],
 ) -> tuple[Optional[datetime], Optional[datetime], Optional[str], str]:
-    """
-    Gibt (start_dt, end_dt, label, final_context) zurück.
-    Wenn nicht extrahierbar, fragt nach (einmal) und hängt die Antwort an den Kontext an.
-    """
     start, end, label = _time_window_from_text(context)
     final_context = context
 
@@ -567,37 +523,10 @@ def interpret_user_query(
     allowed_equipment_types: Optional[List[str]] = None,
     allowed_state_types: Optional[List[str]] = None,
 ) -> Dict[str, Any]:
-    """
-    Liefert IMMER:
-    {
-      "equipment_detected": [...],
-      "state_detected": [...],
-      "metric": "P|Q|S"|None,
-      "equipment_selection": [
-         {"equipment_type": "...", "equipment_key": "...", "equipment_name": "...", "equipment_id": "..."},
-         ...
-      ],
-      "time_start": "...",
-      "time_end": "...",
-      "time_label": "..."
-    }
-
-    Neu:
-    - allowed_equipment_types: optionale Einschränkung durch Planner
-    - allowed_state_types: optionale Einschränkung durch Planner
-    - require_time_window bleibt steuerbar
-
-    Policy:
-    - Equipment + State sollen am Ende vorhanden sein, sofern die Anfrage State-Daten braucht.
-    - Wenn Equipment erkannt aber State fehlt => default SvPowerFlow (oder Planner-Vorgabe).
-    - Wenn Equipment erkannt => wir versuchen zu jeder equipment_type ein konkretes Objekt zu wählen.
-    - Wenn nicht eindeutig => Rückfrage-Schleife.
-    """
     if ask_user is None:
         ask_user = default_ask_user
 
     llm = get_llm()
-
     equipment_name_index = (network_index or {}).get("equipment_name_index", {}) or {}
 
     effective_allowed_equipment_types = _normalize_allowed_set(
@@ -631,7 +560,6 @@ def interpret_user_query(
     for _ in range(max_rounds):
         context = "\n".join(context_lines)
 
-        parsed: Optional[QueryParse] = None
         try:
             parsed = parse_types_with_llm(context)
         except (ValidationError, ValueError, json.JSONDecodeError):
@@ -643,7 +571,6 @@ def interpret_user_query(
             context_lines += [f"Assistant: {q}", f"User: {a}"]
             continue
 
-        # Default-State nur setzen, wenn State-Typen überhaupt erlaubt sind
         if parsed.equipment_detected and not parsed.state_detected and default_state_if_equipment_only in effective_allowed_state_types:
             parsed.state_detected = [default_state_if_equipment_only]
             parsed = normalize_query(
@@ -652,7 +579,6 @@ def interpret_user_query(
                 allowed_state_types=effective_allowed_state_types,
             )
 
-        # Heuristik: "Auslastung" eines Trafos => standardmäßig S
         context_l = context.lower()
         explicit_metric = any(
             w in context_l for w in ["wirkleistung", "blindleistung", "scheinleistung", " p ", " q ", " s "]
@@ -660,28 +586,23 @@ def interpret_user_query(
 
         if ("PowerTransformer" in parsed.equipment_detected) and (
             "auslastung" in context_l or "utilization" in context_l or "loading" in context_l
-        ):
-            if not explicit_metric:
-                parsed.metric = "S"
+        ) and not explicit_metric:
+            parsed.metric = "S"
 
-        # Equipment muss da sein
         if not parsed.equipment_detected:
             q = llm.invoke(make_clarify_prompt(context, "equipment")).content.strip()
             a = (ask_user(q) or "").strip() or "Ich bin mir nicht sicher."
             context_lines += [f"Assistant: {q}", f"User: {a}"]
             continue
 
-        # State nur erzwingen, wenn State-Typen erlaubt/gewünscht sind
         if effective_allowed_state_types and not parsed.state_detected:
             q = llm.invoke(make_clarify_prompt(context, "state")).content.strip()
             a = (ask_user(q) or "").strip() or "Ich bin mir nicht sicher."
             context_lines += [f"Assistant: {q}", f"User: {a}"]
             continue
 
-        # Konkretes Equipment wählen
         selections: List[EquipmentSelection] = []
-        need_more_clarification = False
-        clarification_question = None
+        clarification_needed = False
 
         for eq_type in parsed.equipment_detected:
             if eq_type not in effective_allowed_equipment_types:
@@ -696,42 +617,41 @@ def interpret_user_query(
             )
 
             if not candidates:
-                need_more_clarification = True
-                clarification_question = f"Ich finde keine {eq_type}-Namen im Index. Welches konkrete Equipment meinst du (Name/Nummer)?"
+                q = f"Welches konkrete {eq_type}-Equipment meinst du (Name oder Nummer)?"
+                a = (ask_user(q) or "").strip() or "Ich bin mir nicht sicher."
+                context_lines += [f"Assistant: {q}", f"User: {a}"]
+                clarification_needed = True
                 break
 
             choice = llm_choose_equipment_key(
-                llm,
+                llm=llm,
                 user_context=context,
                 equipment_type=eq_type,
                 candidate_keys=candidates,
             )
 
-            if choice["equipment_key"] is None:
-                need_more_clarification = True
-                clarification_question = choice.get("clarification_question") or "Welches konkrete Equipment meinst du (Name/Nummer)?"
+            if choice.equipment_key is None:
+                q = choice.clarification_question or f"Welches konkrete {eq_type}-Equipment meinst du (Name oder Nummer)?"
+                a = (ask_user(q) or "").strip() or "Ich bin mir nicht sicher."
+                context_lines += [f"Assistant: {q}", f"User: {a}"]
+                clarification_needed = True
                 break
 
-            equipment_key = choice["equipment_key"]
-            eq_obj = equipment_name_index.get(eq_type, {}).get(equipment_key)
-
-            sel = EquipmentSelection(
-                equipment_type=eq_type,
-                equipment_key=equipment_key,
-                equipment_name=getattr(eq_obj, "name", None) if eq_obj is not None else None,
-                equipment_id=equipment_identifier(eq_obj) if eq_obj is not None else None,
+            eq_obj = equipment_name_index.get(eq_type, {}).get(choice.equipment_key)
+            selections.append(
+                EquipmentSelection(
+                    equipment_type=eq_type,
+                    equipment_key=choice.equipment_key,
+                    equipment_name=getattr(eq_obj, "name", None) if eq_obj is not None else None,
+                    equipment_id=equipment_identifier(eq_obj) if eq_obj is not None else None,
+                )
             )
-            selections.append(sel)
 
-        if need_more_clarification:
-            q = (clarification_question or "Welches konkrete Equipment meinst du (Name/Nummer)?").strip()
-            a = (ask_user(q) or "").strip() or "Ich bin mir nicht sicher."
-            context_lines += [f"Assistant: {q}", f"User: {a}"]
+        if clarification_needed:
             continue
 
-        # Zeitraum optional erzwingen
         if require_time_window:
-            start_dt, end_dt, label, context2 = _ensure_time_window(context, ask_user)
+            start_dt, end_dt, label, _ = _ensure_time_window(context, ask_user)
             if start_dt and end_dt:
                 parsed.time_start = start_dt.isoformat()
                 parsed.time_end = end_dt.isoformat()
@@ -771,11 +691,11 @@ def handle_user_query(user_input, snapshot_cache, network_index):
     equipment_detected = parsed.get("equipment_detected", [])
     state_detected = parsed.get("state_detected", [])
     metric = parsed.get("metric", None)
-    equipment_obj = parsed.get("equipment_obj", [])
+    equipment_selection = parsed.get("equipment_selection", [])
 
     agent = LLM_resultAgent()
 
     print("equipment_detected:", equipment_detected)
     print("state_detected:", state_detected)
     print("metric:", metric)
-    print("equipment_obj:", equipment_obj)
+    print("equipment_selection:", equipment_selection)
