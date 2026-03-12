@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from cimpy.cimpy_time_analysis.llm_object_mapping import interpret_user_query
 from cimpy.cimpy_time_analysis.cim_queries import (
     query_equipment_metric_over_time,
@@ -8,9 +10,11 @@ from cimpy.cimpy_time_analysis.cim_queries import (
     query_equipment_connected_component,
     summarize_topology_neighbors,
     summarize_topology_component,
+    get_component_equipment_objects,
+    get_neighbor_equipment_objects,
+    aggregate_metric_over_equipment_set,
 )
 from cimpy.cimpy_time_analysis.llm_result_agent import LLM_resultAgent
-from datetime import datetime
 
 
 def _parse_dt_iso(s: str):
@@ -23,10 +27,6 @@ def _parse_dt_iso(s: str):
 
 
 def _filter_snapshot_cache_by_time(snapshot_cache: dict, start_iso: str | None, end_iso: str | None) -> dict:
-    """
-    Filtert snapshot_cache nach data["timestamp"] oder data["scenario_time"] (falls timestamp fehlt).
-    Erwartet timezone-aware datetimes (ISO).
-    """
     start_dt = _parse_dt_iso(start_iso) if start_iso else None
     end_dt = _parse_dt_iso(end_iso) if end_iso else None
     if not start_dt or not end_dt:
@@ -45,22 +45,6 @@ def _filter_snapshot_cache_by_time(snapshot_cache: dict, start_iso: str | None, 
 
 
 def _detect_topology_intent(user_input: str, analysis_plan: dict | None = None) -> dict:
-    """
-    Einfache Topologie-Erkennung.
-
-    Priorität:
-    1) analysis_plan, falls vorhanden
-    2) Keyword-Heuristik
-
-    Returns
-    -------
-    dict:
-        {
-            "is_topology": bool,
-            "intent": "neighbors" | "component" | None,
-            "graph_level": "connectivity" | "topological",
-        }
-    """
     if analysis_plan:
         topology_scope = analysis_plan.get("topology_scope", "none")
         needs_topology_graph = bool(analysis_plan.get("needs_topology_graph", False))
@@ -129,9 +113,6 @@ def _detect_topology_intent(user_input: str, analysis_plan: dict | None = None) 
 
 
 def _resolve_equipment_from_selection(parsed: dict, network_index: dict):
-    """
-    Holt das echte CIM-Objekt aus parsed["equipment_selection"][0].
-    """
     equipment_selection = parsed.get("equipment_selection", []) or []
     if not equipment_selection:
         return None, None, None
@@ -157,12 +138,8 @@ def _ensure_parsed_query(
     network_index: dict,
     parsed_query: dict | None = None,
 ):
-    """
-    Nutzt vorhandenes parsed_query oder führt interpret_user_query(...) aus.
-    """
     if parsed_query is not None:
         return parsed_query
-
     return interpret_user_query(user_input, network_index=network_index)
 
 
@@ -173,15 +150,6 @@ def handle_user_query(
     parsed_query=None,
     analysis_plan=None,
 ):
-    """
-    Führt die eigentliche Analyseauswahl und Query-Ausführung aus.
-
-    Neu:
-    - parsed_query optional von außen übergebbar
-    - analysis_plan optional von außen übergebbar
-
-    Dadurch wird der Orchestrator ausführender und weniger planend.
-    """
     parsed = _ensure_parsed_query(
         user_input=user_input,
         network_index=network_index,
@@ -196,7 +164,6 @@ def handle_user_query(
     time_end = parsed.get("time_end", None)
     time_label = parsed.get("time_label", None)
 
-    # Snapshot-Cache auf Zeitraum reduzieren
     snapshot_cache = _filter_snapshot_cache_by_time(snapshot_cache, time_start, time_end)
 
     if not equipment_selection:
@@ -212,7 +179,6 @@ def handle_user_query(
 
     agent = LLM_resultAgent()
 
-    # Debug
     print("analysis_plan:", analysis_plan)
     print("equipment_detected:", equipment_detected)
     print("state_detected:", state_detected)
@@ -226,15 +192,61 @@ def handle_user_query(
             "Bitte prüfe die Schreibweise (z.B. 'Trafo 19 - 20' oder 'Load 27')."
         )
 
-    # ---------------------------------------------------------
-    # Topologie-Intent
-    # ---------------------------------------------------------
     topology_intent = _detect_topology_intent(
         user_input=user_input,
         analysis_plan=analysis_plan,
     )
     print("topology_intent:", topology_intent)
 
+    # ---------------------------------------------------------
+    # Kombination: Topologie -> Equipment-Menge -> bestehende State-Query
+    # ---------------------------------------------------------
+    if (
+        analysis_plan
+        and analysis_plan.get("query_mode") == "topology_plus_state"
+        and "SvPowerFlow" in state_detected
+        and topology_intent.get("is_topology")
+    ):
+        graph_level = topology_intent.get("graph_level", "topological")
+        topology_scope = topology_intent.get("intent")
+        target_types = analysis_plan.get("target_equipment_types") or []
+        target_equipment_type = target_types[0] if target_types else None
+
+        if metric is None:
+            metric = analysis_plan.get("metric_hint") or "P"
+
+        aggregation = analysis_plan.get("aggregation") or "max"
+
+        if topology_scope == "component":
+            equipment_set = get_component_equipment_objects(
+                network_index=network_index,
+                reference_equipment_obj=equipment_obj,
+                level=graph_level,
+                target_equipment_type=target_equipment_type,
+            )
+        elif topology_scope == "neighbors":
+            equipment_set = get_neighbor_equipment_objects(
+                network_index=network_index,
+                reference_equipment_obj=equipment_obj,
+                level=graph_level,
+                target_equipment_type=target_equipment_type,
+            )
+        else:
+            equipment_set = []
+
+        result = aggregate_metric_over_equipment_set(
+            snapshot_cache=snapshot_cache,
+            network_index=network_index,
+            equipment_objects=equipment_set,
+            metric=metric,
+            aggregation=aggregation,
+        )
+
+        return agent.summarize(result, user_input)
+
+    # ---------------------------------------------------------
+    # Reine Topologie
+    # ---------------------------------------------------------
     if topology_intent.get("is_topology"):
         graph_level = topology_intent.get("graph_level", "connectivity")
         intent = topology_intent.get("intent")
@@ -273,7 +285,7 @@ def handle_user_query(
             return agent.summarize(summary, user_input)
 
     # ---------------------------------------------------------
-    # Leistung / Auslastung (SvPowerFlow)
+    # Leistung / Auslastung
     # ---------------------------------------------------------
     if "SvPowerFlow" in state_detected:
         if metric is None:
@@ -299,7 +311,7 @@ def handle_user_query(
         return agent.summarize(summary, user_input)
 
     # ---------------------------------------------------------
-    # Spannung (SvVoltage)
+    # Spannung
     # ---------------------------------------------------------
     if "SvVoltage" in state_detected:
         results = query_equipment_voltage_over_time(
@@ -318,7 +330,4 @@ def handle_user_query(
         summary = summarize_voltage(results)
         return agent.summarize(summary, user_input)
 
-    # ---------------------------------------------------------
-    # Default / nicht unterstützt
-    # ---------------------------------------------------------
     return f"Die erkannten Objekttypen {equipment_detected} werden aktuell noch nicht unterstützt."

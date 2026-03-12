@@ -676,26 +676,3 @@ def interpret_user_query(
         "time_label": None,
     }
 
-
-# =============================================================================
-# 10) Standalone-Debug-Placeholder
-# =============================================================================
-
-class LLM_resultAgent:
-    pass
-
-
-def handle_user_query(user_input, snapshot_cache, network_index):
-    parsed = interpret_user_query(user_input, network_index=network_index)
-
-    equipment_detected = parsed.get("equipment_detected", [])
-    state_detected = parsed.get("state_detected", [])
-    metric = parsed.get("metric", None)
-    equipment_selection = parsed.get("equipment_selection", [])
-
-    agent = LLM_resultAgent()
-
-    print("equipment_detected:", equipment_detected)
-    print("state_detected:", state_detected)
-    print("metric:", metric)
-    print("equipment_selection:", equipment_selection)

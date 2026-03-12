@@ -92,6 +92,9 @@ class LLM_resultAgent:
 
         result_type = results.get("type")
 
+        if result_type == "equipment_set_metric_aggregation":
+            return self._build_fallback_prompt(results, user_input)
+
         if result_type == "topology_neighbors":
             return self._build_topology_neighbors_prompt(results, user_input)
 

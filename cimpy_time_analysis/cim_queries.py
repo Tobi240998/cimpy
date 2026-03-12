@@ -6,7 +6,11 @@ from cimpy.cimpy_time_analysis.cim_topology_graph import (
     find_shortest_path_between_equipments,
 )
 
-#Normalisierung der Terminal ID auf einheitliches Format 
+
+# =============================================================================
+# Basis-Helper
+# =============================================================================
+
 def _canonical_id(value):
     if value is None:
         return None
@@ -26,12 +30,6 @@ def _canonical_id(value):
 
 
 def _get_rated_s_mva(equipment_obj):
-    """
-    Holt ratedS (MVA) aus EQ-Profil, falls vorhanden.
-    Für PowerTransformer: ratedS liegt typischerweise an PowerTransformerEnd.
-
-    Für EnergyConsumer etc. gibt es meist keine ratedS -> None.
-    """
     if equipment_obj is None:
         return None
 
@@ -53,28 +51,60 @@ def _get_rated_s_mva(equipment_obj):
     if not rated_vals:
         return None
 
-    # robust: Maximum über alle Enden (falls unterschiedlich / nur auf einer Seite gepflegt)
     return max(rated_vals)
 
+
+def _get_topology_graph_from_index(network_index, level: str = "connectivity"):
+    if level == "connectivity":
+        return (
+            network_index.get("topology_graph_connectivity")
+            or network_index.get("topology_graph")
+        )
+    if level == "topological":
+        return network_index.get("topology_graph_topological")
+    return None
+
+
+def _build_equipment_object_lookup(network_index):
+    lookup = {}
+    equipment_name_index = (network_index or {}).get("equipment_name_index", {}) or {}
+    for _, type_space in equipment_name_index.items():
+        for _, obj in type_space.items():
+            eq_id = _canonical_id(getattr(obj, "mRID", None))
+            if eq_id:
+                lookup[eq_id] = obj
+    return lookup
+
+
+def _metric_value_key(metric: str):
+    metric = (metric or "S").upper().strip()
+    if metric == "P":
+        return "active_power_MW"
+    if metric == "Q":
+        return "reactive_power_MVAr"
+    return "apparent_power_MVA"
+
+
+# =============================================================================
+# Einzel-Equipment: State Queries
+# =============================================================================
 
 def query_equipment_metric_over_time(
     snapshot_cache,
     network_index,
     equipment_obj,
     metric: str = "S"
-    ):
-   
+):
     if equipment_obj is None:
         return []
 
     equipment_type = equipment_obj.__class__.__name__
-    equipment_name = getattr(equipment_obj, "name", getattr(equipment_obj, "mRID", "UNKNOWN"))  #gibt Equipment-Namen aus, falls dieser nicht gefunden wird -> mRID
+    equipment_name = getattr(equipment_obj, "name", getattr(equipment_obj, "mRID", "UNKNOWN"))
 
     metric = (metric or "S").upper().strip()
     if metric not in {"S", "P", "Q"}:
         metric = "S"
 
-    # ratedS nur relevant für Auslastung in % bei S und PowerTransformer
     rated_mva = None
     if metric == "S" and equipment_type == "PowerTransformer":
         rated_mva = _get_rated_s_mva(equipment_obj)
@@ -82,39 +112,36 @@ def query_equipment_metric_over_time(
     results = []
 
     for snapshot, data in snapshot_cache.items():
-        flows = data.get("flows", [])  #zieht sich die SvPowerFlow Objekte aus den Snapshots
+        flows = data.get("flows", [])
         if not flows:
             continue
 
-        ts = data.get("timestamp", None)  #zieht sich die Timestamps aus den Snapshots
+        ts = data.get("timestamp", None)
         ts_str = data.get("timestamp_str", None)
 
-        # Wir merken uns pro Snapshot den "besten" Terminal-Wert (größter Betrag, wird hier "zurückgesetzt")
         best_val = None
         best_abs = -1.0
 
         for flow in flows:
-            terminal = getattr(flow, "Terminal", None)  #Zuordnung des Terminals zum SvPowerFlow
-            terminal_id = _canonical_id(terminal)  #Normalisierung auf einheitliches Format
+            terminal = getattr(flow, "Terminal", None)
+            terminal_id = _canonical_id(terminal)
             if not terminal_id:
                 continue
 
-            eq = network_index["terminals_to_equipment"].get(terminal_id)  #sucht das Equipment zum jeweiligen Terminal raus
-            if eq != equipment_obj:  #Prüfung, ob gefundenes Equipment zum gesuchten passt -> falls ja, werden Werte berechnet, sonst skippen
+            eq = network_index["terminals_to_equipment"].get(terminal_id)
+            if eq != equipment_obj:
                 continue
 
             p = getattr(flow, "p", 0.0)
             q = getattr(flow, "q", 0.0)
 
-            #Berechnung bzw. Ausgabe der richtigen Einheit
             if metric == "S":
                 val = math.sqrt(p**2 + q**2)
             elif metric == "P":
                 val = float(p)
-            else:  # metric == "Q"
+            else:
                 val = float(q)
 
-            #Prüfung, ob größter Wert und falls ja, Speicherung
             a = abs(val)
             if a > best_abs:
                 best_abs = a
@@ -129,14 +156,13 @@ def query_equipment_metric_over_time(
             "timestamp_str": ts_str,
             "equipment": equipment_name,
             "type": equipment_type,
-            "metric": metric
+            "metric": metric,
         }
 
-        # je nach Metrik den passenden Key setzen
         if metric == "S":
             row["apparent_power_MVA"] = float(best_val)
-            row["rated_MVA"] = rated_mva  #Nennleistung (MVA)
-            row["loading_percent"] = (float(best_val) / rated_mva * 100.0) if (rated_mva is not None and rated_mva > 0) else None  #Auslastung (%)
+            row["rated_MVA"] = rated_mva
+            row["loading_percent"] = (float(best_val) / rated_mva * 100.0) if (rated_mva is not None and rated_mva > 0) else None
         elif metric == "P":
             row["active_power_MW"] = float(best_val)
         else:
@@ -144,25 +170,11 @@ def query_equipment_metric_over_time(
 
         results.append(row)
 
-    results.sort(key=lambda r: (r["timestamp"] is None, r["timestamp"]))  #zeitliche Sortierung der Ergebnisse
+    results.sort(key=lambda r: (r["timestamp"] is None, r["timestamp"]))
     return results
 
 
-
-
-def query_equipment_voltage_over_time(snapshot_cache, network_index, equipment_obj):  #bestimmt Spannung des gewählten Equipments; gleicher Aufbau wie bei query equipment metric over time, außer anderem Mapping und Ziehen der Spannung
-    """
-    FIX: Terminals werden NICHT aus equipment_obj.Terminals gezogen,
-    sondern über network_index["equipment_to_terminal_ids"].
-
-    Pfad:
-      equipment_id -> terminal_ids -> connectivityNode_id -> topologicalNode_id -> SvVoltage.v
-
-    Hinweis:
-    - Diese Query ist typunabhängig: funktioniert für PowerTransformer UND EnergyConsumer -> kann noch erweitert werden,
-      solange das Equipment Terminals hat und SvVoltage auf dem zugehörigen TopologicalNode existiert.
-    """
-
+def query_equipment_voltage_over_time(snapshot_cache, network_index, equipment_obj):
     if equipment_obj is None:
         return []
 
@@ -207,18 +219,22 @@ def query_equipment_voltage_over_time(snapshot_cache, network_index, equipment_o
                 "terminal_id": terminal_id,
                 "connectivity_node_id": cn_id,
                 "topological_node_id": tn_id,
-                "voltage_kV": float(v)
+                "voltage_kV": float(v),
             })
 
     results.sort(key=lambda r: (r["timestamp"] is None, r["timestamp"], r["terminal_id"]))
     return results
 
 
+# =============================================================================
+# Einzel-Equipment: Summaries
+# =============================================================================
+
 def summarize_metric(results):
     if not results:
         return {"type": None, "message": "Keine Daten verfügbar"}
 
-    metric = results[0]["metric"]  # P / Q / S
+    metric = results[0]["metric"]
 
     if metric == "P":
         unit = "MW"
@@ -245,10 +261,9 @@ def summarize_metric(results):
         "peak_timestamp": peak_entry.get("timestamp_str"),
         "min_value_at_time": min_entry.get(key),
         "min_timestamp": min_entry.get("timestamp_str"),
-        "num_datapoints": len(values)
+        "num_datapoints": len(values),
     }
 
-    #Auslastung (%) nur bei S und wenn vorhanden
     if metric == "S":
         loading_values = [r["loading_percent"] for r in results if r.get("loading_percent") is not None]
         if loading_values:
@@ -262,7 +277,7 @@ def summarize_metric(results):
             )
 
             summary.update({
-                "rated_MVA": results[0].get("rated_MVA", None),  #Nennleistung, wird für Auslastung genutzt
+                "rated_MVA": results[0].get("rated_MVA", None),
                 "loading_unit": "%",
                 "loading_min_percent": min(loading_values),
                 "loading_max_percent": max(loading_values),
@@ -278,9 +293,7 @@ def summarize_metric(results):
     return summary
 
 
-
-
-def summarize_voltage(results):  #gleiche Vorgehensweise wie bei summarize_metric
+def summarize_voltage(results):
     if not results:
         return {"type": None, "message": "Keine Daten verfügbar"}
 
@@ -306,24 +319,13 @@ def summarize_voltage(results):  #gleiche Vorgehensweise wie bei summarize_metri
         "min_equipment": min_entry["equipment"],
         "min_terminal_id": min_entry.get("terminal_id"),
         "min_topological_node_id": min_entry.get("topological_node_id"),
-        "num_datapoints": len(results)
+        "num_datapoints": len(results),
     }
 
 
 # =============================================================================
-# TOPOLOGIE-QUERIES (neu)
+# Topologie Queries
 # =============================================================================
-
-def _get_topology_graph_from_index(network_index, level: str = "connectivity"):
-    if level == "connectivity":
-        return (
-            network_index.get("topology_graph_connectivity")
-            or network_index.get("topology_graph")
-        )
-    if level == "topological":
-        return network_index.get("topology_graph_topological")
-    return None
-
 
 def query_equipment_topology_neighbors(
     network_index,
@@ -331,20 +333,6 @@ def query_equipment_topology_neighbors(
     level: str = "connectivity",
     allowed_neighbor_classes=None,
 ):
-    """
-    Liefert direkte topologische Nachbarn eines Equipments.
-
-    Parameters
-    ----------
-    network_index : dict
-        Globaler Netzindex.
-    equipment_obj : CIM-Objekt
-        Gewähltes Equipment.
-    level : str
-        "connectivity" oder "topological"
-    allowed_neighbor_classes : list[str] | None
-        Optionaler Klassenfilter für Nachbarn.
-    """
     if equipment_obj is None:
         return []
 
@@ -387,9 +375,6 @@ def query_equipment_connected_component(
     equipment_obj,
     level: str = "connectivity",
 ):
-    """
-    Liefert die zusammenhängende Komponente des Equipments im Topologiegraphen.
-    """
     if equipment_obj is None:
         return {
             "equipment": None,
@@ -432,10 +417,6 @@ def query_shortest_topology_path(
     target_equipment_obj,
     level: str = "connectivity",
 ):
-    """
-    Kürzester topologischer Pfad zwischen zwei Equipments.
-    Ist schon vorbereitet, auch wenn du ihn im Orchestrator zunächst noch nicht nutzt.
-    """
     if source_equipment_obj is None or target_equipment_obj is None:
         return {
             "found": False,
@@ -475,7 +456,7 @@ def query_shortest_topology_path(
 
 
 # =============================================================================
-# TOPOLOGIE-SUMMARIES (neu)
+# Topologie Summaries
 # =============================================================================
 
 def summarize_topology_neighbors(results):
@@ -605,4 +586,135 @@ def summarize_topology_path(path_result):
         "path_length": path_result.get("path_length", 0),
         "path_labels": path_labels,
         "path_details": path_details,
+    }
+
+
+# =============================================================================
+# Generische Mengen-Helper für Kombinationen
+# =============================================================================
+
+def get_component_equipment_objects(
+    network_index,
+    reference_equipment_obj,
+    level: str = "topological",
+    target_equipment_type: str | None = None,
+):
+    component_result = query_equipment_connected_component(
+        network_index=network_index,
+        equipment_obj=reference_equipment_obj,
+        level=level,
+    )
+
+    equipment_nodes = component_result.get("equipment_nodes", []) or []
+    if not equipment_nodes:
+        return []
+
+    obj_lookup = _build_equipment_object_lookup(network_index)
+
+    out = []
+    for node in equipment_nodes:
+        if target_equipment_type and node.get("cim_class") != target_equipment_type:
+            continue
+
+        eq_id = node.get("equipment_id")
+        eq_obj = obj_lookup.get(eq_id)
+        if eq_obj is not None:
+            out.append(eq_obj)
+
+    return out
+
+
+def get_neighbor_equipment_objects(
+    network_index,
+    reference_equipment_obj,
+    level: str = "connectivity",
+    target_equipment_type: str | None = None,
+):
+    neighbors = query_equipment_topology_neighbors(
+        network_index=network_index,
+        equipment_obj=reference_equipment_obj,
+        level=level,
+        allowed_neighbor_classes=None,
+    )
+
+    if not neighbors:
+        return []
+
+    obj_lookup = _build_equipment_object_lookup(network_index)
+
+    out = []
+    for nbr in neighbors:
+        if target_equipment_type and nbr.get("neighbor_type") != target_equipment_type:
+            continue
+
+        eq_id = nbr.get("neighbor_equipment_id")
+        eq_obj = obj_lookup.get(eq_id)
+        if eq_obj is not None:
+            out.append(eq_obj)
+
+    return out
+
+
+def aggregate_metric_over_equipment_set(
+    snapshot_cache,
+    network_index,
+    equipment_objects,
+    metric: str = "P",
+    aggregation: str = "max",
+):
+    metric = (metric or "P").upper().strip()
+    aggregation = (aggregation or "max").lower().strip()
+
+    if metric == "P":
+        value_key = "active_power_MW"
+        unit = "MW"
+    elif metric == "Q":
+        value_key = "reactive_power_MVAr"
+        unit = "MVAr"
+    else:
+        value_key = "apparent_power_MVA"
+        unit = "MVA"
+
+    all_rows = []
+
+    for eq_obj in equipment_objects or []:
+        rows = query_equipment_metric_over_time(
+            snapshot_cache=snapshot_cache,
+            network_index=network_index,
+            equipment_obj=eq_obj,
+            metric=metric,
+        )
+        all_rows.extend(rows)
+
+    valid_rows = [r for r in all_rows if r.get(value_key) is not None]
+
+    if not valid_rows:
+        return {
+            "type": "equipment_set_metric_aggregation",
+            "found": False,
+            "metric": metric,
+            "aggregation": aggregation,
+            "unit": unit,
+            "num_equipment": len(equipment_objects or []),
+            "num_rows": 0,
+        }
+
+    if aggregation == "min":
+        best = min(valid_rows, key=lambda r: r[value_key])
+    else:
+        best = max(valid_rows, key=lambda r: r[value_key])
+
+    return {
+        "type": "equipment_set_metric_aggregation",
+        "found": True,
+        "metric": metric,
+        "aggregation": aggregation,
+        "unit": unit,
+        "num_equipment": len(equipment_objects or []),
+        "num_rows": len(valid_rows),
+        "best_equipment": best.get("equipment"),
+        "best_type": best.get("type"),
+        "best_value": best.get(value_key),
+        "best_timestamp": best.get("timestamp_str"),
+        "best_snapshot": best.get("snapshot"),
     }
