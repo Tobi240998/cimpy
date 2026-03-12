@@ -11,11 +11,8 @@ from cimpy.powerfactory_agent.langchain_llm import get_llm
 from cimpy.powerfactory_agent.powerfactory_mcp_tools import (
     build_powerfactory_services,
     _get_load_catalog_from_services,
-    _interpret_instruction_with_services,
-    _resolve_load_with_services,
-    _execute_change_load_with_services,
-    _summarize_powerfactory_result_with_services,
 )
+from cimpy.powerfactory_agent.powerfactory_tool_registry import PowerFactoryToolRegistry
 
 
 class PFPlannerDecision(BaseModel):
@@ -61,6 +58,8 @@ class PowerFactoryDomainAgent:
         self.project_name = project_name
 
         self.llm = get_llm()
+        self.registry = PowerFactoryToolRegistry()
+
         self.planner_parser = PydanticOutputParser(
             pydantic_object=PFPlannerDecision
         )
@@ -275,6 +274,9 @@ class PowerFactoryDomainAgent:
             "classification": classification,
         }
 
+    def get_available_tools(self) -> List[Dict[str, Any]]:
+        return self.registry.list_tool_specs()
+
     # ------------------------------------------------------------------
     # EXECUTION PART
     # ------------------------------------------------------------------
@@ -296,22 +298,7 @@ class PowerFactoryDomainAgent:
         for item in plan:
             step = item["step"]
 
-            if step == "get_load_catalog":
-                result = _get_load_catalog_from_services(services)
-                debug_trace.append({
-                    "step": step,
-                    "result": result,
-                })
-
-                if result["status"] != "ok":
-                    return self.build_error_result(
-                        error_result=result,
-                        debug_trace=debug_trace,
-                    )
-
-                catalog_result = result
-
-            elif step == "summarize_load_catalog":
+            if step == "summarize_load_catalog":
                 result = self.summarize_load_catalog_result(catalog_result)
                 debug_trace.append({
                     "step": step,
@@ -325,81 +312,9 @@ class PowerFactoryDomainAgent:
                     )
 
                 summary = result
+                continue
 
-            elif step == "interpret_instruction":
-                result = _interpret_instruction_with_services(
-                    services=services,
-                    user_input=user_input,
-                )
-                debug_trace.append({
-                    "step": step,
-                    "result": result,
-                })
-
-                if result["status"] != "ok":
-                    return self.build_error_result(
-                        error_result=result,
-                        debug_trace=debug_trace,
-                    )
-
-                instruction = result["instruction"]
-
-            elif step == "resolve_load":
-                result = _resolve_load_with_services(
-                    services=services,
-                    instruction=instruction,
-                )
-                debug_trace.append({
-                    "step": step,
-                    "result": result,
-                })
-
-                if result["status"] != "ok":
-                    return self.build_error_result(
-                        error_result=result,
-                        debug_trace=debug_trace,
-                    )
-
-                resolution = result
-
-            elif step == "execute_change_load":
-                result = _execute_change_load_with_services(
-                    services=services,
-                    instruction=instruction,
-                )
-                debug_trace.append({
-                    "step": step,
-                    "result": result,
-                })
-
-                if result["status"] != "ok":
-                    return self.build_error_result(
-                        error_result=result,
-                        debug_trace=debug_trace,
-                    )
-
-                execution = result
-
-            elif step == "summarize_powerfactory_result":
-                result = _summarize_powerfactory_result_with_services(
-                    services=services,
-                    result_payload=execution,
-                    user_input=user_input,
-                )
-                debug_trace.append({
-                    "step": step,
-                    "result": result,
-                })
-
-                if result["status"] != "ok":
-                    return self.build_error_result(
-                        error_result=result,
-                        debug_trace=debug_trace,
-                    )
-
-                summary = result
-
-            elif step == "unsupported_request":
+            if step == "unsupported_request":
                 result = self.build_unsupported_result(
                     user_input=user_input,
                     classification=classification,
@@ -410,20 +325,50 @@ class PowerFactoryDomainAgent:
                 })
                 return result
 
-            else:
-                result = {
-                    "status": "error",
-                    "tool": "powerfactory_domain_agent",
-                    "error": f"Unknown plan step: {step}",
-                }
-                debug_trace.append({
-                    "step": step,
-                    "result": result,
-                })
+            tool_kwargs: Dict[str, Any] = {
+                "services": services,
+            }
+
+            if step == "interpret_instruction":
+                tool_kwargs["user_input"] = user_input
+            elif step == "resolve_load":
+                tool_kwargs["instruction"] = instruction
+            elif step == "execute_change_load":
+                tool_kwargs["instruction"] = instruction
+            elif step == "summarize_powerfactory_result":
+                tool_kwargs["result_payload"] = execution
+                tool_kwargs["user_input"] = user_input
+
+            tool_spec = self.registry.get_tool_spec(step)
+            result = self.registry.invoke(step, **tool_kwargs)
+
+            debug_trace.append({
+                "step": step,
+                "tool_spec": {
+                    "name": tool_spec.name if tool_spec else step,
+                    "description": tool_spec.description if tool_spec else "",
+                    "capability_tags": tool_spec.capability_tags if tool_spec else [],
+                    "mutating": tool_spec.mutating if tool_spec else False,
+                },
+                "result": result,
+            })
+
+            if result["status"] != "ok":
                 return self.build_error_result(
                     error_result=result,
                     debug_trace=debug_trace,
                 )
+
+            if step == "get_load_catalog":
+                catalog_result = result
+            elif step == "interpret_instruction":
+                instruction = result["instruction"]
+            elif step == "resolve_load":
+                resolution = result
+            elif step == "execute_change_load":
+                execution = result
+            elif step == "summarize_powerfactory_result":
+                summary = result
 
         return self.build_success_result(
             services=services,
@@ -467,6 +412,7 @@ class PowerFactoryDomainAgent:
             "user_input": user_input,
             "classification": classification,
             "plan": plan,
+            "available_tools": self.get_available_tools(),
             "instruction": instruction,
             "resolved_load": execution.get("resolved_load") if isinstance(execution, dict) else None,
             "data": execution.get("data", {}) if isinstance(execution, dict) else {},
@@ -488,6 +434,7 @@ class PowerFactoryDomainAgent:
     ) -> Dict[str, Any]:
         result = dict(error_result)
         result["agent"] = "PowerFactoryDomainAgent"
+        result["available_tools"] = self.get_available_tools()
         result["debug"] = {
             "trace": debug_trace,
         }
