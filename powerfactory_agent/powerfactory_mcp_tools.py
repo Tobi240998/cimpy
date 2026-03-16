@@ -16,6 +16,23 @@ except ImportError:
     from cimpy.powerfactory_agent.agents.Result_interpreterAgent import Result_interpreterAgent
     from cimpy.powerfactory_agent.agents.LLM_resultAgent import LLM_resultAgent
 
+import os
+import signal
+import subprocess
+from typing import Dict, Any
+
+# Powerfactory beenden, falls es bereits läuft
+def _kill_powerfactory_if_running() -> None:
+    try:
+        subprocess.run(
+            ["taskkill", "/F", "/IM", "powerfactory.exe"],
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+            check=False,
+        )
+    except Exception:
+        pass
+
 
 # ------------------------------------------------------------------
 # POWERFACTORY CONTEXT
@@ -23,6 +40,9 @@ except ImportError:
 def get_powerfactory_context(project_name: str = DEFAULT_PROJECT_NAME) -> Dict[str, Any]:
     pf = _get_pf()
 
+    # Falls PF schon läuft: erst beenden
+    _kill_powerfactory_if_running()
+    
     # PowerFactory starten
     app = _get_app(pf)
     if app is None:

@@ -41,8 +41,10 @@ def _to_py_list(obj):
 
 
 def _get_app(pf):
-    # GetApplicationExt ist häufig robuster (Engine/externes Python)
-    return pf.GetApplicationExt() if hasattr(pf, "GetApplicationExt") else pf.GetApplication()
+    app = pf.GetApplication()  # versucht vorhandene Instanz
+    if app is None:
+        app = pf.GetApplicationExt()  # startet neue
+    return app
 
 
 def _activate_project_by_name(app, project_name: str) -> bool:
