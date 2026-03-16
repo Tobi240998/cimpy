@@ -1,25 +1,34 @@
 from __future__ import annotations
 
 from typing import Any, Dict
+
 from langchain_core.tools import tool
 
 from cimpy.llm_routing.config import CIM_ROOT
-from cimpy.cimpy_time_analysis.runner import run_historical_cim_analysis
+from cimpy.cimpy_time_analysis.cim_domain_agent import CIMDomainAgent
 
 from cimpy.powerfactory_agent.config import DEFAULT_PROJECT_NAME
 from cimpy.powerfactory_agent.powerfactory_domain_agent import PowerFactoryDomainAgent
 
 
 # ------------------------------------------------------------------
-# HISTORICAL TOOL
+# HISTORICAL TOOL (DOMAIN AGENT)
 # ------------------------------------------------------------------
 @tool("historical")
 def historical_tool(user_input: str, **kwargs: Any) -> Dict[str, Any]:
-    """Führt historische CIM-Analyse aus."""
-    return run_historical_cim_analysis(
-        user_input=user_input,
-        cim_root=CIM_ROOT,
+    """
+    Führt eine CIM-/Historical-Operation über den CIMDomainAgent aus.
+    Der Router bleibt unverändert und ruft weiterhin nur das Tool "historical" auf.
+    """
+
+    cim_root = (
+        kwargs.get("cim_root")
+        or kwargs.get("root_folder")
+        or CIM_ROOT
     )
+
+    agent = CIMDomainAgent(cim_root=cim_root)
+    return agent.run(user_input)
 
 
 # ------------------------------------------------------------------
@@ -43,5 +52,4 @@ def powerfactory_tool(
     )
 
     agent = PowerFactoryDomainAgent(project_name=project_name)
-
     return agent.run(user_input)

@@ -1,17 +1,7 @@
-from cimpy.powerfactory_agent.pf_runner import _import_powerfactory, _get_app
-from cimpy.powerfactory_agent.powerfactory_mcp_tools import get_load_catalog
+from cimpy.cimpy_time_analysis.cim_domain_agent import CIMDomainAgent
+from cimpy.llm_routing.config import CIM_ROOT
 
-pf = _import_powerfactory()
-app = _get_app(pf)
+agent = CIMDomainAgent(cim_root=CIM_ROOT)
 
-print("PowerFactory App verbunden:", app)
-
-project = app.GetActiveProject()
-studycase = app.GetActiveStudyCase()
-
-print("Aktives Projekt:", project)
-print("Aktiver StudyCase:", studycase)
-
-result = get_load_catalog(project, studycase)
-print(result["status"])
-print(result["loads"][:3])
+result = agent.run("Zeige mir die Nachbarn von Trafo 19 - 20 am 2026-01-09")
+print(result)
