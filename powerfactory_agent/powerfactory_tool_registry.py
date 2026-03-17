@@ -12,6 +12,12 @@ from cimpy.powerfactory_agent.powerfactory_mcp_tools import (
     _build_topology_inventory_with_services,
     _interpret_entity_instruction_with_services,
     _resolve_entity_from_inventory_with_services,
+    _interpret_switch_instruction_with_services,
+    _build_switch_inventory_from_services,
+    _build_switch_inventory_payload,
+    _resolve_switch_from_inventory_llm_with_services,
+    _execute_switch_operation_with_services,
+    _summarize_switch_result_with_services,
 )
 from cimpy.powerfactory_agent.powerfactory_topology_graph import (
     build_powerfactory_topology_graph_from_services,
@@ -31,29 +37,13 @@ class PowerFactoryToolSpec:
 
 
 class PowerFactoryToolRegistry:
-    """
-    Registry for PowerFactory domain tools.
-    Maps planned step names to executable internal tool functions
-    and exposes MCP-near tool metadata.
-    """
-
     def __init__(self):
         self._registry: Dict[str, PowerFactoryToolSpec] = {
             "get_load_catalog": PowerFactoryToolSpec(
                 name="get_load_catalog",
                 description="Read the available load catalog from the active PowerFactory project.",
-                input_schema={
-                    "type": "object",
-                    "properties": {
-                        "services": {"type": "object"},
-                    },
-                    "required": ["services"],
-                },
-                output_schema_hint={
-                    "status": "ok|error",
-                    "tool": "get_load_catalog",
-                    "loads": "list[load-metadata]",
-                },
+                input_schema={"type": "object", "properties": {"services": {"type": "object"}}, "required": ["services"]},
+                output_schema_hint={"status": "ok|error", "tool": "get_load_catalog", "loads": "list[load-metadata]"},
                 capability_tags=["powerfactory", "read", "catalog", "load"],
                 mutating=False,
                 handler=self._tool_get_load_catalog,
@@ -63,17 +53,10 @@ class PowerFactoryToolRegistry:
                 description="Interpret a natural-language user request into a structured load-change instruction.",
                 input_schema={
                     "type": "object",
-                    "properties": {
-                        "services": {"type": "object"},
-                        "user_input": {"type": "string"},
-                    },
+                    "properties": {"services": {"type": "object"}, "user_input": {"type": "string"}},
                     "required": ["services", "user_input"],
                 },
-                output_schema_hint={
-                    "status": "ok|error",
-                    "tool": "interpret_instruction",
-                    "instruction": "dict",
-                },
+                output_schema_hint={"status": "ok|error", "tool": "interpret_instruction", "instruction": "dict"},
                 capability_tags=["powerfactory", "planning", "nlp", "load"],
                 mutating=False,
                 handler=self._tool_interpret_instruction,
@@ -83,17 +66,10 @@ class PowerFactoryToolRegistry:
                 description="Resolve the target load object inside the active PowerFactory project.",
                 input_schema={
                     "type": "object",
-                    "properties": {
-                        "services": {"type": "object"},
-                        "instruction": {"type": "object"},
-                    },
+                    "properties": {"services": {"type": "object"}, "instruction": {"type": "object"}},
                     "required": ["services", "instruction"],
                 },
-                output_schema_hint={
-                    "status": "ok|error",
-                    "tool": "resolve_load",
-                    "resolution": "dict",
-                },
+                output_schema_hint={"status": "ok|error", "tool": "resolve_load", "resolution": "dict"},
                 capability_tags=["powerfactory", "resolution", "load"],
                 mutating=False,
                 handler=self._tool_resolve_load,
@@ -103,20 +79,13 @@ class PowerFactoryToolRegistry:
                 description="Apply a load change in PowerFactory and run load flow before/after.",
                 input_schema={
                     "type": "object",
-                    "properties": {
-                        "services": {"type": "object"},
-                        "instruction": {"type": "object"},
-                    },
+                    "properties": {"services": {"type": "object"}, "instruction": {"type": "object"}},
                     "required": ["services", "instruction"],
                 },
                 output_schema_hint={
                     "status": "ok|error",
                     "tool": "execute_change_load",
-                    "data": {
-                        "u_before": "dict[str, float]",
-                        "u_after": "dict[str, float]",
-                        "delta_u": "dict[str, float]",
-                    },
+                    "data": {"u_before": "dict[str, float]", "u_after": "dict[str, float]", "delta_u": "dict[str, float]"},
                 },
                 capability_tags=["powerfactory", "execution", "loadflow", "load"],
                 mutating=True,
@@ -124,7 +93,7 @@ class PowerFactoryToolRegistry:
             ),
             "summarize_powerfactory_result": PowerFactoryToolSpec(
                 name="summarize_powerfactory_result",
-                description="Summarize result data from a PowerFactory workflow for the end user.",
+                description="Summarize result data from a PowerFactory load workflow for the end user.",
                 input_schema={
                     "type": "object",
                     "properties": {
@@ -134,11 +103,7 @@ class PowerFactoryToolRegistry:
                     },
                     "required": ["services", "result_payload", "user_input"],
                 },
-                output_schema_hint={
-                    "status": "ok|error",
-                    "tool": "summarize_powerfactory_result",
-                    "answer": "string",
-                },
+                output_schema_hint={"status": "ok|error", "tool": "summarize_powerfactory_result", "answer": "string"},
                 capability_tags=["powerfactory", "summary", "result"],
                 mutating=False,
                 handler=self._tool_summarize_powerfactory_result,
@@ -148,10 +113,7 @@ class PowerFactoryToolRegistry:
                 description="Build a topology graph from the active PowerFactory project.",
                 input_schema={
                     "type": "object",
-                    "properties": {
-                        "services": {"type": "object"},
-                        "contract_cubicles": {"type": "boolean"},
-                    },
+                    "properties": {"services": {"type": "object"}, "contract_cubicles": {"type": "boolean"}},
                     "required": ["services"],
                 },
                 output_schema_hint={
@@ -171,24 +133,17 @@ class PowerFactoryToolRegistry:
                 description="Build a typed inventory from the current PowerFactory topology graph.",
                 input_schema={
                     "type": "object",
-                    "properties": {
-                        "services": {"type": "object"},
-                        "topology_graph_result": {"type": "object"},
-                    },
+                    "properties": {"services": {"type": "object"}, "topology_graph_result": {"type": "object"}},
                     "required": ["services", "topology_graph_result"],
                 },
-                output_schema_hint={
-                    "status": "ok|error",
-                    "tool": "build_topology_inventory",
-                    "inventory": "dict",
-                },
+                output_schema_hint={"status": "ok|error", "tool": "build_topology_inventory", "inventory": "dict"},
                 capability_tags=["powerfactory", "topology", "inventory", "read_only"],
                 mutating=False,
                 handler=self._tool_build_topology_inventory,
             ),
             "interpret_entity_instruction": PowerFactoryToolSpec(
                 name="interpret_entity_instruction",
-                description="Interpret a natural-language user request into a structured generic PowerFactory entity instruction.",
+                description="Interpret a natural-language topology request into a structured generic PowerFactory entity instruction.",
                 input_schema={
                     "type": "object",
                     "properties": {
@@ -198,11 +153,7 @@ class PowerFactoryToolRegistry:
                     },
                     "required": ["services", "user_input", "inventory"],
                 },
-                output_schema_hint={
-                    "status": "ok|error",
-                    "tool": "interpret_entity_instruction",
-                    "instruction": "dict",
-                },
+                output_schema_hint={"status": "ok|error", "tool": "interpret_entity_instruction", "instruction": "dict"},
                 capability_tags=["powerfactory", "planning", "nlp", "topology", "entity"],
                 mutating=False,
                 handler=self._tool_interpret_entity_instruction,
@@ -247,15 +198,84 @@ class PowerFactoryToolRegistry:
                     },
                     "required": ["services", "topology_graph"],
                 },
-                output_schema_hint={
-                    "status": "ok|error",
-                    "tool": "query_topology_neighbors",
-                    "selected_node": "dict",
-                    "neighbors": "list[dict]",
-                },
+                output_schema_hint={"status": "ok|error", "tool": "query_topology_neighbors", "selected_node": "dict", "neighbors": "list[dict]"},
                 capability_tags=["powerfactory", "topology", "neighbors", "read_only"],
                 mutating=False,
                 handler=self._tool_query_topology_neighbors,
+            ),
+            "interpret_switch_instruction": PowerFactoryToolSpec(
+                name="interpret_switch_instruction",
+                description="Interpret a natural-language switch request into a structured switch operation instruction.",
+                input_schema={
+                    "type": "object",
+                    "properties": {"services": {"type": "object"}, "user_input": {"type": "string"}},
+                    "required": ["services", "user_input"],
+                },
+                output_schema_hint={"status": "ok|error", "tool": "interpret_switch_instruction", "instruction": "dict"},
+                capability_tags=["powerfactory", "planning", "nlp", "switch"],
+                mutating=False,
+                handler=self._tool_interpret_switch_instruction,
+            ),
+            "resolve_switch_from_inventory_llm": PowerFactoryToolSpec(
+                name="resolve_switch_from_inventory_llm",
+                description="Resolve a switch by LLM-based selection from the exact available switch candidate list.",
+                input_schema={
+                    "type": "object",
+                    "properties": {"services": {"type": "object"}, "instruction": {"type": "object"}},
+                    "required": ["services", "instruction"],
+                },
+                output_schema_hint={
+                    "status": "ok|error",
+                    "tool": "resolve_switch_from_inventory_llm",
+                    "asset_query": "string",
+                    "selected_match": "dict",
+                    "llm_decision": "dict",
+                },
+                capability_tags=["powerfactory", "switch", "llm_match", "resolution", "read_only"],
+                mutating=False,
+                handler=self._tool_resolve_switch_from_inventory_llm,
+            ),
+            "execute_switch_operation": PowerFactoryToolSpec(
+                name="execute_switch_operation",
+                description="Execute an open/close/toggle operation on a resolved switch object in PowerFactory.",
+                input_schema={
+                    "type": "object",
+                    "properties": {
+                        "services": {"type": "object"},
+                        "instruction": {"type": "object"},
+                        "resolution": {"type": "object"},
+                        "run_loadflow_after": {"type": "boolean"},
+                    },
+                    "required": ["services", "instruction", "resolution"],
+                },
+                output_schema_hint={
+                    "status": "ok|error",
+                    "tool": "execute_switch_operation",
+                    "switch": "dict",
+                    "state_before": "string|None",
+                    "state_after": "string|None",
+                    "loadflow": "dict",
+                },
+                capability_tags=["powerfactory", "execution", "switch", "topology"],
+                mutating=True,
+                handler=self._tool_execute_switch_operation,
+            ),
+            "summarize_switch_result": PowerFactoryToolSpec(
+                name="summarize_switch_result",
+                description="Summarize the result of a switch state change for the end user.",
+                input_schema={
+                    "type": "object",
+                    "properties": {
+                        "services": {"type": "object"},
+                        "result_payload": {"type": "object"},
+                        "user_input": {"type": "string"},
+                    },
+                    "required": ["services", "result_payload", "user_input"],
+                },
+                output_schema_hint={"status": "ok|error", "tool": "summarize_switch_result", "answer": "string"},
+                capability_tags=["powerfactory", "summary", "switch"],
+                mutating=False,
+                handler=self._tool_summarize_switch_result,
             ),
         }
 
@@ -270,7 +290,6 @@ class PowerFactoryToolRegistry:
 
     def list_tool_specs(self) -> List[Dict[str, Any]]:
         items: List[Dict[str, Any]] = []
-
         for name in self.list_tools():
             spec = self._registry[name]
             items.append({
@@ -281,7 +300,6 @@ class PowerFactoryToolRegistry:
                 "capability_tags": spec.capability_tags,
                 "mutating": spec.mutating,
             })
-
         return items
 
     def invoke(self, step_name: str, **kwargs: Any) -> Dict[str, Any]:
@@ -297,44 +315,17 @@ class PowerFactoryToolRegistry:
 
         return spec.handler(**kwargs)
 
-    # ------------------------------------------------------------------
-    # TOOL WRAPPERS
-    # ------------------------------------------------------------------
     def _tool_get_load_catalog(self, services: Dict[str, Any], **kwargs: Any) -> Dict[str, Any]:
         return _get_load_catalog_from_services(services)
 
-    def _tool_interpret_instruction(
-        self,
-        services: Dict[str, Any],
-        user_input: str,
-        **kwargs: Any,
-    ) -> Dict[str, Any]:
-        return _interpret_instruction_with_services(
-            services=services,
-            user_input=user_input,
-        )
+    def _tool_interpret_instruction(self, services: Dict[str, Any], user_input: str, **kwargs: Any) -> Dict[str, Any]:
+        return _interpret_instruction_with_services(services=services, user_input=user_input)
 
-    def _tool_resolve_load(
-        self,
-        services: Dict[str, Any],
-        instruction: dict,
-        **kwargs: Any,
-    ) -> Dict[str, Any]:
-        return _resolve_load_with_services(
-            services=services,
-            instruction=instruction,
-        )
+    def _tool_resolve_load(self, services: Dict[str, Any], instruction: dict, **kwargs: Any) -> Dict[str, Any]:
+        return _resolve_load_with_services(services=services, instruction=instruction)
 
-    def _tool_execute_change_load(
-        self,
-        services: Dict[str, Any],
-        instruction: dict,
-        **kwargs: Any,
-    ) -> Dict[str, Any]:
-        return _execute_change_load_with_services(
-            services=services,
-            instruction=instruction,
-        )
+    def _tool_execute_change_load(self, services: Dict[str, Any], instruction: dict, **kwargs: Any) -> Dict[str, Any]:
+        return _execute_change_load_with_services(services=services, instruction=instruction)
 
     def _tool_summarize_powerfactory_result(
         self,
@@ -418,4 +409,66 @@ class PowerFactoryToolRegistry:
             selected_node_id=selected_node_id,
             matches=matches or [],
             max_matches=max_matches,
+        )
+
+    def _tool_interpret_switch_instruction(
+        self,
+        services: Dict[str, Any],
+        user_input: str,
+        **kwargs: Any,
+    ) -> Dict[str, Any]:
+        switch_inventory_result = _build_switch_inventory_from_services(services)
+        if switch_inventory_result["status"] != "ok":
+            return switch_inventory_result
+
+        inventory = _build_switch_inventory_payload(switch_inventory_result.get("switches", []))
+        return _interpret_switch_instruction_with_services(
+            services=services,
+            user_input=user_input,
+            inventory=inventory,
+        )
+
+    def _tool_resolve_switch_from_inventory_llm(
+        self,
+        services: Dict[str, Any],
+        instruction: dict,
+        **kwargs: Any,
+    ) -> Dict[str, Any]:
+        switch_inventory_result = _build_switch_inventory_from_services(services)
+        if switch_inventory_result["status"] != "ok":
+            return switch_inventory_result
+
+        inventory = _build_switch_inventory_payload(switch_inventory_result.get("switches", []))
+        return _resolve_switch_from_inventory_llm_with_services(
+            services=services,
+            instruction=instruction,
+            inventory=inventory,
+        )
+
+    def _tool_execute_switch_operation(
+        self,
+        services: Dict[str, Any],
+        instruction: dict,
+        resolution: dict,
+        run_loadflow_after: bool = True,
+        **kwargs: Any,
+    ) -> Dict[str, Any]:
+        return _execute_switch_operation_with_services(
+            services=services,
+            instruction=instruction,
+            resolution=resolution,
+            run_loadflow_after=run_loadflow_after,
+        )
+
+    def _tool_summarize_switch_result(
+        self,
+        services: Dict[str, Any],
+        result_payload: dict,
+        user_input: str,
+        **kwargs: Any,
+    ) -> Dict[str, Any]:
+        return _summarize_switch_result_with_services(
+            services=services,
+            result_payload=result_payload,
+            user_input=user_input,
         )

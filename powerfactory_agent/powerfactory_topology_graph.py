@@ -265,10 +265,12 @@ def classify_inventory_type(node_attrs: Dict[str, Any]) -> str:
         return "line"
     if pf_class in {"elmsym", "elmasm", "elmsgen", "elmpvsys"}:
         return "generator"
-    if "coup" in pf_class or "switch" in pf_class or pf_class in {"relfuse", "staswit"}:
+    if "coup" in pf_class or "switch" in pf_class or pf_class in {"relfuse", "staswit", "elmcoup"}:
         return "switch"
     if kind == "equip":
         return "equipment"
+    if kind == "sta":
+        return "station_object"
     return "unknown"
 
 
@@ -283,8 +285,9 @@ def build_topology_inventory(graph: nx.MultiGraph) -> Dict[str, Any]:
             "full_name": attrs.get("full_name"),
             "kind": attrs.get("kind"),
             "degree": graph.degree(node_id),
+            "inventory_type": classify_inventory_type(attrs),
         }
-        inv_type = classify_inventory_type(attrs)
+        inv_type = entry["inventory_type"]
         by_type[inv_type].append(entry)
 
     for inv_type in by_type:
@@ -365,10 +368,10 @@ def _score_candidate_against_query(
         score += 20 * overlap_name
         score += 8 * overlap_full
 
-        # Bonus for consecutive token phrase in candidate name
-        if " ".join(q_tokens) and " ".join(q_tokens) in name:
+        joined = " ".join(q_tokens)
+        if joined and joined in name:
             score += 30
-        if " ".join(q_tokens) and " ".join(q_tokens) in full_name:
+        if joined and joined in full_name:
             score += 15
 
     return score
@@ -393,12 +396,11 @@ def find_matching_nodes(
         kind = str(data.get("kind") or "")
 
         score = _score_candidate_against_query(query, name, full_name)
-
         if score <= 0:
             continue
 
+        inv_type = classify_inventory_type(data)
         if class_hint:
-            inv_type = classify_inventory_type(data)
             if inv_type == class_hint:
                 score += 25
             else:
@@ -412,7 +414,7 @@ def find_matching_nodes(
             "kind": kind,
             "score": score,
             "degree": graph.degree(node_id),
-            "inventory_type": classify_inventory_type(data),
+            "inventory_type": inv_type,
         })
 
     matches.sort(
@@ -437,7 +439,6 @@ def find_matches_in_inventory(
 
     tokens = _tokenize(raw)
     if len(tokens) >= 2:
-        # Sliding windows across tokens, without hard-coded filler removal
         for window_size in range(len(tokens), 0, -1):
             for start in range(0, len(tokens) - window_size + 1):
                 variant = " ".join(tokens[start:start + window_size]).strip()

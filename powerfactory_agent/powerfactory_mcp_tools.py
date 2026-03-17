@@ -3,7 +3,12 @@ from __future__ import annotations
 import subprocess
 from typing import Any, Dict, List, Optional
 
+from pydantic import BaseModel, Field
+from langchain_core.prompts import ChatPromptTemplate
+from langchain_core.output_parsers import PydanticOutputParser
+
 from cimpy.powerfactory_agent.config import DEFAULT_PROJECT_NAME
+from cimpy.powerfactory_agent.langchain_llm import get_llm
 from cimpy.powerfactory_agent.pf_runner import _get_pf, _get_app, _activate_project_by_name
 
 try:
@@ -25,6 +30,22 @@ from cimpy.powerfactory_agent.powerfactory_topology_graph import (
 )
 
 
+# ------------------------------------------------------------------
+# LLM OUTPUT MODEL FOR SWITCH MATCHING
+# ------------------------------------------------------------------
+class SwitchMatchDecision(BaseModel):
+    selected_switch_name: Optional[str] = Field(
+        default=None,
+        description="Exact switch name from the provided candidate list, or null if no safe match exists."
+    )
+    confidence: str = Field(description="One of: high, medium, low")
+    rationale: str = Field(description="Short explanation for the match decision")
+    alternatives: List[str] = Field(default_factory=list)
+    should_execute: bool = Field(
+        description="True only if the selected switch is a safe unambiguous choice."
+    )
+
+
 def _kill_powerfactory_if_running() -> None:
     try:
         subprocess.run(
@@ -37,15 +58,22 @@ def _kill_powerfactory_if_running() -> None:
         pass
 
 
+def _to_py_list(value: Any) -> List[Any]:
+    if value is None:
+        return []
+    try:
+        return list(value)
+    except Exception:
+        return []
+
+
 # ------------------------------------------------------------------
 # POWERFACTORY CONTEXT
 # ------------------------------------------------------------------
 def get_powerfactory_context(project_name: str = DEFAULT_PROJECT_NAME) -> Dict[str, Any]:
     pf = _get_pf()
-
-    _kill_powerfactory_if_running()
-
     app = _get_app(pf)
+
     if app is None:
         return {
             "status": "error",
@@ -110,7 +138,7 @@ def build_powerfactory_services(project_name: str = DEFAULT_PROJECT_NAME) -> Dic
 
 
 # ------------------------------------------------------------------
-# INTERNAL HELPERS USING EXISTING SERVICES
+# LOAD CATALOG / LOAD INTERPRETATION
 # ------------------------------------------------------------------
 def _get_load_catalog_from_services(services: Dict[str, Any]) -> Dict[str, Any]:
     interpreter = services["interpreter"]
@@ -197,7 +225,7 @@ def _resolve_load_with_services(services: Dict[str, Any], instruction: dict) -> 
 
 
 # ------------------------------------------------------------------
-# GENERIC TOPOLOGY ENTITY HELPERS
+# GENERIC TEXT / INVENTORY HELPERS
 # ------------------------------------------------------------------
 def _safe_lower(value: Any) -> str:
     if value is None:
@@ -210,6 +238,24 @@ def _tokenize(value: str) -> List[str]:
     for ch in "\\/()[]{}:;,.!?\"'":
         text = text.replace(ch, " ")
     return [token for token in text.split() if token]
+
+
+def _build_entity_name_candidates(user_input: str) -> List[str]:
+    text = (user_input or "").strip()
+    if not text:
+        return []
+
+    candidates: List[str] = []
+    candidates.append(text)
+
+    tokens = _tokenize(text)
+    for window_size in range(len(tokens), 0, -1):
+        for start in range(0, len(tokens) - window_size + 1):
+            candidate = " ".join(tokens[start:start + window_size]).strip()
+            if candidate and candidate not in candidates:
+                candidates.append(candidate)
+
+    return candidates
 
 
 def _infer_entity_type_from_text(user_input: str, inventory: Dict[str, Any]) -> Optional[str]:
@@ -235,57 +281,9 @@ def _infer_entity_type_from_text(user_input: str, inventory: Dict[str, Any]) -> 
     return None
 
 
-def _build_entity_name_candidates(user_input: str) -> List[str]:
-    """
-    No hard-coded filler removal.
-    We only generate overlapping token windows from the full user input.
-    The resolver later chooses the best candidate against the real inventory.
-    """
-    text = (user_input or "").strip()
-    if not text:
-        return []
-
-    candidates: List[str] = []
-    if text:
-        candidates.append(text)
-
-    tokens = _tokenize(text)
-    for window_size in range(len(tokens), 0, -1):
-        for start in range(0, len(tokens) - window_size + 1):
-            candidate = " ".join(tokens[start:start + window_size]).strip()
-            if candidate and candidate not in candidates:
-                candidates.append(candidate)
-
-    return candidates
-
-
-def _interpret_entity_instruction_with_services(
-    services: Dict[str, Any],
-    user_input: str,
-    inventory: Dict[str, Any],
-) -> Dict[str, Any]:
-    project_name = services["project_name"]
-
-    entity_type = _infer_entity_type_from_text(user_input, inventory)
-    entity_name_candidates = _build_entity_name_candidates(user_input)
-
-    instruction = {
-        "query_type": "neighbors",
-        "entity_type": entity_type,
-        "entity_name_raw": user_input,
-        "entity_name_candidates": entity_name_candidates,
-        "available_types": inventory.get("available_types", []),
-    }
-
-    return {
-        "status": "ok",
-        "tool": "interpret_entity_instruction",
-        "user_input": user_input,
-        "project": project_name,
-        "instruction": instruction,
-    }
-
-
+# ------------------------------------------------------------------
+# TOPOLOGY INVENTORY / TOPOLOGY INTERPRETATION
+# ------------------------------------------------------------------
 def _build_topology_inventory_with_services(
     services: Dict[str, Any],
     topology_graph_result: Dict[str, Any],
@@ -298,6 +296,30 @@ def _build_topology_inventory_with_services(
         "tool": "build_topology_inventory",
         "project": project_name,
         "inventory": inventory,
+    }
+
+
+def _interpret_entity_instruction_with_services(
+    services: Dict[str, Any],
+    user_input: str,
+    inventory: Dict[str, Any],
+) -> Dict[str, Any]:
+    project_name = services["project_name"]
+
+    instruction = {
+        "query_type": "neighbors",
+        "entity_type": _infer_entity_type_from_text(user_input, inventory),
+        "entity_name_raw": user_input,
+        "entity_name_candidates": _build_entity_name_candidates(user_input),
+        "available_types": inventory.get("available_types", []),
+    }
+
+    return {
+        "status": "ok",
+        "tool": "interpret_entity_instruction",
+        "user_input": user_input,
+        "project": project_name,
+        "instruction": instruction,
     }
 
 
@@ -390,15 +412,6 @@ def _resolve_entity_from_inventory_with_services(
             break
 
     if not selected_matches:
-        sample_pool = [
-            {
-                "name": item.get("name"),
-                "pf_class": item.get("pf_class"),
-                "inventory_type": item.get("inventory_type"),
-                "full_name": item.get("full_name"),
-            }
-            for item in candidate_pool[:50]
-        ]
         return {
             "status": "error",
             "tool": "resolve_entity_from_inventory",
@@ -407,16 +420,10 @@ def _resolve_entity_from_inventory_with_services(
             "error": "no_matching_asset",
             "details": "Kein passendes Asset aus der Entity-Instruction konnte im Inventar gematcht werden.",
             "attempted_queries": attempted_queries,
-            "debug_match": {
-                "candidate_pool_size": len(candidate_pool),
-                "entity_type": used_entity_type,
-                "sample_candidates": sample_pool,
-            },
         }
 
     selected_match = selected_matches[0]
 
-    # Re-confirm selected node against graph for consistency/debug
     graph_matches = find_matching_nodes(
         graph=topology_graph,
         asset_query=selected_match.get("name") or selected_match.get("full_name") or "",
@@ -439,6 +446,662 @@ def _resolve_entity_from_inventory_with_services(
     }
 
 
+# ------------------------------------------------------------------
+# SWITCH INVENTORY / SWITCH INTERPRETATION / SWITCH RESOLUTION
+# ------------------------------------------------------------------
+def _looks_like_switch_object(obj: Any) -> bool:
+    try:
+        cls = (obj.GetClassName() or "").lower()
+    except Exception:
+        cls = ""
+
+    try:
+        name = (obj.loc_name or "").lower()
+    except Exception:
+        name = ""
+
+    if "switch" in cls or "coup" in cls or cls in {"staswit", "elmcoup", "relfuse"}:
+        return True
+
+    if "switch" in name or "schalter" in name or "breaker" in name or "coupler" in name:
+        return True
+
+    return False
+
+
+def _build_switch_inventory_from_services(services: Dict[str, Any]) -> Dict[str, Any]:
+    app = services["app"]
+    project_name = services["project_name"]
+
+    switches: List[Dict[str, Any]] = []
+
+    sta_objects = app.GetCalcRelevantObjects("*.Sta*") or []
+    for obj in sta_objects:
+        if not _looks_like_switch_object(obj):
+            continue
+
+        try:
+            full_name = obj.GetFullName()
+        except Exception:
+            full_name = None
+
+        try:
+            pf_class = obj.GetClassName()
+        except Exception:
+            pf_class = None
+
+        try:
+            name = obj.loc_name
+        except Exception:
+            name = None
+
+        switches.append({
+            "node_id": full_name or name,
+            "name": name,
+            "pf_class": pf_class,
+            "full_name": full_name,
+            "kind": "sta",
+            "degree": 0,
+            "inventory_type": "switch",
+        })
+
+    switches.sort(key=lambda item: (str(item.get("name") or ""), str(item.get("full_name") or "")))
+
+    return {
+        "status": "ok",
+        "tool": "build_switch_inventory",
+        "project": project_name,
+        "switches": switches,
+    }
+
+
+def _build_switch_inventory_payload(switches: List[Dict[str, Any]]) -> Dict[str, Any]:
+    return {
+        "available_types": ["switch"] if switches else [],
+        "counts_by_type": {"switch": len(switches)},
+        "items_by_type": {"switch": switches},
+        "samples_by_type": {
+            "switch": [
+                {
+                    "name": item.get("name"),
+                    "pf_class": item.get("pf_class"),
+                    "full_name": item.get("full_name"),
+                }
+                for item in switches[:10]
+            ]
+        },
+    }
+
+
+def _interpret_switch_instruction_with_services(
+    services: Dict[str, Any],
+    user_input: str,
+    inventory: Dict[str, Any],
+) -> Dict[str, Any]:
+    project_name = services["project_name"]
+    text = _safe_lower(user_input)
+
+    operation = None
+    if any(token in text for token in ["öffne", "oeffne", "open", "trenne"]):
+        operation = "open"
+    elif any(token in text for token in ["schließe", "schliesse", "schliese", "close", "einschalten", "zuschalten"]):
+        operation = "close"
+    elif any(token in text for token in ["toggle", "umschalten"]):
+        operation = "toggle"
+
+    instruction = {
+        "query_type": "switch_operation",
+        "operation": operation,
+        "entity_type": "switch",
+        "entity_name_raw": user_input,
+        "entity_name_candidates": _build_entity_name_candidates(user_input),
+        "available_types": inventory.get("available_types", []),
+    }
+
+    if not operation:
+        return {
+            "status": "error",
+            "tool": "interpret_switch_instruction",
+            "project": project_name,
+            "user_input": user_input,
+            "error": "missing_switch_operation",
+            "details": "Es konnte keine Schalteroperation erkannt werden.",
+            "instruction": instruction,
+        }
+
+    return {
+        "status": "ok",
+        "tool": "interpret_switch_instruction",
+        "user_input": user_input,
+        "project": project_name,
+        "instruction": instruction,
+    }
+
+
+def _build_switch_match_chain():
+    parser = PydanticOutputParser(pydantic_object=SwitchMatchDecision)
+    prompt = ChatPromptTemplate.from_messages([
+        (
+            "system",
+            "You match a user's requested switch to an existing PowerFactory switch.\n"
+            "You may only select a switch name that appears exactly in the provided candidate list.\n"
+            "Do not invent names.\n"
+            "If there is no safe unambiguous match, return selected_switch_name=null and should_execute=false.\n"
+            "Use high confidence only for a clearly dominant match.\n\n"
+            "{format_instructions}"
+        ),
+        (
+            "user",
+            "User request:\n{user_input}\n\n"
+            "Available switch candidates:\n{switch_candidates}"
+        ),
+    ])
+    llm = get_llm()
+    return prompt | llm | parser, parser
+
+
+def _resolve_switch_from_inventory_llm_with_services(
+    services: Dict[str, Any],
+    instruction: dict,
+    inventory: Dict[str, Any],
+) -> Dict[str, Any]:
+    project_name = services["project_name"]
+
+    items_by_type = inventory.get("items_by_type", {}) if isinstance(inventory, dict) else {}
+    switch_candidates = items_by_type.get("switch", []) or []
+
+    if not switch_candidates:
+        return {
+            "status": "error",
+            "tool": "resolve_switch_from_inventory_llm",
+            "project": project_name,
+            "instruction": instruction,
+            "error": "no_switch_candidates",
+            "details": "Im Switch-Inventar wurden keine Schalterkandidaten gefunden.",
+        }
+
+    candidate_names = [item.get("name") for item in switch_candidates if item.get("name")]
+    if not candidate_names:
+        return {
+            "status": "error",
+            "tool": "resolve_switch_from_inventory_llm",
+            "project": project_name,
+            "instruction": instruction,
+            "error": "empty_switch_names",
+            "details": "Die vorhandenen Switch-Kandidaten haben keine verwertbaren Namen.",
+        }
+
+    try:
+        chain, parser = _build_switch_match_chain()
+        decision = chain.invoke({
+            "user_input": instruction.get("entity_name_raw") or "",
+            "switch_candidates": "\n".join(f"- {name}" for name in candidate_names),
+            "format_instructions": parser.get_format_instructions(),
+        })
+    except Exception as e:
+        return {
+            "status": "error",
+            "tool": "resolve_switch_from_inventory_llm",
+            "project": project_name,
+            "instruction": instruction,
+            "error": "llm_switch_match_failed",
+            "details": str(e),
+        }
+
+    selected_name = decision.selected_switch_name
+    if selected_name not in candidate_names:
+        return {
+            "status": "error",
+            "tool": "resolve_switch_from_inventory_llm",
+            "project": project_name,
+            "instruction": instruction,
+            "error": "invalid_switch_selection",
+            "details": "Das LLM hat keinen gültigen exakten Switch-Namen aus der Kandidatenliste zurückgegeben.",
+            "llm_decision": decision.model_dump(),
+            "candidate_names": candidate_names,
+        }
+
+    if not decision.should_execute or decision.confidence.lower() != "high":
+        return {
+            "status": "error",
+            "tool": "resolve_switch_from_inventory_llm",
+            "project": project_name,
+            "instruction": instruction,
+            "error": "switch_match_not_safe",
+            "details": "Das LLM hat keinen ausreichend sicheren Switch-Treffer gefunden.",
+            "llm_decision": decision.model_dump(),
+            "candidate_names": candidate_names,
+        }
+
+    selected_match = next(item for item in switch_candidates if item.get("name") == selected_name)
+
+    return {
+        "status": "ok",
+        "tool": "resolve_switch_from_inventory_llm",
+        "project": project_name,
+        "instruction": instruction,
+        "asset_query": selected_name,
+        "selected_match": selected_match,
+        "matches": [selected_match],
+        "llm_decision": decision.model_dump(),
+    }
+
+
+# ------------------------------------------------------------------
+# SWITCH EXECUTION
+# ------------------------------------------------------------------
+def _get_object_by_full_name(app: Any, full_name: str) -> Any | None:
+    if not full_name:
+        return None
+
+    try:
+        obj = app.GetObject(full_name)
+        if obj is not None:
+            return obj
+    except Exception:
+        pass
+
+    try:
+        all_sta = app.GetCalcRelevantObjects("*.Sta*") or []
+        for obj in all_sta:
+            try:
+                if obj.GetFullName() == full_name:
+                    return obj
+            except Exception:
+                pass
+    except Exception:
+        pass
+
+    try:
+        all_elm = app.GetCalcRelevantObjects("*.Elm*") or []
+        for obj in all_elm:
+            try:
+                if obj.GetFullName() == full_name:
+                    return obj
+            except Exception:
+                pass
+    except Exception:
+        pass
+
+    return None
+
+
+def _read_switch_state(obj: Any) -> Dict[str, Any]:
+    candidates = ["on_off", "isclosed", "closed", "outserv"]
+
+    for attr_name in candidates:
+        try:
+            value = obj.GetAttribute(attr_name)
+            if value is not None:
+                return {"status": "ok", "state_source": attr_name, "raw_value": value}
+        except Exception:
+            pass
+
+        try:
+            value = getattr(obj, attr_name)
+            if value is not None:
+                return {"status": "ok", "state_source": attr_name, "raw_value": value}
+        except Exception:
+            pass
+
+    return {
+        "status": "error",
+        "error": "switch_state_not_readable",
+        "details": "Kein bekannter Zustandsindikator gefunden.",
+    }
+
+
+def _normalize_switch_state(raw_value: Any, source: str) -> Optional[str]:
+    if raw_value is None:
+        return None
+
+    source = (source or "").lower()
+
+    try:
+        ivalue = int(raw_value)
+    except Exception:
+        ivalue = None
+
+    if source == "outserv":
+        if ivalue == 0:
+            return "closed"
+        if ivalue == 1:
+            return "open"
+
+    if source in {"on_off", "isclosed", "closed"}:
+        if ivalue == 1:
+            return "closed"
+        if ivalue == 0:
+            return "open"
+
+    text = str(raw_value).strip().lower()
+    if text in {"1", "true", "closed", "on"}:
+        return "closed"
+    if text in {"0", "false", "open", "off"}:
+        return "open"
+
+    return None
+
+
+def _set_attr_or_field(obj: Any, attr_name: str, value: Any) -> bool:
+    try:
+        obj.SetAttribute(attr_name, value)
+        return True
+    except Exception:
+        pass
+
+    try:
+        setattr(obj, attr_name, value)
+        return True
+    except Exception:
+        pass
+
+    return False
+
+
+def _apply_switch_state_to_object(obj: Any, operation: str) -> Dict[str, Any]:
+    op = (operation or "").lower()
+
+    method_map = {
+        "open": ["Open", "SwitchOff", "OpenBreaker", "OpenSwitch"],
+        "close": ["Close", "SwitchOn", "CloseBreaker", "CloseSwitch"],
+    }
+
+    if op in method_map:
+        for method_name in method_map[op]:
+            try:
+                method = getattr(obj, method_name)
+                result = method()
+                return {
+                    "status": "ok",
+                    "apply_mode": "method",
+                    "apply_target": method_name,
+                    "method_result": result,
+                }
+            except Exception:
+                pass
+
+    attr_attempts = []
+    if op == "open":
+        attr_attempts = [("on_off", 0), ("isclosed", 0), ("closed", 0), ("outserv", 1)]
+    elif op == "close":
+        attr_attempts = [("on_off", 1), ("isclosed", 1), ("closed", 1), ("outserv", 0)]
+
+    for attr_name, value in attr_attempts:
+        if _set_attr_or_field(obj, attr_name, value):
+            return {
+                "status": "ok",
+                "apply_mode": "attribute",
+                "apply_target": attr_name,
+                "applied_value": value,
+            }
+
+    if op == "toggle":
+        before_state_raw = _read_switch_state(obj)
+        if before_state_raw.get("status") == "ok":
+            state = _normalize_switch_state(
+                raw_value=before_state_raw.get("raw_value"),
+                source=before_state_raw.get("state_source", ""),
+            )
+            if state == "open":
+                return _apply_switch_state_to_object(obj, "close")
+            if state == "closed":
+                return _apply_switch_state_to_object(obj, "open")
+
+    return {
+        "status": "error",
+        "error": "switch_operation_not_supported",
+        "details": "Für dieses Schalterobjekt konnte keine unterstützte Methode oder kein unterstütztes Attribut gefunden werden.",
+    }
+
+
+def _execute_switch_operation_with_services(
+    services: Dict[str, Any],
+    instruction: dict,
+    resolution: dict,
+    run_loadflow_after: bool = True,
+) -> Dict[str, Any]:
+    app = services["app"]
+    studycase = services["studycase"]
+    project_name = services["project_name"]
+
+    selected_match = resolution.get("selected_match") if isinstance(resolution, dict) else None
+    if not isinstance(selected_match, dict):
+        return {
+            "status": "error",
+            "tool": "execute_switch_operation",
+            "project": project_name,
+            "instruction": instruction,
+            "error": "missing_selected_switch",
+            "details": "Es wurde kein aufgelöstes Schalterobjekt übergeben.",
+        }
+
+    operation = instruction.get("operation")
+    if not operation:
+        return {
+            "status": "error",
+            "tool": "execute_switch_operation",
+            "project": project_name,
+            "instruction": instruction,
+            "error": "missing_switch_operation",
+            "details": "In der Instruction fehlt die gewünschte Schalteroperation.",
+        }
+
+    full_name = selected_match.get("full_name")
+    switch_obj = _get_object_by_full_name(app, full_name)
+    if switch_obj is None:
+        return {
+            "status": "error",
+            "tool": "execute_switch_operation",
+            "project": project_name,
+            "instruction": instruction,
+            "resolution": resolution,
+            "error": "switch_object_not_found",
+            "details": f"Das aufgelöste Objekt konnte in PowerFactory nicht geladen werden: {full_name}",
+        }
+
+    before_state_info = _read_switch_state(switch_obj)
+    before_state = None
+    if before_state_info.get("status") == "ok":
+        before_state = _normalize_switch_state(
+            raw_value=before_state_info.get("raw_value"),
+            source=before_state_info.get("state_source", ""),
+        )
+
+    apply_result = _apply_switch_state_to_object(switch_obj, operation)
+    if apply_result.get("status") != "ok":
+        return {
+            "status": "error",
+            "tool": "execute_switch_operation",
+            "project": project_name,
+            "instruction": instruction,
+            "resolution": resolution,
+            "switch": {
+                "name": getattr(switch_obj, "loc_name", None),
+                "full_name": full_name,
+                "pf_class": switch_obj.GetClassName() if hasattr(switch_obj, "GetClassName") else None,
+            },
+            **apply_result,
+        }
+
+    loadflow_info = {"executed": False, "loadflow_command": None}
+    if run_loadflow_after:
+        try:
+            ldf_list = _to_py_list(studycase.GetContents("*.ComLdf", 1))
+            if not ldf_list:
+                ldf = studycase.CreateObject("ComLdf", "LoadFlow")
+            else:
+                ldf = ldf_list[0]
+
+            ldf.Execute()
+            loadflow_info = {
+                "executed": True,
+                "loadflow_command": getattr(ldf, "loc_name", "LoadFlow"),
+            }
+        except Exception as e:
+            loadflow_info = {"executed": False, "loadflow_command": None, "error": str(e)}
+
+    after_state_info = _read_switch_state(switch_obj)
+    after_state = None
+    if after_state_info.get("status") == "ok":
+        after_state = _normalize_switch_state(
+            raw_value=after_state_info.get("raw_value"),
+            source=after_state_info.get("state_source", ""),
+        )
+
+    return {
+        "status": "ok",
+        "tool": "execute_switch_operation",
+        "project": project_name,
+        "studycase": getattr(studycase, "loc_name", None),
+        "instruction": instruction,
+        "resolution": resolution,
+        "switch": {
+            "name": getattr(switch_obj, "loc_name", None),
+            "full_name": full_name,
+            "pf_class": switch_obj.GetClassName() if hasattr(switch_obj, "GetClassName") else None,
+        },
+        "state_before": before_state,
+        "state_after": after_state,
+        "state_before_raw": before_state_info,
+        "state_after_raw": after_state_info,
+        "apply_result": apply_result,
+        "loadflow": loadflow_info,
+    }
+
+
+def _summarize_switch_result_with_services(
+    services: Dict[str, Any],
+    result_payload: dict,
+    user_input: str,
+) -> Dict[str, Any]:
+    project_name = services["project_name"]
+
+    switch = result_payload.get("switch", {}) if isinstance(result_payload, dict) else {}
+    instruction = result_payload.get("instruction", {}) if isinstance(result_payload, dict) else {}
+
+    switch_name = switch.get("name") or switch.get("full_name") or "<unbekannt>"
+    pf_class = switch.get("pf_class") or "<unknown>"
+    operation = instruction.get("operation") or "<unknown>"
+    state_before = result_payload.get("state_before")
+    state_after = result_payload.get("state_after")
+    loadflow = result_payload.get("loadflow", {}) if isinstance(result_payload, dict) else {}
+
+    if state_before and state_after:
+        answer = (
+            f"Die Schalteroperation '{operation}' wurde für '{switch_name}' ({pf_class}) ausgeführt. "
+            f"Zustand vorher: {state_before}. Zustand nachher: {state_after}."
+        )
+    else:
+        answer = f"Die Schalteroperation '{operation}' wurde für '{switch_name}' ({pf_class}) ausgeführt."
+
+    if loadflow.get("executed"):
+        answer += " Anschließend wurde ein Lastfluss gerechnet."
+
+    return {
+        "status": "ok",
+        "tool": "summarize_switch_result",
+        "project": project_name,
+        "answer": answer,
+        "messages": [],
+    }
+
+
+# ------------------------------------------------------------------
+# ROBUST LOAD EXECUTION
+# ------------------------------------------------------------------
+def _safe_get_pf_attribute(obj: Any, attr_name: str) -> Any:
+    try:
+        return obj.GetAttribute(attr_name)
+    except Exception:
+        return None
+
+
+def _read_bus_voltage_pu_with_debug(bus: Any) -> Dict[str, Any]:
+    tried_attrs = ["m:u", "m:ul", "m:Ul", "m:U"]
+
+    bus_name = None
+    pf_class = None
+    full_name = None
+
+    try:
+        bus_name = getattr(bus, "loc_name", None)
+    except Exception:
+        pass
+
+    try:
+        pf_class = bus.GetClassName()
+    except Exception:
+        pass
+
+    try:
+        full_name = bus.GetFullName()
+    except Exception:
+        pass
+
+    for attr_name in tried_attrs:
+        value = _safe_get_pf_attribute(bus, attr_name)
+        if value is not None:
+            return {
+                "ok": True,
+                "value": value,
+                "used_attr": attr_name,
+                "bus_name": bus_name,
+                "pf_class": pf_class,
+                "full_name": full_name,
+                "tried_attrs": tried_attrs,
+            }
+
+    return {
+        "ok": False,
+        "value": None,
+        "used_attr": None,
+        "bus_name": bus_name,
+        "pf_class": pf_class,
+        "full_name": full_name,
+        "tried_attrs": tried_attrs,
+    }
+
+
+def _snapshot_bus_voltages_with_debug(app: Any) -> Dict[str, Any]:
+    snapshot: Dict[str, Any] = {}
+    missing: List[Dict[str, Any]] = []
+    attr_usage: Dict[str, int] = {}
+
+    buses = app.GetCalcRelevantObjects("*.ElmTerm") or []
+
+    for bus in buses:
+        read_result = _read_bus_voltage_pu_with_debug(bus)
+
+        bus_name = read_result.get("bus_name") or read_result.get("full_name")
+        if not bus_name:
+            continue
+
+        if read_result["ok"]:
+            snapshot[bus_name] = read_result["value"]
+            used_attr = read_result.get("used_attr")
+            if used_attr:
+                attr_usage[used_attr] = attr_usage.get(used_attr, 0) + 1
+        else:
+            missing.append({
+                "bus_name": read_result.get("bus_name"),
+                "pf_class": read_result.get("pf_class"),
+                "full_name": read_result.get("full_name"),
+                "tried_attrs": read_result.get("tried_attrs", []),
+            })
+
+    return {
+        "voltages": snapshot,
+        "debug": {
+            "num_buses_total": len(buses),
+            "num_buses_with_voltage": len(snapshot),
+            "num_buses_missing_voltage": len(missing),
+            "missing_voltage_buses": missing,
+            "attribute_usage": attr_usage,
+        },
+    }
+
+
 def _execute_change_load_with_services(services: Dict[str, Any], instruction: dict) -> Dict[str, Any]:
     app = services["app"]
     studycase = services["studycase"]
@@ -458,26 +1121,30 @@ def _execute_change_load_with_services(services: Dict[str, Any], instruction: di
             "details": str(e),
         }
 
-    try:
-        ldf_list = list(studycase.GetContents("*.ComLdf", 1))
-    except Exception:
-        ldf_list = []
-
+    ldf_list = _to_py_list(studycase.GetContents("*.ComLdf", 1))
     if not ldf_list:
         ldf = studycase.CreateObject("ComLdf", "LoadFlow")
     else:
         ldf = ldf_list[0]
 
-    ldf.Execute()
+    try:
+        ldf_result_before = ldf.Execute()
+    except Exception as e:
+        return {
+            "status": "error",
+            "tool": "execute_change_load",
+            "project": project_name,
+            "instruction": instruction,
+            "error": "loadflow_before_failed",
+            "details": str(e),
+        }
 
-    buses = app.GetCalcRelevantObjects("*.ElmTerm")
-    u_before: Dict[str, float] = {}
-    for bus in buses:
-        u_before[bus.loc_name] = bus.GetAttribute("m:u")
+    before_snapshot = _snapshot_bus_voltages_with_debug(app)
+    u_before = before_snapshot["voltages"]
 
     try:
         _ = resolved_load.GetAttribute("plini")
-    except AttributeError:
+    except Exception:
         return {
             "status": "error",
             "tool": "execute_change_load",
@@ -486,19 +1153,43 @@ def _execute_change_load_with_services(services: Dict[str, Any], instruction: di
             "error": f"Last {getattr(resolved_load, 'loc_name', '<unknown>')} hat kein Attribut 'plini'",
         }
 
-    execution_result = executor.execute(instruction, resolved_load)
+    try:
+        execution_result = executor.execute(instruction, resolved_load)
+    except Exception as e:
+        return {
+            "status": "error",
+            "tool": "execute_change_load",
+            "project": project_name,
+            "instruction": instruction,
+            "resolved_load": getattr(resolved_load, "loc_name", None),
+            "error": "load_execution_failed",
+            "details": str(e),
+        }
 
-    ldf.Execute()
+    try:
+        ldf_result_after = ldf.Execute()
+    except Exception as e:
+        return {
+            "status": "error",
+            "tool": "execute_change_load",
+            "project": project_name,
+            "instruction": instruction,
+            "resolved_load": getattr(resolved_load, "loc_name", None),
+            "execution": execution_result,
+            "error": "loadflow_after_failed",
+            "details": str(e),
+        }
 
-    u_after: Dict[str, float] = {}
-    for bus in buses:
-        u_after[bus.loc_name] = bus.GetAttribute("m:u")
+    after_snapshot = _snapshot_bus_voltages_with_debug(app)
+    u_after = after_snapshot["voltages"]
 
     deltas: Dict[str, float] = {}
-    for name, u0 in u_before.items():
-        u1 = u_after.get(name)
-        if u1 is not None:
-            deltas[name] = u1 - u0
+    common_bus_names = set(u_before.keys()) & set(u_after.keys())
+    for name in sorted(common_bus_names):
+        try:
+            deltas[name] = u_after[name] - u_before[name]
+        except Exception:
+            continue
 
     return {
         "status": "ok",
@@ -508,6 +1199,12 @@ def _execute_change_load_with_services(services: Dict[str, Any], instruction: di
         "instruction": instruction,
         "resolved_load": getattr(resolved_load, "loc_name", None),
         "execution": execution_result,
+        "loadflow_debug": {
+            "before_execute_result": ldf_result_before,
+            "after_execute_result": ldf_result_after,
+            "before_snapshot_debug": before_snapshot["debug"],
+            "after_snapshot_debug": after_snapshot["debug"],
+        },
         "data": {
             "u_before": u_before,
             "u_after": u_after,
@@ -580,11 +1277,7 @@ def summarize_powerfactory_result(
     services = build_powerfactory_services(project_name=project_name)
     if services["status"] != "ok":
         return services
-    return _summarize_powerfactory_result_with_services(
-        services=services,
-        result_payload=result_payload,
-        user_input=user_input,
-    )
+    return _summarize_powerfactory_result_with_services(services, result_payload, user_input)
 
 
 def interpret_entity_instruction(
@@ -603,10 +1296,35 @@ def interpret_entity_instruction(
     if graph_result["status"] != "ok":
         return graph_result
 
+    inventory_result = _build_topology_inventory_with_services(services, graph_result)
+    if inventory_result["status"] != "ok":
+        return inventory_result
+
     return _interpret_entity_instruction_with_services(
         services=services,
         user_input=user_input,
-        inventory=graph_result.get("inventory", {}),
+        inventory=inventory_result.get("inventory", {}),
+    )
+
+
+def interpret_switch_instruction(
+    user_input: str,
+    project_name: str = DEFAULT_PROJECT_NAME,
+) -> Dict[str, Any]:
+    services = build_powerfactory_services(project_name=project_name)
+    if services["status"] != "ok":
+        return services
+
+    switch_inventory_result = _build_switch_inventory_from_services(services)
+    if switch_inventory_result["status"] != "ok":
+        return switch_inventory_result
+
+    inventory = _build_switch_inventory_payload(switch_inventory_result.get("switches", []))
+
+    return _interpret_switch_instruction_with_services(
+        services=services,
+        user_input=user_input,
+        inventory=inventory,
     )
 
 
@@ -627,19 +1345,60 @@ def resolve_entity_from_inventory(
     if graph_result["status"] != "ok":
         return graph_result
 
+    inventory_result = _build_topology_inventory_with_services(services, graph_result)
+    if inventory_result["status"] != "ok":
+        return inventory_result
+
     return _resolve_entity_from_inventory_with_services(
         services=services,
         instruction=instruction,
-        inventory=graph_result.get("inventory", {}),
+        inventory=inventory_result.get("inventory", {}),
         topology_graph=graph_result.get("topology_graph"),
         max_matches=max_matches,
     )
 
 
-# ------------------------------------------------------------------
-# CONVENIENCE TOOLS
-# ------------------------------------------------------------------
-def run_powerfactory_pipeline(
+def resolve_switch_from_inventory_llm(
+    instruction: dict,
+    project_name: str = DEFAULT_PROJECT_NAME,
+) -> Dict[str, Any]:
+    services = build_powerfactory_services(project_name=project_name)
+    if services["status"] != "ok":
+        return services
+
+    switch_inventory_result = _build_switch_inventory_from_services(services)
+    if switch_inventory_result["status"] != "ok":
+        return switch_inventory_result
+
+    inventory = _build_switch_inventory_payload(switch_inventory_result.get("switches", []))
+
+    return _resolve_switch_from_inventory_llm_with_services(
+        services=services,
+        instruction=instruction,
+        inventory=inventory,
+    )
+
+
+def execute_switch_operation(
+    instruction: dict,
+    resolution: dict,
+    project_name: str = DEFAULT_PROJECT_NAME,
+    run_loadflow_after: bool = True,
+) -> Dict[str, Any]:
+    services = build_powerfactory_services(project_name=project_name)
+    if services["status"] != "ok":
+        return services
+
+    return _execute_switch_operation_with_services(
+        services=services,
+        instruction=instruction,
+        resolution=resolution,
+        run_loadflow_after=run_loadflow_after,
+    )
+
+
+def summarize_switch_result(
+    result_payload: dict,
     user_input: str,
     project_name: str = DEFAULT_PROJECT_NAME,
 ) -> Dict[str, Any]:
@@ -647,117 +1406,8 @@ def run_powerfactory_pipeline(
     if services["status"] != "ok":
         return services
 
-    interpretation = _interpret_instruction_with_services(
+    return _summarize_switch_result_with_services(
         services=services,
+        result_payload=result_payload,
         user_input=user_input,
     )
-    if interpretation["status"] != "ok":
-        return interpretation
-
-    instruction = interpretation["instruction"]
-
-    resolution = _resolve_load_with_services(
-        services=services,
-        instruction=instruction,
-    )
-    if resolution["status"] != "ok":
-        return resolution
-
-    execution = _execute_change_load_with_services(
-        services=services,
-        instruction=instruction,
-    )
-    if execution["status"] != "ok":
-        return execution
-
-    summary = _summarize_powerfactory_result_with_services(
-        services=services,
-        result_payload=execution,
-        user_input=user_input,
-    )
-    if summary["status"] != "ok":
-        return summary
-
-    return {
-        "status": "ok",
-        "tool": "powerfactory",
-        "project": project_name,
-        "studycase": execution.get("studycase"),
-        "instruction": instruction,
-        "resolved_load": execution.get("resolved_load"),
-        "data": execution.get("data", {}),
-        "messages": summary.get("messages", []),
-        "answer": summary.get("answer", ""),
-        "debug": {
-            "interpretation": interpretation,
-            "resolution": resolution,
-            "execution": execution,
-            "summary": summary,
-        },
-    }
-
-
-def run_powerfactory_topology_pipeline(
-    user_input: str,
-    project_name: str = DEFAULT_PROJECT_NAME,
-    contract_cubicles: bool = True,
-    max_matches: int = 10,
-) -> Dict[str, Any]:
-    services = build_powerfactory_services(project_name=project_name)
-    if services["status"] != "ok":
-        return services
-
-    graph_result = build_powerfactory_topology_graph_from_services(
-        services=services,
-        contract_cubicles=contract_cubicles,
-    )
-    if graph_result["status"] != "ok":
-        return graph_result
-
-    inventory_result = _build_topology_inventory_with_services(
-        services=services,
-        topology_graph_result=graph_result,
-    )
-    if inventory_result["status"] != "ok":
-        return inventory_result
-
-    interpretation = _interpret_entity_instruction_with_services(
-        services=services,
-        user_input=user_input,
-        inventory=inventory_result["inventory"],
-    )
-    if interpretation["status"] != "ok":
-        return interpretation
-
-    resolution = _resolve_entity_from_inventory_with_services(
-        services=services,
-        instruction=interpretation["instruction"],
-        inventory=inventory_result["inventory"],
-        topology_graph=graph_result["topology_graph"],
-        max_matches=max_matches,
-    )
-    if resolution["status"] != "ok":
-        return resolution
-
-    result = query_powerfactory_topology_neighbors_from_services(
-        services=services,
-        topology_graph=graph_result["topology_graph"],
-        asset_query=resolution.get("asset_query", user_input),
-        selected_node_id=(resolution.get("selected_match") or {}).get("node_id"),
-        matches=resolution.get("matches", []),
-        max_matches=max_matches,
-    )
-    if result["status"] != "ok":
-        return result
-
-    return {
-        "status": "ok",
-        "tool": "powerfactory_topology",
-        "project": project_name,
-        "answer": result.get("answer", ""),
-        "graph_result": graph_result,
-        "inventory_result": inventory_result,
-        "interpretation": interpretation,
-        "resolution": resolution,
-        "topology_result": result,
-    }
