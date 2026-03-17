@@ -9,14 +9,18 @@ from cimpy.powerfactory_agent.powerfactory_mcp_tools import (
     _resolve_load_with_services,
     _execute_change_load_with_services,
     _summarize_powerfactory_result_with_services,
+    _build_topology_inventory_with_services,
+    _interpret_entity_instruction_with_services,
+    _resolve_entity_from_inventory_with_services,
+)
+from cimpy.powerfactory_agent.powerfactory_topology_graph import (
+    build_powerfactory_topology_graph_from_services,
+    query_powerfactory_topology_neighbors_from_services,
 )
 
 
 @dataclass
 class PowerFactoryToolSpec:
-    """
-    MCP-near internal tool specification.
-    """
     name: str
     description: str
     input_schema: Dict[str, Any]
@@ -139,11 +143,122 @@ class PowerFactoryToolRegistry:
                 mutating=False,
                 handler=self._tool_summarize_powerfactory_result,
             ),
+            "build_topology_graph": PowerFactoryToolSpec(
+                name="build_topology_graph",
+                description="Build a topology graph from the active PowerFactory project.",
+                input_schema={
+                    "type": "object",
+                    "properties": {
+                        "services": {"type": "object"},
+                        "contract_cubicles": {"type": "boolean"},
+                    },
+                    "required": ["services"],
+                },
+                output_schema_hint={
+                    "status": "ok|error",
+                    "tool": "build_topology_graph",
+                    "graph_mode": "contracted|wiring",
+                    "graph_summary": "dict",
+                    "inventory": "dict",
+                    "build_debug": "dict",
+                },
+                capability_tags=["powerfactory", "topology", "graph", "read_only"],
+                mutating=False,
+                handler=self._tool_build_topology_graph,
+            ),
+            "build_topology_inventory": PowerFactoryToolSpec(
+                name="build_topology_inventory",
+                description="Build a typed inventory from the current PowerFactory topology graph.",
+                input_schema={
+                    "type": "object",
+                    "properties": {
+                        "services": {"type": "object"},
+                        "topology_graph_result": {"type": "object"},
+                    },
+                    "required": ["services", "topology_graph_result"],
+                },
+                output_schema_hint={
+                    "status": "ok|error",
+                    "tool": "build_topology_inventory",
+                    "inventory": "dict",
+                },
+                capability_tags=["powerfactory", "topology", "inventory", "read_only"],
+                mutating=False,
+                handler=self._tool_build_topology_inventory,
+            ),
+            "interpret_entity_instruction": PowerFactoryToolSpec(
+                name="interpret_entity_instruction",
+                description="Interpret a natural-language user request into a structured generic PowerFactory entity instruction.",
+                input_schema={
+                    "type": "object",
+                    "properties": {
+                        "services": {"type": "object"},
+                        "user_input": {"type": "string"},
+                        "inventory": {"type": "object"},
+                    },
+                    "required": ["services", "user_input", "inventory"],
+                },
+                output_schema_hint={
+                    "status": "ok|error",
+                    "tool": "interpret_entity_instruction",
+                    "instruction": "dict",
+                },
+                capability_tags=["powerfactory", "planning", "nlp", "topology", "entity"],
+                mutating=False,
+                handler=self._tool_interpret_entity_instruction,
+            ),
+            "resolve_entity_from_inventory": PowerFactoryToolSpec(
+                name="resolve_entity_from_inventory",
+                description="Resolve the requested generic asset from a typed topology inventory.",
+                input_schema={
+                    "type": "object",
+                    "properties": {
+                        "services": {"type": "object"},
+                        "instruction": {"type": "object"},
+                        "inventory": {"type": "object"},
+                        "topology_graph": {"type": "object"},
+                        "max_matches": {"type": "integer"},
+                    },
+                    "required": ["services", "instruction", "inventory", "topology_graph"],
+                },
+                output_schema_hint={
+                    "status": "ok|error",
+                    "tool": "resolve_entity_from_inventory",
+                    "asset_query": "string",
+                    "selected_match": "dict",
+                    "matches": "list[dict]",
+                },
+                capability_tags=["powerfactory", "topology", "entity", "inventory", "resolution", "read_only"],
+                mutating=False,
+                handler=self._tool_resolve_entity_from_inventory,
+            ),
+            "query_topology_neighbors": PowerFactoryToolSpec(
+                name="query_topology_neighbors",
+                description="Query the direct neighbors of an asset in the PowerFactory topology graph.",
+                input_schema={
+                    "type": "object",
+                    "properties": {
+                        "services": {"type": "object"},
+                        "topology_graph": {"type": "object"},
+                        "asset_query": {"type": "string"},
+                        "selected_node_id": {"type": "string"},
+                        "matches": {"type": "array"},
+                        "max_matches": {"type": "integer"},
+                    },
+                    "required": ["services", "topology_graph"],
+                },
+                output_schema_hint={
+                    "status": "ok|error",
+                    "tool": "query_topology_neighbors",
+                    "selected_node": "dict",
+                    "neighbors": "list[dict]",
+                },
+                capability_tags=["powerfactory", "topology", "neighbors", "read_only"],
+                mutating=False,
+                handler=self._tool_query_topology_neighbors,
+            ),
         }
 
-    # ------------------------------------------------------------------
-    # REGISTRY ACCESS
-    # ------------------------------------------------------------------
     def has_tool(self, step_name: str) -> bool:
         return step_name in self._registry
 
@@ -232,4 +347,75 @@ class PowerFactoryToolRegistry:
             services=services,
             result_payload=result_payload,
             user_input=user_input,
+        )
+
+    def _tool_build_topology_graph(
+        self,
+        services: Dict[str, Any],
+        contract_cubicles: bool = True,
+        **kwargs: Any,
+    ) -> Dict[str, Any]:
+        return build_powerfactory_topology_graph_from_services(
+            services=services,
+            contract_cubicles=contract_cubicles,
+        )
+
+    def _tool_build_topology_inventory(
+        self,
+        services: Dict[str, Any],
+        topology_graph_result: Dict[str, Any],
+        **kwargs: Any,
+    ) -> Dict[str, Any]:
+        return _build_topology_inventory_with_services(
+            services=services,
+            topology_graph_result=topology_graph_result,
+        )
+
+    def _tool_interpret_entity_instruction(
+        self,
+        services: Dict[str, Any],
+        user_input: str,
+        inventory: Dict[str, Any],
+        **kwargs: Any,
+    ) -> Dict[str, Any]:
+        return _interpret_entity_instruction_with_services(
+            services=services,
+            user_input=user_input,
+            inventory=inventory,
+        )
+
+    def _tool_resolve_entity_from_inventory(
+        self,
+        services: Dict[str, Any],
+        instruction: dict,
+        inventory: Dict[str, Any],
+        topology_graph: Any,
+        max_matches: int = 10,
+        **kwargs: Any,
+    ) -> Dict[str, Any]:
+        return _resolve_entity_from_inventory_with_services(
+            services=services,
+            instruction=instruction,
+            inventory=inventory,
+            topology_graph=topology_graph,
+            max_matches=max_matches,
+        )
+
+    def _tool_query_topology_neighbors(
+        self,
+        services: Dict[str, Any],
+        topology_graph: Any,
+        asset_query: str | None = None,
+        selected_node_id: str | None = None,
+        matches: list | None = None,
+        max_matches: int = 10,
+        **kwargs: Any,
+    ) -> Dict[str, Any]:
+        return query_powerfactory_topology_neighbors_from_services(
+            services=services,
+            topology_graph=topology_graph,
+            asset_query=asset_query or "",
+            selected_node_id=selected_node_id,
+            matches=matches or [],
+            max_matches=max_matches,
         )
