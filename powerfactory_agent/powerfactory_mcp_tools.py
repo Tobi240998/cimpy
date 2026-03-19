@@ -1875,3 +1875,1027 @@ def summarize_switch_result(
         result_payload=result_payload,
         user_input=user_input,
     )
+
+
+# ------------------------------------------------------------------
+# LLM OUTPUT MODELS FOR DATA QUERY
+# ------------------------------------------------------------------
+class DataQueryInstructionDecision(BaseModel):
+    selected_entity_type: Optional[str] = Field(default=None)
+    selected_fields: List[str] = Field(default_factory=list)
+    confidence: str = Field(description="One of: high, medium, low")
+    rationale: str = Field(description="Short explanation for the match decision")
+    missing_context: List[str] = Field(default_factory=list)
+    should_execute: bool = Field(description="True only if type and field selection are sufficiently safe.")
+
+
+class InventoryObjectMatchDecision(BaseModel):
+    selected_object_name: Optional[str] = Field(default=None)
+    confidence: str = Field(description="One of: high, medium, low")
+    rationale: str = Field(description="Short explanation for the match decision")
+    alternatives: List[str] = Field(default_factory=list)
+    should_execute: bool = Field(description="True only if the selected object is a safe unambiguous choice.")
+
+
+# ------------------------------------------------------------------
+# LIGHTWEIGHT DATA INVENTORY (NO TOPOLOGY GRAPH)
+# ------------------------------------------------------------------
+def _safe_get_name(obj: Any) -> Optional[str]:
+    try:
+        return getattr(obj, 'loc_name', None)
+    except Exception:
+        return None
+
+
+def _safe_get_full_name(obj: Any) -> Optional[str]:
+    try:
+        return obj.GetFullName()
+    except Exception:
+        return _safe_get_name(obj)
+
+
+def _safe_get_class_name(obj: Any) -> Optional[str]:
+    try:
+        return obj.GetClassName()
+    except Exception:
+        return None
+
+
+def _normalize_object_entry(obj: Any, inventory_type: str) -> Dict[str, Any]:
+    name = _safe_get_name(obj)
+    full_name = _safe_get_full_name(obj)
+    pf_class = _safe_get_class_name(obj)
+    return {
+        'node_id': full_name or name,
+        'name': name,
+        'full_name': full_name,
+        'pf_class': pf_class,
+        'kind': 'pf_object',
+        'degree': 0,
+        'inventory_type': inventory_type,
+    }
+
+
+def _dedupe_inventory_items(items: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    seen = set()
+    unique: List[Dict[str, Any]] = []
+    for item in items:
+        key = item.get('full_name') or item.get('name')
+        if not key or key in seen:
+            continue
+        seen.add(key)
+        unique.append(item)
+    unique.sort(key=lambda item: (str(item.get('name') or ''), str(item.get('full_name') or '')))
+    return unique
+
+
+def _collect_pf_objects(app: Any, patterns: List[str]) -> List[Any]:
+    objects: List[Any] = []
+    for pattern in patterns:
+        try:
+            found = app.GetCalcRelevantObjects(pattern) or []
+            objects.extend(list(found))
+        except Exception:
+            continue
+    return objects
+
+
+def _build_data_inventory_from_services(services: Dict[str, Any]) -> Dict[str, Any]:
+    app = services['app']
+    project_name = services['project_name']
+
+    raw_items_by_type: Dict[str, List[Dict[str, Any]]] = {
+        'bus': [_normalize_object_entry(obj, 'bus') for obj in _collect_pf_objects(app, ['*.ElmTerm'])],
+        'load': [_normalize_object_entry(obj, 'load') for obj in _collect_pf_objects(app, ['*.ElmLod*'])],
+        'line': [_normalize_object_entry(obj, 'line') for obj in _collect_pf_objects(app, ['*.ElmLne', '*.ElmCable'])],
+        'transformer': [_normalize_object_entry(obj, 'transformer') for obj in _collect_pf_objects(app, ['*.ElmTr*'])],
+        'generator': [_normalize_object_entry(obj, 'generator') for obj in _collect_pf_objects(app, ['*.ElmSym', '*.ElmAsm', '*.ElmGenstat', '*.ElmPvsys', '*.ElmSgen'])],
+    }
+
+    switch_inventory_result = _build_switch_inventory_from_services(services)
+    if switch_inventory_result.get('status') == 'ok':
+        raw_items_by_type['switch'] = switch_inventory_result.get('switches', []) or []
+    else:
+        raw_items_by_type['switch'] = []
+
+    items_by_type: Dict[str, List[Dict[str, Any]]] = {}
+    counts_by_type: Dict[str, int] = {}
+    samples_by_type: Dict[str, List[Dict[str, Any]]] = {}
+
+    for inventory_type, items in raw_items_by_type.items():
+        unique = _dedupe_inventory_items(items)
+        if not unique:
+            continue
+        items_by_type[inventory_type] = unique
+        counts_by_type[inventory_type] = len(unique)
+        samples_by_type[inventory_type] = [
+            {
+                'name': item.get('name'),
+                'pf_class': item.get('pf_class'),
+                'full_name': item.get('full_name'),
+            }
+            for item in unique[:10]
+        ]
+
+    inventory = {
+        'available_types': sorted(items_by_type.keys()),
+        'counts_by_type': counts_by_type,
+        'items_by_type': items_by_type,
+        'samples_by_type': samples_by_type,
+    }
+
+    return {
+        'status': 'ok',
+        'tool': 'build_data_inventory',
+        'project': project_name,
+        'inventory': inventory,
+    }
+
+
+# ------------------------------------------------------------------
+# FIELD LIBRARY FOR DATA QUERY
+# ------------------------------------------------------------------
+PF_DATA_FIELD_LIBRARY: Dict[str, Dict[str, Dict[str, Any]]] = {
+    'bus': {
+        'voltage_ll': {
+            'aliases': ['leiter leiter spannung', 'leiter-leiter-spannung', 'spannung ll', 'line to line voltage', 'voltage ll'],
+            'attr_candidates': ['m:ul', 'm:Ul', 'm:u1l', 'm:U1l'],
+            'unit': 'kV',
+            'requires_loadflow': True,
+            'label': 'Leiter-Leiter-Spannung',
+        },
+        'voltage_ln': {
+            'aliases': ['leiter erde spannung', 'leiter-erde-spannung', 'spannung gegen erde', 'phase to ground voltage', 'voltage ln'],
+            'attr_candidates': ['m:u', 'm:U', 'm:u1', 'm:U1'],
+            'unit': 'kV',
+            'requires_loadflow': True,
+            'label': 'Leiter-Erde-Spannung',
+        },
+        'p': {
+            'aliases': ['wirkleistung', 'p', 'knoten p', 'bus p'],
+            'attr_candidates': ['m:Psum:bus1', 'm:Psum', 'm:P', 'c:p'],
+            'unit': 'MW',
+            'requires_loadflow': True,
+            'label': 'Wirkleistung',
+        },
+        'q': {
+            'aliases': ['blindleistung', 'q', 'knoten q', 'bus q'],
+            'attr_candidates': ['m:Qsum:bus1', 'm:Qsum', 'm:Q', 'c:q'],
+            'unit': 'MVAr',
+            'requires_loadflow': True,
+            'label': 'Blindleistung',
+        },
+        'phases': {
+            'aliases': ['phasen', 'phase set'],
+            'attr_candidates': ['phtech', 'phases'],
+            'unit': None,
+            'requires_loadflow': False,
+            'label': 'Phasen',
+        },
+    },
+    'line': {
+        'loading': {
+            'aliases': ['auslastung', 'belastung', 'loading', 'thermische auslastung'],
+            'attr_candidates': ['c:loading', 'm:loading', 'loading', 'c:loadingmax'],
+            'unit': '%',
+            'requires_loadflow': True,
+            'label': 'Auslastung',
+        },
+        'length': {
+            'aliases': ['länge', 'leitungslänge', 'length'],
+            'attr_candidates': ['dline', 'length', 'line_length'],
+            'unit': 'km',
+            'requires_loadflow': False,
+            'label': 'Länge',
+        },
+        'type': {
+            'aliases': ['typ', 'leitungstyp', 'line type', 'kabeltyp'],
+            'attr_candidates': ['typ_id', 'type_id'],
+            'unit': None,
+            'requires_loadflow': False,
+            'label': 'Typ',
+        },
+        'rated_current': {
+            'aliases': ['nennstrom', 'rated current', 'ampacity', 'zulässiger strom'],
+            'attr_candidates': ['Inom', 'inom', 'sline', 'Ithnom'],
+            'unit': 'A',
+            'requires_loadflow': False,
+            'label': 'Nennstrom',
+        },
+        'laying_factor': {
+            'aliases': ['verlegefaktor', 'laying factor'],
+            'attr_candidates': ['frlay', 'layfac'],
+            'unit': None,
+            'requires_loadflow': False,
+            'label': 'Verlegefaktor',
+        },
+        'r1': {
+            'aliases': ['r1', 'positivsystem widerstand', 'widerstand mitsystem'],
+            'attr_candidates': ['R1', 'r1', 'Rline'],
+            'unit': 'Ohm',
+            'requires_loadflow': False,
+            'label': 'R1',
+        },
+        'x1': {
+            'aliases': ['x1', 'positivsystem reaktanz', 'reaktanz mitsystem'],
+            'attr_candidates': ['X1', 'x1', 'Xline'],
+            'unit': 'Ohm',
+            'requires_loadflow': False,
+            'label': 'X1',
+        },
+        'r0': {
+            'aliases': ['r0', 'nullsystem widerstand'],
+            'attr_candidates': ['R0', 'r0'],
+            'unit': 'Ohm',
+            'requires_loadflow': False,
+            'label': 'R0',
+        },
+        'x0': {
+            'aliases': ['x0', 'nullsystem reaktanz'],
+            'attr_candidates': ['X0', 'x0'],
+            'unit': 'Ohm',
+            'requires_loadflow': False,
+            'label': 'X0',
+        },
+        'earth_factor': {
+            'aliases': ['erdfaktor', 'earth factor'],
+            'attr_candidates': ['fearth', 'earthfac'],
+            'unit': None,
+            'requires_loadflow': False,
+            'label': 'Erdfaktor',
+        },
+    },
+    'switch': {
+        'state': {
+            'aliases': ['zustand', 'status', 'offen geschlossen', 'open closed', 'schalterzustand'],
+            'special_reader': 'switch_state',
+            'unit': None,
+            'requires_loadflow': False,
+            'label': 'Zustand',
+        },
+    },
+    'load': {
+        'p_set': {
+            'aliases': ['wirkleistung soll', 'p soll', 'plini', 'setpoint p'],
+            'attr_candidates': ['plini', 'pgini', 'Pset'],
+            'unit': 'MW',
+            'requires_loadflow': False,
+            'label': 'Wirkleistung Soll',
+        },
+        'q_set': {
+            'aliases': ['blindleistung soll', 'q soll', 'qlini', 'setpoint q'],
+            'attr_candidates': ['qlini', 'qgini', 'Qset'],
+            'unit': 'MVAr',
+            'requires_loadflow': False,
+            'label': 'Blindleistung Soll',
+        },
+    },
+    'transformer': {
+        'type': {
+            'aliases': ['typ', 'trafotyp', 'type'],
+            'attr_candidates': ['typ_id', 'type_id'],
+            'unit': None,
+            'requires_loadflow': False,
+            'label': 'Typ',
+        },
+        'loading': {
+            'aliases': ['auslastung', 'loading'],
+            'attr_candidates': ['c:loading', 'm:loading', 'loading'],
+            'unit': '%',
+            'requires_loadflow': True,
+            'label': 'Auslastung',
+        },
+        'rated_power': {
+            'aliases': ['nennleistung', 'rated power', 'sn'],
+            'attr_candidates': ['strn', 'Snom', 'snom'],
+            'unit': 'MVA',
+            'requires_loadflow': False,
+            'label': 'Nennleistung',
+        },
+    },
+    'generator': {
+        'p': {
+            'aliases': ['wirkleistung', 'p'],
+            'attr_candidates': ['m:Psum', 'm:P', 'pgini'],
+            'unit': 'MW',
+            'requires_loadflow': True,
+            'label': 'Wirkleistung',
+        },
+        'q': {
+            'aliases': ['blindleistung', 'q'],
+            'attr_candidates': ['m:Qsum', 'm:Q', 'qgini'],
+            'unit': 'MVAr',
+            'requires_loadflow': True,
+            'label': 'Blindleistung',
+        },
+        'type': {
+            'aliases': ['typ', 'generator typ', 'type'],
+            'attr_candidates': ['sgn', 'typ_id', 'type_id'],
+            'unit': None,
+            'requires_loadflow': False,
+            'label': 'Typ',
+        },
+    },
+}
+
+
+def _get_available_data_fields(entity_type: str) -> Dict[str, Dict[str, Any]]:
+    return PF_DATA_FIELD_LIBRARY.get(entity_type, {}) if entity_type else {}
+
+
+def _build_data_field_catalog(entity_type: str) -> List[Dict[str, Any]]:
+    fields = _get_available_data_fields(entity_type)
+    items: List[Dict[str, Any]] = []
+    for field_name, meta in fields.items():
+        items.append({
+            'field': field_name,
+            'label': meta.get('label', field_name),
+            'aliases': meta.get('aliases', []),
+            'unit': meta.get('unit'),
+            'requires_loadflow': bool(meta.get('requires_loadflow', False)),
+        })
+    items.sort(key=lambda item: item['field'])
+    return items
+
+
+# ------------------------------------------------------------------
+# DATA QUERY LLM MATCHING
+# ------------------------------------------------------------------
+def _build_data_query_instruction_chain():
+    parser = PydanticOutputParser(pydantic_object=DataQueryInstructionDecision)
+    prompt = ChatPromptTemplate.from_messages([
+        (
+            'system',
+            'You classify a PowerFactory data query.\n'
+            'You may only choose an entity type from the provided available types.\n'
+            'You may only choose fields from the provided available field list for the chosen type.\n'
+            'Do not invent types or fields.\n'
+            'If there is not enough information, return should_execute=false.\n'
+            'Use high confidence only for a clearly grounded interpretation.\n\n'
+            '{format_instructions}'
+        ),
+        (
+            'user',
+            'User request:\n{user_input}\n\n'
+            'Available entity types:\n{available_types}\n\n'
+            'Available fields by type:\n{available_fields_by_type}'
+        ),
+    ])
+    llm = get_llm()
+    return prompt | llm | parser, parser
+
+
+def _build_object_match_chain():
+    parser = PydanticOutputParser(pydantic_object=InventoryObjectMatchDecision)
+    prompt = ChatPromptTemplate.from_messages([
+        (
+            'system',
+            'You resolve a user request to one exact PowerFactory object from a provided candidate list.\n'
+            'You may only select a name that appears exactly in the candidate list.\n'
+            'Do not invent names.\n'
+            'If there is no safe unambiguous match, return selected_object_name=null and should_execute=false.\n'
+            'Use high confidence only for a clearly dominant match.\n\n'
+            '{format_instructions}'
+        ),
+        (
+            'user',
+            'User request:\n{user_input}\n\n'
+            'Entity type: {entity_type}\n\n'
+            'Available object candidates:\n{object_candidates}'
+        ),
+    ])
+    llm = get_llm()
+    return prompt | llm | parser, parser
+
+
+def _fallback_select_entity_type(user_input: str, available_types: List[str]) -> Optional[str]:
+    text = _safe_lower(user_input)
+    mapping = {
+        'bus': ['bus', 'knoten', 'terminal'],
+        'load': ['last', 'load'],
+        'switch': ['schalter', 'switch', 'breaker', 'coupler'],
+        'transformer': ['trafo', 'transformer'],
+        'line': ['leitung', 'line', 'kabel', 'cable'],
+        'generator': ['generator', 'gen'],
+    }
+    for entity_type, tokens in mapping.items():
+        if entity_type not in available_types:
+            continue
+        if any(token in text for token in tokens):
+            return entity_type
+    if len(available_types) == 1:
+        return available_types[0]
+    return None
+
+
+def _fallback_select_fields(user_input: str, entity_type: str) -> List[str]:
+    text = _safe_lower(user_input)
+    fields = _get_available_data_fields(entity_type)
+    selected: List[str] = []
+    for field_name, meta in fields.items():
+        aliases = [field_name, meta.get('label', field_name), *(meta.get('aliases', []) or [])]
+        alias_text = ' | '.join(_safe_lower(alias) for alias in aliases)
+        if any(token and token in text for token in _tokenize(alias_text)):
+            selected.append(field_name)
+            continue
+        for alias in aliases:
+            alias_norm = _safe_lower(alias)
+            if alias_norm and alias_norm in text:
+                selected.append(field_name)
+                break
+    if selected:
+        return sorted(set(selected))
+    if entity_type == 'switch' and 'zustand' not in text:
+        return ['state']
+    return []
+
+
+def _interpret_data_query_instruction_with_services(
+    services: Dict[str, Any],
+    user_input: str,
+    inventory: Dict[str, Any],
+) -> Dict[str, Any]:
+    project_name = services['project_name']
+    available_types = inventory.get('available_types', []) if isinstance(inventory, dict) else []
+    if not available_types:
+        return {
+            'status': 'error',
+            'tool': 'interpret_data_query_instruction',
+            'project': project_name,
+            'user_input': user_input,
+            'error': 'empty_data_inventory',
+            'details': 'Für die Datenabfrage stehen keine PowerFactory-Elementtypen zur Verfügung.',
+        }
+
+    available_fields_by_type = {
+        entity_type: _build_data_field_catalog(entity_type)
+        for entity_type in available_types
+    }
+
+    llm_decision_dump: Dict[str, Any] = {}
+    selected_entity_type = None
+    selected_fields: List[str] = []
+    confidence = 'low'
+    rationale = 'Fallback-Auswahl verwendet.'
+    missing_context: List[str] = []
+    should_execute = False
+
+    try:
+        chain, parser = _build_data_query_instruction_chain()
+        decision = chain.invoke({
+            'user_input': user_input,
+            'available_types': '\n'.join(f'- {item}' for item in available_types),
+            'available_fields_by_type': '\n'.join(
+                f'- {etype}: ' + ', '.join(field['field'] for field in fields)
+                for etype, fields in available_fields_by_type.items()
+            ),
+            'format_instructions': parser.get_format_instructions(),
+        })
+        llm_decision_dump = decision.model_dump()
+        selected_entity_type = decision.selected_entity_type if decision.selected_entity_type in available_types else None
+        confidence = decision.confidence
+        rationale = decision.rationale
+        missing_context = decision.missing_context or []
+        should_execute = bool(decision.should_execute)
+        if selected_entity_type:
+            allowed_fields = set(_get_available_data_fields(selected_entity_type).keys())
+            selected_fields = [field for field in decision.selected_fields if field in allowed_fields]
+    except Exception as e:
+        llm_decision_dump = {'error': str(e)}
+
+    if selected_entity_type is None:
+        selected_entity_type = _fallback_select_entity_type(user_input, available_types)
+        if selected_entity_type:
+            confidence = 'medium'
+            should_execute = True
+            rationale = 'Entity-Typ wurde per regelbasiertem Fallback erkannt.'
+
+    if selected_entity_type:
+        if not selected_fields:
+            selected_fields = _fallback_select_fields(user_input, selected_entity_type)
+            if selected_fields:
+                should_execute = True
+        if not selected_fields:
+            missing_context.append('requested_fields')
+            should_execute = False
+
+    if not selected_entity_type:
+        missing_context.append('entity_type')
+
+    instruction = {
+        'query_type': 'element_data',
+        'entity_type': selected_entity_type,
+        'entity_name_raw': user_input,
+        'entity_name_candidates': _build_entity_name_candidates(user_input),
+        'requested_fields': selected_fields,
+        'available_types': available_types,
+        'available_fields_by_type': {
+            key: [field['field'] for field in value]
+            for key, value in available_fields_by_type.items()
+        },
+    }
+
+    if not should_execute or not selected_entity_type or not selected_fields:
+        return {
+            'status': 'error',
+            'tool': 'interpret_data_query_instruction',
+            'project': project_name,
+            'user_input': user_input,
+            'error': 'data_query_not_safe',
+            'details': 'Die Datenabfrage konnte nicht sicher genug in Typ und Felder aufgelöst werden.',
+            'instruction': instruction,
+            'llm_decision': llm_decision_dump,
+            'missing_context': sorted(set(missing_context)),
+        }
+
+    return {
+        'status': 'ok',
+        'tool': 'interpret_data_query_instruction',
+        'project': project_name,
+        'user_input': user_input,
+        'instruction': instruction,
+        'llm_decision': llm_decision_dump,
+        'confidence': confidence,
+        'rationale': rationale,
+    }
+
+
+def _resolve_pf_object_from_inventory_llm_with_services(
+    services: Dict[str, Any],
+    instruction: dict,
+    inventory: Dict[str, Any],
+) -> Dict[str, Any]:
+    project_name = services['project_name']
+    entity_type = instruction.get('entity_type') if isinstance(instruction, dict) else None
+    if not entity_type:
+        return {
+            'status': 'error',
+            'tool': 'resolve_pf_object_from_inventory_llm',
+            'project': project_name,
+            'instruction': instruction,
+            'error': 'missing_entity_type',
+            'details': 'In der Instruction fehlt der Elementtyp.',
+        }
+
+    items_by_type = inventory.get('items_by_type', {}) if isinstance(inventory, dict) else {}
+    object_candidates = items_by_type.get(entity_type, []) or []
+    if not object_candidates:
+        return {
+            'status': 'error',
+            'tool': 'resolve_pf_object_from_inventory_llm',
+            'project': project_name,
+            'instruction': instruction,
+            'error': 'no_object_candidates',
+            'details': f'Für den Elementtyp {entity_type} wurden keine Kandidaten gefunden.',
+        }
+
+    candidate_names = [item.get('name') for item in object_candidates if item.get('name')]
+    if not candidate_names:
+        return {
+            'status': 'error',
+            'tool': 'resolve_pf_object_from_inventory_llm',
+            'project': project_name,
+            'instruction': instruction,
+            'error': 'empty_object_names',
+            'details': 'Die Kandidatenliste enthält keine verwertbaren Objektnamen.',
+        }
+
+    try:
+        chain, parser = _build_object_match_chain()
+        decision = chain.invoke({
+            'user_input': instruction.get('entity_name_raw') or '',
+            'entity_type': entity_type,
+            'object_candidates': '\n'.join(f'- {name}' for name in candidate_names),
+            'format_instructions': parser.get_format_instructions(),
+        })
+        decision_dump = decision.model_dump()
+    except Exception as e:
+        return {
+            'status': 'error',
+            'tool': 'resolve_pf_object_from_inventory_llm',
+            'project': project_name,
+            'instruction': instruction,
+            'error': 'llm_object_match_failed',
+            'details': str(e),
+        }
+
+    selected_name = decision.selected_object_name
+    if selected_name not in candidate_names:
+        return {
+            'status': 'error',
+            'tool': 'resolve_pf_object_from_inventory_llm',
+            'project': project_name,
+            'instruction': instruction,
+            'error': 'invalid_object_selection',
+            'details': 'Das LLM hat keinen gültigen exakten Objektnamen aus der Kandidatenliste zurückgegeben.',
+            'llm_decision': decision_dump,
+            'candidate_names': candidate_names,
+        }
+
+    if not decision.should_execute or decision.confidence.lower() != 'high':
+        return {
+            'status': 'error',
+            'tool': 'resolve_pf_object_from_inventory_llm',
+            'project': project_name,
+            'instruction': instruction,
+            'error': 'object_match_not_safe',
+            'details': 'Das LLM hat keinen ausreichend sicheren Objekttreffer gefunden.',
+            'llm_decision': decision_dump,
+            'candidate_names': candidate_names,
+        }
+
+    selected_match = next(item for item in object_candidates if item.get('name') == selected_name)
+    return {
+        'status': 'ok',
+        'tool': 'resolve_pf_object_from_inventory_llm',
+        'project': project_name,
+        'instruction': instruction,
+        'asset_query': selected_name,
+        'selected_match': selected_match,
+        'matches': [selected_match],
+        'llm_decision': decision_dump,
+        'entity_type': entity_type,
+    }
+
+
+# ------------------------------------------------------------------
+# DATA QUERY EXECUTION
+# ------------------------------------------------------------------
+def _try_numeric(value: Any) -> Optional[float]:
+    if value is None:
+        return None
+    if isinstance(value, (int, float)):
+        return float(value)
+    try:
+        return float(str(value).strip())
+    except Exception:
+        return None
+
+
+def _serialize_pf_value(value: Any) -> Any:
+    if value is None:
+        return None
+    if isinstance(value, (str, int, float, bool)):
+        return value
+    try:
+        if hasattr(value, 'loc_name'):
+            return getattr(value, 'loc_name', None)
+    except Exception:
+        pass
+    try:
+        return str(value)
+    except Exception:
+        return None
+
+
+def _read_pf_attribute_candidates(obj: Any, attr_candidates: List[str]) -> Dict[str, Any]:
+    tried: List[Dict[str, Any]] = []
+    for attr_name in attr_candidates:
+        raw_value = None
+        source = None
+        try:
+            raw_value = obj.GetAttribute(attr_name)
+            source = 'GetAttribute'
+        except Exception:
+            raw_value = None
+        if raw_value is None:
+            try:
+                raw_value = getattr(obj, attr_name)
+                source = 'getattr'
+            except Exception:
+                raw_value = None
+        numeric_value = _try_numeric(raw_value)
+        tried.append({
+            'attribute': attr_name,
+            'source': source,
+            'raw_value': _serialize_pf_value(raw_value),
+            'numeric_value': numeric_value,
+        })
+        if raw_value is not None:
+            return {
+                'status': 'ok',
+                'attribute': attr_name,
+                'source': source,
+                'raw_value': _serialize_pf_value(raw_value),
+                'numeric_value': numeric_value,
+                'tried': tried,
+            }
+    return {
+        'status': 'error',
+        'error': 'attribute_not_found',
+        'tried': tried,
+    }
+
+
+def _read_special_field(obj: Any, special_reader: str) -> Dict[str, Any]:
+    if special_reader == 'switch_state':
+        state_info = _read_switch_state(obj)
+        if state_info.get('status') != 'ok':
+            return state_info
+        normalized_state = _normalize_switch_state(
+            raw_value=state_info.get('raw_value'),
+            source=state_info.get('state_source', ''),
+        )
+        return {
+            'status': 'ok',
+            'attribute': state_info.get('state_source'),
+            'source': 'special_reader',
+            'raw_value': state_info.get('raw_value'),
+            'numeric_value': None,
+            'display_value': normalized_state,
+            'tried': [state_info],
+        }
+    return {
+        'status': 'error',
+        'error': 'unknown_special_reader',
+        'details': special_reader,
+    }
+
+
+def _ensure_loadflow_for_data_query(studycase: Any) -> Dict[str, Any]:
+    try:
+        ldf_list = _to_py_list(studycase.GetContents('*.ComLdf', 1))
+        if not ldf_list:
+            ldf = studycase.CreateObject('ComLdf', 'LoadFlow')
+        else:
+            ldf = ldf_list[0]
+        result = ldf.Execute()
+        return {
+            'executed': True,
+            'loadflow_command': getattr(ldf, 'loc_name', 'LoadFlow'),
+            'loadflow_result': result,
+        }
+    except Exception as e:
+        return {
+            'executed': False,
+            'error': str(e),
+        }
+
+
+def _query_pf_object_data_with_services(
+    services: Dict[str, Any],
+    instruction: dict,
+    resolution: dict,
+) -> Dict[str, Any]:
+    app = services['app']
+    studycase = services['studycase']
+    project_name = services['project_name']
+
+    selected_match = resolution.get('selected_match') if isinstance(resolution, dict) else None
+    if not isinstance(selected_match, dict):
+        return {
+            'status': 'error',
+            'tool': 'query_pf_object_data',
+            'project': project_name,
+            'instruction': instruction,
+            'error': 'missing_selected_object',
+            'details': 'Es wurde kein aufgelöstes PowerFactory-Objekt übergeben.',
+        }
+
+    entity_type = instruction.get('entity_type')
+    requested_fields = instruction.get('requested_fields', []) if isinstance(instruction, dict) else []
+    if not entity_type or not requested_fields:
+        return {
+            'status': 'error',
+            'tool': 'query_pf_object_data',
+            'project': project_name,
+            'instruction': instruction,
+            'error': 'missing_data_query_fields',
+            'details': 'In der Instruction fehlen Typ oder angeforderte Felder.',
+        }
+
+    fields_meta = _get_available_data_fields(entity_type)
+    full_name = selected_match.get('full_name')
+    pf_object = _get_object_by_full_name(app, full_name)
+    if pf_object is None:
+        return {
+            'status': 'error',
+            'tool': 'query_pf_object_data',
+            'project': project_name,
+            'instruction': instruction,
+            'resolution': resolution,
+            'error': 'pf_object_not_found',
+            'details': f'Das aufgelöste Objekt konnte in PowerFactory nicht geladen werden: {full_name}',
+        }
+
+    requires_loadflow = any(bool(fields_meta.get(field, {}).get('requires_loadflow', False)) for field in requested_fields)
+    loadflow_info = {'executed': False, 'reason': 'not_required'}
+    if requires_loadflow:
+        loadflow_info = _ensure_loadflow_for_data_query(studycase)
+        if not loadflow_info.get('executed'):
+            return {
+                'status': 'error',
+                'tool': 'query_pf_object_data',
+                'project': project_name,
+                'instruction': instruction,
+                'resolution': resolution,
+                'error': 'data_query_loadflow_failed',
+                'details': loadflow_info.get('error', 'unknown_loadflow_error'),
+                'loadflow': loadflow_info,
+            }
+
+    values: Dict[str, Any] = {}
+    field_debug: Dict[str, Any] = {}
+    field_metadata: Dict[str, Any] = {}
+
+    for field_name in requested_fields:
+        meta = fields_meta.get(field_name, {})
+        field_metadata[field_name] = {
+            'label': meta.get('label', field_name),
+            'unit': meta.get('unit'),
+            'requires_loadflow': bool(meta.get('requires_loadflow', False)),
+        }
+        if 'special_reader' in meta:
+            read_result = _read_special_field(pf_object, meta['special_reader'])
+        else:
+            read_result = _read_pf_attribute_candidates(pf_object, meta.get('attr_candidates', []))
+
+        field_debug[field_name] = read_result
+        if read_result.get('status') == 'ok':
+            display_value = read_result.get('display_value')
+            if display_value is None:
+                display_value = read_result.get('numeric_value')
+            if display_value is None:
+                display_value = read_result.get('raw_value')
+            values[field_name] = display_value
+        else:
+            values[field_name] = None
+
+    return {
+        'status': 'ok',
+        'tool': 'query_pf_object_data',
+        'project': project_name,
+        'studycase': getattr(studycase, 'loc_name', None),
+        'instruction': instruction,
+        'resolution': resolution,
+        'entity_type': entity_type,
+        'object': {
+            'name': getattr(pf_object, 'loc_name', None),
+            'full_name': full_name,
+            'pf_class': pf_object.GetClassName() if hasattr(pf_object, 'GetClassName') else None,
+        },
+        'data': {
+            'entity_type': entity_type,
+            'requested_fields': requested_fields,
+            'field_metadata': field_metadata,
+            'values': values,
+        },
+        'loadflow': loadflow_info,
+        'debug': {
+            'field_reads': field_debug,
+        },
+    }
+
+
+def _summarize_pf_object_data_result_with_services(
+    services: Dict[str, Any],
+    result_payload: dict,
+    user_input: str,
+) -> Dict[str, Any]:
+    project_name = services['project_name']
+
+    data = result_payload.get('data', {}) if isinstance(result_payload, dict) else {}
+    values = data.get('values', {}) if isinstance(data, dict) else {}
+    field_metadata = data.get('field_metadata', {}) if isinstance(data, dict) else {}
+    obj = result_payload.get('object', {}) if isinstance(result_payload, dict) else {}
+    loadflow = result_payload.get('loadflow', {}) if isinstance(result_payload, dict) else {}
+    debug = result_payload.get('debug', {}) if isinstance(result_payload, dict) else {}
+    field_reads = debug.get('field_reads', {}) if isinstance(debug, dict) else {}
+    entity_type = result_payload.get('entity_type') if isinstance(result_payload, dict) else None
+
+    object_name = obj.get('name') or obj.get('full_name') or '<unbekannt>'
+    pf_class = obj.get('pf_class') or '<unknown>'
+
+    parts: List[str] = []
+    messages: List[str] = []
+    debug_parts: List[str] = []
+    for field_name, value in values.items():
+        meta = field_metadata.get(field_name, {}) if isinstance(field_metadata, dict) else {}
+        label = meta.get('label', field_name)
+        unit = meta.get('unit')
+        read_debug = field_reads.get(field_name, {}) if isinstance(field_reads, dict) else {}
+
+        if value is None:
+            parts.append(f'{label}: nicht verfügbar')
+            messages.append(f'{label} für {object_name}: nicht verfügbar.')
+
+            if entity_type == 'line' and field_name == 'loading':
+                tried_attrs = read_debug.get('tried_attrs', []) if isinstance(read_debug, dict) else []
+                raw_value = read_debug.get('raw_value') if isinstance(read_debug, dict) else None
+                used_attr = read_debug.get('used_attr') if isinstance(read_debug, dict) else None
+                status = read_debug.get('status') if isinstance(read_debug, dict) else None
+                error = read_debug.get('error') if isinstance(read_debug, dict) else None
+
+                debug_text = 'Debug Auslastung'
+                if tried_attrs:
+                    debug_text += ': probierte Attribute = ' + ', '.join(str(x) for x in tried_attrs)
+                if used_attr:
+                    debug_text += f'; getroffenes Attribut = {used_attr}'
+                if raw_value is not None:
+                    debug_text += f'; Rohwert = {raw_value}'
+                if status and status != 'ok':
+                    debug_text += f'; Status = {status}'
+                if error:
+                    debug_text += f'; Fehler = {error}'
+
+                if debug_text != 'Debug Auslastung':
+                    debug_parts.append(debug_text)
+                    messages.append(debug_text + '.')
+        elif unit:
+            parts.append(f'{label}: {value} {unit}')
+            messages.append(f'{label} für {object_name}: {value} {unit}.')
+        else:
+            parts.append(f'{label}: {value}')
+            messages.append(f'{label} für {object_name}: {value}.')
+
+    answer = f"Daten für '{object_name}' ({pf_class}): " + '; '.join(parts) if parts else f"Für '{object_name}' konnten keine Daten gelesen werden."
+    if loadflow.get('executed'):
+        answer += ' Für die angefragten Ergebnisgrößen wurde zuvor ein Lastfluss gerechnet.'
+    if debug_parts:
+        answer += ' ' + ' '.join(debug_parts)
+
+    return {
+        'status': 'ok',
+        'tool': 'summarize_pf_object_data_result',
+        'project': project_name,
+        'answer': answer,
+        'messages': messages,
+    }
+
+
+# ------------------------------------------------------------------
+# PUBLIC DATA QUERY TOOL FUNCTIONS
+# ------------------------------------------------------------------
+def build_data_inventory(project_name: str = DEFAULT_PROJECT_NAME) -> Dict[str, Any]:
+    services = build_powerfactory_services(project_name=project_name)
+    if services['status'] != 'ok':
+        return services
+    return _build_data_inventory_from_services(services)
+
+
+def interpret_data_query_instruction(
+    user_input: str,
+    project_name: str = DEFAULT_PROJECT_NAME,
+) -> Dict[str, Any]:
+    services = build_powerfactory_services(project_name=project_name)
+    if services['status'] != 'ok':
+        return services
+
+    inventory_result = _build_data_inventory_from_services(services)
+    if inventory_result['status'] != 'ok':
+        return inventory_result
+
+    return _interpret_data_query_instruction_with_services(
+        services=services,
+        user_input=user_input,
+        inventory=inventory_result.get('inventory', {}),
+    )
+
+
+def resolve_pf_object_from_inventory_llm(
+    instruction: dict,
+    project_name: str = DEFAULT_PROJECT_NAME,
+) -> Dict[str, Any]:
+    services = build_powerfactory_services(project_name=project_name)
+    if services['status'] != 'ok':
+        return services
+
+    inventory_result = _build_data_inventory_from_services(services)
+    if inventory_result['status'] != 'ok':
+        return inventory_result
+
+    return _resolve_pf_object_from_inventory_llm_with_services(
+        services=services,
+        instruction=instruction,
+        inventory=inventory_result.get('inventory', {}),
+    )
+
+
+def query_pf_object_data(
+    instruction: dict,
+    resolution: dict,
+    project_name: str = DEFAULT_PROJECT_NAME,
+) -> Dict[str, Any]:
+    services = build_powerfactory_services(project_name=project_name)
+    if services['status'] != 'ok':
+        return services
+    return _query_pf_object_data_with_services(
+        services=services,
+        instruction=instruction,
+        resolution=resolution,
+    )
+
+
+def summarize_pf_object_data_result(
+    result_payload: dict,
+    user_input: str,
+    project_name: str = DEFAULT_PROJECT_NAME,
+) -> Dict[str, Any]:
+    services = build_powerfactory_services(project_name=project_name)
+    if services['status'] != 'ok':
+        return services
+    return _summarize_pf_object_data_result_with_services(
+        services=services,
+        result_payload=result_payload,
+        user_input=user_input,
+    )

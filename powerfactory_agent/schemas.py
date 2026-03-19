@@ -1,22 +1,21 @@
-from pydantic import BaseModel, Field
+from __future__ import annotations
+
 from typing import List, Literal
 
-PowerFactoryResultMetric = Literal[
-    "bus_voltage",
-    "bus_p",
-    "bus_q",
-    "line_loading",
-]
+from pydantic import BaseModel, Field
 
 
 class LoadChangeInstruction(BaseModel):
     action: Literal["change_load"] = "change_load"
     load_name: str
     delta_p_mw: float
-    result_requests: List[PowerFactoryResultMetric] = Field(
-        default_factory=lambda: ["bus_voltage"],
-        description=(
-            "Selektiv angeforderte Ergebnis-Metriken für den Vorher/Nachher-Vergleich. "
-            "Standardmäßig werden Bus-Spannungen verglichen."
-        ),
+    result_requests: List[Literal["bus_voltage", "bus_p", "bus_q", "line_loading"]] = Field(
+        default_factory=lambda: ["bus_voltage"]
     )
+
+
+class DataQueryInstruction(BaseModel):
+    query_type: Literal["element_data"] = "element_data"
+    entity_type: str
+    entity_name_raw: str
+    requested_fields: List[str] = Field(default_factory=list)
