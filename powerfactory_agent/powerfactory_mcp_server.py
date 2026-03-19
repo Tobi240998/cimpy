@@ -15,6 +15,9 @@ from cimpy.powerfactory_agent.powerfactory_mcp_tools import (
     build_data_inventory,
     interpret_data_query_instruction,
     resolve_pf_object_from_inventory_llm,
+    list_available_object_attributes,
+    select_pf_object_attributes_llm,
+    read_pf_object_attributes,
     query_pf_object_data,
     summarize_pf_object_data_result,
 )

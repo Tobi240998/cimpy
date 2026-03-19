@@ -21,7 +21,9 @@ from cimpy.powerfactory_agent.powerfactory_mcp_tools import (
     _build_data_inventory_from_services,
     _interpret_data_query_instruction_with_services,
     _resolve_pf_object_from_inventory_llm_with_services,
-    _query_pf_object_data_with_services,
+    _list_available_object_attributes_with_services,
+    _select_pf_object_attributes_llm_with_services,
+    _read_pf_object_attributes_with_services,
     _summarize_pf_object_data_result_with_services,
 )
 from cimpy.powerfactory_agent.powerfactory_topology_graph import (
@@ -312,9 +314,9 @@ class PowerFactoryToolRegistry:
                 mutating=False,
                 handler=self._tool_resolve_pf_object_from_inventory_llm,
             ),
-            "query_pf_object_data": PowerFactoryToolSpec(
-                name="query_pf_object_data",
-                description="Read selected fields from a resolved PowerFactory object, running load flow only when the requested fields require it.",
+            "list_available_object_attributes": PowerFactoryToolSpec(
+                name="list_available_object_attributes",
+                description="List the available semantic and raw attribute options for the resolved PowerFactory object.",
                 input_schema={
                     "type": "object",
                     "properties": {
@@ -324,10 +326,45 @@ class PowerFactoryToolRegistry:
                     },
                     "required": ["services", "instruction", "resolution"],
                 },
-                output_schema_hint={"status": "ok|error", "tool": "query_pf_object_data", "data": "dict", "loadflow": "dict"},
+                output_schema_hint={"status": "ok|error", "tool": "list_available_object_attributes", "attribute_options": "list[dict]", "loadflow": "dict"},
+                capability_tags=["powerfactory", "data_query", "attribute_listing", "read_only"],
+                mutating=False,
+                handler=self._tool_list_available_object_attributes,
+            ),
+            "select_pf_object_attributes_llm": PowerFactoryToolSpec(
+                name="select_pf_object_attributes_llm",
+                description="Select matching attributes for the resolved PowerFactory object via LLM from the available attribute option list.",
+                input_schema={
+                    "type": "object",
+                    "properties": {
+                        "services": {"type": "object"},
+                        "instruction": {"type": "object"},
+                        "resolution": {"type": "object"},
+                        "attribute_listing": {"type": "object"},
+                    },
+                    "required": ["services", "instruction", "resolution", "attribute_listing"],
+                },
+                output_schema_hint={"status": "ok|error", "tool": "select_pf_object_attributes_llm", "selected_attribute_handles": "list[str]", "instruction": "dict"},
+                capability_tags=["powerfactory", "data_query", "llm_match", "read_only"],
+                mutating=False,
+                handler=self._tool_select_pf_object_attributes_llm,
+            ),
+            "read_pf_object_attributes": PowerFactoryToolSpec(
+                name="read_pf_object_attributes",
+                description="Read the selected attributes from the resolved PowerFactory object, running load flow only when required.",
+                input_schema={
+                    "type": "object",
+                    "properties": {
+                        "services": {"type": "object"},
+                        "instruction": {"type": "object"},
+                        "resolution": {"type": "object"},
+                    },
+                    "required": ["services", "instruction", "resolution"],
+                },
+                output_schema_hint={"status": "ok|error", "tool": "read_pf_object_attributes", "data": "dict", "loadflow": "dict"},
                 capability_tags=["powerfactory", "data_query", "read_only"],
                 mutating=False,
-                handler=self._tool_query_pf_object_data,
+                handler=self._tool_read_pf_object_attributes,
             ),
             "summarize_pf_object_data_result": PowerFactoryToolSpec(
                 name="summarize_pf_object_data_result",
@@ -575,14 +612,42 @@ class PowerFactoryToolRegistry:
             inventory=inventory,
         )
 
-    def _tool_query_pf_object_data(
+    def _tool_list_available_object_attributes(
         self,
         services: Dict[str, Any],
         instruction: dict,
         resolution: dict,
         **kwargs: Any,
     ) -> Dict[str, Any]:
-        return _query_pf_object_data_with_services(
+        return _list_available_object_attributes_with_services(
+            services=services,
+            instruction=instruction,
+            resolution=resolution,
+        )
+
+    def _tool_select_pf_object_attributes_llm(
+        self,
+        services: Dict[str, Any],
+        instruction: dict,
+        resolution: dict,
+        attribute_listing: dict,
+        **kwargs: Any,
+    ) -> Dict[str, Any]:
+        return _select_pf_object_attributes_llm_with_services(
+            services=services,
+            instruction=instruction,
+            resolution=resolution,
+            attribute_listing=attribute_listing,
+        )
+
+    def _tool_read_pf_object_attributes(
+        self,
+        services: Dict[str, Any],
+        instruction: dict,
+        resolution: dict,
+        **kwargs: Any,
+    ) -> Dict[str, Any]:
+        return _read_pf_object_attributes_with_services(
             services=services,
             instruction=instruction,
             resolution=resolution,

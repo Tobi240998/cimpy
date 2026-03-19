@@ -1880,13 +1880,12 @@ def summarize_switch_result(
 # ------------------------------------------------------------------
 # LLM OUTPUT MODELS FOR DATA QUERY
 # ------------------------------------------------------------------
-class DataQueryInstructionDecision(BaseModel):
+class DataQueryTypeDecision(BaseModel):
     selected_entity_type: Optional[str] = Field(default=None)
-    selected_fields: List[str] = Field(default_factory=list)
     confidence: str = Field(description="One of: high, medium, low")
     rationale: str = Field(description="Short explanation for the match decision")
     missing_context: List[str] = Field(default_factory=list)
-    should_execute: bool = Field(description="True only if type and field selection are sufficiently safe.")
+    should_execute: bool = Field(description="True only if the selected entity type is sufficiently safe.")
 
 
 class InventoryObjectMatchDecision(BaseModel):
@@ -1895,6 +1894,14 @@ class InventoryObjectMatchDecision(BaseModel):
     rationale: str = Field(description="Short explanation for the match decision")
     alternatives: List[str] = Field(default_factory=list)
     should_execute: bool = Field(description="True only if the selected object is a safe unambiguous choice.")
+
+
+class AttributeSelectionDecision(BaseModel):
+    selected_attribute_handles: List[str] = Field(default_factory=list)
+    confidence: str = Field(description="One of: high, medium, low")
+    rationale: str = Field(description="Short explanation for the match decision")
+    missing_context: List[str] = Field(default_factory=list)
+    should_execute: bool = Field(description="True only if the selected attributes are a safe grounded match.")
 
 
 # ------------------------------------------------------------------
@@ -1973,10 +1980,7 @@ def _build_data_inventory_from_services(services: Dict[str, Any]) -> Dict[str, A
     }
 
     switch_inventory_result = _build_switch_inventory_from_services(services)
-    if switch_inventory_result.get('status') == 'ok':
-        raw_items_by_type['switch'] = switch_inventory_result.get('switches', []) or []
-    else:
-        raw_items_by_type['switch'] = []
+    raw_items_by_type['switch'] = switch_inventory_result.get('switches', []) if switch_inventory_result.get('status') == 'ok' else []
 
     items_by_type: Dict[str, List[Dict[str, Any]]] = {}
     counts_by_type: Dict[str, int] = {}
@@ -2055,8 +2059,8 @@ PF_DATA_FIELD_LIBRARY: Dict[str, Dict[str, Dict[str, Any]]] = {
     },
     'line': {
         'loading': {
-            'aliases': ['auslastung', 'belastung', 'loading', 'thermische auslastung'],
-            'attr_candidates': ['c:loading', 'm:loading', 'loading', 'c:loadingmax'],
+            'aliases': ['auslastung', 'belastung', 'loading', 'thermische auslastung', 'loadfactor'],
+            'attr_candidates': ['loadfactor', 'c:loadfactor', 'maxload', 'c:maxload', 'c:loading', 'm:loading', 'loading', 'c:loadingmax'],
             'unit': '%',
             'requires_loadflow': True,
             'label': 'Auslastung',
@@ -2219,17 +2223,44 @@ def _build_data_field_catalog(entity_type: str) -> List[Dict[str, Any]]:
 
 
 # ------------------------------------------------------------------
-# DATA QUERY LLM MATCHING
+
 # ------------------------------------------------------------------
-def _build_data_query_instruction_chain():
-    parser = PydanticOutputParser(pydantic_object=DataQueryInstructionDecision)
+# RAW ATTRIBUTE CANDIDATE CATALOG FOR ATTRIBUTE LISTING
+# ------------------------------------------------------------------
+PF_RAW_ATTRIBUTE_CATALOG: Dict[str, List[str]] = {
+    'bus': [
+        'm:u', 'm:ul', 'm:U', 'm:Ul', 'm:Psum', 'm:Qsum', 'm:Psum:bus1', 'm:Qsum:bus1',
+        'phtech', 'uknom', 'outserv', 'cpGrid', 'iUsage', 'loc_name'
+    ],
+    'line': [
+        'c:loading', 'm:loading', 'c:loading1', 'm:loading1', 'loading', 'Loading', 'c:loadingmax',
+        'm:i', 'm:I', 'm:i1', 'm:I1', 'm:Inom', 'Inom', 'inom', 'Ithnom', 'sline',
+        'dline', 'length', 'line_length', 'typ_id', 'type_id', 'frlay', 'layfac',
+        'R1', 'X1', 'R0', 'X0', 'r1', 'x1', 'r0', 'x0', 'fearth', 'earthfac', 'outserv'
+    ],
+    'switch': [
+        'on_off', 'isclosed', 'closed', 'outserv', 'typ_id', 'type_id', 'loc_name'
+    ],
+    'load': [
+        'plini', 'qlini', 'pgini', 'qgini', 'm:Psum', 'm:Qsum', 'm:P', 'm:Q', 'outserv'
+    ],
+    'transformer': [
+        'c:loading', 'm:loading', 'loading', 'strn', 'Snom', 'snom', 'typ_id', 'type_id', 'outserv'
+    ],
+    'generator': [
+        'm:Psum', 'm:Qsum', 'm:P', 'm:Q', 'pgini', 'qgini', 'sgn', 'typ_id', 'type_id', 'outserv'
+    ],
+}
+
+
+def _build_data_query_type_chain():
+    parser = PydanticOutputParser(pydantic_object=DataQueryTypeDecision)
     prompt = ChatPromptTemplate.from_messages([
         (
             'system',
-            'You classify a PowerFactory data query.\n'
+            'You classify a PowerFactory data query to one supported element type.\n'
             'You may only choose an entity type from the provided available types.\n'
-            'You may only choose fields from the provided available field list for the chosen type.\n'
-            'Do not invent types or fields.\n'
+            'Do not invent types.\n'
             'If there is not enough information, return should_execute=false.\n'
             'Use high confidence only for a clearly grounded interpretation.\n\n'
             '{format_instructions}'
@@ -2237,8 +2268,7 @@ def _build_data_query_instruction_chain():
         (
             'user',
             'User request:\n{user_input}\n\n'
-            'Available entity types:\n{available_types}\n\n'
-            'Available fields by type:\n{available_fields_by_type}'
+            'Available entity types:\n{available_types}'
         ),
     ])
     llm = get_llm()
@@ -2268,6 +2298,31 @@ def _build_object_match_chain():
     return prompt | llm | parser, parser
 
 
+def _build_attribute_selection_chain():
+    parser = PydanticOutputParser(pydantic_object=AttributeSelectionDecision)
+    prompt = ChatPromptTemplate.from_messages([
+        (
+            'system',
+            'You select the best matching PowerFactory data attributes from a provided option list.\n'
+            'You may only choose handles that appear exactly in the provided options.\n'
+            'Prefer semantic field handles (field::<name>) when they clearly match.\n'
+            'Use raw attribute handles (attr::<name>) when they are a better match to the user wording or the desired concept.\n'
+            'Do not invent handles.\n'
+            'Return should_execute=false if the match is not grounded enough.\n\n'
+            '{format_instructions}'
+        ),
+        (
+            'user',
+            'User request:\n{user_input}\n\n'
+            'Entity type: {entity_type}\n'
+            'Selected object: {object_name}\n\n'
+            'Available attribute options:\n{attribute_options}'
+        ),
+    ])
+    llm = get_llm()
+    return prompt | llm | parser, parser
+
+
 def _fallback_select_entity_type(user_input: str, available_types: List[str]) -> Optional[str]:
     text = _safe_lower(user_input)
     mapping = {
@@ -2288,26 +2343,176 @@ def _fallback_select_entity_type(user_input: str, available_types: List[str]) ->
     return None
 
 
-def _fallback_select_fields(user_input: str, entity_type: str) -> List[str]:
+def _fallback_select_attribute_handles(user_input: str, attribute_options: List[Dict[str, Any]]) -> List[str]:
     text = _safe_lower(user_input)
-    fields = _get_available_data_fields(entity_type)
     selected: List[str] = []
-    for field_name, meta in fields.items():
-        aliases = [field_name, meta.get('label', field_name), *(meta.get('aliases', []) or [])]
-        alias_text = ' | '.join(_safe_lower(alias) for alias in aliases)
-        if any(token and token in text for token in _tokenize(alias_text)):
-            selected.append(field_name)
+    for item in attribute_options:
+        handle = item.get('handle')
+        tokens = [
+            item.get('label', ''),
+            item.get('field_name', ''),
+            item.get('attribute_name', ''),
+            *(item.get('aliases', []) or []),
+            *(item.get('candidate_attrs', []) or []),
+        ]
+        joined = ' | '.join(_safe_lower(str(token)) for token in tokens if token)
+        if not joined:
             continue
-        for alias in aliases:
-            alias_norm = _safe_lower(alias)
-            if alias_norm and alias_norm in text:
-                selected.append(field_name)
-                break
-    if selected:
-        return sorted(set(selected))
-    if entity_type == 'switch' and 'zustand' not in text:
-        return ['state']
-    return []
+        if any(tok and tok in text for tok in _tokenize(joined)):
+            if handle:
+                selected.append(handle)
+    if not selected:
+        for item in attribute_options:
+            if item.get('handle') == 'field::state':
+                if any(token in text for token in ['zustand', 'offen', 'geschlossen', 'status', 'state']):
+                    selected.append('field::state')
+                    break
+    seen = set()
+    result: List[str] = []
+    for handle in selected:
+        if handle not in seen:
+            seen.add(handle)
+            result.append(handle)
+    return result[:10]
+
+
+def _semantic_request_likely_needs_loadflow(user_input: str) -> bool:
+    text = _safe_lower(user_input)
+    tokens = ['auslastung', 'loading', 'spannung', 'voltage', 'wirkleistung', 'blindleistung', 'strom', 'current', 'lastfluss', 'load flow']
+    return any(token in text for token in tokens)
+
+
+def _normalize_attr_option_label(attr_name: str) -> str:
+    return attr_name.replace(':', ' : ')
+
+
+def _probe_raw_attribute_handle(obj: Any, attr_name: str) -> Dict[str, Any]:
+    return _read_pf_attribute_candidates(obj, [attr_name])
+
+
+def _list_readable_raw_attributes(obj: Any, entity_type: str) -> List[Dict[str, Any]]:
+    candidate_names = list(PF_RAW_ATTRIBUTE_CATALOG.get(entity_type, []))
+    for meta in _get_available_data_fields(entity_type).values():
+        for attr_name in meta.get('attr_candidates', []) or []:
+            if attr_name not in candidate_names:
+                candidate_names.append(attr_name)
+
+    options: List[Dict[str, Any]] = []
+    seen = set()
+    for attr_name in candidate_names:
+        read_result = _probe_raw_attribute_handle(obj, attr_name)
+        if read_result.get('status') != 'ok':
+            continue
+        key = f'attr::{attr_name}'
+        if key in seen:
+            continue
+        seen.add(key)
+        display_value = read_result.get('display_value')
+        if display_value is None:
+            display_value = read_result.get('numeric_value')
+        if display_value is None:
+            display_value = read_result.get('raw_value')
+        options.append({
+            'handle': key,
+            'kind': 'raw_attribute',
+            'label': _normalize_attr_option_label(attr_name),
+            'attribute_name': attr_name,
+            'sample_value': display_value,
+            'unit': None,
+            'requires_loadflow': False,
+        })
+    options.sort(key=lambda item: str(item.get('attribute_name') or ''))
+    return options
+
+
+def _probe_specific_attribute(obj: Any, attr_name: str) -> Dict[str, Any]:
+    getattribute_value = None
+    getattribute_error = None
+    try:
+        getattribute_value = obj.GetAttribute(attr_name)
+    except Exception as e:
+        getattribute_error = str(e)
+
+    getattr_value = None
+    getattr_error = None
+    try:
+        getattr_value = getattr(obj, attr_name)
+    except Exception as e:
+        getattr_error = str(e)
+
+    return {
+        'attribute_name': attr_name,
+        'getattribute_value': _serialize_pf_value(getattribute_value),
+        'getattribute_numeric': _try_numeric(getattribute_value),
+        'getattribute_error': getattribute_error,
+        'getattr_value': _serialize_pf_value(getattr_value),
+        'getattr_numeric': _try_numeric(getattr_value),
+        'getattr_error': getattr_error,
+    }
+
+
+def _build_line_result_attribute_debug(obj: Any) -> Dict[str, Any]:
+    has_results_value = None
+    has_results_error = None
+    try:
+        has_results_value = obj.HasResults()
+    except Exception as e:
+        has_results_error = str(e)
+
+    candidates = [
+        'loadfactor', 'maxload', 'c:loadfactor', 'm:loadfactor',
+        'c:maxload', 'm:maxload', 'loading', 'c:loading', 'm:loading',
+        'Imaxlim', 'Inom', 'Irated'
+    ]
+
+    probes = [_probe_specific_attribute(obj, attr_name) for attr_name in candidates]
+
+    return {
+        'has_results_value': has_results_value,
+        'has_results_error': has_results_error,
+        'specific_probes': probes,
+    }
+
+
+def _build_semantic_field_options(entity_type: str) -> List[Dict[str, Any]]:
+    options: List[Dict[str, Any]] = []
+    for field_name, meta in _get_available_data_fields(entity_type).items():
+        options.append({
+            'handle': f'field::{field_name}',
+            'kind': 'semantic_field',
+            'field_name': field_name,
+            'label': meta.get('label', field_name),
+            'aliases': meta.get('aliases', []),
+            'candidate_attrs': meta.get('attr_candidates', []),
+            'special_reader': meta.get('special_reader'),
+            'unit': meta.get('unit'),
+            'requires_loadflow': bool(meta.get('requires_loadflow', False)),
+        })
+    options.sort(key=lambda item: str(item.get('field_name') or ''))
+    return options
+
+
+def _format_attribute_options_for_prompt(attribute_options: List[Dict[str, Any]]) -> str:
+    lines: List[str] = []
+    for item in attribute_options:
+        handle = item.get('handle')
+        label = item.get('label') or item.get('field_name') or item.get('attribute_name') or handle
+        kind = item.get('kind')
+        unit = item.get('unit')
+        sample_value = item.get('sample_value')
+        aliases = item.get('aliases', []) or []
+        candidate_attrs = item.get('candidate_attrs', []) or []
+        details: List[str] = [f'kind={kind}']
+        if unit:
+            details.append(f'unit={unit}')
+        if aliases:
+            details.append('aliases=' + ', '.join(str(x) for x in aliases[:6]))
+        if candidate_attrs:
+            details.append('pf_candidates=' + ', '.join(str(x) for x in candidate_attrs[:6]))
+        if sample_value is not None:
+            details.append(f'sample={sample_value}')
+        lines.append(f'- {handle}: {label} ({"; ".join(details)})')
+    return '\n'.join(lines)
 
 
 def _interpret_data_query_instruction_with_services(
@@ -2327,28 +2532,18 @@ def _interpret_data_query_instruction_with_services(
             'details': 'Für die Datenabfrage stehen keine PowerFactory-Elementtypen zur Verfügung.',
         }
 
-    available_fields_by_type = {
-        entity_type: _build_data_field_catalog(entity_type)
-        for entity_type in available_types
-    }
-
     llm_decision_dump: Dict[str, Any] = {}
     selected_entity_type = None
-    selected_fields: List[str] = []
     confidence = 'low'
     rationale = 'Fallback-Auswahl verwendet.'
     missing_context: List[str] = []
     should_execute = False
 
     try:
-        chain, parser = _build_data_query_instruction_chain()
+        chain, parser = _build_data_query_type_chain()
         decision = chain.invoke({
             'user_input': user_input,
             'available_types': '\n'.join(f'- {item}' for item in available_types),
-            'available_fields_by_type': '\n'.join(
-                f'- {etype}: ' + ', '.join(field['field'] for field in fields)
-                for etype, fields in available_fields_by_type.items()
-            ),
             'format_instructions': parser.get_format_instructions(),
         })
         llm_decision_dump = decision.model_dump()
@@ -2357,9 +2552,6 @@ def _interpret_data_query_instruction_with_services(
         rationale = decision.rationale
         missing_context = decision.missing_context or []
         should_execute = bool(decision.should_execute)
-        if selected_entity_type:
-            allowed_fields = set(_get_available_data_fields(selected_entity_type).keys())
-            selected_fields = [field for field in decision.selected_fields if field in allowed_fields]
     except Exception as e:
         llm_decision_dump = {'error': str(e)}
 
@@ -2370,15 +2562,6 @@ def _interpret_data_query_instruction_with_services(
             should_execute = True
             rationale = 'Entity-Typ wurde per regelbasiertem Fallback erkannt.'
 
-    if selected_entity_type:
-        if not selected_fields:
-            selected_fields = _fallback_select_fields(user_input, selected_entity_type)
-            if selected_fields:
-                should_execute = True
-        if not selected_fields:
-            missing_context.append('requested_fields')
-            should_execute = False
-
     if not selected_entity_type:
         missing_context.append('entity_type')
 
@@ -2387,22 +2570,18 @@ def _interpret_data_query_instruction_with_services(
         'entity_type': selected_entity_type,
         'entity_name_raw': user_input,
         'entity_name_candidates': _build_entity_name_candidates(user_input),
-        'requested_fields': selected_fields,
+        'attribute_request_text': user_input,
         'available_types': available_types,
-        'available_fields_by_type': {
-            key: [field['field'] for field in value]
-            for key, value in available_fields_by_type.items()
-        },
     }
 
-    if not should_execute or not selected_entity_type or not selected_fields:
+    if not should_execute or not selected_entity_type:
         return {
             'status': 'error',
             'tool': 'interpret_data_query_instruction',
             'project': project_name,
             'user_input': user_input,
             'error': 'data_query_not_safe',
-            'details': 'Die Datenabfrage konnte nicht sicher genug in Typ und Felder aufgelöst werden.',
+            'details': 'Die Datenabfrage konnte nicht sicher genug auf einen Elementtyp aufgelöst werden.',
             'instruction': instruction,
             'llm_decision': llm_decision_dump,
             'missing_context': sorted(set(missing_context)),
@@ -2519,7 +2698,7 @@ def _resolve_pf_object_from_inventory_llm_with_services(
 
 
 # ------------------------------------------------------------------
-# DATA QUERY EXECUTION
+# DATA QUERY ATTRIBUTE LISTING / EXECUTION
 # ------------------------------------------------------------------
 def _try_numeric(value: Any) -> Optional[float]:
     if value is None:
@@ -2632,7 +2811,7 @@ def _ensure_loadflow_for_data_query(studycase: Any) -> Dict[str, Any]:
         }
 
 
-def _query_pf_object_data_with_services(
+def _list_available_object_attributes_with_services(
     services: Dict[str, Any],
     instruction: dict,
     resolution: dict,
@@ -2645,32 +2824,20 @@ def _query_pf_object_data_with_services(
     if not isinstance(selected_match, dict):
         return {
             'status': 'error',
-            'tool': 'query_pf_object_data',
+            'tool': 'list_available_object_attributes',
             'project': project_name,
             'instruction': instruction,
             'error': 'missing_selected_object',
             'details': 'Es wurde kein aufgelöstes PowerFactory-Objekt übergeben.',
         }
 
-    entity_type = instruction.get('entity_type')
-    requested_fields = instruction.get('requested_fields', []) if isinstance(instruction, dict) else []
-    if not entity_type or not requested_fields:
-        return {
-            'status': 'error',
-            'tool': 'query_pf_object_data',
-            'project': project_name,
-            'instruction': instruction,
-            'error': 'missing_data_query_fields',
-            'details': 'In der Instruction fehlen Typ oder angeforderte Felder.',
-        }
-
-    fields_meta = _get_available_data_fields(entity_type)
+    entity_type = instruction.get('entity_type') if isinstance(instruction, dict) else None
     full_name = selected_match.get('full_name')
     pf_object = _get_object_by_full_name(app, full_name)
     if pf_object is None:
         return {
             'status': 'error',
-            'tool': 'query_pf_object_data',
+            'tool': 'list_available_object_attributes',
             'project': project_name,
             'instruction': instruction,
             'resolution': resolution,
@@ -2678,14 +2845,281 @@ def _query_pf_object_data_with_services(
             'details': f'Das aufgelöste Objekt konnte in PowerFactory nicht geladen werden: {full_name}',
         }
 
-    requires_loadflow = any(bool(fields_meta.get(field, {}).get('requires_loadflow', False)) for field in requested_fields)
+    loadflow_info = {'executed': False, 'reason': 'not_required_for_listing'}
+    if _semantic_request_likely_needs_loadflow(instruction.get('attribute_request_text') or ''):
+        loadflow_info = _ensure_loadflow_for_data_query(studycase)
+        if not loadflow_info.get('executed'):
+            return {
+                'status': 'error',
+                'tool': 'list_available_object_attributes',
+                'project': project_name,
+                'instruction': instruction,
+                'resolution': resolution,
+                'error': 'attribute_listing_loadflow_failed',
+                'details': loadflow_info.get('error', 'unknown_loadflow_error'),
+                'loadflow': loadflow_info,
+            }
+
+    semantic_options = _build_semantic_field_options(entity_type)
+    raw_options = _list_readable_raw_attributes(pf_object, entity_type)
+    attribute_options = semantic_options + raw_options
+
+    return {
+        'status': 'ok',
+        'tool': 'list_available_object_attributes',
+        'project': project_name,
+        'studycase': getattr(studycase, 'loc_name', None),
+        'instruction': instruction,
+        'resolution': resolution,
+        'object': {
+            'name': getattr(pf_object, 'loc_name', None),
+            'full_name': full_name,
+            'pf_class': pf_object.GetClassName() if hasattr(pf_object, 'GetClassName') else None,
+        },
+        'attribute_options': attribute_options,
+        'loadflow': loadflow_info,
+    }
+
+
+def _select_pf_object_attributes_llm_with_services(
+    services: Dict[str, Any],
+    instruction: dict,
+    resolution: dict,
+    attribute_listing: dict,
+) -> Dict[str, Any]:
+    project_name = services['project_name']
+    attribute_options = attribute_listing.get('attribute_options', []) if isinstance(attribute_listing, dict) else []
+    if not attribute_options:
+        return {
+            'status': 'error',
+            'tool': 'select_pf_object_attributes_llm',
+            'project': project_name,
+            'instruction': instruction,
+            'resolution': resolution,
+            'error': 'empty_attribute_options',
+            'details': 'Für das ausgewählte Objekt stehen keine Attributoptionen zur Verfügung.',
+        }
+
+    available_handles = [item.get('handle') for item in attribute_options if item.get('handle')]
+    object_name = (attribute_listing.get('object', {}) or {}).get('name') if isinstance(attribute_listing, dict) else None
+    entity_type = instruction.get('entity_type') if isinstance(instruction, dict) else None
+
+    llm_decision_dump: Dict[str, Any] = {}
+    selected_handles: List[str] = []
+    confidence = 'low'
+    rationale = 'Fallback-Auswahl verwendet.'
+    missing_context: List[str] = []
+    should_execute = False
+
+    try:
+        chain, parser = _build_attribute_selection_chain()
+        decision = chain.invoke({
+            'user_input': instruction.get('attribute_request_text') or instruction.get('entity_name_raw') or '',
+            'entity_type': entity_type or '',
+            'object_name': object_name or '',
+            'attribute_options': _format_attribute_options_for_prompt(attribute_options),
+            'format_instructions': parser.get_format_instructions(),
+        })
+        llm_decision_dump = decision.model_dump()
+        selected_handles = [handle for handle in decision.selected_attribute_handles if handle in available_handles]
+        confidence = decision.confidence
+        rationale = decision.rationale
+        missing_context = decision.missing_context or []
+        should_execute = bool(decision.should_execute)
+    except Exception as e:
+        llm_decision_dump = {'error': str(e)}
+
+    if not selected_handles:
+        selected_handles = _fallback_select_attribute_handles(
+            instruction.get('attribute_request_text') or instruction.get('entity_name_raw') or '',
+            attribute_options,
+        )
+        if selected_handles:
+            should_execute = True
+            confidence = 'medium'
+            rationale = 'Attributauswahl wurde per regelbasiertem Fallback getroffen.'
+
+    if not selected_handles:
+        missing_context.append('attribute_selection')
+
+    if not should_execute or not selected_handles:
+        return {
+            'status': 'error',
+            'tool': 'select_pf_object_attributes_llm',
+            'project': project_name,
+            'instruction': instruction,
+            'resolution': resolution,
+            'attribute_listing': attribute_listing,
+            'error': 'attribute_selection_not_safe',
+            'details': 'Die Attributauswahl konnte nicht sicher genug aufgelöst werden.',
+            'llm_decision': llm_decision_dump,
+            'missing_context': sorted(set(missing_context)),
+        }
+
+    instruction_out = dict(instruction)
+    instruction_out['selected_attribute_handles'] = selected_handles
+    return {
+        'status': 'ok',
+        'tool': 'select_pf_object_attributes_llm',
+        'project': project_name,
+        'instruction': instruction_out,
+        'selected_attribute_handles': selected_handles,
+        'llm_decision': llm_decision_dump,
+        'confidence': confidence,
+        'rationale': rationale,
+    }
+
+
+def _read_attribute_handle(obj: Any, entity_type: str, handle: str) -> Dict[str, Any]:
+    if handle.startswith('field::'):
+        field_name = handle.split('::', 1)[1]
+        meta = _get_available_data_fields(entity_type).get(field_name, {})
+        if not meta:
+            return {
+                'status': 'error',
+                'error': 'unknown_field_handle',
+                'handle': handle,
+            }
+        if 'special_reader' in meta:
+            read_result = _read_special_field(obj, meta['special_reader'])
+        else:
+            read_result = _read_pf_attribute_candidates(obj, meta.get('attr_candidates', []))
+        if read_result.get('status') == 'ok':
+            display_value = read_result.get('display_value')
+            if display_value is None:
+                display_value = read_result.get('numeric_value')
+            if display_value is None:
+                display_value = read_result.get('raw_value')
+
+            if (
+                entity_type == 'line'
+                and field_name == 'loading'
+            ):
+                numeric_value = _try_numeric(display_value)
+                selected_attr = str(read_result.get('attribute') or '')
+                if numeric_value is not None and selected_attr in {'loadfactor', 'c:loadfactor'}:
+                    if numeric_value <= 1.5:
+                        display_value = round(numeric_value * 100.0, 6)
+                elif numeric_value is not None and selected_attr in {'maxload', 'c:maxload'}:
+                    display_value = round(numeric_value, 6)
+
+            return {
+                'status': 'ok',
+                'handle': handle,
+                'field_name': field_name,
+                'label': meta.get('label', field_name),
+                'unit': meta.get('unit'),
+                'requires_loadflow': bool(meta.get('requires_loadflow', False)),
+                'value': display_value,
+                'read_debug': read_result,
+            }
+        return {
+            'status': 'error',
+            'handle': handle,
+            'field_name': field_name,
+            'label': meta.get('label', field_name),
+            'unit': meta.get('unit'),
+            'requires_loadflow': bool(meta.get('requires_loadflow', False)),
+            'read_debug': read_result,
+        }
+
+    if handle.startswith('attr::'):
+        attr_name = handle.split('::', 1)[1]
+        read_result = _read_pf_attribute_candidates(obj, [attr_name])
+        if read_result.get('status') == 'ok':
+            display_value = read_result.get('display_value')
+            if display_value is None:
+                display_value = read_result.get('numeric_value')
+            if display_value is None:
+                display_value = read_result.get('raw_value')
+            return {
+                'status': 'ok',
+                'handle': handle,
+                'attribute_name': attr_name,
+                'label': attr_name,
+                'unit': None,
+                'requires_loadflow': False,
+                'value': display_value,
+                'read_debug': read_result,
+            }
+        return {
+            'status': 'error',
+            'handle': handle,
+            'attribute_name': attr_name,
+            'label': attr_name,
+            'unit': None,
+            'requires_loadflow': False,
+            'read_debug': read_result,
+        }
+
+    return {
+        'status': 'error',
+        'error': 'unknown_attribute_handle_kind',
+        'handle': handle,
+    }
+
+
+def _read_pf_object_attributes_with_services(
+    services: Dict[str, Any],
+    instruction: dict,
+    resolution: dict,
+) -> Dict[str, Any]:
+    app = services['app']
+    studycase = services['studycase']
+    project_name = services['project_name']
+
+    selected_match = resolution.get('selected_match') if isinstance(resolution, dict) else None
+    if not isinstance(selected_match, dict):
+        return {
+            'status': 'error',
+            'tool': 'read_pf_object_attributes',
+            'project': project_name,
+            'instruction': instruction,
+            'error': 'missing_selected_object',
+            'details': 'Es wurde kein aufgelöstes PowerFactory-Objekt übergeben.',
+        }
+
+    entity_type = instruction.get('entity_type') if isinstance(instruction, dict) else None
+    selected_handles = instruction.get('selected_attribute_handles', []) if isinstance(instruction, dict) else []
+    if not entity_type or not selected_handles:
+        return {
+            'status': 'error',
+            'tool': 'read_pf_object_attributes',
+            'project': project_name,
+            'instruction': instruction,
+            'error': 'missing_selected_attribute_handles',
+            'details': 'In der Instruction fehlen Typ oder ausgewählte Attribute.',
+        }
+
+    full_name = selected_match.get('full_name')
+    pf_object = _get_object_by_full_name(app, full_name)
+    if pf_object is None:
+        return {
+            'status': 'error',
+            'tool': 'read_pf_object_attributes',
+            'project': project_name,
+            'instruction': instruction,
+            'resolution': resolution,
+            'error': 'pf_object_not_found',
+            'details': f'Das aufgelöste Objekt konnte in PowerFactory nicht geladen werden: {full_name}',
+        }
+
+    requires_loadflow = False
+    for handle in selected_handles:
+        if handle.startswith('field::'):
+            field_name = handle.split('::', 1)[1]
+            meta = _get_available_data_fields(entity_type).get(field_name, {})
+            if bool(meta.get('requires_loadflow', False)):
+                requires_loadflow = True
+                break
+
     loadflow_info = {'executed': False, 'reason': 'not_required'}
     if requires_loadflow:
         loadflow_info = _ensure_loadflow_for_data_query(studycase)
         if not loadflow_info.get('executed'):
             return {
                 'status': 'error',
-                'tool': 'query_pf_object_data',
+                'tool': 'read_pf_object_attributes',
                 'project': project_name,
                 'instruction': instruction,
                 'resolution': resolution,
@@ -2695,35 +3129,42 @@ def _query_pf_object_data_with_services(
             }
 
     values: Dict[str, Any] = {}
-    field_debug: Dict[str, Any] = {}
     field_metadata: Dict[str, Any] = {}
+    field_debug: Dict[str, Any] = {}
 
-    for field_name in requested_fields:
-        meta = fields_meta.get(field_name, {})
-        field_metadata[field_name] = {
-            'label': meta.get('label', field_name),
-            'unit': meta.get('unit'),
-            'requires_loadflow': bool(meta.get('requires_loadflow', False)),
+    for handle in selected_handles:
+        read_result = _read_attribute_handle(pf_object, entity_type, handle)
+        field_debug[handle] = read_result
+        field_metadata[handle] = {
+            'label': read_result.get('label', handle),
+            'unit': read_result.get('unit'),
+            'requires_loadflow': bool(read_result.get('requires_loadflow', False)),
+            'field_name': read_result.get('field_name'),
+            'attribute_name': read_result.get('attribute_name'),
+            'handle': handle,
         }
-        if 'special_reader' in meta:
-            read_result = _read_special_field(pf_object, meta['special_reader'])
-        else:
-            read_result = _read_pf_attribute_candidates(pf_object, meta.get('attr_candidates', []))
+        values[handle] = read_result.get('value') if read_result.get('status') == 'ok' else None
 
-        field_debug[field_name] = read_result
-        if read_result.get('status') == 'ok':
-            display_value = read_result.get('display_value')
-            if display_value is None:
-                display_value = read_result.get('numeric_value')
-            if display_value is None:
-                display_value = read_result.get('raw_value')
-            values[field_name] = display_value
-        else:
-            values[field_name] = None
+    extra_debug: Dict[str, Any] = {}
+    loading_handle_missing = (
+        entity_type == 'line'
+        and any(handle == 'field::loading' for handle in selected_handles)
+        and values.get('field::loading') is None
+    )
+    if loading_handle_missing:
+        all_attribute_names = sorted([name for name in dir(pf_object) if not str(name).startswith('_')])
+        readable_raw_attributes = _list_readable_raw_attributes(pf_object, entity_type)
+        explicit_result_debug = _build_line_result_attribute_debug(pf_object)
+        extra_debug['line_loading_attribute_debug'] = {
+            'reason': 'selected line loading was not readable via current semantic mapping',
+            'all_attribute_names': all_attribute_names,
+            'readable_raw_attributes': readable_raw_attributes,
+            'explicit_result_debug': explicit_result_debug,
+        }
 
     return {
         'status': 'ok',
-        'tool': 'query_pf_object_data',
+        'tool': 'read_pf_object_attributes',
         'project': project_name,
         'studycase': getattr(studycase, 'loc_name', None),
         'instruction': instruction,
@@ -2736,13 +3177,14 @@ def _query_pf_object_data_with_services(
         },
         'data': {
             'entity_type': entity_type,
-            'requested_fields': requested_fields,
+            'selected_attribute_handles': selected_handles,
             'field_metadata': field_metadata,
             'values': values,
         },
         'loadflow': loadflow_info,
         'debug': {
             'field_reads': field_debug,
+            **extra_debug,
         },
     }
 
@@ -2759,48 +3201,19 @@ def _summarize_pf_object_data_result_with_services(
     field_metadata = data.get('field_metadata', {}) if isinstance(data, dict) else {}
     obj = result_payload.get('object', {}) if isinstance(result_payload, dict) else {}
     loadflow = result_payload.get('loadflow', {}) if isinstance(result_payload, dict) else {}
-    debug = result_payload.get('debug', {}) if isinstance(result_payload, dict) else {}
-    field_reads = debug.get('field_reads', {}) if isinstance(debug, dict) else {}
-    entity_type = result_payload.get('entity_type') if isinstance(result_payload, dict) else None
 
     object_name = obj.get('name') or obj.get('full_name') or '<unbekannt>'
     pf_class = obj.get('pf_class') or '<unknown>'
 
     parts: List[str] = []
     messages: List[str] = []
-    debug_parts: List[str] = []
-    for field_name, value in values.items():
-        meta = field_metadata.get(field_name, {}) if isinstance(field_metadata, dict) else {}
-        label = meta.get('label', field_name)
+    for handle, value in values.items():
+        meta = field_metadata.get(handle, {}) if isinstance(field_metadata, dict) else {}
+        label = meta.get('label', handle)
         unit = meta.get('unit')
-        read_debug = field_reads.get(field_name, {}) if isinstance(field_reads, dict) else {}
-
         if value is None:
             parts.append(f'{label}: nicht verfügbar')
             messages.append(f'{label} für {object_name}: nicht verfügbar.')
-
-            if entity_type == 'line' and field_name == 'loading':
-                tried_attrs = read_debug.get('tried_attrs', []) if isinstance(read_debug, dict) else []
-                raw_value = read_debug.get('raw_value') if isinstance(read_debug, dict) else None
-                used_attr = read_debug.get('used_attr') if isinstance(read_debug, dict) else None
-                status = read_debug.get('status') if isinstance(read_debug, dict) else None
-                error = read_debug.get('error') if isinstance(read_debug, dict) else None
-
-                debug_text = 'Debug Auslastung'
-                if tried_attrs:
-                    debug_text += ': probierte Attribute = ' + ', '.join(str(x) for x in tried_attrs)
-                if used_attr:
-                    debug_text += f'; getroffenes Attribut = {used_attr}'
-                if raw_value is not None:
-                    debug_text += f'; Rohwert = {raw_value}'
-                if status and status != 'ok':
-                    debug_text += f'; Status = {status}'
-                if error:
-                    debug_text += f'; Fehler = {error}'
-
-                if debug_text != 'Debug Auslastung':
-                    debug_parts.append(debug_text)
-                    messages.append(debug_text + '.')
         elif unit:
             parts.append(f'{label}: {value} {unit}')
             messages.append(f'{label} für {object_name}: {value} {unit}.')
@@ -2811,8 +3224,41 @@ def _summarize_pf_object_data_result_with_services(
     answer = f"Daten für '{object_name}' ({pf_class}): " + '; '.join(parts) if parts else f"Für '{object_name}' konnten keine Daten gelesen werden."
     if loadflow.get('executed'):
         answer += ' Für die angefragten Ergebnisgrößen wurde zuvor ein Lastfluss gerechnet.'
-    if debug_parts:
-        answer += ' ' + ' '.join(debug_parts)
+
+    debug_payload = result_payload.get('debug', {}) if isinstance(result_payload, dict) else {}
+    line_loading_debug = debug_payload.get('line_loading_attribute_debug', {}) if isinstance(debug_payload, dict) else {}
+    if isinstance(line_loading_debug, dict) and line_loading_debug:
+        all_attr_names = line_loading_debug.get('all_attribute_names', []) or []
+        readable_raw = line_loading_debug.get('readable_raw_attributes', []) or []
+        explicit_result_debug = line_loading_debug.get('explicit_result_debug', {}) or {}
+        answer += ' Debug Attribute der Leitung: '
+        if all_attr_names:
+            answer += 'Alle Attributnamen = ' + ', '.join(str(name) for name in all_attr_names)
+        if readable_raw:
+            if all_attr_names:
+                answer += ' | '
+            answer += 'Lesbare Raw-Attribute = ' + ', '.join(
+                f"{item.get('attribute_name')}={item.get('sample_value')}" for item in readable_raw
+            )
+        if explicit_result_debug:
+            if all_attr_names or readable_raw:
+                answer += ' | '
+            has_results_value = explicit_result_debug.get('has_results_value')
+            has_results_error = explicit_result_debug.get('has_results_error')
+            probes = explicit_result_debug.get('specific_probes', []) or []
+            answer += f"Resultat-Debug HasResults={has_results_value}"
+            if has_results_error:
+                answer += f" (Fehler: {has_results_error})"
+            if probes:
+                formatted = []
+                for item in probes:
+                    formatted.append(
+                        f"{item.get('attribute_name')}: GetAttribute={item.get('getattribute_value')}"
+                        f" [num={item.get('getattribute_numeric')}, err={item.get('getattribute_error')}]"
+                        f"; getattr={item.get('getattr_value')}"
+                        f" [num={item.get('getattr_numeric')}, err={item.get('getattr_error')}]"
+                    )
+                answer += ' | Gezielte Attributtests = ' + ' || '.join(formatted)
 
     return {
         'status': 'ok',
@@ -2871,18 +3317,120 @@ def resolve_pf_object_from_inventory_llm(
     )
 
 
-def query_pf_object_data(
+def list_available_object_attributes(
     instruction: dict,
-    resolution: dict,
     project_name: str = DEFAULT_PROJECT_NAME,
 ) -> Dict[str, Any]:
     services = build_powerfactory_services(project_name=project_name)
     if services['status'] != 'ok':
         return services
-    return _query_pf_object_data_with_services(
+
+    inventory_result = _build_data_inventory_from_services(services)
+    if inventory_result['status'] != 'ok':
+        return inventory_result
+
+    resolution = _resolve_pf_object_from_inventory_llm_with_services(
+        services=services,
+        instruction=instruction,
+        inventory=inventory_result.get('inventory', {}),
+    )
+    if resolution.get('status') != 'ok':
+        return resolution
+
+    return _list_available_object_attributes_with_services(
         services=services,
         instruction=instruction,
         resolution=resolution,
+    )
+
+
+def select_pf_object_attributes_llm(
+    instruction: dict,
+    project_name: str = DEFAULT_PROJECT_NAME,
+) -> Dict[str, Any]:
+    services = build_powerfactory_services(project_name=project_name)
+    if services['status'] != 'ok':
+        return services
+
+    inventory_result = _build_data_inventory_from_services(services)
+    if inventory_result['status'] != 'ok':
+        return inventory_result
+
+    resolution = _resolve_pf_object_from_inventory_llm_with_services(
+        services=services,
+        instruction=instruction,
+        inventory=inventory_result.get('inventory', {}),
+    )
+    if resolution.get('status') != 'ok':
+        return resolution
+
+    listing = _list_available_object_attributes_with_services(
+        services=services,
+        instruction=instruction,
+        resolution=resolution,
+    )
+    if listing.get('status') != 'ok':
+        return listing
+
+    return _select_pf_object_attributes_llm_with_services(
+        services=services,
+        instruction=instruction,
+        resolution=resolution,
+        attribute_listing=listing,
+    )
+
+
+def read_pf_object_attributes(
+    instruction: dict,
+    project_name: str = DEFAULT_PROJECT_NAME,
+) -> Dict[str, Any]:
+    services = build_powerfactory_services(project_name=project_name)
+    if services['status'] != 'ok':
+        return services
+
+    inventory_result = _build_data_inventory_from_services(services)
+    if inventory_result['status'] != 'ok':
+        return inventory_result
+
+    resolution = _resolve_pf_object_from_inventory_llm_with_services(
+        services=services,
+        instruction=instruction,
+        inventory=inventory_result.get('inventory', {}),
+    )
+    if resolution.get('status') != 'ok':
+        return resolution
+
+    listing = _list_available_object_attributes_with_services(
+        services=services,
+        instruction=instruction,
+        resolution=resolution,
+    )
+    if listing.get('status') != 'ok':
+        return listing
+
+    selected = _select_pf_object_attributes_llm_with_services(
+        services=services,
+        instruction=instruction,
+        resolution=resolution,
+        attribute_listing=listing,
+    )
+    if selected.get('status') != 'ok':
+        return selected
+
+    return _read_pf_object_attributes_with_services(
+        services=services,
+        instruction=selected.get('instruction', instruction),
+        resolution=resolution,
+    )
+
+
+def query_pf_object_data(
+    instruction: dict,
+    project_name: str = DEFAULT_PROJECT_NAME,
+) -> Dict[str, Any]:
+    return read_pf_object_attributes(
+        instruction=instruction,
+        project_name=project_name,
     )
 
 

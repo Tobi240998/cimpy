@@ -18,4 +18,5 @@ class DataQueryInstruction(BaseModel):
     query_type: Literal["element_data"] = "element_data"
     entity_type: str
     entity_name_raw: str
-    requested_fields: List[str] = Field(default_factory=list)
+    attribute_request_text: str = ""
+    selected_attribute_handles: List[str] = Field(default_factory=list)

@@ -76,7 +76,9 @@ class PowerFactoryDomainAgent:
                 "- build_data_inventory\n"
                 "- interpret_data_query_instruction\n"
                 "- resolve_pf_object_from_inventory_llm\n"
-                "- query_pf_object_data\n"
+                "- list_available_object_attributes\n"
+                "- select_pf_object_attributes_llm\n"
+                "- read_pf_object_attributes\n"
                 "- summarize_pf_object_data_result\n"
                 "- unsupported_request\n\n"
                 "Return only structured output.\n\n"
@@ -131,7 +133,9 @@ class PowerFactoryDomainAgent:
             "build_data_inventory": "Build a lightweight typed inventory for PowerFactory data queries without a topology graph",
             "interpret_data_query_instruction": "Interpret user input into a structured PowerFactory data query instruction",
             "resolve_pf_object_from_inventory_llm": "Resolve the requested PowerFactory object via LLM-based exact candidate selection from the typed inventory",
-            "query_pf_object_data": "Read the requested fields from the resolved PowerFactory object",
+            "list_available_object_attributes": "Build the available attribute option list for the resolved PowerFactory object",
+            "select_pf_object_attributes_llm": "Select matching attributes for the resolved PowerFactory object via LLM from the available attribute option list",
+            "read_pf_object_attributes": "Read the selected attributes from the resolved PowerFactory object",
             "summarize_pf_object_data_result": "Summarize the data query result for the user",
             "unsupported_request": "Return a controlled message for unsupported PowerFactory intent",
         }
@@ -176,7 +180,9 @@ class PowerFactoryDomainAgent:
                 {"step": "build_data_inventory", "description": allowed_steps["build_data_inventory"]},
                 {"step": "interpret_data_query_instruction", "description": allowed_steps["interpret_data_query_instruction"]},
                 {"step": "resolve_pf_object_from_inventory_llm", "description": allowed_steps["resolve_pf_object_from_inventory_llm"]},
-                {"step": "query_pf_object_data", "description": allowed_steps["query_pf_object_data"]},
+                {"step": "list_available_object_attributes", "description": allowed_steps["list_available_object_attributes"]},
+                {"step": "select_pf_object_attributes_llm", "description": allowed_steps["select_pf_object_attributes_llm"]},
+                {"step": "read_pf_object_attributes", "description": allowed_steps["read_pf_object_attributes"]},
                 {"step": "summarize_pf_object_data_result", "description": allowed_steps["summarize_pf_object_data_result"]},
             ]
 
@@ -303,6 +309,8 @@ class PowerFactoryDomainAgent:
         data_inventory_result = None
         data_instruction = None
         data_resolution = None
+        data_attribute_listing = None
+        data_attribute_selection = None
         data_query_result = None
         data_summary = None
 
@@ -391,8 +399,15 @@ class PowerFactoryDomainAgent:
             elif step == "resolve_pf_object_from_inventory_llm":
                 tool_kwargs["instruction"] = data_instruction
                 tool_kwargs["inventory"] = data_inventory_result["inventory"] if isinstance(data_inventory_result, dict) else {}
-            elif step == "query_pf_object_data":
+            elif step == "list_available_object_attributes":
                 tool_kwargs["instruction"] = data_instruction
+                tool_kwargs["resolution"] = data_resolution
+            elif step == "select_pf_object_attributes_llm":
+                tool_kwargs["instruction"] = data_instruction
+                tool_kwargs["resolution"] = data_resolution
+                tool_kwargs["attribute_listing"] = data_attribute_listing
+            elif step == "read_pf_object_attributes":
+                tool_kwargs["instruction"] = (data_attribute_selection.get("instruction") if isinstance(data_attribute_selection, dict) else None) or data_instruction
                 tool_kwargs["resolution"] = data_resolution
 
             tool_spec = self.registry.get_tool_spec(step)
@@ -447,7 +462,12 @@ class PowerFactoryDomainAgent:
                 data_instruction = result["instruction"]
             elif step == "resolve_pf_object_from_inventory_llm":
                 data_resolution = result
-            elif step == "query_pf_object_data":
+            elif step == "list_available_object_attributes":
+                data_attribute_listing = result
+            elif step == "select_pf_object_attributes_llm":
+                data_attribute_selection = result
+                data_instruction = result.get("instruction", data_instruction)
+            elif step == "read_pf_object_attributes":
                 data_query_result = result
 
         return self.build_success_result(
@@ -472,6 +492,8 @@ class PowerFactoryDomainAgent:
             data_inventory_result=data_inventory_result,
             data_instruction=data_instruction,
             data_resolution=data_resolution,
+            data_attribute_listing=data_attribute_listing,
+            data_attribute_selection=data_attribute_selection,
             data_query_result=data_query_result,
             data_summary=data_summary,
             debug_trace=debug_trace,
@@ -500,6 +522,8 @@ class PowerFactoryDomainAgent:
         data_inventory_result: Dict[str, Any] | None,
         data_instruction: Dict[str, Any] | None,
         data_resolution: Dict[str, Any] | None,
+        data_attribute_listing: Dict[str, Any] | None,
+        data_attribute_selection: Dict[str, Any] | None,
         data_query_result: Dict[str, Any] | None,
         data_summary: Dict[str, Any] | None,
         debug_trace: List[Dict[str, Any]],
@@ -544,6 +568,8 @@ class PowerFactoryDomainAgent:
                 "inventory": data_inventory_result.get("inventory", {}) if isinstance(data_inventory_result, dict) else {},
                 "instruction": data_instruction,
                 "resolution": data_resolution,
+                "attribute_listing": data_attribute_listing,
+                "attribute_selection": data_attribute_selection,
                 "execution": data_query_result,
                 "summary": data_summary,
             },
@@ -563,6 +589,8 @@ class PowerFactoryDomainAgent:
                 "data_inventory_result": data_inventory_result,
                 "data_instruction": data_instruction,
                 "data_resolution": data_resolution,
+                "data_attribute_listing": data_attribute_listing,
+                "data_attribute_selection": data_attribute_selection,
                 "data_query_result": data_query_result,
                 "data_summary": data_summary,
                 "trace": debug_trace,
