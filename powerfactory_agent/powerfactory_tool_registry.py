@@ -92,7 +92,7 @@ class PowerFactoryToolRegistry:
                 output_schema_hint={
                     "status": "ok|error",
                     "tool": "execute_change_load",
-                    "data": {"requested_metrics": "list[str]", "before": "dict[str, dict]", "after": "dict[str, dict]", "delta": "dict[str, dict]"},
+                    "data": {"u_before": "dict[str, float]", "u_after": "dict[str, float]", "delta_u": "dict[str, float]"},
                 },
                 capability_tags=["powerfactory", "execution", "loadflow", "load"],
                 mutating=True,
@@ -267,122 +267,6 @@ class PowerFactoryToolRegistry:
                 mutating=True,
                 handler=self._tool_execute_switch_operation,
             ),
-            "build_data_inventory": PowerFactoryToolSpec(
-                name="build_data_inventory",
-                description="Build a lightweight typed inventory for PowerFactory data queries without building a topology graph.",
-                input_schema={
-                    "type": "object",
-                    "properties": {"services": {"type": "object"}},
-                    "required": ["services"],
-                },
-                output_schema_hint={"status": "ok|error", "tool": "build_data_inventory", "inventory": "dict"},
-                capability_tags=["powerfactory", "inventory", "data_query", "read_only"],
-                mutating=False,
-                handler=self._tool_build_data_inventory,
-            ),
-            "interpret_data_query_instruction": PowerFactoryToolSpec(
-                name="interpret_data_query_instruction",
-                description="Interpret a natural-language PowerFactory data query into a structured instruction using LLM selection from type and field candidate lists.",
-                input_schema={
-                    "type": "object",
-                    "properties": {
-                        "services": {"type": "object"},
-                        "user_input": {"type": "string"},
-                        "inventory": {"type": "object"},
-                    },
-                    "required": ["services", "user_input", "inventory"],
-                },
-                output_schema_hint={"status": "ok|error", "tool": "interpret_data_query_instruction", "instruction": "dict"},
-                capability_tags=["powerfactory", "planning", "nlp", "data_query"],
-                mutating=False,
-                handler=self._tool_interpret_data_query_instruction,
-            ),
-            "resolve_pf_object_from_inventory_llm": PowerFactoryToolSpec(
-                name="resolve_pf_object_from_inventory_llm",
-                description="Resolve a PowerFactory object by LLM-based exact candidate selection from a lightweight typed inventory.",
-                input_schema={
-                    "type": "object",
-                    "properties": {
-                        "services": {"type": "object"},
-                        "instruction": {"type": "object"},
-                        "inventory": {"type": "object"},
-                    },
-                    "required": ["services", "instruction", "inventory"],
-                },
-                output_schema_hint={"status": "ok|error", "tool": "resolve_pf_object_from_inventory_llm", "selected_match": "dict", "llm_decision": "dict"},
-                capability_tags=["powerfactory", "resolution", "llm_match", "data_query", "read_only"],
-                mutating=False,
-                handler=self._tool_resolve_pf_object_from_inventory_llm,
-            ),
-            "list_available_object_attributes": PowerFactoryToolSpec(
-                name="list_available_object_attributes",
-                description="List the available semantic and raw attribute options for the resolved PowerFactory object.",
-                input_schema={
-                    "type": "object",
-                    "properties": {
-                        "services": {"type": "object"},
-                        "instruction": {"type": "object"},
-                        "resolution": {"type": "object"},
-                    },
-                    "required": ["services", "instruction", "resolution"],
-                },
-                output_schema_hint={"status": "ok|error", "tool": "list_available_object_attributes", "attribute_options": "list[dict]", "loadflow": "dict"},
-                capability_tags=["powerfactory", "data_query", "attribute_listing", "read_only"],
-                mutating=False,
-                handler=self._tool_list_available_object_attributes,
-            ),
-            "select_pf_object_attributes_llm": PowerFactoryToolSpec(
-                name="select_pf_object_attributes_llm",
-                description="Select matching attributes for the resolved PowerFactory object via LLM from the available attribute option list.",
-                input_schema={
-                    "type": "object",
-                    "properties": {
-                        "services": {"type": "object"},
-                        "instruction": {"type": "object"},
-                        "resolution": {"type": "object"},
-                        "attribute_listing": {"type": "object"},
-                    },
-                    "required": ["services", "instruction", "resolution", "attribute_listing"],
-                },
-                output_schema_hint={"status": "ok|error", "tool": "select_pf_object_attributes_llm", "selected_attribute_handles": "list[str]", "instruction": "dict"},
-                capability_tags=["powerfactory", "data_query", "llm_match", "read_only"],
-                mutating=False,
-                handler=self._tool_select_pf_object_attributes_llm,
-            ),
-            "read_pf_object_attributes": PowerFactoryToolSpec(
-                name="read_pf_object_attributes",
-                description="Read the selected attributes from the resolved PowerFactory object, running load flow only when required.",
-                input_schema={
-                    "type": "object",
-                    "properties": {
-                        "services": {"type": "object"},
-                        "instruction": {"type": "object"},
-                        "resolution": {"type": "object"},
-                    },
-                    "required": ["services", "instruction", "resolution"],
-                },
-                output_schema_hint={"status": "ok|error", "tool": "read_pf_object_attributes", "data": "dict", "loadflow": "dict"},
-                capability_tags=["powerfactory", "data_query", "read_only"],
-                mutating=False,
-                handler=self._tool_read_pf_object_attributes,
-            ),
-            "summarize_pf_object_data_result": PowerFactoryToolSpec(
-                name="summarize_pf_object_data_result",
-                description="Summarize the result of a PowerFactory element data query for the end user.",
-                input_schema={
-                    "type": "object",
-                    "properties": {
-                        "services": {"type": "object"},
-                        "result_payload": {"type": "object"},
-                        "user_input": {"type": "string"},
-                    },
-                    "required": ["services", "result_payload", "user_input"],
-                },
-                output_schema_hint={"status": "ok|error", "tool": "summarize_pf_object_data_result", "answer": "string"},
-                capability_tags=["powerfactory", "summary", "data_query"],
-                mutating=False,
-                handler=self._tool_summarize_pf_object_data_result,
-            ),
             "summarize_switch_result": PowerFactoryToolSpec(
                 name="summarize_switch_result",
                 description="Summarize the result of a switch state change for the end user.",
@@ -399,6 +283,123 @@ class PowerFactoryToolRegistry:
                 capability_tags=["powerfactory", "summary", "switch"],
                 mutating=False,
                 handler=self._tool_summarize_switch_result,
+            ),
+
+            "build_data_inventory": PowerFactoryToolSpec(
+                name="build_data_inventory",
+                description="Build a lightweight PowerFactory inventory for data queries without topology graph.",
+                input_schema={
+                    "type": "object",
+                    "properties": {"services": {"type": "object"}},
+                    "required": ["services"],
+                },
+                output_schema_hint={"status": "ok|error", "tool": "build_data_inventory", "inventory": "dict"},
+                capability_tags=["powerfactory", "data_query", "inventory", "read_only"],
+                mutating=False,
+                handler=self._tool_build_data_inventory,
+            ),
+            "interpret_data_query_instruction": PowerFactoryToolSpec(
+                name="interpret_data_query_instruction",
+                description="Interpret a natural-language data query into a structured PowerFactory data-query instruction.",
+                input_schema={
+                    "type": "object",
+                    "properties": {
+                        "services": {"type": "object"},
+                        "user_input": {"type": "string"},
+                        "inventory": {"type": "object"},
+                    },
+                    "required": ["services", "user_input", "inventory"],
+                },
+                output_schema_hint={"status": "ok|error", "tool": "interpret_data_query_instruction", "instruction": "dict"},
+                capability_tags=["powerfactory", "data_query", "planning", "llm"],
+                mutating=False,
+                handler=self._tool_interpret_data_query_instruction,
+            ),
+            "resolve_pf_object_from_inventory_llm": PowerFactoryToolSpec(
+                name="resolve_pf_object_from_inventory_llm",
+                description="Resolve a PowerFactory object by LLM-based exact candidate selection from the data inventory.",
+                input_schema={
+                    "type": "object",
+                    "properties": {
+                        "services": {"type": "object"},
+                        "instruction": {"type": "object"},
+                        "inventory": {"type": "object"},
+                    },
+                    "required": ["services", "instruction", "inventory"],
+                },
+                output_schema_hint={"status": "ok|error", "tool": "resolve_pf_object_from_inventory_llm", "selected_match": "dict"},
+                capability_tags=["powerfactory", "data_query", "resolution", "llm_match", "read_only"],
+                mutating=False,
+                handler=self._tool_resolve_pf_object_from_inventory_llm,
+            ),
+            "list_available_object_attributes": PowerFactoryToolSpec(
+                name="list_available_object_attributes",
+                description="List semantic and raw attribute options for the selected PowerFactory object.",
+                input_schema={
+                    "type": "object",
+                    "properties": {
+                        "services": {"type": "object"},
+                        "instruction": {"type": "object"},
+                        "resolution": {"type": "object"},
+                    },
+                    "required": ["services", "instruction", "resolution"],
+                },
+                output_schema_hint={"status": "ok|error", "tool": "list_available_object_attributes", "attribute_options": "list"},
+                capability_tags=["powerfactory", "data_query", "attributes", "read_only"],
+                mutating=False,
+                handler=self._tool_list_available_object_attributes,
+            ),
+            "select_pf_object_attributes_llm": PowerFactoryToolSpec(
+                name="select_pf_object_attributes_llm",
+                description="Select the best matching attribute handles from the available option list.",
+                input_schema={
+                    "type": "object",
+                    "properties": {
+                        "services": {"type": "object"},
+                        "instruction": {"type": "object"},
+                        "resolution": {"type": "object"},
+                        "attribute_listing": {"type": "object"},
+                    },
+                    "required": ["services", "instruction", "resolution", "attribute_listing"],
+                },
+                output_schema_hint={"status": "ok|error", "tool": "select_pf_object_attributes_llm", "selected_attribute_handles": "list"},
+                capability_tags=["powerfactory", "data_query", "attributes", "llm_match", "read_only"],
+                mutating=False,
+                handler=self._tool_select_pf_object_attributes_llm,
+            ),
+            "read_pf_object_attributes": PowerFactoryToolSpec(
+                name="read_pf_object_attributes",
+                description="Read selected attributes from a resolved PowerFactory object with dynamic loadflow fallback.",
+                input_schema={
+                    "type": "object",
+                    "properties": {
+                        "services": {"type": "object"},
+                        "instruction": {"type": "object"},
+                        "resolution": {"type": "object"},
+                    },
+                    "required": ["services", "instruction", "resolution"],
+                },
+                output_schema_hint={"status": "ok|error", "tool": "read_pf_object_attributes", "data": "dict"},
+                capability_tags=["powerfactory", "data_query", "read_only"],
+                mutating=False,
+                handler=self._tool_read_pf_object_attributes,
+            ),
+            "summarize_pf_object_data_result": PowerFactoryToolSpec(
+                name="summarize_pf_object_data_result",
+                description="Summarize queried PowerFactory object data for the end user.",
+                input_schema={
+                    "type": "object",
+                    "properties": {
+                        "services": {"type": "object"},
+                        "result_payload": {"type": "object"},
+                        "user_input": {"type": "string"},
+                    },
+                    "required": ["services", "result_payload", "user_input"],
+                },
+                output_schema_hint={"status": "ok|error", "tool": "summarize_pf_object_data_result", "answer": "string"},
+                capability_tags=["powerfactory", "data_query", "summary"],
+                mutating=False,
+                handler=self._tool_summarize_pf_object_data_result,
             ),
         }
 
@@ -583,6 +584,19 @@ class PowerFactoryToolRegistry:
             run_loadflow_after=run_loadflow_after,
         )
 
+    def _tool_summarize_switch_result(
+        self,
+        services: Dict[str, Any],
+        result_payload: dict,
+        user_input: str,
+        **kwargs: Any,
+    ) -> Dict[str, Any]:
+        return _summarize_switch_result_with_services(
+            services=services,
+            result_payload=result_payload,
+            user_input=user_input,
+        )
+
     def _tool_build_data_inventory(self, services: Dict[str, Any], **kwargs: Any) -> Dict[str, Any]:
         return _build_data_inventory_from_services(services=services)
 
@@ -661,19 +675,6 @@ class PowerFactoryToolRegistry:
         **kwargs: Any,
     ) -> Dict[str, Any]:
         return _summarize_pf_object_data_result_with_services(
-            services=services,
-            result_payload=result_payload,
-            user_input=user_input,
-        )
-
-    def _tool_summarize_switch_result(
-        self,
-        services: Dict[str, Any],
-        result_payload: dict,
-        user_input: str,
-        **kwargs: Any,
-    ) -> Dict[str, Any]:
-        return _summarize_switch_result_with_services(
             services=services,
             result_payload=result_payload,
             user_input=user_input,

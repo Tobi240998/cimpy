@@ -2059,8 +2059,8 @@ PF_DATA_FIELD_LIBRARY: Dict[str, Dict[str, Dict[str, Any]]] = {
     },
     'line': {
         'loading': {
-            'aliases': ['auslastung', 'belastung', 'loading', 'thermische auslastung', 'loadfactor'],
-            'attr_candidates': ['loadfactor', 'c:loadfactor', 'maxload', 'c:maxload', 'c:loading', 'm:loading', 'loading', 'c:loadingmax'],
+            'aliases': ['auslastung', 'belastung', 'loading', 'thermische auslastung'],
+            'attr_candidates': ['c:loading', 'm:loading', 'loading', 'c:loadingmax'],
             'unit': '%',
             'requires_loadflow': True,
             'label': 'Auslastung',
@@ -2423,55 +2423,6 @@ def _list_readable_raw_attributes(obj: Any, entity_type: str) -> List[Dict[str, 
         })
     options.sort(key=lambda item: str(item.get('attribute_name') or ''))
     return options
-
-
-def _probe_specific_attribute(obj: Any, attr_name: str) -> Dict[str, Any]:
-    getattribute_value = None
-    getattribute_error = None
-    try:
-        getattribute_value = obj.GetAttribute(attr_name)
-    except Exception as e:
-        getattribute_error = str(e)
-
-    getattr_value = None
-    getattr_error = None
-    try:
-        getattr_value = getattr(obj, attr_name)
-    except Exception as e:
-        getattr_error = str(e)
-
-    return {
-        'attribute_name': attr_name,
-        'getattribute_value': _serialize_pf_value(getattribute_value),
-        'getattribute_numeric': _try_numeric(getattribute_value),
-        'getattribute_error': getattribute_error,
-        'getattr_value': _serialize_pf_value(getattr_value),
-        'getattr_numeric': _try_numeric(getattr_value),
-        'getattr_error': getattr_error,
-    }
-
-
-def _build_line_result_attribute_debug(obj: Any) -> Dict[str, Any]:
-    has_results_value = None
-    has_results_error = None
-    try:
-        has_results_value = obj.HasResults()
-    except Exception as e:
-        has_results_error = str(e)
-
-    candidates = [
-        'loadfactor', 'maxload', 'c:loadfactor', 'm:loadfactor',
-        'c:maxload', 'm:maxload', 'loading', 'c:loading', 'm:loading',
-        'Imaxlim', 'Inom', 'Irated'
-    ]
-
-    probes = [_probe_specific_attribute(obj, attr_name) for attr_name in candidates]
-
-    return {
-        'has_results_value': has_results_value,
-        'has_results_error': has_results_error,
-        'specific_probes': probes,
-    }
 
 
 def _build_semantic_field_options(entity_type: str) -> List[Dict[str, Any]]:
@@ -2990,19 +2941,6 @@ def _read_attribute_handle(obj: Any, entity_type: str, handle: str) -> Dict[str,
                 display_value = read_result.get('numeric_value')
             if display_value is None:
                 display_value = read_result.get('raw_value')
-
-            if (
-                entity_type == 'line'
-                and field_name == 'loading'
-            ):
-                numeric_value = _try_numeric(display_value)
-                selected_attr = str(read_result.get('attribute') or '')
-                if numeric_value is not None and selected_attr in {'loadfactor', 'c:loadfactor'}:
-                    if numeric_value <= 1.5:
-                        display_value = round(numeric_value * 100.0, 6)
-                elif numeric_value is not None and selected_attr in {'maxload', 'c:maxload'}:
-                    display_value = round(numeric_value, 6)
-
             return {
                 'status': 'ok',
                 'handle': handle,
@@ -3145,23 +3083,6 @@ def _read_pf_object_attributes_with_services(
         }
         values[handle] = read_result.get('value') if read_result.get('status') == 'ok' else None
 
-    extra_debug: Dict[str, Any] = {}
-    loading_handle_missing = (
-        entity_type == 'line'
-        and any(handle == 'field::loading' for handle in selected_handles)
-        and values.get('field::loading') is None
-    )
-    if loading_handle_missing:
-        all_attribute_names = sorted([name for name in dir(pf_object) if not str(name).startswith('_')])
-        readable_raw_attributes = _list_readable_raw_attributes(pf_object, entity_type)
-        explicit_result_debug = _build_line_result_attribute_debug(pf_object)
-        extra_debug['line_loading_attribute_debug'] = {
-            'reason': 'selected line loading was not readable via current semantic mapping',
-            'all_attribute_names': all_attribute_names,
-            'readable_raw_attributes': readable_raw_attributes,
-            'explicit_result_debug': explicit_result_debug,
-        }
-
     return {
         'status': 'ok',
         'tool': 'read_pf_object_attributes',
@@ -3184,7 +3105,6 @@ def _read_pf_object_attributes_with_services(
         'loadflow': loadflow_info,
         'debug': {
             'field_reads': field_debug,
-            **extra_debug,
         },
     }
 
@@ -3224,41 +3144,6 @@ def _summarize_pf_object_data_result_with_services(
     answer = f"Daten für '{object_name}' ({pf_class}): " + '; '.join(parts) if parts else f"Für '{object_name}' konnten keine Daten gelesen werden."
     if loadflow.get('executed'):
         answer += ' Für die angefragten Ergebnisgrößen wurde zuvor ein Lastfluss gerechnet.'
-
-    debug_payload = result_payload.get('debug', {}) if isinstance(result_payload, dict) else {}
-    line_loading_debug = debug_payload.get('line_loading_attribute_debug', {}) if isinstance(debug_payload, dict) else {}
-    if isinstance(line_loading_debug, dict) and line_loading_debug:
-        all_attr_names = line_loading_debug.get('all_attribute_names', []) or []
-        readable_raw = line_loading_debug.get('readable_raw_attributes', []) or []
-        explicit_result_debug = line_loading_debug.get('explicit_result_debug', {}) or {}
-        answer += ' Debug Attribute der Leitung: '
-        if all_attr_names:
-            answer += 'Alle Attributnamen = ' + ', '.join(str(name) for name in all_attr_names)
-        if readable_raw:
-            if all_attr_names:
-                answer += ' | '
-            answer += 'Lesbare Raw-Attribute = ' + ', '.join(
-                f"{item.get('attribute_name')}={item.get('sample_value')}" for item in readable_raw
-            )
-        if explicit_result_debug:
-            if all_attr_names or readable_raw:
-                answer += ' | '
-            has_results_value = explicit_result_debug.get('has_results_value')
-            has_results_error = explicit_result_debug.get('has_results_error')
-            probes = explicit_result_debug.get('specific_probes', []) or []
-            answer += f"Resultat-Debug HasResults={has_results_value}"
-            if has_results_error:
-                answer += f" (Fehler: {has_results_error})"
-            if probes:
-                formatted = []
-                for item in probes:
-                    formatted.append(
-                        f"{item.get('attribute_name')}: GetAttribute={item.get('getattribute_value')}"
-                        f" [num={item.get('getattribute_numeric')}, err={item.get('getattribute_error')}]"
-                        f"; getattr={item.get('getattr_value')}"
-                        f" [num={item.get('getattr_numeric')}, err={item.get('getattr_error')}]"
-                    )
-                answer += ' | Gezielte Attributtests = ' + ' || '.join(formatted)
 
     return {
         'status': 'ok',

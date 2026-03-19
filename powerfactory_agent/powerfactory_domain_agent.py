@@ -32,6 +32,8 @@ class PFPlannerDecision(BaseModel):
             "build_topology_graph, build_topology_inventory, interpret_entity_instruction, "
             "resolve_entity_from_inventory, query_topology_neighbors, summarize_topology_result, "
             "interpret_switch_instruction, resolve_switch_from_inventory_llm, execute_switch_operation, summarize_switch_result, "
+            "build_data_inventory, interpret_data_query_instruction, resolve_pf_object_from_inventory_llm, "
+            "list_available_object_attributes, select_pf_object_attributes_llm, read_pf_object_attributes, summarize_pf_object_data_result, "
             "unsupported_request"
         )
     )
@@ -130,13 +132,13 @@ class PowerFactoryDomainAgent:
             "resolve_switch_from_inventory_llm": "Resolve the requested switch via LLM-based exact candidate selection from the switch list",
             "execute_switch_operation": "Apply the requested switch state change in PowerFactory",
             "summarize_switch_result": "Summarize the switch operation result for the user",
-            "build_data_inventory": "Build a lightweight typed inventory for PowerFactory data queries without a topology graph",
-            "interpret_data_query_instruction": "Interpret user input into a structured PowerFactory data query instruction",
-            "resolve_pf_object_from_inventory_llm": "Resolve the requested PowerFactory object via LLM-based exact candidate selection from the typed inventory",
-            "list_available_object_attributes": "Build the available attribute option list for the resolved PowerFactory object",
-            "select_pf_object_attributes_llm": "Select matching attributes for the resolved PowerFactory object via LLM from the available attribute option list",
-            "read_pf_object_attributes": "Read the selected attributes from the resolved PowerFactory object",
-            "summarize_pf_object_data_result": "Summarize the data query result for the user",
+            "build_data_inventory": "Build a lightweight typed inventory from PowerFactory objects without topology graph",
+            "interpret_data_query_instruction": "Interpret user input into a structured PowerFactory data-query instruction",
+            "resolve_pf_object_from_inventory_llm": "Resolve the requested PowerFactory object via LLM-based exact candidate selection",
+            "list_available_object_attributes": "List semantic and raw attribute options for the selected PowerFactory object",
+            "select_pf_object_attributes_llm": "Select the best matching attribute handles from the provided option list",
+            "read_pf_object_attributes": "Read the selected attributes from the resolved PowerFactory object with dynamic loadflow fallback",
+            "summarize_pf_object_data_result": "Summarize the queried PowerFactory object data for the user",
             "unsupported_request": "Return a controlled message for unsupported PowerFactory intent",
         }
 
@@ -307,12 +309,12 @@ class PowerFactoryDomainAgent:
         switch_summary = None
 
         data_inventory_result = None
-        data_instruction = None
-        data_resolution = None
+        data_query_instruction = None
+        data_object_resolution = None
         data_attribute_listing = None
         data_attribute_selection = None
-        data_query_result = None
-        data_summary = None
+        data_query_execution = None
+        data_query_summary = None
 
         for item in plan:
             step = item["step"]
@@ -340,11 +342,16 @@ class PowerFactoryDomainAgent:
                 continue
 
             if step == "summarize_pf_object_data_result":
-                result = self.registry.invoke(step, services=services, result_payload=data_query_result, user_input=user_input)
+                result = self.registry.invoke(
+                    step,
+                    services=services,
+                    result_payload=data_query_execution,
+                    user_input=user_input,
+                )
                 debug_trace.append({"step": step, "result": result})
                 if result["status"] != "ok":
                     return self.build_error_result(error_result=result, debug_trace=debug_trace)
-                data_summary = result
+                data_query_summary = result
                 summary = result
                 continue
 
@@ -397,18 +404,18 @@ class PowerFactoryDomainAgent:
                 tool_kwargs["user_input"] = user_input
                 tool_kwargs["inventory"] = data_inventory_result["inventory"] if isinstance(data_inventory_result, dict) else {}
             elif step == "resolve_pf_object_from_inventory_llm":
-                tool_kwargs["instruction"] = data_instruction
+                tool_kwargs["instruction"] = data_query_instruction
                 tool_kwargs["inventory"] = data_inventory_result["inventory"] if isinstance(data_inventory_result, dict) else {}
             elif step == "list_available_object_attributes":
-                tool_kwargs["instruction"] = data_instruction
-                tool_kwargs["resolution"] = data_resolution
+                tool_kwargs["instruction"] = data_query_instruction
+                tool_kwargs["resolution"] = data_object_resolution
             elif step == "select_pf_object_attributes_llm":
-                tool_kwargs["instruction"] = data_instruction
-                tool_kwargs["resolution"] = data_resolution
+                tool_kwargs["instruction"] = data_query_instruction
+                tool_kwargs["resolution"] = data_object_resolution
                 tool_kwargs["attribute_listing"] = data_attribute_listing
             elif step == "read_pf_object_attributes":
-                tool_kwargs["instruction"] = (data_attribute_selection.get("instruction") if isinstance(data_attribute_selection, dict) else None) or data_instruction
-                tool_kwargs["resolution"] = data_resolution
+                tool_kwargs["instruction"] = (data_attribute_selection.get("instruction") if isinstance(data_attribute_selection, dict) else None) or data_query_instruction
+                tool_kwargs["resolution"] = data_object_resolution
 
             tool_spec = self.registry.get_tool_spec(step)
             result = self.registry.invoke(step, **tool_kwargs)
@@ -459,16 +466,15 @@ class PowerFactoryDomainAgent:
             elif step == "build_data_inventory":
                 data_inventory_result = result
             elif step == "interpret_data_query_instruction":
-                data_instruction = result["instruction"]
+                data_query_instruction = result["instruction"]
             elif step == "resolve_pf_object_from_inventory_llm":
-                data_resolution = result
+                data_object_resolution = result
             elif step == "list_available_object_attributes":
                 data_attribute_listing = result
             elif step == "select_pf_object_attributes_llm":
                 data_attribute_selection = result
-                data_instruction = result.get("instruction", data_instruction)
             elif step == "read_pf_object_attributes":
-                data_query_result = result
+                data_query_execution = result
 
         return self.build_success_result(
             services=services,
@@ -490,12 +496,12 @@ class PowerFactoryDomainAgent:
             switch_execution=switch_execution,
             switch_summary=switch_summary,
             data_inventory_result=data_inventory_result,
-            data_instruction=data_instruction,
-            data_resolution=data_resolution,
+            data_query_instruction=data_query_instruction,
+            data_object_resolution=data_object_resolution,
             data_attribute_listing=data_attribute_listing,
             data_attribute_selection=data_attribute_selection,
-            data_query_result=data_query_result,
-            data_summary=data_summary,
+            data_query_execution=data_query_execution,
+            data_query_summary=data_query_summary,
             debug_trace=debug_trace,
         )
 
@@ -520,12 +526,12 @@ class PowerFactoryDomainAgent:
         switch_execution: Dict[str, Any] | None,
         switch_summary: Dict[str, Any] | None,
         data_inventory_result: Dict[str, Any] | None,
-        data_instruction: Dict[str, Any] | None,
-        data_resolution: Dict[str, Any] | None,
+        data_query_instruction: Dict[str, Any] | None,
+        data_object_resolution: Dict[str, Any] | None,
         data_attribute_listing: Dict[str, Any] | None,
         data_attribute_selection: Dict[str, Any] | None,
-        data_query_result: Dict[str, Any] | None,
-        data_summary: Dict[str, Any] | None,
+        data_query_execution: Dict[str, Any] | None,
+        data_query_summary: Dict[str, Any] | None,
         debug_trace: List[Dict[str, Any]],
     ) -> Dict[str, Any]:
         answer = summary.get("answer", "") if isinstance(summary, dict) else ""
@@ -535,7 +541,7 @@ class PowerFactoryDomainAgent:
             "tool": "powerfactory",
             "agent": "PowerFactoryDomainAgent",
             "project": services.get("project_name"),
-            "studycase": execution.get("studycase") if isinstance(execution, dict) else (switch_execution.get("studycase") if isinstance(switch_execution, dict) else (data_query_result.get("studycase") if isinstance(data_query_result, dict) else None)),
+            "studycase": execution.get("studycase") if isinstance(execution, dict) else (switch_execution.get("studycase") if isinstance(switch_execution, dict) else None),
             "user_input": user_input,
             "classification": classification,
             "plan": plan,
@@ -566,12 +572,12 @@ class PowerFactoryDomainAgent:
             },
             "data_query": {
                 "inventory": data_inventory_result.get("inventory", {}) if isinstance(data_inventory_result, dict) else {},
-                "instruction": data_instruction,
-                "resolution": data_resolution,
+                "instruction": data_query_instruction,
+                "resolution": data_object_resolution,
                 "attribute_listing": data_attribute_listing,
                 "attribute_selection": data_attribute_selection,
-                "execution": data_query_result,
-                "summary": data_summary,
+                "execution": data_query_execution,
+                "summary": data_query_summary,
             },
             "debug": {
                 "resolution": resolution,
@@ -587,12 +593,12 @@ class PowerFactoryDomainAgent:
                 "switch_execution": switch_execution,
                 "switch_summary": switch_summary,
                 "data_inventory_result": data_inventory_result,
-                "data_instruction": data_instruction,
-                "data_resolution": data_resolution,
+                "data_query_instruction": data_query_instruction,
+                "data_object_resolution": data_object_resolution,
                 "data_attribute_listing": data_attribute_listing,
                 "data_attribute_selection": data_attribute_selection,
-                "data_query_result": data_query_result,
-                "data_summary": data_summary,
+                "data_query_execution": data_query_execution,
+                "data_query_summary": data_query_summary,
                 "trace": debug_trace,
             },
         }
