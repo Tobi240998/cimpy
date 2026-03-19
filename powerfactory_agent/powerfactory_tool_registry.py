@@ -85,7 +85,16 @@ class PowerFactoryToolRegistry:
                 output_schema_hint={
                     "status": "ok|error",
                     "tool": "execute_change_load",
-                    "data": {"u_before": "dict[str, float]", "u_after": "dict[str, float]", "delta_u": "dict[str, float]"},
+                    "data": {
+                        "requested_metrics": "list[str]",
+                        "metric_metadata": "dict[str, dict[str, Any]]",
+                        "before": "dict[str, dict[str, float]]",
+                        "after": "dict[str, dict[str, float]]",
+                        "delta": "dict[str, dict[str, float]]",
+                        "u_before": "dict[str, float] (legacy alias when bus_voltage requested)",
+                        "u_after": "dict[str, float] (legacy alias when bus_voltage requested)",
+                        "delta_u": "dict[str, float] (legacy alias when bus_voltage requested)",
+                    },
                 },
                 capability_tags=["powerfactory", "execution", "loadflow", "load"],
                 mutating=True,

@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import subprocess
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Tuple
 
 from pydantic import BaseModel, Field
 from langchain_core.prompts import ChatPromptTemplate
@@ -178,6 +178,8 @@ def _interpret_instruction_with_services(services: Dict[str, Any], user_input: s
             "user_input": user_input,
             "project": project_name,
         }
+
+    instruction = _ensure_instruction_result_requests(instruction, user_input=user_input)
 
     return {
         "status": "ok",
@@ -1007,9 +1009,119 @@ def _summarize_switch_result_with_services(
     }
 
 
+
 # ------------------------------------------------------------------
-# ROBUST LOAD EXECUTION
+# GENERIC LOAD RESULT SNAPSHOTS / INTERPRETATION
 # ------------------------------------------------------------------
+METRIC_SPECS: Dict[str, Dict[str, Any]] = {
+    "bus_voltage": {
+        "label": "Bus-Spannung",
+        "unit": "p.u.",
+        "legacy_before_key": "u_before",
+        "legacy_after_key": "u_after",
+        "legacy_delta_key": "delta_u",
+        "aliases": [
+            "spannung", "spannungen", "busspannung", "busspannungen", "voltage", "voltages",
+            "u", "u_bus", "u_knoten",
+        ],
+    },
+    "bus_p": {
+        "label": "Knoten-Wirkleistung",
+        "unit": "MW",
+        "aliases": [
+            "wirkleistung", "wirkleistungen", "knotenwirkleistung", "knotenwirkleistungen",
+            "bus p", "knoten p", "active power", "bus_p", "p",
+        ],
+    },
+    "bus_q": {
+        "label": "Knoten-Blindleistung",
+        "unit": "MVAr",
+        "aliases": [
+            "blindleistung", "blindleistungen", "knotenblindleistung", "knotenblindleistungen",
+            "bus q", "knoten q", "reactive power", "bus_q", "q",
+        ],
+    },
+    "line_loading": {
+        "label": "Leitungsauslastung",
+        "unit": "%",
+        "aliases": [
+            "auslastung", "leitungsauslastung", "leitungsauslastungen", "leitungsauslastung",
+            "leitungsauslastungen", "line loading", "loading", "line_loading", "line loading",
+        ],
+    },
+}
+
+DEFAULT_RESULT_REQUESTS: List[str] = ["bus_voltage"]
+
+
+def _infer_result_requests_from_user_input(user_input: str) -> List[str]:
+    text = _safe_lower(user_input)
+    if not text:
+        return list(DEFAULT_RESULT_REQUESTS)
+
+    inferred: List[str] = []
+    for metric_name, spec in METRIC_SPECS.items():
+        aliases = spec.get("aliases", []) or []
+        if any(alias in text for alias in aliases):
+            inferred.append(metric_name)
+
+    if inferred:
+        return inferred
+
+    return list(DEFAULT_RESULT_REQUESTS)
+
+
+
+def _normalize_result_requests(requested_metrics: Any, user_input: str = "") -> List[str]:
+    normalized: List[str] = []
+
+    if isinstance(requested_metrics, str):
+        requested_metrics = [requested_metrics]
+    elif not isinstance(requested_metrics, list):
+        requested_metrics = []
+
+    alias_to_metric: Dict[str, str] = {}
+    for metric_name, spec in METRIC_SPECS.items():
+        alias_to_metric[metric_name] = metric_name
+        for alias in spec.get("aliases", []) or []:
+            alias_to_metric[_safe_lower(alias)] = metric_name
+
+    for raw_metric in requested_metrics:
+        key = _safe_lower(raw_metric)
+        if not key:
+            continue
+        metric = alias_to_metric.get(key)
+        if metric and metric not in normalized:
+            normalized.append(metric)
+
+    if normalized:
+        return normalized
+
+    return _infer_result_requests_from_user_input(user_input)
+
+
+
+def _ensure_instruction_result_requests(instruction: Any, user_input: str = "") -> Dict[str, Any]:
+    if isinstance(instruction, BaseModel):
+        try:
+            instruction = instruction.model_dump()
+        except Exception:
+            try:
+                instruction = instruction.dict()
+            except Exception:
+                instruction = {}
+    elif not isinstance(instruction, dict):
+        instruction = {}
+    else:
+        instruction = dict(instruction)
+
+    instruction["result_requests"] = _normalize_result_requests(
+        instruction.get("result_requests", []),
+        user_input=user_input,
+    )
+    return instruction
+
+
 def _safe_get_pf_attribute(obj: Any, attr_name: str) -> Any:
     try:
         return obj.GetAttribute(attr_name)
@@ -1017,97 +1129,427 @@ def _safe_get_pf_attribute(obj: Any, attr_name: str) -> Any:
         return None
 
 
-def _read_bus_voltage_pu_with_debug(bus: Any) -> Dict[str, Any]:
-    tried_attrs = ["m:u", "m:ul", "m:Ul", "m:U"]
-
-    bus_name = None
+def _build_pf_object_identity(obj: Any) -> Dict[str, Any]:
+    name = None
     pf_class = None
     full_name = None
 
     try:
-        bus_name = getattr(bus, "loc_name", None)
+        name = getattr(obj, "loc_name", None)
     except Exception:
         pass
 
     try:
-        pf_class = bus.GetClassName()
+        pf_class = obj.GetClassName()
     except Exception:
         pass
 
     try:
-        full_name = bus.GetFullName()
+        full_name = obj.GetFullName()
     except Exception:
         pass
 
-    for attr_name in tried_attrs:
-        value = _safe_get_pf_attribute(bus, attr_name)
-        if value is not None:
+    return {
+        "name": name,
+        "pf_class": pf_class,
+        "full_name": full_name,
+    }
+
+
+def _coerce_numeric_pf_value(value: Any) -> Tuple[bool, float | None]:
+    if value is None:
+        return False, None
+
+    if isinstance(value, bool):
+        return True, float(value)
+
+    if isinstance(value, (int, float)):
+        return True, float(value)
+
+    try:
+        return True, float(value)
+    except Exception:
+        pass
+
+    try:
+        if hasattr(value, "__len__") and len(value) == 1:
+            return True, float(value[0])
+    except Exception:
+        pass
+
+    return False, None
+
+
+
+def _read_first_available_attribute_with_debug(
+    obj: Any,
+    attr_candidates: List[str],
+    identity: Dict[str, Any],
+) -> Dict[str, Any]:
+    non_numeric_hits: List[Dict[str, Any]] = []
+
+    for attr_name in attr_candidates:
+        value = _safe_get_pf_attribute(obj, attr_name)
+        if value is None:
+            continue
+
+        is_numeric, numeric_value = _coerce_numeric_pf_value(value)
+        if is_numeric:
             return {
                 "ok": True,
-                "value": value,
+                "value": numeric_value,
+                "raw_value": value,
                 "used_attr": attr_name,
-                "bus_name": bus_name,
-                "pf_class": pf_class,
-                "full_name": full_name,
-                "tried_attrs": tried_attrs,
+                "tried_attrs": attr_candidates,
+                "non_numeric_hits": non_numeric_hits,
+                **identity,
             }
+
+        non_numeric_hits.append({
+            "attr": attr_name,
+            "value_repr": repr(value),
+            "value_type": type(value).__name__,
+        })
 
     return {
         "ok": False,
         "value": None,
         "used_attr": None,
-        "bus_name": bus_name,
-        "pf_class": pf_class,
-        "full_name": full_name,
-        "tried_attrs": tried_attrs,
+        "tried_attrs": attr_candidates,
+        "non_numeric_hits": non_numeric_hits,
+        **identity,
     }
 
 
-def _snapshot_bus_voltages_with_debug(app: Any) -> Dict[str, Any]:
+
+def _read_bus_voltage_pu_with_debug(bus: Any) -> Dict[str, Any]:
+    identity = _build_pf_object_identity(bus)
+    identity["bus_name"] = identity.get("name")
+    tried_attrs = ["m:u", "m:ul", "m:Ul", "m:U"]
+    return _read_first_available_attribute_with_debug(bus, tried_attrs, identity)
+
+
+
+def _read_bus_p_with_debug(bus: Any) -> Dict[str, Any]:
+    identity = _build_pf_object_identity(bus)
+    identity["bus_name"] = identity.get("name")
+    tried_attrs = [
+        "m:Psum:bus1",
+        "m:Psum:bus2",
+        "m:Psum",
+        "c:Psum",
+        "m:P:bus1",
+        "m:P:bus2",
+        "m:Pbus1",
+        "m:Pbus2",
+        "m:P1",
+        "m:P2",
+        "m:P",
+        "c:P",
+    ]
+    return _read_first_available_attribute_with_debug(bus, tried_attrs, identity)
+
+
+
+def _read_bus_q_with_debug(bus: Any) -> Dict[str, Any]:
+    identity = _build_pf_object_identity(bus)
+    identity["bus_name"] = identity.get("name")
+    tried_attrs = [
+        "m:Qsum:bus1",
+        "m:Qsum:bus2",
+        "m:Qsum",
+        "c:Qsum",
+        "m:Q:bus1",
+        "m:Q:bus2",
+        "m:Qbus1",
+        "m:Qbus2",
+        "m:Q1",
+        "m:Q2",
+        "m:Q",
+        "c:Q",
+    ]
+    return _read_first_available_attribute_with_debug(bus, tried_attrs, identity)
+
+
+
+def _read_line_loading_with_debug(line: Any) -> Dict[str, Any]:
+    identity = _build_pf_object_identity(line)
+    identity["line_name"] = identity.get("name")
+    tried_attrs = [
+        "c:loading",
+        "m:loading",
+        "c:loading1",
+        "m:loading1",
+        "c:Loading",
+        "m:Loading",
+        "c:load",
+        "m:load",
+        "c:Load",
+        "m:Load",
+    ]
+    return _read_first_available_attribute_with_debug(line, tried_attrs, identity)
+
+
+def _snapshot_objects_with_debug(
+    app: Any,
+    object_queries: List[str],
+    reader_fn: Any,
+    object_label: str,
+    identity_name_key: str,
+) -> Dict[str, Any]:
     snapshot: Dict[str, Any] = {}
     missing: List[Dict[str, Any]] = []
     attr_usage: Dict[str, int] = {}
+    total_objects = 0
 
-    buses = app.GetCalcRelevantObjects("*.ElmTerm") or []
+    seen_ids: set[str] = set()
 
-    for bus in buses:
-        read_result = _read_bus_voltage_pu_with_debug(bus)
+    for query in object_queries:
+        objects = app.GetCalcRelevantObjects(query) or []
+        total_objects += len(objects)
 
-        bus_name = read_result.get("bus_name") or read_result.get("full_name")
-        if not bus_name:
-            continue
+        for obj in objects:
+            identity = _build_pf_object_identity(obj)
+            object_id = identity.get("full_name") or identity.get("name")
+            if not object_id or object_id in seen_ids:
+                continue
+            seen_ids.add(object_id)
 
-        if read_result["ok"]:
-            snapshot[bus_name] = read_result["value"]
-            used_attr = read_result.get("used_attr")
-            if used_attr:
-                attr_usage[used_attr] = attr_usage.get(used_attr, 0) + 1
-        else:
-            missing.append({
-                "bus_name": read_result.get("bus_name"),
-                "pf_class": read_result.get("pf_class"),
-                "full_name": read_result.get("full_name"),
-                "tried_attrs": read_result.get("tried_attrs", []),
-            })
+            read_result = reader_fn(obj)
+            object_name = (
+                read_result.get(identity_name_key)
+                or read_result.get("name")
+                or read_result.get("full_name")
+            )
+            if not object_name:
+                continue
+
+            if read_result["ok"]:
+                snapshot[object_name] = read_result["value"]
+                used_attr = read_result.get("used_attr")
+                if used_attr:
+                    attr_usage[used_attr] = attr_usage.get(used_attr, 0) + 1
+            else:
+                missing.append({
+                    object_label: object_name,
+                    "pf_class": read_result.get("pf_class"),
+                    "full_name": read_result.get("full_name"),
+                    "tried_attrs": read_result.get("tried_attrs", []),
+                    "non_numeric_hits": read_result.get("non_numeric_hits", []),
+                })
 
     return {
-        "voltages": snapshot,
+        "values": snapshot,
         "debug": {
-            "num_buses_total": len(buses),
-            "num_buses_with_voltage": len(snapshot),
-            "num_buses_missing_voltage": len(missing),
-            "missing_voltage_buses": missing,
+            f"num_{object_label}_total": total_objects,
+            f"num_{object_label}_with_value": len(snapshot),
+            f"num_{object_label}_missing_value": len(missing),
+            f"missing_{object_label}": missing,
             "attribute_usage": attr_usage,
+            "object_queries": object_queries,
         },
     }
 
 
+def _snapshot_bus_voltages_with_debug(app: Any) -> Dict[str, Any]:
+    result = _snapshot_objects_with_debug(
+        app=app,
+        object_queries=["*.ElmTerm"],
+        reader_fn=_read_bus_voltage_pu_with_debug,
+        object_label="buses",
+        identity_name_key="bus_name",
+    )
+    return {
+        "voltages": result["values"],
+        "debug": result["debug"],
+    }
+
+
+def _snapshot_bus_p_with_debug(app: Any) -> Dict[str, Any]:
+    return _snapshot_objects_with_debug(
+        app=app,
+        object_queries=["*.ElmTerm"],
+        reader_fn=_read_bus_p_with_debug,
+        object_label="buses",
+        identity_name_key="bus_name",
+    )
+
+
+def _snapshot_bus_q_with_debug(app: Any) -> Dict[str, Any]:
+    return _snapshot_objects_with_debug(
+        app=app,
+        object_queries=["*.ElmTerm"],
+        reader_fn=_read_bus_q_with_debug,
+        object_label="buses",
+        identity_name_key="bus_name",
+    )
+
+
+def _snapshot_line_loading_with_debug(app: Any) -> Dict[str, Any]:
+    return _snapshot_objects_with_debug(
+        app=app,
+        object_queries=["*.ElmLne", "*.ElmCabl"],
+        reader_fn=_read_line_loading_with_debug,
+        object_label="lines",
+        identity_name_key="line_name",
+    )
+
+
+def _collect_requested_metric_snapshots(app: Any, result_requests: List[str]) -> Dict[str, Any]:
+    before_data: Dict[str, Dict[str, Any]] = {}
+    snapshot_debug: Dict[str, Dict[str, Any]] = {}
+
+    for metric in result_requests:
+        if metric == "bus_voltage":
+            snapshot_result = _snapshot_bus_voltages_with_debug(app)
+            before_data[metric] = snapshot_result.get("voltages", {})
+            snapshot_debug[metric] = snapshot_result.get("debug", {})
+        elif metric == "bus_p":
+            snapshot_result = _snapshot_bus_p_with_debug(app)
+            before_data[metric] = snapshot_result.get("values", {})
+            snapshot_debug[metric] = snapshot_result.get("debug", {})
+        elif metric == "bus_q":
+            snapshot_result = _snapshot_bus_q_with_debug(app)
+            before_data[metric] = snapshot_result.get("values", {})
+            snapshot_debug[metric] = snapshot_result.get("debug", {})
+        elif metric == "line_loading":
+            snapshot_result = _snapshot_line_loading_with_debug(app)
+            before_data[metric] = snapshot_result.get("values", {})
+            snapshot_debug[metric] = snapshot_result.get("debug", {})
+
+    return {
+        "values": before_data,
+        "debug": snapshot_debug,
+    }
+
+
+def _compute_numeric_delta(before_map: Dict[str, Any], after_map: Dict[str, Any]) -> Dict[str, float]:
+    deltas: Dict[str, float] = {}
+    common_names = set(before_map.keys()) & set(after_map.keys())
+
+    for name in sorted(common_names):
+        try:
+            deltas[name] = float(after_map[name]) - float(before_map[name])
+        except Exception:
+            continue
+
+    return deltas
+
+
+def _build_metric_delta_payload(
+    before: Dict[str, Dict[str, Any]],
+    after: Dict[str, Dict[str, Any]],
+    requested_metrics: List[str],
+) -> Dict[str, Dict[str, float]]:
+    return {
+        metric: _compute_numeric_delta(
+            before_map=before.get(metric, {}),
+            after_map=after.get(metric, {}),
+        )
+        for metric in requested_metrics
+    }
+
+
+def _build_metric_metadata(requested_metrics: List[str]) -> Dict[str, Dict[str, Any]]:
+    metadata: Dict[str, Dict[str, Any]] = {}
+    for metric in requested_metrics:
+        spec = METRIC_SPECS.get(metric, {})
+        metadata[metric] = {
+            "label": spec.get("label", metric),
+            "unit": spec.get("unit"),
+        }
+    return metadata
+
+
+def _build_top_delta_lines(
+    metric_label: str,
+    delta_map: Dict[str, float],
+    unit: str,
+    top_n: int = 5,
+) -> List[str]:
+    if not delta_map:
+        return [f"Für {metric_label} konnten keine vergleichbaren Vorher/Nachher-Werte gebildet werden."]
+
+    sorted_items = sorted(
+        delta_map.items(),
+        key=lambda item: abs(item[1]),
+        reverse=True,
+    )
+
+    top_items = sorted_items[:top_n]
+    parts = [
+        f"{name}: {value:+.4f} {unit}".rstrip()
+        for name, value in top_items
+    ]
+
+    return [
+        f"Größte Änderungen für {metric_label}: " + ", ".join(parts),
+    ]
+
+
+def _build_metric_messages(
+    metric: str,
+    before_map: Dict[str, Any],
+    after_map: Dict[str, Any],
+    delta_map: Dict[str, float],
+    result_agent: Any,
+) -> List[str]:
+    spec = METRIC_SPECS.get(metric, {})
+    metric_label = spec.get("label", metric)
+    unit = spec.get("unit", "")
+
+    if metric == "bus_voltage" and hasattr(result_agent, "interpret_voltage_change"):
+        try:
+            return result_agent.interpret_voltage_change(before_map, after_map)
+        except Exception:
+            pass
+
+    messages: List[str] = []
+    messages.append(
+        f"Für {metric_label} wurden {len(before_map)} Vorher-Werte, {len(after_map)} Nachher-Werte "
+        f"und {len(delta_map)} Differenzen ermittelt."
+    )
+    messages.extend(_build_top_delta_lines(metric_label=metric_label, delta_map=delta_map, unit=unit))
+    return messages
+
+
+def _extract_metric_payload_from_result_payload(result_payload: Dict[str, Any]) -> Tuple[List[str], Dict[str, Any], Dict[str, Any], Dict[str, Any]]:
+    data = result_payload.get("data", {}) if isinstance(result_payload, dict) else {}
+    if not isinstance(data, dict):
+        return [], {}, {}, {}
+
+    requested_metrics = data.get("requested_metrics")
+    before = data.get("before")
+    after = data.get("after")
+    delta = data.get("delta")
+
+    if isinstance(requested_metrics, list) and isinstance(before, dict) and isinstance(after, dict) and isinstance(delta, dict):
+        return requested_metrics, before, after, delta
+
+    legacy_u_before = data.get("u_before", {})
+    legacy_u_after = data.get("u_after", {})
+    legacy_delta_u = data.get("delta_u", {})
+    if isinstance(legacy_u_before, dict) or isinstance(legacy_u_after, dict):
+        return (
+            ["bus_voltage"],
+            {"bus_voltage": legacy_u_before if isinstance(legacy_u_before, dict) else {}},
+            {"bus_voltage": legacy_u_after if isinstance(legacy_u_after, dict) else {}},
+            {"bus_voltage": legacy_delta_u if isinstance(legacy_delta_u, dict) else {}},
+        )
+
+    return [], {}, {}, {}
 def _execute_change_load_with_services(services: Dict[str, Any], instruction: dict) -> Dict[str, Any]:
     app = services["app"]
     studycase = services["studycase"]
     interpreter = services["interpreter"]
     executor = services["executor"]
     project_name = services["project_name"]
+
+    instruction = _ensure_instruction_result_requests(instruction, user_input="")
+    requested_metrics = []
+    if isinstance(instruction, dict):
+        requested_metrics = instruction.get("result_requests", [])
+    requested_metrics = _normalize_result_requests(requested_metrics, user_input="")
 
     try:
         resolved_load = interpreter.resolve(instruction)
@@ -1139,8 +1581,8 @@ def _execute_change_load_with_services(services: Dict[str, Any], instruction: di
             "details": str(e),
         }
 
-    before_snapshot = _snapshot_bus_voltages_with_debug(app)
-    u_before = before_snapshot["voltages"]
+    before_snapshot = _collect_requested_metric_snapshots(app, requested_metrics)
+    values_before = before_snapshot["values"]
 
     try:
         _ = resolved_load.GetAttribute("plini")
@@ -1180,16 +1622,26 @@ def _execute_change_load_with_services(services: Dict[str, Any], instruction: di
             "details": str(e),
         }
 
-    after_snapshot = _snapshot_bus_voltages_with_debug(app)
-    u_after = after_snapshot["voltages"]
+    after_snapshot = _collect_requested_metric_snapshots(app, requested_metrics)
+    values_after = after_snapshot["values"]
+    delta_by_metric = _build_metric_delta_payload(
+        before=values_before,
+        after=values_after,
+        requested_metrics=requested_metrics,
+    )
 
-    deltas: Dict[str, float] = {}
-    common_bus_names = set(u_before.keys()) & set(u_after.keys())
-    for name in sorted(common_bus_names):
-        try:
-            deltas[name] = u_after[name] - u_before[name]
-        except Exception:
-            continue
+    data_payload: Dict[str, Any] = {
+        "requested_metrics": requested_metrics,
+        "metric_metadata": _build_metric_metadata(requested_metrics),
+        "before": values_before,
+        "after": values_after,
+        "delta": delta_by_metric,
+    }
+
+    if "bus_voltage" in requested_metrics:
+        data_payload["u_before"] = values_before.get("bus_voltage", {})
+        data_payload["u_after"] = values_after.get("bus_voltage", {})
+        data_payload["delta_u"] = delta_by_metric.get("bus_voltage", {})
 
     return {
         "status": "ok",
@@ -1202,14 +1654,14 @@ def _execute_change_load_with_services(services: Dict[str, Any], instruction: di
         "loadflow_debug": {
             "before_execute_result": ldf_result_before,
             "after_execute_result": ldf_result_after,
-            "before_snapshot_debug": before_snapshot["debug"],
-            "after_snapshot_debug": after_snapshot["debug"],
+            "metric_snapshot_debug": {
+                "before": before_snapshot["debug"],
+                "after": after_snapshot["debug"],
+            },
+            "before_snapshot_debug": before_snapshot["debug"].get("bus_voltage", {}),
+            "after_snapshot_debug": after_snapshot["debug"].get("bus_voltage", {}),
         },
-        "data": {
-            "u_before": u_before,
-            "u_after": u_after,
-            "delta_u": deltas,
-        },
+        "data": data_payload,
     }
 
 
@@ -1222,11 +1674,22 @@ def _summarize_powerfactory_result_with_services(
     llm_result_agent = services["llm_result_agent"]
     project_name = services["project_name"]
 
-    data = result_payload.get("data", {}) if isinstance(result_payload, dict) else {}
-    u_before = data.get("u_before", {}) if isinstance(data, dict) else {}
-    u_after = data.get("u_after", {}) if isinstance(data, dict) else {}
+    requested_metrics, before, after, delta = _extract_metric_payload_from_result_payload(result_payload)
 
-    messages = result_agent.interpret_voltage_change(u_before, u_after)
+    messages: List[str] = []
+    for metric in requested_metrics:
+        metric_messages = _build_metric_messages(
+            metric=metric,
+            before_map=before.get(metric, {}),
+            after_map=after.get(metric, {}),
+            delta_map=delta.get(metric, {}),
+            result_agent=result_agent,
+        )
+        messages.extend(metric_messages)
+
+    if not messages:
+        messages = ["Es konnten keine auswertbaren Lastfluss-Ergebnisse für die angeforderten Metriken erzeugt werden."]
+
     summary = llm_result_agent.summarize(messages, user_input)
 
     return {
@@ -1235,6 +1698,7 @@ def _summarize_powerfactory_result_with_services(
         "project": project_name,
         "messages": messages,
         "answer": summary,
+        "requested_metrics": requested_metrics,
     }
 
 
