@@ -132,13 +132,13 @@ class PowerFactoryDomainAgent:
             "resolve_switch_from_inventory_llm": "Resolve the requested switch via LLM-based exact candidate selection from the switch list",
             "execute_switch_operation": "Apply the requested switch state change in PowerFactory",
             "summarize_switch_result": "Summarize the switch operation result for the user",
-            "build_data_inventory": "Build a lightweight typed inventory from PowerFactory objects without topology graph",
-            "interpret_data_query_instruction": "Interpret user input into a structured PowerFactory data-query instruction",
-            "resolve_pf_object_from_inventory_llm": "Resolve the requested PowerFactory object via LLM-based exact candidate selection",
-            "list_available_object_attributes": "List semantic and raw attribute options for the selected PowerFactory object",
-            "select_pf_object_attributes_llm": "Select the best matching attribute handles from the provided option list",
-            "read_pf_object_attributes": "Read the selected attributes from the resolved PowerFactory object with dynamic loadflow fallback",
-            "summarize_pf_object_data_result": "Summarize the queried PowerFactory object data for the user",
+            "build_data_inventory": "Build a lightweight typed inventory for PowerFactory data queries",
+            "interpret_data_query_instruction": "Interpret a PowerFactory data query into structured object and field intent",
+            "resolve_pf_object_from_inventory_llm": "Resolve the requested PowerFactory object via LLM selection from the exact candidate list",
+            "list_available_object_attributes": "List the available readable attributes for the resolved PowerFactory object",
+            "select_pf_object_attributes_llm": "Select the most relevant object attributes via LLM from the exact available attribute list",
+            "read_pf_object_attributes": "Read the selected PowerFactory object attributes, using raw-first then loadflow-based fallback when needed",
+            "summarize_pf_object_data_result": "Summarize the PowerFactory object data query result for the user",
             "unsupported_request": "Return a controlled message for unsupported PowerFactory intent",
         }
 
@@ -282,6 +282,141 @@ class PowerFactoryDomainAgent:
     def get_available_tools(self) -> List[Dict[str, Any]]:
         return self.registry.list_tool_specs()
 
+    def _build_tool_kwargs(
+        self,
+        step: str,
+        services: Dict[str, Any],
+        user_input: str,
+        classification: Dict[str, Any],
+        state: Dict[str, Any],
+    ) -> Dict[str, Any]:
+        #Festlegung der Input-Parameter je Tool. Services wird immer übergeben & zusätzlich die jeweils aufgeführte Info 
+        tool_kwargs: Dict[str, Any] = {"services": services}
+
+        if step == "interpret_instruction":
+            tool_kwargs["user_input"] = user_input
+        elif step == "resolve_load":
+            tool_kwargs["instruction"] = state["instruction"]
+        elif step == "execute_change_load":
+            tool_kwargs["instruction"] = state["instruction"]
+        elif step == "summarize_powerfactory_result":
+            tool_kwargs["result_payload"] = state["execution"]
+            tool_kwargs["user_input"] = user_input
+        elif step == "summarize_load_catalog":
+            tool_kwargs["catalog_result"] = state["catalog_result"]
+        elif step == "build_topology_graph":
+            tool_kwargs["contract_cubicles"] = True
+        elif step == "build_topology_inventory":
+            tool_kwargs["topology_graph_result"] = state["graph_result"]
+        elif step == "interpret_entity_instruction":
+            tool_kwargs["user_input"] = user_input
+            tool_kwargs["inventory"] = state["inventory_result"]["inventory"] if isinstance(state["inventory_result"], dict) else {}
+        elif step == "resolve_entity_from_inventory":
+            tool_kwargs["instruction"] = state["entity_instruction"]
+            tool_kwargs["inventory"] = state["inventory_result"]["inventory"] if isinstance(state["inventory_result"], dict) else {}
+            tool_kwargs["topology_graph"] = state["graph_result"]["topology_graph"] if isinstance(state["graph_result"], dict) else None
+            tool_kwargs["max_matches"] = 10
+        elif step == "query_topology_neighbors":
+            tool_kwargs["topology_graph"] = state["graph_result"]["topology_graph"] if isinstance(state["graph_result"], dict) else None
+            tool_kwargs["asset_query"] = state["entity_resolution"].get("asset_query") if isinstance(state["entity_resolution"], dict) else user_input
+            tool_kwargs["selected_node_id"] = (state["entity_resolution"].get("selected_match", {}) or {}).get("node_id") if isinstance(state["entity_resolution"], dict) else None
+            tool_kwargs["matches"] = state["entity_resolution"].get("matches", []) if isinstance(state["entity_resolution"], dict) else []
+            tool_kwargs["max_matches"] = 10
+        elif step == "summarize_topology_result":
+            tool_kwargs["topology_result"] = state["topology_result"]
+            tool_kwargs["graph_result"] = state["graph_result"]
+            tool_kwargs["inventory_result"] = state["inventory_result"]
+            tool_kwargs["entity_instruction"] = state["entity_instruction"]
+            tool_kwargs["entity_resolution"] = state["entity_resolution"]
+        elif step == "interpret_switch_instruction":
+            tool_kwargs["user_input"] = user_input
+        elif step == "resolve_switch_from_inventory_llm":
+            tool_kwargs["instruction"] = state["switch_instruction"]
+        elif step == "execute_switch_operation":
+            tool_kwargs["instruction"] = state["switch_instruction"]
+            tool_kwargs["resolution"] = state["switch_resolution"]
+            tool_kwargs["run_loadflow_after"] = True
+        elif step == "summarize_switch_result":
+            tool_kwargs["result_payload"] = state["switch_execution"]
+            tool_kwargs["user_input"] = user_input
+        elif step == "build_data_inventory":
+            pass
+        elif step == "interpret_data_query_instruction":
+            tool_kwargs["user_input"] = user_input
+            tool_kwargs["inventory"] = state["data_inventory_result"]["inventory"] if isinstance(state["data_inventory_result"], dict) else {}
+        elif step == "resolve_pf_object_from_inventory_llm":
+            tool_kwargs["instruction"] = state["data_query_instruction"]
+            tool_kwargs["inventory"] = state["data_inventory_result"]["inventory"] if isinstance(state["data_inventory_result"], dict) else {}
+        elif step == "list_available_object_attributes":
+            tool_kwargs["instruction"] = state["data_query_instruction"]
+            tool_kwargs["resolution"] = state["data_object_resolution"]
+        elif step == "select_pf_object_attributes_llm":
+            tool_kwargs["instruction"] = state["data_query_instruction"]
+            tool_kwargs["resolution"] = state["data_object_resolution"]
+            tool_kwargs["attribute_listing"] = state["data_attribute_listing"]
+        elif step == "read_pf_object_attributes":
+            tool_kwargs["instruction"] = (state["data_attribute_selection"].get("instruction") if isinstance(state["data_attribute_selection"], dict) else None) or state["data_query_instruction"]
+            tool_kwargs["resolution"] = state["data_object_resolution"]
+        elif step == "summarize_pf_object_data_result":
+            tool_kwargs["result_payload"] = state["data_query_execution"]
+            tool_kwargs["user_input"] = user_input
+        elif step == "unsupported_request":
+            tool_kwargs["user_input"] = user_input
+            tool_kwargs["classification"] = classification
+
+        return tool_kwargs
+
+    def _store_step_result(self, step: str, result: Dict[str, Any], state: Dict[str, Any]) -> None:
+        #Datenfluss bei erfolgreicher Ausführung -> Speichern der Variablen
+        if step == "get_load_catalog":
+            state["catalog_result"] = result
+        elif step == "interpret_instruction":
+            state["instruction"] = result["instruction"]
+        elif step == "resolve_load":
+            state["resolution"] = result
+        elif step == "execute_change_load":
+            state["execution"] = result
+        elif step == "summarize_powerfactory_result":
+            state["summary"] = result
+        elif step == "summarize_load_catalog":
+            state["summary"] = result
+        elif step == "build_topology_graph":
+            state["graph_result"] = result
+        elif step == "build_topology_inventory":
+            state["inventory_result"] = result
+        elif step == "interpret_entity_instruction":
+            state["entity_instruction"] = result["instruction"]
+        elif step == "resolve_entity_from_inventory":
+            state["entity_resolution"] = result
+        elif step == "query_topology_neighbors":
+            state["topology_result"] = result
+        elif step == "summarize_topology_result":
+            state["summary"] = result
+        elif step == "interpret_switch_instruction":
+            state["switch_instruction"] = result["instruction"]
+        elif step == "resolve_switch_from_inventory_llm":
+            state["switch_resolution"] = result
+        elif step == "execute_switch_operation":
+            state["switch_execution"] = result
+        elif step == "summarize_switch_result":
+            state["switch_summary"] = result
+            state["summary"] = result
+        elif step == "build_data_inventory":
+            state["data_inventory_result"] = result
+        elif step == "interpret_data_query_instruction":
+            state["data_query_instruction"] = result["instruction"]
+        elif step == "resolve_pf_object_from_inventory_llm":
+            state["data_object_resolution"] = result
+        elif step == "list_available_object_attributes":
+            state["data_attribute_listing"] = result
+        elif step == "select_pf_object_attributes_llm":
+            state["data_attribute_selection"] = result
+        elif step == "read_pf_object_attributes":
+            state["data_query_execution"] = result
+        elif step == "summarize_pf_object_data_result":
+            state["data_query_summary"] = result
+            state["summary"] = result
+
     def execute_plan(
         self,
         services: Dict[str, Any],
@@ -291,135 +426,45 @@ class PowerFactoryDomainAgent:
     ) -> Dict[str, Any]:
         debug_trace: List[Dict[str, Any]] = []
 
-        instruction = None
-        resolution = None
-        execution = None
-        summary = None
-        catalog_result = None
-
-        graph_result = None
-        inventory_result = None
-        entity_instruction = None
-        entity_resolution = None
-        topology_result = None
-
-        switch_instruction = None
-        switch_resolution = None
-        switch_execution = None
-        switch_summary = None
-
-        data_inventory_result = None
-        data_query_instruction = None
-        data_object_resolution = None
-        data_attribute_listing = None
-        data_attribute_selection = None
-        data_query_execution = None
-        data_query_summary = None
+        state: Dict[str, Any] = {
+            "instruction": None,
+            "resolution": None,
+            "execution": None,
+            "summary": None,
+            "catalog_result": None,
+            "graph_result": None,
+            "inventory_result": None,
+            "entity_instruction": None,
+            "entity_resolution": None,
+            "topology_result": None,
+            "switch_instruction": None,
+            "switch_resolution": None,
+            "switch_execution": None,
+            "switch_summary": None,
+            "data_inventory_result": None,
+            "data_query_instruction": None,
+            "data_object_resolution": None,
+            "data_attribute_listing": None,
+            "data_attribute_selection": None,
+            "data_query_execution": None,
+            "data_query_summary": None,
+        }
 
         for item in plan:
             step = item["step"]
 
-            if step == "summarize_load_catalog":
-                result = self.summarize_load_catalog_result(catalog_result)
-                debug_trace.append({"step": step, "result": result})
-                if result["status"] != "ok":
-                    return self.build_error_result(error_result=result, debug_trace=debug_trace)
-                summary = result
-                continue
+            tool_kwargs = self._build_tool_kwargs(
+                step=step,
+                services=services,
+                user_input=user_input,
+                classification=classification,
+                state=state,
+            )
 
-            if step == "summarize_topology_result":
-                result = self.summarize_topology_result(
-                    topology_result=topology_result,
-                    graph_result=graph_result,
-                    inventory_result=inventory_result,
-                    entity_instruction=entity_instruction,
-                    entity_resolution=entity_resolution,
-                )
-                debug_trace.append({"step": step, "result": result})
-                if result["status"] != "ok":
-                    return self.build_error_result(error_result=result, debug_trace=debug_trace)
-                summary = result
-                continue
+            tool_spec = self.registry.get_tool_spec(step) #Beschreibung des Tools (aus der Registry)
+            result = self.registry.invoke(step, **tool_kwargs) #Ausführung des Tools
 
-            if step == "summarize_pf_object_data_result":
-                result = self.registry.invoke(
-                    step,
-                    services=services,
-                    result_payload=data_query_execution,
-                    user_input=user_input,
-                )
-                debug_trace.append({"step": step, "result": result})
-                if result["status"] != "ok":
-                    return self.build_error_result(error_result=result, debug_trace=debug_trace)
-                data_query_summary = result
-                summary = result
-                continue
-
-            if step == "unsupported_request":
-                result = self.build_unsupported_result(user_input=user_input, classification=classification)
-                debug_trace.append({"step": step, "result": result})
-                return result
-
-            tool_kwargs: Dict[str, Any] = {"services": services}
-
-            if step == "interpret_instruction":
-                tool_kwargs["user_input"] = user_input
-            elif step == "resolve_load":
-                tool_kwargs["instruction"] = instruction
-            elif step == "execute_change_load":
-                tool_kwargs["instruction"] = instruction
-            elif step == "summarize_powerfactory_result":
-                tool_kwargs["result_payload"] = execution
-                tool_kwargs["user_input"] = user_input
-            elif step == "build_topology_graph":
-                tool_kwargs["contract_cubicles"] = True
-            elif step == "build_topology_inventory":
-                tool_kwargs["topology_graph_result"] = graph_result
-            elif step == "interpret_entity_instruction":
-                tool_kwargs["user_input"] = user_input
-                tool_kwargs["inventory"] = inventory_result["inventory"] if isinstance(inventory_result, dict) else {}
-            elif step == "resolve_entity_from_inventory":
-                tool_kwargs["instruction"] = entity_instruction
-                tool_kwargs["inventory"] = inventory_result["inventory"] if isinstance(inventory_result, dict) else {}
-                tool_kwargs["topology_graph"] = graph_result["topology_graph"] if isinstance(graph_result, dict) else None
-                tool_kwargs["max_matches"] = 10
-            elif step == "query_topology_neighbors":
-                tool_kwargs["topology_graph"] = graph_result["topology_graph"] if isinstance(graph_result, dict) else None
-                tool_kwargs["asset_query"] = entity_resolution.get("asset_query") if isinstance(entity_resolution, dict) else user_input
-                tool_kwargs["selected_node_id"] = (entity_resolution.get("selected_match", {}) or {}).get("node_id") if isinstance(entity_resolution, dict) else None
-                tool_kwargs["matches"] = entity_resolution.get("matches", []) if isinstance(entity_resolution, dict) else []
-                tool_kwargs["max_matches"] = 10
-            elif step == "interpret_switch_instruction":
-                tool_kwargs["user_input"] = user_input
-            elif step == "resolve_switch_from_inventory_llm":
-                tool_kwargs["instruction"] = switch_instruction
-            elif step == "execute_switch_operation":
-                tool_kwargs["instruction"] = switch_instruction
-                tool_kwargs["resolution"] = switch_resolution
-                tool_kwargs["run_loadflow_after"] = True
-            elif step == "summarize_switch_result":
-                tool_kwargs["result_payload"] = switch_execution
-                tool_kwargs["user_input"] = user_input
-            elif step == "interpret_data_query_instruction":
-                tool_kwargs["user_input"] = user_input
-                tool_kwargs["inventory"] = data_inventory_result["inventory"] if isinstance(data_inventory_result, dict) else {}
-            elif step == "resolve_pf_object_from_inventory_llm":
-                tool_kwargs["instruction"] = data_query_instruction
-                tool_kwargs["inventory"] = data_inventory_result["inventory"] if isinstance(data_inventory_result, dict) else {}
-            elif step == "list_available_object_attributes":
-                tool_kwargs["instruction"] = data_query_instruction
-                tool_kwargs["resolution"] = data_object_resolution
-            elif step == "select_pf_object_attributes_llm":
-                tool_kwargs["instruction"] = data_query_instruction
-                tool_kwargs["resolution"] = data_object_resolution
-                tool_kwargs["attribute_listing"] = data_attribute_listing
-            elif step == "read_pf_object_attributes":
-                tool_kwargs["instruction"] = (data_attribute_selection.get("instruction") if isinstance(data_attribute_selection, dict) else None) or data_query_instruction
-                tool_kwargs["resolution"] = data_object_resolution
-
-            tool_spec = self.registry.get_tool_spec(step)
-            result = self.registry.invoke(step, **tool_kwargs)
-
+            #Tracking für Debugging
             debug_trace.append({
                 "step": step,
                 "tool_spec": {
@@ -431,77 +476,39 @@ class PowerFactoryDomainAgent:
                 "result": result,
             })
 
+            #Fehler-Check -> Abbruch, wenn Fehler ausgegeben wird und Rückgabe von debug_trace
             if result["status"] != "ok":
                 return self.build_error_result(error_result=result, debug_trace=debug_trace)
 
-            if step == "get_load_catalog":
-                catalog_result = result
-            elif step == "interpret_instruction":
-                instruction = result["instruction"]
-            elif step == "resolve_load":
-                resolution = result
-            elif step == "execute_change_load":
-                execution = result
-            elif step == "summarize_powerfactory_result":
-                summary = result
-            elif step == "build_topology_graph":
-                graph_result = result
-            elif step == "build_topology_inventory":
-                inventory_result = result
-            elif step == "interpret_entity_instruction":
-                entity_instruction = result["instruction"]
-            elif step == "resolve_entity_from_inventory":
-                entity_resolution = result
-            elif step == "query_topology_neighbors":
-                topology_result = result
-            elif step == "interpret_switch_instruction":
-                switch_instruction = result["instruction"]
-            elif step == "resolve_switch_from_inventory_llm":
-                switch_resolution = result
-            elif step == "execute_switch_operation":
-                switch_execution = result
-            elif step == "summarize_switch_result":
-                switch_summary = result
-                summary = result
-            elif step == "build_data_inventory":
-                data_inventory_result = result
-            elif step == "interpret_data_query_instruction":
-                data_query_instruction = result["instruction"]
-            elif step == "resolve_pf_object_from_inventory_llm":
-                data_object_resolution = result
-            elif step == "list_available_object_attributes":
-                data_attribute_listing = result
-            elif step == "select_pf_object_attributes_llm":
-                data_attribute_selection = result
-            elif step == "read_pf_object_attributes":
-                data_query_execution = result
+            self._store_step_result(step=step, result=result, state=state)
 
+        #Sammeln der Ergebnisse
         return self.build_success_result(
             services=services,
             user_input=user_input,
             classification=classification,
             plan=plan,
-            instruction=instruction,
-            resolution=resolution,
-            execution=execution,
-            summary=summary,
-            catalog_result=catalog_result,
-            graph_result=graph_result,
-            inventory_result=inventory_result,
-            entity_instruction=entity_instruction,
-            entity_resolution=entity_resolution,
-            topology_result=topology_result,
-            switch_instruction=switch_instruction,
-            switch_resolution=switch_resolution,
-            switch_execution=switch_execution,
-            switch_summary=switch_summary,
-            data_inventory_result=data_inventory_result,
-            data_query_instruction=data_query_instruction,
-            data_object_resolution=data_object_resolution,
-            data_attribute_listing=data_attribute_listing,
-            data_attribute_selection=data_attribute_selection,
-            data_query_execution=data_query_execution,
-            data_query_summary=data_query_summary,
+            instruction=state["instruction"],
+            resolution=state["resolution"],
+            execution=state["execution"],
+            summary=state["summary"],
+            catalog_result=state["catalog_result"],
+            graph_result=state["graph_result"],
+            inventory_result=state["inventory_result"],
+            entity_instruction=state["entity_instruction"],
+            entity_resolution=state["entity_resolution"],
+            topology_result=state["topology_result"],
+            switch_instruction=state["switch_instruction"],
+            switch_resolution=state["switch_resolution"],
+            switch_execution=state["switch_execution"],
+            switch_summary=state["switch_summary"],
+            data_inventory_result=state["data_inventory_result"],
+            data_query_instruction=state["data_query_instruction"],
+            data_object_resolution=state["data_object_resolution"],
+            data_attribute_listing=state["data_attribute_listing"],
+            data_attribute_selection=state["data_attribute_selection"],
+            data_query_execution=state["data_query_execution"],
+            data_query_summary=state["data_query_summary"],
             debug_trace=debug_trace,
         )
 
@@ -541,14 +548,14 @@ class PowerFactoryDomainAgent:
             "tool": "powerfactory",
             "agent": "PowerFactoryDomainAgent",
             "project": services.get("project_name"),
-            "studycase": execution.get("studycase") if isinstance(execution, dict) else (switch_execution.get("studycase") if isinstance(switch_execution, dict) else None),
+            "studycase": execution.get("studycase") if isinstance(execution, dict) else (switch_execution.get("studycase") if isinstance(switch_execution, dict) else (data_query_execution.get("studycase") if isinstance(data_query_execution, dict) else None)),
             "user_input": user_input,
             "classification": classification,
             "plan": plan,
             "available_tools": self.get_available_tools(),
             "instruction": instruction,
             "resolved_load": execution.get("resolved_load") if isinstance(execution, dict) else None,
-            "data": execution.get("data", {}) if isinstance(execution, dict) else {},
+            "data": execution.get("data", {}) if isinstance(execution, dict) else (data_query_execution.get("data", {}) if isinstance(data_query_execution, dict) else {}),
             "catalog": catalog_result.get("loads", []) if isinstance(catalog_result, dict) else [],
             "messages": summary.get("messages", []) if isinstance(summary, dict) else [],
             "answer": answer,
@@ -571,7 +578,7 @@ class PowerFactoryDomainAgent:
                 "summary": switch_summary,
             },
             "data_query": {
-                "inventory": data_inventory_result.get("inventory", {}) if isinstance(data_inventory_result, dict) else {},
+                "inventory": data_inventory_result,
                 "instruction": data_query_instruction,
                 "resolution": data_object_resolution,
                 "attribute_listing": data_attribute_listing,

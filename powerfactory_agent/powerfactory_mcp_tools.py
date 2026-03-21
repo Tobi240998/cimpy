@@ -3332,3 +3332,102 @@ def summarize_pf_object_data_result(
         result_payload=result_payload,
         user_input=user_input,
     )
+
+
+# ------------------------------------------------------------------
+# REGISTRY-UNIFIED SUMMARY / CONTROL HELPERS
+# ------------------------------------------------------------------
+def _summarize_load_catalog_with_services(
+    services: Dict[str, Any],
+    catalog_result: Dict[str, Any],
+) -> Dict[str, Any]:
+    loads = catalog_result.get('loads', []) if isinstance(catalog_result, dict) else []
+    names = [entry.get('loc_name') for entry in loads if isinstance(entry, dict) and entry.get('loc_name')]
+    preview = names[:10]
+
+    if not names:
+        answer = 'Im aktiven PowerFactory-Projekt wurden keine Lasten gefunden.'
+    elif len(names) <= 10:
+        answer = 'Verfügbare Lasten im aktiven PowerFactory-Projekt: ' + ', '.join(names)
+    else:
+        answer = f"Im aktiven PowerFactory-Projekt wurden {len(names)} Lasten gefunden. Beispiele: " + ', '.join(preview)
+
+    return {
+        'status': 'ok',
+        'tool': 'summarize_load_catalog',
+        'answer': answer,
+        'count': len(names),
+        'loads': loads,
+    }
+
+
+def _summarize_topology_result_with_services(
+    services: Dict[str, Any],
+    topology_result: Dict[str, Any],
+    graph_result: Dict[str, Any] | None = None,
+    inventory_result: Dict[str, Any] | None = None,
+    entity_instruction: Dict[str, Any] | None = None,
+    entity_resolution: Dict[str, Any] | None = None,
+) -> Dict[str, Any]:
+    if not topology_result or topology_result.get('status') != 'ok':
+        return {
+            'status': 'error',
+            'tool': 'summarize_topology_result',
+            'error': 'missing_topology_result',
+            'answer': 'Es liegt kein gültiges Topologieergebnis zur Zusammenfassung vor.',
+        }
+
+    selected = topology_result.get('selected_node', {}) or {}
+    neighbors = topology_result.get('neighbors', []) or []
+    selected_name = selected.get('name') or selected.get('full_name') or '<unbekannt>'
+    selected_class = selected.get('pf_class') or '<unknown>'
+    selected_type = selected.get('inventory_type') or '<unknown>'
+    neighbor_count = topology_result.get('neighbor_count', len(neighbors))
+
+    if neighbor_count == 0:
+        answer = f"Für das Asset '{selected_name}' ({selected_class}) wurden im aktuellen PowerFactory-Topologiegraphen keine direkten Nachbarn gefunden."
+    else:
+        preview_items = []
+        for neighbor in neighbors[:10]:
+            neighbor_name = neighbor.get('name') or neighbor.get('full_name') or '<unbekannt>'
+            neighbor_class = neighbor.get('pf_class') or '<unknown>'
+            preview_items.append(f"{neighbor_name} ({neighbor_class})")
+
+        if neighbor_count <= 10:
+            answer = f"Direkte Nachbarn von '{selected_name}' ({selected_class}, Typ {selected_type}) im PowerFactory-Topologiegraphen: " + ', '.join(preview_items)
+        else:
+            answer = f"Für '{selected_name}' ({selected_class}, Typ {selected_type}) wurden {neighbor_count} direkte Nachbarn im PowerFactory-Topologiegraphen gefunden. Beispiele: " + ', '.join(preview_items)
+
+    return {
+        'status': 'ok',
+        'tool': 'summarize_topology_result',
+        'answer': answer,
+        'selected_node': selected,
+        'neighbor_count': neighbor_count,
+        'neighbors': neighbors,
+        'graph_summary': graph_result.get('graph_summary', {}) if isinstance(graph_result, dict) else {},
+        'inventory_types': inventory_result.get('inventory', {}).get('available_types', []) if isinstance(inventory_result, dict) else [],
+        'instruction': entity_instruction,
+        'resolution': entity_resolution,
+    }
+
+
+def _build_unsupported_result_with_services(
+    services: Dict[str, Any],
+    user_input: str,
+    classification: Dict[str, Any],
+) -> Dict[str, Any]:
+    missing_context = classification.get('missing_context', []) if isinstance(classification, dict) else []
+    missing_text = ''
+    if missing_context:
+        missing_text = ' Fehlender Kontext: ' + ', '.join(missing_context) + '.'
+
+    return {
+        'status': 'error',
+        'tool': 'powerfactory',
+        'agent': 'PowerFactoryDomainAgent',
+        'error': 'unsupported_powerfactory_request',
+        'answer': 'Die Anfrage wurde nach PowerFactory geroutet, passt aber aktuell zu keinem unterstützten PowerFactory-Ablauf oder ist noch nicht sicher ausführbar.' + missing_text,
+        'user_input': user_input,
+        'classification': classification,
+    }

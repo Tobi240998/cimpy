@@ -25,6 +25,9 @@ from cimpy.powerfactory_agent.powerfactory_mcp_tools import (
     _select_pf_object_attributes_llm_with_services,
     _read_pf_object_attributes_with_services,
     _summarize_pf_object_data_result_with_services,
+    _summarize_load_catalog_with_services,
+    _summarize_topology_result_with_services,
+    _build_unsupported_result_with_services,
 )
 from cimpy.powerfactory_agent.powerfactory_topology_graph import (
     build_powerfactory_topology_graph_from_services,
@@ -285,6 +288,56 @@ class PowerFactoryToolRegistry:
                 handler=self._tool_summarize_switch_result,
             ),
 
+            "summarize_load_catalog": PowerFactoryToolSpec(
+                name="summarize_load_catalog",
+                description="Build a concise user-facing catalog answer.",
+                input_schema={
+                    "type": "object",
+                    "properties": {"services": {"type": "object"}, "catalog_result": {"type": "object"}},
+                    "required": ["services", "catalog_result"],
+                },
+                output_schema_hint={"status": "ok|error", "tool": "summarize_load_catalog", "answer": "string"},
+                capability_tags=["powerfactory", "summary", "catalog"],
+                mutating=False,
+                handler=self._tool_summarize_load_catalog,
+            ),
+            "summarize_topology_result": PowerFactoryToolSpec(
+                name="summarize_topology_result",
+                description="Build a concise user-facing topology answer.",
+                input_schema={
+                    "type": "object",
+                    "properties": {
+                        "services": {"type": "object"},
+                        "topology_result": {"type": "object"},
+                        "graph_result": {"type": "object"},
+                        "inventory_result": {"type": "object"},
+                        "entity_instruction": {"type": "object"},
+                        "entity_resolution": {"type": "object"},
+                    },
+                    "required": ["services", "topology_result"],
+                },
+                output_schema_hint={"status": "ok|error", "tool": "summarize_topology_result", "answer": "string"},
+                capability_tags=["powerfactory", "summary", "topology"],
+                mutating=False,
+                handler=self._tool_summarize_topology_result,
+            ),
+            "unsupported_request": PowerFactoryToolSpec(
+                name="unsupported_request",
+                description="Return a controlled message for unsupported PowerFactory intent.",
+                input_schema={
+                    "type": "object",
+                    "properties": {
+                        "services": {"type": "object"},
+                        "user_input": {"type": "string"},
+                        "classification": {"type": "object"},
+                    },
+                    "required": ["services", "user_input", "classification"],
+                },
+                output_schema_hint={"status": "error", "tool": "powerfactory", "answer": "string"},
+                capability_tags=["powerfactory", "control"],
+                mutating=False,
+                handler=self._tool_unsupported_request,
+            ),
             "build_data_inventory": PowerFactoryToolSpec(
                 name="build_data_inventory",
                 description="Build a lightweight PowerFactory inventory for data queries without topology graph.",
@@ -595,6 +648,49 @@ class PowerFactoryToolRegistry:
             services=services,
             result_payload=result_payload,
             user_input=user_input,
+        )
+
+    def _tool_summarize_load_catalog(
+        self,
+        services: Dict[str, Any],
+        catalog_result: Dict[str, Any],
+        **kwargs: Any,
+    ) -> Dict[str, Any]:
+        return _summarize_load_catalog_with_services(
+            services=services,
+            catalog_result=catalog_result,
+        )
+
+    def _tool_summarize_topology_result(
+        self,
+        services: Dict[str, Any],
+        topology_result: Dict[str, Any],
+        graph_result: Dict[str, Any] | None = None,
+        inventory_result: Dict[str, Any] | None = None,
+        entity_instruction: Dict[str, Any] | None = None,
+        entity_resolution: Dict[str, Any] | None = None,
+        **kwargs: Any,
+    ) -> Dict[str, Any]:
+        return _summarize_topology_result_with_services(
+            services=services,
+            topology_result=topology_result,
+            graph_result=graph_result,
+            inventory_result=inventory_result,
+            entity_instruction=entity_instruction,
+            entity_resolution=entity_resolution,
+        )
+
+    def _tool_unsupported_request(
+        self,
+        services: Dict[str, Any],
+        user_input: str,
+        classification: Dict[str, Any],
+        **kwargs: Any,
+    ) -> Dict[str, Any]:
+        return _build_unsupported_result_with_services(
+            services=services,
+            user_input=user_input,
+            classification=classification,
         )
 
     def _tool_build_data_inventory(self, services: Dict[str, Any], **kwargs: Any) -> Dict[str, Any]:
