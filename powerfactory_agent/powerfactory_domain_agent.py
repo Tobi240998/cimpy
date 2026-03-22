@@ -58,6 +58,17 @@ class PFFlexiblePlanDecision(BaseModel):
     reasoning: str = Field(description="Short explanation of why this step sequence was selected")
 
 
+class PFCompositeSubrequest(BaseModel):
+    user_input: str = Field(description="A standalone subrequest in the same language as the original user input")
+    depends_on_previous: bool = Field(description="True if this subrequest should be executed after the previous one")
+
+
+class PFCompositeDecomposition(BaseModel):
+    is_composite: bool = Field(description="True if the original request should be split into multiple subrequests")
+    subrequests: List[PFCompositeSubrequest] = Field(default_factory=list)
+    reasoning: str = Field(description="Short explanation of the decomposition decision")
+
+
 class PowerFactoryDomainAgent:
     def __init__(self, project_name: str = DEFAULT_PROJECT_NAME):
         self.project_name = project_name
@@ -65,6 +76,7 @@ class PowerFactoryDomainAgent:
         self.registry = PowerFactoryToolRegistry()
         self.planner_parser = PydanticOutputParser(pydantic_object=PFPlannerDecision)
         self.flexible_plan_parser = PydanticOutputParser(pydantic_object=PFFlexiblePlanDecision)
+        self.decomposition_parser = PydanticOutputParser(pydantic_object=PFCompositeDecomposition)
 
         self.planner_prompt = ChatPromptTemplate.from_messages([
             (
@@ -156,11 +168,37 @@ class PowerFactoryDomainAgent:
             ),
         ])
 
+        self.decomposition_prompt = ChatPromptTemplate.from_messages([
+            (
+                "system",
+                "You are a decomposition assistant for a PowerFactory domain agent.\n"
+                "Your job is to decide whether a PowerFactory user request should be split into multiple sequential subrequests.\n\n"
+                "Rules:\n"
+                "- Keep standard single-intent requests as a single request.\n"
+                "- Mark is_composite=true only if the request clearly contains multiple user goals or multiple sequential actions.\n"
+                "- If you split, each subrequest must be a standalone natural-language request in the same language as the original input.\n"
+                "- Preserve execution order.\n"
+                "- Do not invent details that are not stated by the user.\n"
+                "- Do not split merely because a request is long; split only if there are multiple distinct tasks.\n"
+                "- If unsure, prefer is_composite=false.\n\n"
+                "Return only structured output.\n\n"
+                "{format_instructions}"
+            ),
+            (
+                "user",
+                "Original user request:\n{user_input}\n\n"
+                "Current classification:\n{classification}\n"
+            ),
+        ])
+
     def build_planner_chain(self):
         return self.planner_prompt | self.llm | self.planner_parser
 
     def build_flexible_plan_chain(self):
         return self.flexible_plan_prompt | self.llm | self.flexible_plan_parser
+
+    def build_decomposition_chain(self):
+        return self.decomposition_prompt | self.llm | self.decomposition_parser
 
     def classify_request(self, user_input: str) -> Dict[str, Any]:
         try:
@@ -182,6 +220,24 @@ class PowerFactoryDomainAgent:
                 "missing_context": [],
                 "required_steps": ["unsupported_request"],
                 "reasoning": f"LLM planning failed: {str(e)}",
+            }
+
+    def _decompose_request(self, user_input: str, classification: Dict[str, Any]) -> Dict[str, Any]:
+        try:
+            chain = self.build_decomposition_chain()
+            decision = chain.invoke({
+                "user_input": user_input,
+                "classification": classification,
+                "format_instructions": self.decomposition_parser.get_format_instructions(),
+            })
+            result = decision.dict() if hasattr(decision, "dict") else dict(decision)
+            return {"status": "ok", **result}
+        except Exception as e:
+            return {
+                "status": "error",
+                "is_composite": False,
+                "subrequests": [],
+                "reasoning": f"LLM decomposition failed: {str(e)}",
             }
 
     def _get_allowed_steps(self) -> Dict[str, str]:
@@ -276,6 +332,28 @@ class PowerFactoryDomainAgent:
             "unsupported_request": [],
         }
 
+    def _get_dependency_producers(self) -> Dict[str, str]:
+        return {
+            "catalog_result": "get_load_catalog",
+            "instruction": "interpret_instruction",
+            "resolution": "resolve_load",
+            "execution": "execute_change_load",
+            "graph_result": "build_topology_graph",
+            "inventory_result": "build_topology_inventory",
+            "entity_instruction": "interpret_entity_instruction",
+            "entity_resolution": "resolve_entity_from_inventory",
+            "topology_result": "query_topology_neighbors",
+            "switch_instruction": "interpret_switch_instruction",
+            "switch_resolution": "resolve_switch_from_inventory_llm",
+            "switch_execution": "execute_switch_operation",
+            "data_inventory_result": "build_data_inventory",
+            "data_query_instruction": "interpret_data_query_instruction",
+            "data_object_resolution": "resolve_pf_object_from_inventory_llm",
+            "data_attribute_listing": "list_available_object_attributes",
+            "data_attribute_selection": "select_pf_object_attributes_llm",
+            "data_query_execution": "read_pf_object_attributes",
+        }
+
     def _validate_step_sequence(self, steps: List[str]) -> bool:
         allowed_steps = self._get_allowed_steps()
         step_dependencies = self._get_step_dependencies()
@@ -301,6 +379,94 @@ class PowerFactoryDomainAgent:
                 available_state.add(produced_key)
 
         return True
+
+    def _normalize_candidate_steps(self, steps: List[str]) -> List[str]:
+        allowed_steps = self._get_allowed_steps()
+        normalized_steps: List[str] = []
+
+        for step in steps:
+            if not isinstance(step, str):
+                continue
+            if step not in allowed_steps:
+                continue
+            if step == "unsupported_request":
+                continue
+            if normalized_steps and normalized_steps[-1] == step:
+                continue
+            normalized_steps.append(step)
+
+        if not normalized_steps:
+            return []
+
+        return normalized_steps
+
+    def _ensure_step_dependencies_recursive(
+        self,
+        step: str,
+        ordered_steps: List[str],
+        visiting: set[str],
+    ) -> None:
+        dependency_producers = self._get_dependency_producers()
+        step_dependencies = self._get_step_dependencies()
+
+        if step in ordered_steps:
+            return
+
+        if step in visiting:
+            return
+
+        visiting.add(step)
+
+        for dependency_key in step_dependencies.get(step, []):
+            producer_step = dependency_producers.get(dependency_key)
+            if producer_step:
+                self._ensure_step_dependencies_recursive(
+                    step=producer_step,
+                    ordered_steps=ordered_steps,
+                    visiting=visiting,
+                )
+
+        if step not in ordered_steps:
+            ordered_steps.append(step)
+
+        visiting.remove(step)
+
+    def _repair_step_sequence(self, steps: List[str]) -> List[str]:
+        normalized_steps = self._normalize_candidate_steps(steps)
+        if not normalized_steps:
+            return []
+
+        ordered_steps: List[str] = []
+
+        for step in normalized_steps:
+            self._ensure_step_dependencies_recursive(
+                step=step,
+                ordered_steps=ordered_steps,
+                visiting=set(),
+            )
+
+        if not ordered_steps:
+            return []
+
+        summary_steps = [step for step in ordered_steps if self._is_summary_step(step)]
+        if not summary_steps:
+            if "execute_change_load" in ordered_steps:
+                ordered_steps.append("summarize_powerfactory_result")
+            elif "query_topology_neighbors" in ordered_steps:
+                ordered_steps.append("summarize_topology_result")
+            elif "execute_switch_operation" in ordered_steps:
+                ordered_steps.append("summarize_switch_result")
+            elif "read_pf_object_attributes" in ordered_steps:
+                ordered_steps.append("summarize_pf_object_data_result")
+            elif "get_load_catalog" in ordered_steps:
+                ordered_steps.append("summarize_load_catalog")
+
+        repaired_steps = []
+        for step in ordered_steps:
+            if not repaired_steps or repaired_steps[-1] != step:
+                repaired_steps.append(step)
+
+        return repaired_steps
 
     def normalize_required_steps(self, classification: Dict[str, Any]) -> List[Dict[str, Any]]:
         allowed_steps = self._get_allowed_steps()
@@ -360,10 +526,14 @@ class PowerFactoryDomainAgent:
         if not steps:
             return None
 
-        if not self._validate_step_sequence(steps):
-            return None
+        if self._validate_step_sequence(steps):
+            return self._steps_to_plan(steps)
 
-        return self._steps_to_plan(steps)
+        repaired_steps = self._repair_step_sequence(steps)
+        if self._validate_step_sequence(repaired_steps):
+            return self._steps_to_plan(repaired_steps)
+
+        return None
 
     def _build_flexible_fallback_plan(self, user_input: str, classification: Dict[str, Any]) -> List[Dict[str, Any]]:
         try:
@@ -379,17 +549,114 @@ class PowerFactoryDomainAgent:
 
             if self._validate_step_sequence(steps):
                 return self._steps_to_plan(steps)
+
+            repaired_steps = self._repair_step_sequence(steps)
+            if self._validate_step_sequence(repaired_steps):
+                return self._steps_to_plan(repaired_steps)
         except Exception:
             pass
 
         return self._steps_to_plan(["unsupported_request"])
 
+    def _is_standard_plan(self, plan: List[Dict[str, Any]]) -> bool:
+        steps = [item["step"] for item in plan]
+        return steps != ["unsupported_request"]
+
+    def _deduplicate_composite_steps(self, steps: List[str]) -> List[str]:
+        if not steps:
+            return steps
+
+        deduplicated: List[str] = []
+        for step in steps:
+            if deduplicated and deduplicated[-1] == step:
+                continue
+            deduplicated.append(step)
+
+        return deduplicated
+
+    def _build_nonstandard_subplan(self, user_input: str, classification: Dict[str, Any]) -> List[Dict[str, Any]]:
+        classification_plan = self._get_classification_required_steps_plan(classification)
+        if classification_plan is not None:
+            return classification_plan
+
+        return self._build_flexible_fallback_plan(
+            user_input=user_input,
+            classification=classification,
+        )
+
+    def _build_subplan_for_request(self, user_input: str) -> List[Dict[str, Any]]:
+        classification = self.classify_request(user_input)
+
+        standard_plan = self.normalize_required_steps(classification)
+        if self._is_standard_plan(standard_plan):
+            return standard_plan
+
+        return self._build_nonstandard_subplan(
+            user_input=user_input,
+            classification=classification,
+        )
+
+    def _build_composite_plan(self, user_input: str, classification: Dict[str, Any]) -> List[Dict[str, Any]] | None:
+        decomposition = self._decompose_request(
+            user_input=user_input,
+            classification=classification,
+        )
+
+        if decomposition.get("status") != "ok":
+            return None
+
+        if not decomposition.get("is_composite", False):
+            return None
+
+        raw_subrequests = decomposition.get("subrequests", [])
+        subrequests = []
+
+        for item in raw_subrequests:
+            if not isinstance(item, dict):
+                continue
+            subrequest_text = item.get("user_input", "")
+            if isinstance(subrequest_text, str) and subrequest_text.strip():
+                subrequests.append(subrequest_text.strip())
+
+        if len(subrequests) < 2:
+            return None
+
+        composite_steps: List[str] = []
+
+        for subrequest in subrequests:
+            subplan = self._build_subplan_for_request(subrequest)
+            substeps = [item["step"] for item in subplan]
+
+            if substeps == ["unsupported_request"]:
+                return None
+
+            composite_steps.extend(substeps)
+
+        composite_steps = self._deduplicate_composite_steps(composite_steps)
+
+        if self._validate_step_sequence(composite_steps):
+            return self._steps_to_plan(composite_steps)
+
+        repaired_steps = self._repair_step_sequence(composite_steps)
+        if self._validate_step_sequence(repaired_steps):
+            return self._steps_to_plan(repaired_steps)
+
+        return None
+
     def build_plan(self, user_input: str, classification: Dict[str, Any]) -> List[Dict[str, Any]]:
         standard_plan = self.normalize_required_steps(classification)
         standard_steps = [item["step"] for item in standard_plan]
 
+        # Standardfälle bleiben deterministisch und haben immer Vorrang
         if standard_steps != ["unsupported_request"]:
             return standard_plan
+
+        composite_plan = self._build_composite_plan(
+            user_input=user_input,
+            classification=classification,
+        )
+        if composite_plan is not None:
+            return composite_plan
 
         classification_plan = self._get_classification_required_steps_plan(classification)
         if classification_plan is not None:
@@ -488,6 +755,66 @@ class PowerFactoryDomainAgent:
 
     def get_available_tools(self) -> List[Dict[str, Any]]:
         return self.registry.list_tool_specs()
+
+    def _is_summary_step(self, step: str) -> bool:
+        return step in {
+            "summarize_load_catalog",
+            "summarize_powerfactory_result",
+            "summarize_topology_result",
+            "summarize_switch_result",
+            "summarize_pf_object_data_result",
+        }
+
+    def _merge_summary_results(
+        self,
+        plan: List[Dict[str, Any]],
+        summary: Dict[str, Any] | None,
+        summary_results: List[Dict[str, Any]],
+    ) -> Dict[str, Any] | None:
+        if isinstance(summary, dict) and len(summary_results) <= 1:
+            return summary
+
+        valid_summaries = [item for item in summary_results if isinstance(item, dict) and item.get("status") == "ok"]
+
+        if not valid_summaries:
+            return summary
+
+        if len(valid_summaries) == 1:
+            return valid_summaries[0]
+
+        merged_messages: List[str] = []
+        seen_messages = set()
+
+        answer_parts: List[str] = []
+        seen_answers = set()
+
+        for item in valid_summaries:
+            answer = item.get("answer", "")
+            if isinstance(answer, str):
+                normalized_answer = answer.strip()
+                if normalized_answer and normalized_answer not in seen_answers:
+                    answer_parts.append(normalized_answer)
+                    seen_answers.add(normalized_answer)
+
+            for message in item.get("messages", []) if isinstance(item.get("messages", []), list) else []:
+                if isinstance(message, str):
+                    normalized_message = message.strip()
+                    if normalized_message and normalized_message not in seen_messages:
+                        merged_messages.append(normalized_message)
+                        seen_messages.add(normalized_message)
+
+        merged_answer = "\n\n".join(answer_parts)
+
+        return {
+            "status": "ok",
+            "tool": "summarize_combined_result",
+            "answer": merged_answer,
+            "messages": merged_messages,
+            "summary_count": len(valid_summaries),
+            "summary_tools": [item.get("tool") for item in valid_summaries],
+            "plan_steps": [item.get("step") for item in plan if isinstance(item, dict)],
+            "parts": valid_summaries,
+        }
 
     def _build_tool_kwargs(
         self,
@@ -638,6 +965,7 @@ class PowerFactoryDomainAgent:
             "resolution": None,
             "execution": None,
             "summary": None,
+            "summary_results": [],
             "catalog_result": None,
             "graph_result": None,
             "inventory_result": None,
@@ -689,6 +1017,9 @@ class PowerFactoryDomainAgent:
 
             self._store_step_result(step=step, result=result, state=state)
 
+            if self._is_summary_step(step):
+                state["summary_results"].append(result)
+
         #Sammeln der Ergebnisse
         return self.build_success_result(
             services=services,
@@ -699,6 +1030,7 @@ class PowerFactoryDomainAgent:
             resolution=state["resolution"],
             execution=state["execution"],
             summary=state["summary"],
+            summary_results=state["summary_results"],
             catalog_result=state["catalog_result"],
             graph_result=state["graph_result"],
             inventory_result=state["inventory_result"],
@@ -729,6 +1061,7 @@ class PowerFactoryDomainAgent:
         resolution: Dict[str, Any] | None,
         execution: Dict[str, Any] | None,
         summary: Dict[str, Any] | None,
+        summary_results: List[Dict[str, Any]],
         catalog_result: Dict[str, Any] | None,
         graph_result: Dict[str, Any] | None,
         inventory_result: Dict[str, Any] | None,
@@ -748,7 +1081,14 @@ class PowerFactoryDomainAgent:
         data_query_summary: Dict[str, Any] | None,
         debug_trace: List[Dict[str, Any]],
     ) -> Dict[str, Any]:
-        answer = summary.get("answer", "") if isinstance(summary, dict) else ""
+        final_summary = self._merge_summary_results(
+            plan=plan,
+            summary=summary,
+            summary_results=summary_results,
+        )
+
+        answer = final_summary.get("answer", "") if isinstance(final_summary, dict) else ""
+        messages = final_summary.get("messages", []) if isinstance(final_summary, dict) else []
 
         return {
             "status": "ok",
@@ -764,8 +1104,10 @@ class PowerFactoryDomainAgent:
             "resolved_load": execution.get("resolved_load") if isinstance(execution, dict) else None,
             "data": execution.get("data", {}) if isinstance(execution, dict) else (data_query_execution.get("data", {}) if isinstance(data_query_execution, dict) else {}),
             "catalog": catalog_result.get("loads", []) if isinstance(catalog_result, dict) else [],
-            "messages": summary.get("messages", []) if isinstance(summary, dict) else [],
+            "messages": messages,
             "answer": answer,
+            "summary": final_summary,
+            "summary_parts": summary_results,
             "topology": {
                 "graph_mode": graph_result.get("graph_mode") if isinstance(graph_result, dict) else None,
                 "graph_summary": graph_result.get("graph_summary", {}) if isinstance(graph_result, dict) else {},
@@ -796,7 +1138,8 @@ class PowerFactoryDomainAgent:
             "debug": {
                 "resolution": resolution,
                 "execution": execution,
-                "summary": summary,
+                "summary": final_summary,
+                "summary_parts": summary_results,
                 "graph_result": graph_result,
                 "inventory_result": inventory_result,
                 "entity_instruction": entity_instruction,
