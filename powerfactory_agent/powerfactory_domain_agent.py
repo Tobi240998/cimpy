@@ -40,12 +40,31 @@ class PFPlannerDecision(BaseModel):
     reasoning: str = Field(description="Short explanation of why this plan was selected")
 
 
+class PFFlexiblePlanDecision(BaseModel):
+    required_steps: List[str] = Field(
+        default_factory=list,
+        description=(
+            "Ordered list of required internal steps. Allowed values are: "
+            "get_load_catalog, summarize_load_catalog, "
+            "interpret_instruction, resolve_load, execute_change_load, summarize_powerfactory_result, "
+            "build_topology_graph, build_topology_inventory, interpret_entity_instruction, "
+            "resolve_entity_from_inventory, query_topology_neighbors, summarize_topology_result, "
+            "interpret_switch_instruction, resolve_switch_from_inventory_llm, execute_switch_operation, summarize_switch_result, "
+            "build_data_inventory, interpret_data_query_instruction, resolve_pf_object_from_inventory_llm, "
+            "list_available_object_attributes, select_pf_object_attributes_llm, read_pf_object_attributes, summarize_pf_object_data_result, "
+            "unsupported_request"
+        )
+    )
+    reasoning: str = Field(description="Short explanation of why this step sequence was selected")
+
+
 class PowerFactoryDomainAgent:
     def __init__(self, project_name: str = DEFAULT_PROJECT_NAME):
         self.project_name = project_name
         self.llm = get_llm()
         self.registry = PowerFactoryToolRegistry()
         self.planner_parser = PydanticOutputParser(pydantic_object=PFPlannerDecision)
+        self.flexible_plan_parser = PydanticOutputParser(pydantic_object=PFFlexiblePlanDecision)
 
         self.planner_prompt = ChatPromptTemplate.from_messages([
             (
@@ -89,8 +108,59 @@ class PowerFactoryDomainAgent:
             ("user", "User request:\n{user_input}"),
         ])
 
+        self.flexible_plan_prompt = ChatPromptTemplate.from_messages([
+            (
+                "system",
+                "You are a fallback planner for a PowerFactory domain agent.\n"
+                "The standard workflows remain preferred, but if no standard workflow fits exactly, build the best valid ordered step sequence from the allowed internal steps below.\n\n"
+                "Rules:\n"
+                "- Use only the allowed required_steps values listed below.\n"
+                "- Keep the plan as short as possible.\n"
+                "- The sequence must be executable in a simple linear pipeline.\n"
+                "- Respect dependencies between steps.\n"
+                "- If the request is unsafe or cannot be mapped reliably, return [unsupported_request].\n"
+                "- Prefer ending with exactly one user-facing summary step where possible.\n"
+                "- Do not invent new tools, new steps or parallel branches.\n\n"
+                "Allowed required_steps values:\n"
+                "- get_load_catalog\n"
+                "- summarize_load_catalog\n"
+                "- interpret_instruction\n"
+                "- resolve_load\n"
+                "- execute_change_load\n"
+                "- summarize_powerfactory_result\n"
+                "- build_topology_graph\n"
+                "- build_topology_inventory\n"
+                "- interpret_entity_instruction\n"
+                "- resolve_entity_from_inventory\n"
+                "- query_topology_neighbors\n"
+                "- summarize_topology_result\n"
+                "- interpret_switch_instruction\n"
+                "- resolve_switch_from_inventory_llm\n"
+                "- execute_switch_operation\n"
+                "- summarize_switch_result\n"
+                "- build_data_inventory\n"
+                "- interpret_data_query_instruction\n"
+                "- resolve_pf_object_from_inventory_llm\n"
+                "- list_available_object_attributes\n"
+                "- select_pf_object_attributes_llm\n"
+                "- read_pf_object_attributes\n"
+                "- summarize_pf_object_data_result\n"
+                "- unsupported_request\n\n"
+                "Return only structured output.\n\n"
+                "{format_instructions}"
+            ),
+            (
+                "user",
+                "User request:\n{user_input}\n\n"
+                "Current classification:\n{classification}\n"
+            ),
+        ])
+
     def build_planner_chain(self):
         return self.planner_prompt | self.llm | self.planner_parser
+
+    def build_flexible_plan_chain(self):
+        return self.flexible_plan_prompt | self.llm | self.flexible_plan_parser
 
     def classify_request(self, user_input: str) -> Dict[str, Any]:
         try:
@@ -114,8 +184,8 @@ class PowerFactoryDomainAgent:
                 "reasoning": f"LLM planning failed: {str(e)}",
             }
 
-    def normalize_required_steps(self, classification: Dict[str, Any]) -> List[Dict[str, Any]]:
-        allowed_steps = {
+    def _get_allowed_steps(self) -> Dict[str, str]:
+        return {
             "get_load_catalog": "Read the available load catalog from the active PowerFactory project",
             "summarize_load_catalog": "Build a concise user-facing catalog answer",
             "interpret_instruction": "Interpret user input into structured PowerFactory load instruction",
@@ -141,6 +211,99 @@ class PowerFactoryDomainAgent:
             "summarize_pf_object_data_result": "Summarize the PowerFactory object data query result for the user",
             "unsupported_request": "Return a controlled message for unsupported PowerFactory intent",
         }
+
+    def _steps_to_plan(self, steps: List[str]) -> List[Dict[str, Any]]:
+        allowed_steps = self._get_allowed_steps()
+        return [
+            {"step": step, "description": allowed_steps[step]}
+            for step in steps
+            if step in allowed_steps
+        ]
+
+    def _get_step_dependencies(self) -> Dict[str, List[str]]:
+        return {
+            "get_load_catalog": [],
+            "summarize_load_catalog": ["catalog_result"],
+            "interpret_instruction": [],
+            "resolve_load": ["instruction"],
+            "execute_change_load": ["instruction"],
+            "summarize_powerfactory_result": ["execution"],
+            "build_topology_graph": [],
+            "build_topology_inventory": ["graph_result"],
+            "interpret_entity_instruction": ["inventory_result"],
+            "resolve_entity_from_inventory": ["entity_instruction", "inventory_result", "graph_result"],
+            "query_topology_neighbors": ["graph_result", "entity_resolution"],
+            "summarize_topology_result": ["topology_result"],
+            "interpret_switch_instruction": [],
+            "resolve_switch_from_inventory_llm": ["switch_instruction"],
+            "execute_switch_operation": ["switch_instruction", "switch_resolution"],
+            "summarize_switch_result": ["switch_execution"],
+            "build_data_inventory": [],
+            "interpret_data_query_instruction": ["data_inventory_result"],
+            "resolve_pf_object_from_inventory_llm": ["data_query_instruction", "data_inventory_result"],
+            "list_available_object_attributes": ["data_query_instruction", "data_object_resolution"],
+            "select_pf_object_attributes_llm": ["data_query_instruction", "data_object_resolution", "data_attribute_listing"],
+            "read_pf_object_attributes": ["data_query_instruction", "data_object_resolution"],
+            "summarize_pf_object_data_result": ["data_query_execution"],
+            "unsupported_request": [],
+        }
+
+    def _get_step_outputs(self) -> Dict[str, List[str]]:
+        return {
+            "get_load_catalog": ["catalog_result"],
+            "summarize_load_catalog": ["summary"],
+            "interpret_instruction": ["instruction"],
+            "resolve_load": ["resolution"],
+            "execute_change_load": ["execution"],
+            "summarize_powerfactory_result": ["summary"],
+            "build_topology_graph": ["graph_result"],
+            "build_topology_inventory": ["inventory_result"],
+            "interpret_entity_instruction": ["entity_instruction"],
+            "resolve_entity_from_inventory": ["entity_resolution"],
+            "query_topology_neighbors": ["topology_result"],
+            "summarize_topology_result": ["summary"],
+            "interpret_switch_instruction": ["switch_instruction"],
+            "resolve_switch_from_inventory_llm": ["switch_resolution"],
+            "execute_switch_operation": ["switch_execution"],
+            "summarize_switch_result": ["switch_summary", "summary"],
+            "build_data_inventory": ["data_inventory_result"],
+            "interpret_data_query_instruction": ["data_query_instruction"],
+            "resolve_pf_object_from_inventory_llm": ["data_object_resolution"],
+            "list_available_object_attributes": ["data_attribute_listing"],
+            "select_pf_object_attributes_llm": ["data_attribute_selection"],
+            "read_pf_object_attributes": ["data_query_execution"],
+            "summarize_pf_object_data_result": ["data_query_summary", "summary"],
+            "unsupported_request": [],
+        }
+
+    def _validate_step_sequence(self, steps: List[str]) -> bool:
+        allowed_steps = self._get_allowed_steps()
+        step_dependencies = self._get_step_dependencies()
+        step_outputs = self._get_step_outputs()
+
+        if not steps:
+            return False
+
+        if any(step not in allowed_steps for step in steps):
+            return False
+
+        if "unsupported_request" in steps and steps != ["unsupported_request"]:
+            return False
+
+        available_state = {"services"}
+
+        for step in steps:
+            required_state = step_dependencies.get(step, [])
+            if any(required_key not in available_state for required_key in required_state):
+                return False
+
+            for produced_key in step_outputs.get(step, []):
+                available_state.add(produced_key)
+
+        return True
+
+    def normalize_required_steps(self, classification: Dict[str, Any]) -> List[Dict[str, Any]]:
+        allowed_steps = self._get_allowed_steps()
 
         intent = classification.get("intent")
         safe_to_execute = classification.get("safe_to_execute", False)
@@ -190,8 +353,52 @@ class PowerFactoryDomainAgent:
 
         return [{"step": "unsupported_request", "description": allowed_steps["unsupported_request"]}]
 
+    def _get_classification_required_steps_plan(self, classification: Dict[str, Any]) -> List[Dict[str, Any]] | None:
+        raw_steps = classification.get("required_steps", []) if isinstance(classification, dict) else []
+        steps = [step for step in raw_steps if isinstance(step, str)]
+
+        if not steps:
+            return None
+
+        if not self._validate_step_sequence(steps):
+            return None
+
+        return self._steps_to_plan(steps)
+
+    def _build_flexible_fallback_plan(self, user_input: str, classification: Dict[str, Any]) -> List[Dict[str, Any]]:
+        try:
+            chain = self.build_flexible_plan_chain()
+            decision = chain.invoke({
+                "user_input": user_input,
+                "classification": classification,
+                "format_instructions": self.flexible_plan_parser.get_format_instructions(),
+            })
+            result = decision.dict() if hasattr(decision, "dict") else dict(decision)
+            steps = result.get("required_steps", []) if isinstance(result, dict) else []
+            steps = [step for step in steps if isinstance(step, str)]
+
+            if self._validate_step_sequence(steps):
+                return self._steps_to_plan(steps)
+        except Exception:
+            pass
+
+        return self._steps_to_plan(["unsupported_request"])
+
     def build_plan(self, user_input: str, classification: Dict[str, Any]) -> List[Dict[str, Any]]:
-        return self.normalize_required_steps(classification)
+        standard_plan = self.normalize_required_steps(classification)
+        standard_steps = [item["step"] for item in standard_plan]
+
+        if standard_steps != ["unsupported_request"]:
+            return standard_plan
+
+        classification_plan = self._get_classification_required_steps_plan(classification)
+        if classification_plan is not None:
+            return classification_plan
+
+        return self._build_flexible_fallback_plan(
+            user_input=user_input,
+            classification=classification,
+        )
 
     def summarize_load_catalog_result(self, catalog_result: Dict[str, Any]) -> Dict[str, Any]:
         loads = catalog_result.get("loads", [])
