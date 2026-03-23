@@ -44,6 +44,10 @@ class PowerFactoryToolSpec:
     capability_tags: List[str] = field(default_factory=list)
     mutating: bool = False
     handler: Callable[..., Dict[str, Any]] | None = None
+    requires_state: List[str] = field(default_factory=list)
+    produces_state: List[str] = field(default_factory=list)
+    is_summary: bool = False
+    domain_notes: List[str] = field(default_factory=list)
 
 
 class PowerFactoryToolRegistry:
@@ -56,6 +60,9 @@ class PowerFactoryToolRegistry:
                 output_schema_hint={"status": "ok|error", "tool": "get_load_catalog", "loads": "list[load-metadata]"},
                 capability_tags=["powerfactory", "read", "catalog", "load"],
                 mutating=False,
+                requires_state=[],
+                produces_state=["catalog_result"],
+                is_summary=False,
                 handler=self._tool_get_load_catalog,
             ),
             "interpret_instruction": PowerFactoryToolSpec(
@@ -69,6 +76,9 @@ class PowerFactoryToolRegistry:
                 output_schema_hint={"status": "ok|error", "tool": "interpret_instruction", "instruction": "dict"},
                 capability_tags=["powerfactory", "planning", "nlp", "load"],
                 mutating=False,
+                requires_state=[],
+                produces_state=["instruction"],
+                is_summary=False,
                 handler=self._tool_interpret_instruction,
             ),
             "resolve_load": PowerFactoryToolSpec(
@@ -82,6 +92,9 @@ class PowerFactoryToolRegistry:
                 output_schema_hint={"status": "ok|error", "tool": "resolve_load", "resolution": "dict"},
                 capability_tags=["powerfactory", "resolution", "load"],
                 mutating=False,
+                requires_state=["instruction"],
+                produces_state=["resolution"],
+                is_summary=False,
                 handler=self._tool_resolve_load,
             ),
             "execute_change_load": PowerFactoryToolSpec(
@@ -99,6 +112,9 @@ class PowerFactoryToolRegistry:
                 },
                 capability_tags=["powerfactory", "execution", "loadflow", "load"],
                 mutating=True,
+                requires_state=["instruction"],
+                produces_state=["execution"],
+                is_summary=False,
                 handler=self._tool_execute_change_load,
             ),
             "summarize_powerfactory_result": PowerFactoryToolSpec(
@@ -116,6 +132,9 @@ class PowerFactoryToolRegistry:
                 output_schema_hint={"status": "ok|error", "tool": "summarize_powerfactory_result", "answer": "string"},
                 capability_tags=["powerfactory", "summary", "result"],
                 mutating=False,
+                requires_state=["execution"],
+                produces_state=["summary"],
+                is_summary=True,
                 handler=self._tool_summarize_powerfactory_result,
             ),
             "build_topology_graph": PowerFactoryToolSpec(
@@ -136,6 +155,9 @@ class PowerFactoryToolRegistry:
                 },
                 capability_tags=["powerfactory", "topology", "graph", "read_only"],
                 mutating=False,
+                requires_state=[],
+                produces_state=["graph_result"],
+                is_summary=False,
                 handler=self._tool_build_topology_graph,
             ),
             "build_topology_inventory": PowerFactoryToolSpec(
@@ -149,6 +171,9 @@ class PowerFactoryToolRegistry:
                 output_schema_hint={"status": "ok|error", "tool": "build_topology_inventory", "inventory": "dict"},
                 capability_tags=["powerfactory", "topology", "inventory", "read_only"],
                 mutating=False,
+                requires_state=["graph_result"],
+                produces_state=["inventory_result"],
+                is_summary=False,
                 handler=self._tool_build_topology_inventory,
             ),
             "interpret_entity_instruction": PowerFactoryToolSpec(
@@ -166,6 +191,9 @@ class PowerFactoryToolRegistry:
                 output_schema_hint={"status": "ok|error", "tool": "interpret_entity_instruction", "instruction": "dict"},
                 capability_tags=["powerfactory", "planning", "nlp", "topology", "entity"],
                 mutating=False,
+                requires_state=["inventory_result"],
+                produces_state=["entity_instruction"],
+                is_summary=False,
                 handler=self._tool_interpret_entity_instruction,
             ),
             "resolve_entity_from_inventory": PowerFactoryToolSpec(
@@ -191,6 +219,9 @@ class PowerFactoryToolRegistry:
                 },
                 capability_tags=["powerfactory", "topology", "entity", "inventory", "resolution", "read_only"],
                 mutating=False,
+                requires_state=["entity_instruction", "inventory_result", "graph_result"],
+                produces_state=["entity_resolution"],
+                is_summary=False,
                 handler=self._tool_resolve_entity_from_inventory,
             ),
             "query_topology_neighbors": PowerFactoryToolSpec(
@@ -211,6 +242,9 @@ class PowerFactoryToolRegistry:
                 output_schema_hint={"status": "ok|error", "tool": "query_topology_neighbors", "selected_node": "dict", "neighbors": "list[dict]"},
                 capability_tags=["powerfactory", "topology", "neighbors", "read_only"],
                 mutating=False,
+                requires_state=["graph_result", "entity_resolution"],
+                produces_state=["topology_result"],
+                is_summary=False,
                 handler=self._tool_query_topology_neighbors,
             ),
             "interpret_switch_instruction": PowerFactoryToolSpec(
@@ -224,6 +258,9 @@ class PowerFactoryToolRegistry:
                 output_schema_hint={"status": "ok|error", "tool": "interpret_switch_instruction", "instruction": "dict"},
                 capability_tags=["powerfactory", "planning", "nlp", "switch"],
                 mutating=False,
+                requires_state=[],
+                produces_state=["switch_instruction"],
+                is_summary=False,
                 handler=self._tool_interpret_switch_instruction,
             ),
             "resolve_switch_from_inventory_llm": PowerFactoryToolSpec(
@@ -243,6 +280,9 @@ class PowerFactoryToolRegistry:
                 },
                 capability_tags=["powerfactory", "switch", "llm_match", "resolution", "read_only"],
                 mutating=False,
+                requires_state=["switch_instruction"],
+                produces_state=["switch_resolution"],
+                is_summary=False,
                 handler=self._tool_resolve_switch_from_inventory_llm,
             ),
             "execute_switch_operation": PowerFactoryToolSpec(
@@ -268,6 +308,9 @@ class PowerFactoryToolRegistry:
                 },
                 capability_tags=["powerfactory", "execution", "switch", "topology"],
                 mutating=True,
+                requires_state=["switch_instruction", "switch_resolution"],
+                produces_state=["switch_execution"],
+                is_summary=False,
                 handler=self._tool_execute_switch_operation,
             ),
             "summarize_switch_result": PowerFactoryToolSpec(
@@ -285,9 +328,11 @@ class PowerFactoryToolRegistry:
                 output_schema_hint={"status": "ok|error", "tool": "summarize_switch_result", "answer": "string"},
                 capability_tags=["powerfactory", "summary", "switch"],
                 mutating=False,
+                requires_state=["switch_execution"],
+                produces_state=["switch_summary", "summary"],
+                is_summary=True,
                 handler=self._tool_summarize_switch_result,
             ),
-
             "summarize_load_catalog": PowerFactoryToolSpec(
                 name="summarize_load_catalog",
                 description="Build a concise user-facing catalog answer.",
@@ -299,6 +344,9 @@ class PowerFactoryToolRegistry:
                 output_schema_hint={"status": "ok|error", "tool": "summarize_load_catalog", "answer": "string"},
                 capability_tags=["powerfactory", "summary", "catalog"],
                 mutating=False,
+                requires_state=["catalog_result"],
+                produces_state=["summary"],
+                is_summary=True,
                 handler=self._tool_summarize_load_catalog,
             ),
             "summarize_topology_result": PowerFactoryToolSpec(
@@ -319,6 +367,9 @@ class PowerFactoryToolRegistry:
                 output_schema_hint={"status": "ok|error", "tool": "summarize_topology_result", "answer": "string"},
                 capability_tags=["powerfactory", "summary", "topology"],
                 mutating=False,
+                requires_state=["topology_result"],
+                produces_state=["summary"],
+                is_summary=True,
                 handler=self._tool_summarize_topology_result,
             ),
             "unsupported_request": PowerFactoryToolSpec(
@@ -336,6 +387,9 @@ class PowerFactoryToolRegistry:
                 output_schema_hint={"status": "error", "tool": "powerfactory", "answer": "string"},
                 capability_tags=["powerfactory", "control"],
                 mutating=False,
+                requires_state=[],
+                produces_state=[],
+                is_summary=False,
                 handler=self._tool_unsupported_request,
             ),
             "build_data_inventory": PowerFactoryToolSpec(
@@ -349,6 +403,9 @@ class PowerFactoryToolRegistry:
                 output_schema_hint={"status": "ok|error", "tool": "build_data_inventory", "inventory": "dict"},
                 capability_tags=["powerfactory", "data_query", "inventory", "read_only"],
                 mutating=False,
+                requires_state=[],
+                produces_state=["data_inventory_result"],
+                is_summary=False,
                 handler=self._tool_build_data_inventory,
             ),
             "interpret_data_query_instruction": PowerFactoryToolSpec(
@@ -366,6 +423,9 @@ class PowerFactoryToolRegistry:
                 output_schema_hint={"status": "ok|error", "tool": "interpret_data_query_instruction", "instruction": "dict"},
                 capability_tags=["powerfactory", "data_query", "planning", "llm"],
                 mutating=False,
+                requires_state=["data_inventory_result"],
+                produces_state=["data_query_instruction"],
+                is_summary=False,
                 handler=self._tool_interpret_data_query_instruction,
             ),
             "resolve_pf_object_from_inventory_llm": PowerFactoryToolSpec(
@@ -383,6 +443,9 @@ class PowerFactoryToolRegistry:
                 output_schema_hint={"status": "ok|error", "tool": "resolve_pf_object_from_inventory_llm", "selected_match": "dict"},
                 capability_tags=["powerfactory", "data_query", "resolution", "llm_match", "read_only"],
                 mutating=False,
+                requires_state=["data_query_instruction", "data_inventory_result"],
+                produces_state=["data_object_resolution"],
+                is_summary=False,
                 handler=self._tool_resolve_pf_object_from_inventory_llm,
             ),
             "list_available_object_attributes": PowerFactoryToolSpec(
@@ -400,6 +463,9 @@ class PowerFactoryToolRegistry:
                 output_schema_hint={"status": "ok|error", "tool": "list_available_object_attributes", "attribute_options": "list"},
                 capability_tags=["powerfactory", "data_query", "attributes", "read_only"],
                 mutating=False,
+                requires_state=["data_query_instruction", "data_object_resolution"],
+                produces_state=["data_attribute_listing"],
+                is_summary=False,
                 handler=self._tool_list_available_object_attributes,
             ),
             "select_pf_object_attributes_llm": PowerFactoryToolSpec(
@@ -418,6 +484,9 @@ class PowerFactoryToolRegistry:
                 output_schema_hint={"status": "ok|error", "tool": "select_pf_object_attributes_llm", "selected_attribute_handles": "list"},
                 capability_tags=["powerfactory", "data_query", "attributes", "llm_match", "read_only"],
                 mutating=False,
+                requires_state=["data_query_instruction", "data_object_resolution", "data_attribute_listing"],
+                produces_state=["data_attribute_selection"],
+                is_summary=False,
                 handler=self._tool_select_pf_object_attributes_llm,
             ),
             "read_pf_object_attributes": PowerFactoryToolSpec(
@@ -435,6 +504,10 @@ class PowerFactoryToolRegistry:
                 output_schema_hint={"status": "ok|error", "tool": "read_pf_object_attributes", "data": "dict"},
                 capability_tags=["powerfactory", "data_query", "read_only"],
                 mutating=False,
+                requires_state=["data_query_instruction", "data_object_resolution", "data_attribute_selection"],
+                produces_state=["data_query_execution"],
+                is_summary=False,
+                domain_notes=["Do not use this step before attribute selection is available."],
                 handler=self._tool_read_pf_object_attributes,
             ),
             "summarize_pf_object_data_result": PowerFactoryToolSpec(
@@ -452,6 +525,9 @@ class PowerFactoryToolRegistry:
                 output_schema_hint={"status": "ok|error", "tool": "summarize_pf_object_data_result", "answer": "string"},
                 capability_tags=["powerfactory", "data_query", "summary"],
                 mutating=False,
+                requires_state=["data_query_execution"],
+                produces_state=["data_query_summary", "summary"],
+                is_summary=True,
                 handler=self._tool_summarize_pf_object_data_result,
             ),
         }
@@ -465,6 +541,19 @@ class PowerFactoryToolRegistry:
     def get_tool_spec(self, step_name: str) -> PowerFactoryToolSpec | None:
         return self._registry.get(step_name)
 
+    def get_step_contracts(self) -> Dict[str, Dict[str, Any]]:
+        contracts: Dict[str, Dict[str, Any]] = {}
+        for step_name, spec in self._registry.items():
+            contracts[step_name] = {
+                "description": spec.description,
+                "requires_state": list(spec.requires_state),
+                "produces_state": list(spec.produces_state),
+                "mutating": spec.mutating,
+                "is_summary": spec.is_summary,
+                "domain_notes": list(spec.domain_notes),
+            }
+        return contracts
+
     def list_tool_specs(self) -> List[Dict[str, Any]]:
         items: List[Dict[str, Any]] = []
         for name in self.list_tools():
@@ -476,6 +565,10 @@ class PowerFactoryToolRegistry:
                 "output_schema_hint": spec.output_schema_hint,
                 "capability_tags": spec.capability_tags,
                 "mutating": spec.mutating,
+                "requires_state": spec.requires_state,
+                "produces_state": spec.produces_state,
+                "is_summary": spec.is_summary,
+                "domain_notes": spec.domain_notes,
             })
         return items
 
