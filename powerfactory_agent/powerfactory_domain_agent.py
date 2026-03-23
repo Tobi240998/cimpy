@@ -70,13 +70,15 @@ class PFCompositeDecomposition(BaseModel):
 
 
 class PowerFactoryDomainAgent:
-    def __init__(self, project_name: str = DEFAULT_PROJECT_NAME):
+    def __init__(self, project_name: str = DEFAULT_PROJECT_NAME, debug_mode: bool = True):
         self.project_name = project_name
+        self.debug_mode = debug_mode
         self.llm = get_llm()
         self.registry = PowerFactoryToolRegistry()
         self.planner_parser = PydanticOutputParser(pydantic_object=PFPlannerDecision)
         self.flexible_plan_parser = PydanticOutputParser(pydantic_object=PFFlexiblePlanDecision)
         self.decomposition_parser = PydanticOutputParser(pydantic_object=PFCompositeDecomposition)
+        self._last_planning_debug: Dict[str, Any] = {}
 
         self.planner_prompt = ChatPromptTemplate.from_messages([
             (
@@ -199,6 +201,19 @@ class PowerFactoryDomainAgent:
 
     def build_decomposition_chain(self):
         return self.decomposition_prompt | self.llm | self.decomposition_parser
+
+    def _reset_planning_debug(self) -> None:
+        self._last_planning_debug = {
+            "debug_mode": self.debug_mode,
+            "project_name": self.project_name,
+            "initial_classification": None,
+            "decomposition": None,
+            "subrequests": [],
+            "plan_source": None,
+            "final_plan_steps": [],
+            "standard_plan_steps": [],
+            "classification_plan_steps": [],
+        }
 
     def classify_request(self, user_input: str) -> Dict[str, Any]:
         try:
@@ -562,6 +577,11 @@ class PowerFactoryDomainAgent:
         steps = [item["step"] for item in plan]
         return steps != ["unsupported_request"]
 
+    def _is_prefix_plan(self, prefix_steps: List[str], candidate_steps: List[str]) -> bool:
+        if len(candidate_steps) < len(prefix_steps):
+            return False
+        return candidate_steps[:len(prefix_steps)] == prefix_steps
+
     def _deduplicate_composite_steps(self, steps: List[str]) -> List[str]:
         if not steps:
             return steps
@@ -574,33 +594,58 @@ class PowerFactoryDomainAgent:
 
         return deduplicated
 
-    def _build_nonstandard_subplan(self, user_input: str, classification: Dict[str, Any]) -> List[Dict[str, Any]]:
+    def _build_nonstandard_subplan(self, user_input: str, classification: Dict[str, Any]) -> tuple[List[Dict[str, Any]], str]:
         classification_plan = self._get_classification_required_steps_plan(classification)
         if classification_plan is not None:
-            return classification_plan
+            return classification_plan, "classification_required_steps"
 
         return self._build_flexible_fallback_plan(
             user_input=user_input,
             classification=classification,
-        )
+        ), "flexible_fallback"
 
-    def _build_subplan_for_request(self, user_input: str) -> List[Dict[str, Any]]:
+    def _build_subplan_for_request(self, user_input: str) -> Dict[str, Any]:
         classification = self.classify_request(user_input)
 
         standard_plan = self.normalize_required_steps(classification)
         if self._is_standard_plan(standard_plan):
-            return standard_plan
+            classification_plan = self._get_classification_required_steps_plan(classification)
+            standard_steps = [item["step"] for item in standard_plan]
+            classification_steps = [item["step"] for item in classification_plan] if classification_plan is not None else []
 
-        return self._build_nonstandard_subplan(
+            if classification_plan is not None and len(classification_steps) > len(standard_steps) and self._is_prefix_plan(standard_steps, classification_steps):
+                return {
+                    "user_input": user_input,
+                    "classification": classification,
+                    "plan": classification_plan,
+                    "plan_source": "extended_standard_from_classification_subplan",
+                }
+
+            return {
+                "user_input": user_input,
+                "classification": classification,
+                "plan": standard_plan,
+                "plan_source": "standard_subplan",
+            }
+
+        nonstandard_plan, plan_source = self._build_nonstandard_subplan(
             user_input=user_input,
             classification=classification,
         )
+        return {
+            "user_input": user_input,
+            "classification": classification,
+            "plan": nonstandard_plan,
+            "plan_source": plan_source,
+        }
 
     def _build_composite_plan(self, user_input: str, classification: Dict[str, Any]) -> List[Dict[str, Any]] | None:
         decomposition = self._decompose_request(
             user_input=user_input,
             classification=classification,
         )
+
+        self._last_planning_debug["decomposition"] = decomposition
 
         if decomposition.get("status") != "ok":
             return None
@@ -609,23 +654,31 @@ class PowerFactoryDomainAgent:
             return None
 
         raw_subrequests = decomposition.get("subrequests", [])
-        subrequests = []
+        subrequest_texts = []
 
         for item in raw_subrequests:
             if not isinstance(item, dict):
                 continue
             subrequest_text = item.get("user_input", "")
             if isinstance(subrequest_text, str) and subrequest_text.strip():
-                subrequests.append(subrequest_text.strip())
+                subrequest_texts.append(subrequest_text.strip())
 
-        if len(subrequests) < 2:
+        if len(subrequest_texts) < 2:
             return None
 
         composite_steps: List[str] = []
 
-        for subrequest in subrequests:
-            subplan = self._build_subplan_for_request(subrequest)
-            substeps = [item["step"] for item in subplan]
+        for subrequest in subrequest_texts:
+            subrequest_debug = self._build_subplan_for_request(subrequest)
+            self._last_planning_debug["subrequests"].append({
+                "user_input": subrequest_debug["user_input"],
+                "classification": subrequest_debug["classification"],
+                "plan_source": subrequest_debug["plan_source"],
+                "plan": subrequest_debug["plan"],
+                "plan_steps": [item["step"] for item in subrequest_debug["plan"]],
+            })
+
+            substeps = [item["step"] for item in subrequest_debug["plan"]]
 
             if substeps == ["unsupported_request"]:
                 return None
@@ -644,11 +697,27 @@ class PowerFactoryDomainAgent:
         return None
 
     def build_plan(self, user_input: str, classification: Dict[str, Any]) -> List[Dict[str, Any]]:
+        self._reset_planning_debug()
+        self._last_planning_debug["initial_classification"] = classification
+
         standard_plan = self.normalize_required_steps(classification)
         standard_steps = [item["step"] for item in standard_plan]
+        self._last_planning_debug["standard_plan_steps"] = standard_steps
 
-        # Standardfälle bleiben deterministisch und haben immer Vorrang
+        classification_plan = self._get_classification_required_steps_plan(classification)
+        classification_steps = [item["step"] for item in classification_plan] if classification_plan is not None else []
+        self._last_planning_debug["classification_plan_steps"] = classification_steps
+
+        # Standardfälle bleiben deterministisch, außer das LLM liefert einen größeren validen Plan,
+        # der mit dem deterministischen Standardplan beginnt.
         if standard_steps != ["unsupported_request"]:
+            if classification_plan is not None and len(classification_steps) > len(standard_steps) and self._is_prefix_plan(standard_steps, classification_steps):
+                self._last_planning_debug["plan_source"] = "extended_standard_from_classification"
+                self._last_planning_debug["final_plan_steps"] = classification_steps
+                return classification_plan
+
+            self._last_planning_debug["plan_source"] = "standard"
+            self._last_planning_debug["final_plan_steps"] = standard_steps
             return standard_plan
 
         composite_plan = self._build_composite_plan(
@@ -656,16 +725,22 @@ class PowerFactoryDomainAgent:
             classification=classification,
         )
         if composite_plan is not None:
+            self._last_planning_debug["plan_source"] = "composite_llm"
+            self._last_planning_debug["final_plan_steps"] = [item["step"] for item in composite_plan]
             return composite_plan
 
-        classification_plan = self._get_classification_required_steps_plan(classification)
         if classification_plan is not None:
+            self._last_planning_debug["plan_source"] = "classification_required_steps"
+            self._last_planning_debug["final_plan_steps"] = classification_steps
             return classification_plan
 
-        return self._build_flexible_fallback_plan(
+        fallback_plan = self._build_flexible_fallback_plan(
             user_input=user_input,
             classification=classification,
         )
+        self._last_planning_debug["plan_source"] = "flexible_fallback"
+        self._last_planning_debug["final_plan_steps"] = [item["step"] for item in fallback_plan]
+        return fallback_plan
 
     def summarize_load_catalog_result(self, catalog_result: Dict[str, Any]) -> Dict[str, Any]:
         loads = catalog_result.get("loads", [])
@@ -815,6 +890,47 @@ class PowerFactoryDomainAgent:
             "plan_steps": [item.get("step") for item in plan if isinstance(item, dict)],
             "parts": valid_summaries,
         }
+
+    def _simplify_debug_value(self, value: Any) -> Any:
+        if isinstance(value, (str, int, float, bool)) or value is None:
+            return value
+
+        if isinstance(value, list):
+            if len(value) > 10:
+                return {
+                    "type": "list",
+                    "length": len(value),
+                    "preview": [self._simplify_debug_value(item) for item in value[:5]],
+                }
+            return [self._simplify_debug_value(item) for item in value]
+
+        if isinstance(value, dict):
+            simplified: Dict[str, Any] = {}
+            for key, item in value.items():
+                if key in {"services", "app", "project", "study_case_obj", "project_obj", "pf"}:
+                    simplified[key] = "<omitted>"
+                else:
+                    simplified[key] = self._simplify_debug_value(item)
+            return simplified
+
+        return repr(value)
+
+    def _build_tool_kwargs_debug(self, tool_kwargs: Dict[str, Any]) -> Dict[str, Any]:
+        debug_kwargs: Dict[str, Any] = {}
+
+        for key, value in tool_kwargs.items():
+            if key == "services":
+                if isinstance(value, dict):
+                    debug_kwargs[key] = {
+                        "status": value.get("status"),
+                        "project_name": value.get("project_name"),
+                    }
+                else:
+                    debug_kwargs[key] = "<services>"
+            else:
+                debug_kwargs[key] = self._simplify_debug_value(value)
+
+        return debug_kwargs
 
     def _build_tool_kwargs(
         self,
@@ -1008,6 +1124,7 @@ class PowerFactoryDomainAgent:
                     "capability_tags": tool_spec.capability_tags if tool_spec else [],
                     "mutating": tool_spec.mutating if tool_spec else False,
                 },
+                "tool_kwargs": self._build_tool_kwargs_debug(tool_kwargs),
                 "result": result,
             })
 
@@ -1090,7 +1207,7 @@ class PowerFactoryDomainAgent:
         answer = final_summary.get("answer", "") if isinstance(final_summary, dict) else ""
         messages = final_summary.get("messages", []) if isinstance(final_summary, dict) else []
 
-        return {
+        result = {
             "status": "ok",
             "tool": "powerfactory",
             "agent": "PowerFactoryDomainAgent",
@@ -1135,7 +1252,11 @@ class PowerFactoryDomainAgent:
                 "execution": data_query_execution,
                 "summary": data_query_summary,
             },
-            "debug": {
+        }
+
+        if self.debug_mode:
+            result["debug"] = {
+                "planning": self._last_planning_debug,
                 "resolution": resolution,
                 "execution": execution,
                 "summary": final_summary,
@@ -1156,31 +1277,77 @@ class PowerFactoryDomainAgent:
                 "data_attribute_selection": data_attribute_selection,
                 "data_query_execution": data_query_execution,
                 "data_query_summary": data_query_summary,
+                "selected_equipment": {
+                    "resolved_load": execution.get("resolved_load") if isinstance(execution, dict) else None,
+                    "entity_resolution": entity_resolution,
+                    "switch_resolution": switch_resolution,
+                    "data_object_resolution": data_object_resolution,
+                },
                 "trace": debug_trace,
-            },
-        }
+            }
+
+        return result
 
     def build_error_result(self, error_result: Dict[str, Any], debug_trace: List[Dict[str, Any]]) -> Dict[str, Any]:
         result = dict(error_result)
         result["agent"] = "PowerFactoryDomainAgent"
         result["available_tools"] = self.get_available_tools()
-        result["debug"] = {"trace": debug_trace}
+        if self.debug_mode:
+            result["debug"] = {
+                "planning": self._last_planning_debug,
+                "trace": debug_trace,
+            }
+        else:
+            result["debug"] = {"trace": debug_trace}
         return result
 
     def run(self, user_input: str) -> Dict[str, Any]:
+        print("\n================ DEBUG START ================")
+        print(f"[INPUT] {user_input}")
+
         services = build_powerfactory_services(project_name=self.project_name)
         if services["status"] != "ok":
+            print("[ERROR] Services konnten nicht gebaut werden")
             return services
 
         classification = self.classify_request(user_input)
+        print("\n[CLASSIFICATION]")
+        print(classification)
+
         plan = self.build_plan(user_input=user_input, classification=classification)
 
-        return self.execute_plan(
+        print("\n[PLAN SOURCE]")
+        print(self._last_planning_debug.get("plan_source"))
+
+        print("\n[STANDARD PLAN STEPS]")
+        print(self._last_planning_debug.get("standard_plan_steps"))
+
+        print("\n[CLASSIFICATION PLAN STEPS]")
+        print(self._last_planning_debug.get("classification_plan_steps"))
+
+        print("\n[DECOMPOSITION]")
+        print(self._last_planning_debug.get("decomposition"))
+
+        print("\n[SUBREQUESTS]")
+        for sub in self._last_planning_debug.get("subrequests", []):
+            print(sub)
+
+        print("\n[FINAL PLAN]")
+        print(self._last_planning_debug.get("final_plan_steps"))
+
+        result = self.execute_plan(
             services=services,
             plan=plan,
             user_input=user_input,
             classification=classification,
         )
+
+        print("\n[FINAL RESULT ANSWER]")
+        print(result.get("answer"))
+
+        print("================ DEBUG END =================\n")
+
+        return result
 
     def get_load_catalog(self) -> Dict[str, Any]:
         services = build_powerfactory_services(project_name=self.project_name)
