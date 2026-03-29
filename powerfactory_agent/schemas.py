@@ -19,4 +19,7 @@ class DataQueryInstruction(BaseModel):
     entity_type: str
     entity_name_raw: str
     attribute_request_text: str = ""
+    requested_attribute_names: List[str] = Field(default_factory=list)
+    data_source_preference: Literal["base", "result"] = "base"
+    data_source_note: str = ""
     selected_attribute_handles: List[str] = Field(default_factory=list)

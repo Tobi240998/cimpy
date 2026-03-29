@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import subprocess
+import re
 from typing import Any, Dict, List, Optional, Tuple
 
 from pydantic import BaseModel, Field
@@ -2021,17 +2022,45 @@ def _build_data_inventory_from_services(services: Dict[str, Any]) -> Dict[str, A
 # ------------------------------------------------------------------
 PF_DATA_FIELD_LIBRARY: Dict[str, Dict[str, Dict[str, Any]]] = {
     'bus': {
-        'voltage_ll': {
-            'aliases': ['leiter leiter spannung', 'leiter-leiter-spannung', 'spannung ll', 'line to line voltage', 'voltage ll'],
-            'attr_candidates': ['m:ul', 'm:Ul', 'm:u1l', 'm:U1l'],
+        'nominal_voltage': {
+            'aliases': ['spannung', 'basisdaten spannung', 'nennspannung', 'bus spannung', 'spannung basisdaten', 'nominal voltage'],
+            'attr_candidates': ['uknom'],
             'unit': 'kV',
+            'requires_loadflow': False,
+            'label': 'Nennspannung',
+        },
+        'voltage_setpoint': {
+            'aliases': ['spannungssollwert', 'sollspannung', 'u soll', 'usetp', 'setpoint voltage'],
+            'attr_candidates': ['usetp', 'u0', 'uset'],
+            'unit': 'p.u.',
+            'requires_loadflow': False,
+            'label': 'Spannungssollwert',
+        },
+        'voltage_upper_limit': {
+            'aliases': ['obere spannungsgrenze', 'spannungsobergrenze', 'u max', 'umax', 'upper voltage limit', 'maximum voltage limit'],
+            'attr_candidates': ['umax', 'u_max', 'vmax'],
+            'unit': 'p.u.',
+            'requires_loadflow': False,
+            'label': 'Obere Spannungsgrenze',
+        },
+        'voltage_lower_limit': {
+            'aliases': ['untere spannungsgrenze', 'spannungsuntergrenze', 'u min', 'umin', 'lower voltage limit', 'minimum voltage limit'],
+            'attr_candidates': ['umin', 'u_min', 'vmin'],
+            'unit': 'p.u.',
+            'requires_loadflow': False,
+            'label': 'Untere Spannungsgrenze',
+        },
+        'voltage_ll': {
+            'aliases': ['leiter leiter spannung', 'leiter-leiter-spannung', 'spannung ll', 'line to line voltage', 'voltage ll', 'spannung nach lastfluss', 'lastfluss spannung'],
+            'attr_candidates': ['m:ul', 'm:Ul', 'm:u1l', 'm:U1l'],
+            'unit': 'p.u.',
             'requires_loadflow': True,
             'label': 'Leiter-Leiter-Spannung',
         },
         'voltage_ln': {
             'aliases': ['leiter erde spannung', 'leiter-erde-spannung', 'spannung gegen erde', 'phase to ground voltage', 'voltage ln'],
             'attr_candidates': ['m:u', 'm:U', 'm:u1', 'm:U1'],
-            'unit': 'kV',
+            'unit': 'p.u.',
             'requires_loadflow': True,
             'label': 'Leiter-Erde-Spannung',
         },
@@ -2227,10 +2256,30 @@ def _build_data_field_catalog(entity_type: str) -> List[Dict[str, Any]]:
 # ------------------------------------------------------------------
 # RAW ATTRIBUTE CANDIDATE CATALOG FOR ATTRIBUTE LISTING
 # ------------------------------------------------------------------
+PF_ATTRIBUTE_UNIT_OVERRIDES: Dict[str, str] = {
+    'uknom': 'kV',
+    'usetp': 'p.u.',
+    'u0': 'p.u.',
+    'umax': 'p.u.',
+    'umin': 'p.u.',
+    'm:u': 'p.u.',
+    'm:ul': 'p.u.',
+    'm:u1': 'p.u.',
+    'm:u1l': 'p.u.',
+    'm:U': 'kV',
+    'm:Ul': 'kV',
+    'm:U1': 'kV',
+    'm:U1l': 'kV',
+    'c:u': 'p.u.',
+    'c:ul': 'p.u.',
+    'c:U': 'kV',
+    'c:Ul': 'kV',
+}
+
 PF_RAW_ATTRIBUTE_CATALOG: Dict[str, List[str]] = {
     'bus': [
         'm:u', 'm:ul', 'm:U', 'm:Ul', 'm:Psum', 'm:Qsum', 'm:Psum:bus1', 'm:Qsum:bus1',
-        'phtech', 'uknom', 'outserv', 'cpGrid', 'iUsage', 'loc_name'
+        'phtech', 'uknom', 'usetp', 'u0', 'umax', 'umin', 'outserv', 'cpGrid', 'iUsage', 'loc_name'
     ],
     'line': [
         'c:loading', 'm:loading', 'c:loading1', 'm:loading1', 'loading', 'Loading', 'c:loadingmax',
@@ -2376,14 +2425,90 @@ def _fallback_select_attribute_handles(user_input: str, attribute_options: List[
     return result[:10]
 
 
-def _semantic_request_likely_needs_loadflow(user_input: str) -> bool:
+def _infer_data_source_preference(user_input: str) -> str:
     text = _safe_lower(user_input)
-    tokens = ['auslastung', 'loading', 'spannung', 'voltage', 'wirkleistung', 'blindleistung', 'strom', 'current', 'lastfluss', 'load flow']
+    result_tokens = [
+        'nach dem lastfluss', 'nach lastfluss', 'im lastfluss', 'aus dem lastfluss',
+        'lastfluss', 'load flow', 'loadflow', 'ergebnis', 'ergebnisse', 'resultat', 'berechnet', 'aktuell',
+    ]
+    if any(token in text for token in result_tokens):
+        return 'result'
+    return 'base'
+
+
+def _semantic_request_likely_needs_loadflow(user_input: str, source_preference: str = 'base') -> bool:
+    if source_preference == 'result':
+        return True
+    text = _safe_lower(user_input)
+    tokens = ['nach dem lastfluss', 'nach lastfluss', 'im lastfluss', 'aus dem lastfluss', 'load flow', 'loadflow', 'ergebnis', 'resultat']
     return any(token in text for token in tokens)
 
 
 def _normalize_attr_option_label(attr_name: str) -> str:
     return attr_name.replace(':', ' : ')
+
+
+def _infer_data_source_from_attr_name(attr_name: str) -> str:
+    text = _safe_lower(attr_name)
+    if text.startswith('m:') or text.startswith('c:'):
+        return 'result'
+    return 'base'
+
+
+def _attribute_name_likely_requires_loadflow(attr_name: Optional[str]) -> bool:
+    if not attr_name:
+        return False
+    return _infer_data_source_from_attr_name(attr_name) == 'result'
+
+
+def _extract_explicit_attribute_names(user_input: str) -> List[str]:
+    text = user_input or ''
+    result: List[str] = []
+    seen = set()
+
+    patterns = [
+        r'`([^`]+)`',
+        r'"([^"]+)"',
+        r"'([^']+)'",
+        r'\b(?:m|c):[A-Za-z0-9_:.]+\b',
+        r'\b[A-Za-z][A-Za-z0-9_]*:[A-Za-z0-9_:.]+\b',
+        r'\b[A-Za-z][A-Za-z0-9_]*\b',
+    ]
+
+    for pattern in patterns:
+        for match in re.findall(pattern, text):
+            candidate = (match or '').strip()
+            if not candidate:
+                continue
+            if pattern == r'\b[A-Za-z][A-Za-z0-9_]*\b':
+                if not any(ch.isupper() for ch in candidate) and ':' not in candidate:
+                    continue
+            if candidate not in seen:
+                seen.add(candidate)
+                result.append(candidate)
+
+    return result[:20]
+
+
+def _infer_unit_from_attribute_name(attr_name: Optional[str], default_unit: Optional[str] = None) -> Optional[str]:
+    if not attr_name:
+        return default_unit
+    if attr_name in PF_ATTRIBUTE_UNIT_OVERRIDES:
+        return PF_ATTRIBUTE_UNIT_OVERRIDES[attr_name]
+    if re.search(r'(^|:)u[a-z0-9_]*$', attr_name):
+        return 'p.u.'
+    if re.search(r'(^|:)U[a-zA-Z0-9_]*$', attr_name):
+        return 'kV'
+    return default_unit
+
+
+def _attribute_option_matches_source_preference(item: Dict[str, Any], source_preference: str) -> bool:
+    if source_preference not in {'base', 'result'}:
+        return True
+    item_source = item.get('data_source')
+    if not item_source:
+        return True
+    return item_source == source_preference
 
 
 def _probe_raw_attribute_handle(obj: Any, attr_name: str) -> Dict[str, Any]:
@@ -2418,11 +2543,113 @@ def _list_readable_raw_attributes(obj: Any, entity_type: str) -> List[Dict[str, 
             'label': _normalize_attr_option_label(attr_name),
             'attribute_name': attr_name,
             'sample_value': display_value,
-            'unit': None,
-            'requires_loadflow': False,
+            'unit': _infer_unit_from_attribute_name(attr_name),
+            'requires_loadflow': _attribute_name_likely_requires_loadflow(attr_name),
+            'data_source': _infer_data_source_from_attr_name(attr_name),
         })
     options.sort(key=lambda item: str(item.get('attribute_name') or ''))
     return options
+
+
+
+
+def _discover_object_attribute_names(obj: Any) -> List[str]:
+    names: List[str] = []
+    seen = set()
+
+    def _add(name: Any) -> None:
+        if not name:
+            return
+        try:
+            name_str = str(name).strip()
+        except Exception:
+            return
+        if not name_str or name_str.startswith('_') or name_str in seen:
+            return
+        seen.add(name_str)
+        names.append(name_str)
+
+    for method_name in ['GetAttributeList', 'GetAttributeNames', 'GetVariableList', 'GetVarList']:
+        method = getattr(obj, method_name, None)
+        if not callable(method):
+            continue
+        for args in [(), ('*',), (0,), (1,)]:
+            try:
+                result = method(*args)
+            except Exception:
+                continue
+            for item in _to_py_list(result):
+                _add(item)
+
+    try:
+        for name in dir(obj):
+            if name.startswith('_'):
+                continue
+            try:
+                value = getattr(obj, name)
+            except Exception:
+                value = None
+            if callable(value):
+                continue
+            _add(name)
+    except Exception:
+        pass
+
+    return names
+
+
+def _build_dynamic_attr_candidates_for_field(obj: Any, field_name: str, meta: Dict[str, Any]) -> List[str]:
+    discovered = _discover_object_attribute_names(obj)
+    if not discovered:
+        return []
+
+    preferred: List[str] = []
+    seen = set()
+
+    explicit = [str(x).strip() for x in meta.get('attr_candidates', []) or [] if str(x).strip()]
+    alias_tokens: List[str] = []
+    for raw in [field_name, meta.get('label')] + list(meta.get('aliases', []) or []) + explicit:
+        for token in _tokenize(str(raw or '')):
+            if len(token) >= 2:
+                alias_tokens.append(token)
+
+    special_token_map = {
+        'voltage_upper_limit': ['umax', 'upper', 'max', 'limit', 'voltage'],
+        'voltage_lower_limit': ['umin', 'lower', 'min', 'limit', 'voltage'],
+        'voltage_setpoint': ['usetp', 'uset', 'setpoint', 'soll', 'voltage'],
+    }
+    alias_tokens.extend(special_token_map.get(field_name, []))
+    alias_tokens = list(dict.fromkeys(alias_tokens))
+
+    def _add(name: str) -> None:
+        if name and name not in seen:
+            seen.add(name)
+            preferred.append(name)
+
+    for candidate in explicit:
+        for name in discovered:
+            if name == candidate:
+                _add(name)
+
+    for name in discovered:
+        lower_name = _safe_lower(name)
+        if any(token and token == lower_name for token in explicit):
+            _add(name)
+            continue
+        if any(token and token in lower_name for token in alias_tokens):
+            _add(name)
+
+    return preferred[:50]
+
+
+def _read_field_with_dynamic_attr_fallback(obj: Any, field_name: str, meta: Dict[str, Any]) -> Dict[str, Any]:
+    dynamic_candidates = _build_dynamic_attr_candidates_for_field(obj, field_name, meta)
+    if not dynamic_candidates:
+        return {'status': 'error', 'error': 'no_dynamic_attr_candidates'}
+    read_result = _read_pf_attribute_candidates(obj, dynamic_candidates)
+    if read_result.get('status') == 'ok':
+        read_result['dynamic_candidates'] = dynamic_candidates
+    return read_result
 
 
 def _build_semantic_field_options(entity_type: str) -> List[Dict[str, Any]]:
@@ -2438,6 +2665,7 @@ def _build_semantic_field_options(entity_type: str) -> List[Dict[str, Any]]:
             'special_reader': meta.get('special_reader'),
             'unit': meta.get('unit'),
             'requires_loadflow': bool(meta.get('requires_loadflow', False)),
+            'data_source': 'result' if bool(meta.get('requires_loadflow', False)) else 'base',
         })
     options.sort(key=lambda item: str(item.get('field_name') or ''))
     return options
@@ -2453,7 +2681,10 @@ def _format_attribute_options_for_prompt(attribute_options: List[Dict[str, Any]]
         sample_value = item.get('sample_value')
         aliases = item.get('aliases', []) or []
         candidate_attrs = item.get('candidate_attrs', []) or []
+        data_source = item.get('data_source')
         details: List[str] = [f'kind={kind}']
+        if data_source:
+            details.append(f'data_source={data_source}')
         if unit:
             details.append(f'unit={unit}')
         if aliases:
@@ -2516,6 +2747,10 @@ def _interpret_data_query_instruction_with_services(
     if not selected_entity_type:
         missing_context.append('entity_type')
 
+    requested_attribute_names = _extract_explicit_attribute_names(user_input)
+    data_source_preference = _infer_data_source_preference(user_input)
+    data_source_note = 'Basisdaten werden standardmäßig verwendet.' if data_source_preference == 'base' else 'Lastflussergebnisse wurden explizit angefordert.'
+
     instruction = {
         'query_type': 'element_data',
         'entity_type': selected_entity_type,
@@ -2523,6 +2758,9 @@ def _interpret_data_query_instruction_with_services(
         'entity_name_candidates': _build_entity_name_candidates(user_input),
         'attribute_request_text': user_input,
         'available_types': available_types,
+        'requested_attribute_names': requested_attribute_names,
+        'data_source_preference': data_source_preference,
+        'data_source_note': data_source_note,
     }
 
     if not should_execute or not selected_entity_type:
@@ -2700,6 +2938,8 @@ def _read_pf_attribute_candidates(obj: Any, attr_candidates: List[str]) -> Dict[
             'source': source,
             'raw_value': _serialize_pf_value(raw_value),
             'numeric_value': numeric_value,
+            'unit': _infer_unit_from_attribute_name(attr_name),
+            'data_source': _infer_data_source_from_attr_name(attr_name),
         })
         if raw_value is not None:
             return {
@@ -2708,6 +2948,8 @@ def _read_pf_attribute_candidates(obj: Any, attr_candidates: List[str]) -> Dict[
                 'source': source,
                 'raw_value': _serialize_pf_value(raw_value),
                 'numeric_value': numeric_value,
+                'unit': _infer_unit_from_attribute_name(attr_name),
+                'data_source': _infer_data_source_from_attr_name(attr_name),
                 'tried': tried,
             }
     return {
@@ -2796,8 +3038,10 @@ def _list_available_object_attributes_with_services(
             'details': f'Das aufgelöste Objekt konnte in PowerFactory nicht geladen werden: {full_name}',
         }
 
+    source_preference = instruction.get('data_source_preference', 'base') if isinstance(instruction, dict) else 'base'
+
     loadflow_info = {'executed': False, 'reason': 'not_required_for_listing'}
-    if _semantic_request_likely_needs_loadflow(instruction.get('attribute_request_text') or ''):
+    if _semantic_request_likely_needs_loadflow(instruction.get('attribute_request_text') or '', source_preference):
         loadflow_info = _ensure_loadflow_for_data_query(studycase)
         if not loadflow_info.get('executed'):
             return {
@@ -2854,6 +3098,8 @@ def _select_pf_object_attributes_llm_with_services(
     available_handles = [item.get('handle') for item in attribute_options if item.get('handle')]
     object_name = (attribute_listing.get('object', {}) or {}).get('name') if isinstance(attribute_listing, dict) else None
     entity_type = instruction.get('entity_type') if isinstance(instruction, dict) else None
+    requested_attribute_names = instruction.get('requested_attribute_names', []) if isinstance(instruction, dict) else []
+    source_preference = instruction.get('data_source_preference', 'base') if isinstance(instruction, dict) else 'base'
 
     llm_decision_dump: Dict[str, Any] = {}
     selected_handles: List[str] = []
@@ -2873,6 +3119,15 @@ def _select_pf_object_attributes_llm_with_services(
         })
         llm_decision_dump = decision.model_dump()
         selected_handles = [handle for handle in decision.selected_attribute_handles if handle in available_handles]
+        if source_preference in {'base', 'result'}:
+            filtered_llm_handles = [
+                handle for handle in selected_handles
+                if _attribute_option_matches_source_preference(
+                    next((item for item in attribute_options if item.get('handle') == handle), {}),
+                    source_preference,
+                ) or handle in {f'attr::{name}' for name in requested_attribute_names}
+            ]
+            selected_handles = filtered_llm_handles
         confidence = decision.confidence
         rationale = decision.rationale
         missing_context = decision.missing_context or []
@@ -2880,11 +3135,32 @@ def _select_pf_object_attributes_llm_with_services(
     except Exception as e:
         llm_decision_dump = {'error': str(e)}
 
+    preferred_explicit_handles: List[str] = []
+    for attr_name in requested_attribute_names:
+        direct_handle = f'attr::{attr_name}'
+        if direct_handle in available_handles:
+            preferred_explicit_handles.append(direct_handle)
+
+    if preferred_explicit_handles:
+        selected_handles = preferred_explicit_handles
+        should_execute = True
+        confidence = 'high'
+        rationale = 'Direkt angegebene PowerFactory-Attribute wurden bevorzugt übernommen.'
+
     if not selected_handles:
         selected_handles = _fallback_select_attribute_handles(
             instruction.get('attribute_request_text') or instruction.get('entity_name_raw') or '',
             attribute_options,
         )
+        if source_preference in {'base', 'result'}:
+            filtered_handles = [
+                handle for handle in selected_handles
+                if _attribute_option_matches_source_preference(
+                    next((item for item in attribute_options if item.get('handle') == handle), {}),
+                    source_preference,
+                ) or handle in {f'attr::{name}' for name in requested_attribute_names}
+            ]
+            selected_handles = filtered_handles
         if selected_handles:
             should_execute = True
             confidence = 'medium'
@@ -2935,6 +3211,8 @@ def _read_attribute_handle(obj: Any, entity_type: str, handle: str) -> Dict[str,
             read_result = _read_special_field(obj, meta['special_reader'])
         else:
             read_result = _read_pf_attribute_candidates(obj, meta.get('attr_candidates', []))
+            if read_result.get('status') != 'ok':
+                read_result = _read_field_with_dynamic_attr_fallback(obj, field_name, meta)
         if read_result.get('status') == 'ok':
             display_value = read_result.get('display_value')
             if display_value is None:
@@ -2946,8 +3224,9 @@ def _read_attribute_handle(obj: Any, entity_type: str, handle: str) -> Dict[str,
                 'handle': handle,
                 'field_name': field_name,
                 'label': meta.get('label', field_name),
-                'unit': meta.get('unit'),
+                'unit': meta.get('unit') or read_result.get('unit'),
                 'requires_loadflow': bool(meta.get('requires_loadflow', False)),
+                'data_source': 'result' if bool(meta.get('requires_loadflow', False)) else 'base',
                 'value': display_value,
                 'read_debug': read_result,
             }
@@ -2956,8 +3235,9 @@ def _read_attribute_handle(obj: Any, entity_type: str, handle: str) -> Dict[str,
             'handle': handle,
             'field_name': field_name,
             'label': meta.get('label', field_name),
-            'unit': meta.get('unit'),
+            'unit': meta.get('unit') or read_result.get('unit'),
             'requires_loadflow': bool(meta.get('requires_loadflow', False)),
+            'data_source': 'result' if bool(meta.get('requires_loadflow', False)) else 'base',
             'read_debug': read_result,
         }
 
@@ -2975,8 +3255,9 @@ def _read_attribute_handle(obj: Any, entity_type: str, handle: str) -> Dict[str,
                 'handle': handle,
                 'attribute_name': attr_name,
                 'label': attr_name,
-                'unit': None,
-                'requires_loadflow': False,
+                'unit': read_result.get('unit'),
+                'requires_loadflow': _attribute_name_likely_requires_loadflow(attr_name),
+                'data_source': read_result.get('data_source') or _infer_data_source_from_attr_name(attr_name),
                 'value': display_value,
                 'read_debug': read_result,
             }
@@ -2985,8 +3266,9 @@ def _read_attribute_handle(obj: Any, entity_type: str, handle: str) -> Dict[str,
             'handle': handle,
             'attribute_name': attr_name,
             'label': attr_name,
-            'unit': None,
-            'requires_loadflow': False,
+            'unit': read_result.get('unit'),
+            'requires_loadflow': _attribute_name_likely_requires_loadflow(attr_name),
+            'data_source': read_result.get('data_source') or _infer_data_source_from_attr_name(attr_name),
             'read_debug': read_result,
         }
 
@@ -3043,12 +3325,20 @@ def _read_pf_object_attributes_with_services(
         }
 
     requires_loadflow = False
+    selected_data_source = 'base'
     for handle in selected_handles:
         if handle.startswith('field::'):
             field_name = handle.split('::', 1)[1]
             meta = _get_available_data_fields(entity_type).get(field_name, {})
             if bool(meta.get('requires_loadflow', False)):
                 requires_loadflow = True
+                selected_data_source = 'result'
+                break
+        if handle.startswith('attr::'):
+            attr_name = handle.split('::', 1)[1]
+            if _attribute_name_likely_requires_loadflow(attr_name):
+                requires_loadflow = True
+                selected_data_source = 'result'
                 break
 
     loadflow_info = {'executed': False, 'reason': 'not_required'}
@@ -3077,6 +3367,7 @@ def _read_pf_object_attributes_with_services(
             'label': read_result.get('label', handle),
             'unit': read_result.get('unit'),
             'requires_loadflow': bool(read_result.get('requires_loadflow', False)),
+            'data_source': read_result.get('data_source') or ('result' if bool(read_result.get('requires_loadflow', False)) else 'base'),
             'field_name': read_result.get('field_name'),
             'attribute_name': read_result.get('attribute_name'),
             'handle': handle,
@@ -3103,6 +3394,7 @@ def _read_pf_object_attributes_with_services(
             'values': values,
         },
         'loadflow': loadflow_info,
+        'selected_data_source': selected_data_source,
         'debug': {
             'field_reads': field_debug,
         },
@@ -3127,21 +3419,34 @@ def _summarize_pf_object_data_result_with_services(
 
     parts: List[str] = []
     messages: List[str] = []
+    data_sources = set()
     for handle, value in values.items():
         meta = field_metadata.get(handle, {}) if isinstance(field_metadata, dict) else {}
         label = meta.get('label', handle)
         unit = meta.get('unit')
+        data_source = meta.get('data_source', 'base')
+        data_sources.add(data_source)
+        source_label = 'Basisdaten' if data_source == 'base' else 'Lastflussergebnis'
         if value is None:
-            parts.append(f'{label}: nicht verfügbar')
-            messages.append(f'{label} für {object_name}: nicht verfügbar.')
+            parts.append(f'{label}: nicht verfügbar ({source_label})')
+            messages.append(f'{label} für {object_name}: nicht verfügbar ({source_label}).')
         elif unit:
-            parts.append(f'{label}: {value} {unit}')
-            messages.append(f'{label} für {object_name}: {value} {unit}.')
+            parts.append(f'{label}: {value} {unit} ({source_label})')
+            messages.append(f'{label} für {object_name}: {value} {unit} ({source_label}).')
         else:
-            parts.append(f'{label}: {value}')
-            messages.append(f'{label} für {object_name}: {value}.')
+            parts.append(f'{label}: {value} ({source_label})')
+            messages.append(f'{label} für {object_name}: {value} ({source_label}).')
 
-    answer = f"Daten für '{object_name}' ({pf_class}): " + '; '.join(parts) if parts else f"Für '{object_name}' konnten keine Daten gelesen werden."
+    if not parts:
+        answer = f"Für '{object_name}' konnten keine Daten gelesen werden."
+    else:
+        if data_sources == {'result'}:
+            prefix = 'Lastflussergebnisse'
+        elif data_sources == {'base'}:
+            prefix = 'Basisdaten'
+        else:
+            prefix = 'Daten'
+        answer = f"{prefix} für '{object_name}' ({pf_class}): " + '; '.join(parts)
     if loadflow.get('executed'):
         answer += ' Für die angefragten Ergebnisgrößen wurde zuvor ein Lastfluss gerechnet.'
 
