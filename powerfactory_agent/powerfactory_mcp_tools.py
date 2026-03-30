@@ -2054,6 +2054,11 @@ class DataQueryTypeDecision(BaseModel):
 
 class InventoryObjectMatchDecision(BaseModel):
     selected_object_name: Optional[str] = Field(default=None)
+    selected_object_names: List[str] = Field(default_factory=list)
+    selection_mode: Optional[str] = Field(
+        default=None,
+        description="Use 'one' for a single exact object or 'all' if the request clearly targets all provided candidates."
+    )
     confidence: str = Field(description="One of: high, medium, low")
     rationale: str = Field(description="Short explanation for the match decision")
     alternatives: List[str] = Field(default_factory=list)
@@ -2492,11 +2497,14 @@ def _build_object_match_chain():
     prompt = ChatPromptTemplate.from_messages([
         (
             'system',
-            'You resolve a user request to one exact PowerFactory object from a provided candidate list.\n'
-            'You may only select a name that appears exactly in the candidate list.\n'
+            'You resolve a user request to PowerFactory objects from a provided candidate list.\n'
+            'You may only select a name that appears exactly in the candidate list, or the special token __ALL__.\n'
             'Do not invent names.\n'
-            'If there is no safe unambiguous match, return selected_object_name=null and should_execute=false.\n'
-            'Use high confidence only for a clearly dominant match.\n\n'
+            'Use __ALL__ only if the request clearly refers to all available objects of the provided type, for example plural requests or requests explicitly saying all.\n'
+            'If you choose __ALL__, set selection_mode=all, selected_object_name=__ALL__, and optionally copy matching object names into selected_object_names.\n'
+            'If you choose one object, set selection_mode=one and selected_object_name to the exact chosen candidate name.\n'
+            'If there is no safe grounded match, return selected_object_name=null and should_execute=false.\n'
+            'Use high confidence only for a clearly grounded decision.\n\n'
             '{format_instructions}'
         ),
         (
@@ -2991,12 +2999,16 @@ def _resolve_pf_object_from_inventory_llm_with_services(
             'details': 'Die Kandidatenliste enthält keine verwertbaren Objektnamen.',
         }
 
+    candidate_names_for_prompt = list(candidate_names)
+    if '__ALL__' not in candidate_names_for_prompt:
+        candidate_names_for_prompt.append('__ALL__')
+
     try:
         chain, parser = _build_object_match_chain()
         decision = chain.invoke({
             'user_input': instruction.get('entity_name_raw') or '',
             'entity_type': entity_type,
-            'object_candidates': '\n'.join(f'- {name}' for name in candidate_names),
+            'object_candidates': '\n'.join(f'- {name}' for name in candidate_names_for_prompt),
             'format_instructions': parser.get_format_instructions(),
         })
         decision_dump = decision.model_dump()
@@ -3011,6 +3023,51 @@ def _resolve_pf_object_from_inventory_llm_with_services(
         }
 
     selected_name = decision.selected_object_name
+    selection_mode = decision.selection_mode or ('all' if selected_name == '__ALL__' else 'one')
+
+    if selected_name == '__ALL__':
+        if not decision.should_execute or decision.confidence.lower() != 'high':
+            return {
+                'status': 'error',
+                'tool': 'resolve_pf_object_from_inventory_llm',
+                'project': project_name,
+                'instruction': instruction,
+                'error': 'object_match_not_safe',
+                'details': 'Das LLM hat keine ausreichend sichere Mehrfachauswahl getroffen.',
+                'llm_decision': decision_dump,
+                'candidate_names': candidate_names,
+            }
+
+        selected_matches = [item for item in object_candidates if item.get('name') in candidate_names]
+        selected_object_names = [item.get('name') for item in selected_matches if item.get('name')]
+        selected_match = selected_matches[0] if selected_matches else None
+        if not selected_match:
+            return {
+                'status': 'error',
+                'tool': 'resolve_pf_object_from_inventory_llm',
+                'project': project_name,
+                'instruction': instruction,
+                'error': 'empty_all_selection',
+                'details': 'Die Mehrfachauswahl hat keine verwertbaren Objekte ergeben.',
+                'llm_decision': decision_dump,
+                'candidate_names': candidate_names,
+            }
+
+        return {
+            'status': 'ok',
+            'tool': 'resolve_pf_object_from_inventory_llm',
+            'project': project_name,
+            'instruction': instruction,
+            'asset_query': '__ALL__',
+            'selected_match': selected_match,
+            'selected_matches': selected_matches,
+            'selected_object_names': selected_object_names,
+            'selection_mode': 'all',
+            'matches': selected_matches,
+            'llm_decision': decision_dump,
+            'entity_type': entity_type,
+        }
+
     if selected_name not in candidate_names:
         return {
             'status': 'error',
@@ -3043,6 +3100,9 @@ def _resolve_pf_object_from_inventory_llm_with_services(
         'instruction': instruction,
         'asset_query': selected_name,
         'selected_match': selected_match,
+        'selected_matches': [selected_match],
+        'selected_object_names': [selected_name],
+        'selection_mode': 'one' if selection_mode != 'all' else 'all',
         'matches': [selected_match],
         'llm_decision': decision_dump,
         'entity_type': entity_type,
@@ -3452,7 +3512,11 @@ def _read_pf_object_attributes_with_services(
     project_name = services['project_name']
 
     selected_match = resolution.get('selected_match') if isinstance(resolution, dict) else None
-    if not isinstance(selected_match, dict):
+    selected_matches = resolution.get('selected_matches') if isinstance(resolution, dict) else None
+    if not isinstance(selected_matches, list) or not selected_matches:
+        selected_matches = [selected_match] if isinstance(selected_match, dict) else []
+
+    if not selected_matches:
         return {
             'status': 'error',
             'tool': 'read_pf_object_attributes',
@@ -3474,9 +3538,19 @@ def _read_pf_object_attributes_with_services(
             'details': 'In der Instruction fehlen Typ oder ausgewählte Attribute.',
         }
 
-    full_name = selected_match.get('full_name')
-    pf_object = _get_object_by_full_name(app, full_name)
-    if pf_object is None:
+    pf_objects: List[Tuple[Dict[str, Any], Any]] = []
+    missing_full_names: List[str] = []
+    for match in selected_matches:
+        if not isinstance(match, dict):
+            continue
+        full_name = match.get('full_name')
+        pf_object = _get_object_by_full_name(app, full_name)
+        if pf_object is None:
+            missing_full_names.append(str(full_name))
+            continue
+        pf_objects.append((match, pf_object))
+
+    if not pf_objects:
         return {
             'status': 'error',
             'tool': 'read_pf_object_attributes',
@@ -3484,7 +3558,8 @@ def _read_pf_object_attributes_with_services(
             'instruction': instruction,
             'resolution': resolution,
             'error': 'pf_object_not_found',
-            'details': f'Das aufgelöste Objekt konnte in PowerFactory nicht geladen werden: {full_name}',
+            'details': 'Keines der aufgelösten Objekte konnte in PowerFactory geladen werden.',
+            'missing_full_names': missing_full_names,
         }
 
     requires_loadflow = False
@@ -3519,23 +3594,94 @@ def _read_pf_object_attributes_with_services(
                 'loadflow': loadflow_info,
             }
 
-    values: Dict[str, Any] = {}
-    field_metadata: Dict[str, Any] = {}
-    field_debug: Dict[str, Any] = {}
+    selection_mode = resolution.get('selection_mode', 'one') if isinstance(resolution, dict) else 'one'
 
-    for handle in selected_handles:
-        read_result = _read_attribute_handle(pf_object, entity_type, handle)
-        field_debug[handle] = read_result
-        field_metadata[handle] = {
-            'label': read_result.get('label', handle),
-            'unit': read_result.get('unit'),
-            'requires_loadflow': bool(read_result.get('requires_loadflow', False)),
-            'data_source': read_result.get('data_source') or ('result' if bool(read_result.get('requires_loadflow', False)) else 'base'),
-            'field_name': read_result.get('field_name'),
-            'attribute_name': read_result.get('attribute_name'),
-            'handle': handle,
+    if len(pf_objects) == 1 and selection_mode != 'all':
+        selected_match, pf_object = pf_objects[0]
+        full_name = selected_match.get('full_name')
+
+        values: Dict[str, Any] = {}
+        field_metadata: Dict[str, Any] = {}
+        field_debug: Dict[str, Any] = {}
+
+        for handle in selected_handles:
+            read_result = _read_attribute_handle(pf_object, entity_type, handle)
+            field_debug[handle] = read_result
+            field_metadata[handle] = {
+                'label': read_result.get('label', handle),
+                'unit': read_result.get('unit'),
+                'requires_loadflow': bool(read_result.get('requires_loadflow', False)),
+                'data_source': read_result.get('data_source') or ('result' if bool(read_result.get('requires_loadflow', False)) else 'base'),
+                'field_name': read_result.get('field_name'),
+                'attribute_name': read_result.get('attribute_name'),
+                'handle': handle,
+            }
+            values[handle] = read_result.get('value') if read_result.get('status') == 'ok' else None
+
+        return {
+            'status': 'ok',
+            'tool': 'read_pf_object_attributes',
+            'project': project_name,
+            'studycase': getattr(studycase, 'loc_name', None),
+            'instruction': instruction,
+            'resolution': resolution,
+            'entity_type': entity_type,
+            'object': {
+                'name': getattr(pf_object, 'loc_name', None),
+                'full_name': full_name,
+                'pf_class': pf_object.GetClassName() if hasattr(pf_object, 'GetClassName') else None,
+            },
+            'data': {
+                'entity_type': entity_type,
+                'selected_attribute_handles': selected_handles,
+                'field_metadata': field_metadata,
+                'values': values,
+            },
+            'loadflow': loadflow_info,
+            'selected_data_source': selected_data_source,
+            'debug': {
+                'field_reads': field_debug,
+            },
         }
-        values[handle] = read_result.get('value') if read_result.get('status') == 'ok' else None
+
+    values_by_object: Dict[str, Dict[str, Any]] = {}
+    field_metadata: Dict[str, Any] = {}
+    field_debug_by_object: Dict[str, Any] = {}
+    objects_payload: List[Dict[str, Any]] = []
+
+    for match, pf_object in pf_objects:
+        object_name = getattr(pf_object, 'loc_name', None) or match.get('name') or match.get('full_name')
+        object_full_name = match.get('full_name')
+        object_pf_class = pf_object.GetClassName() if hasattr(pf_object, 'GetClassName') else None
+
+        object_values: Dict[str, Any] = {}
+        object_field_debug: Dict[str, Any] = {}
+
+        for handle in selected_handles:
+            read_result = _read_attribute_handle(pf_object, entity_type, handle)
+            object_field_debug[handle] = read_result
+            if handle not in field_metadata:
+                field_metadata[handle] = {
+                    'label': read_result.get('label', handle),
+                    'unit': read_result.get('unit'),
+                    'requires_loadflow': bool(read_result.get('requires_loadflow', False)),
+                    'data_source': read_result.get('data_source') or ('result' if bool(read_result.get('requires_loadflow', False)) else 'base'),
+                    'field_name': read_result.get('field_name'),
+                    'attribute_name': read_result.get('attribute_name'),
+                    'handle': handle,
+                }
+            object_values[handle] = read_result.get('value') if read_result.get('status') == 'ok' else None
+
+        values_by_object[object_name] = object_values
+        field_debug_by_object[object_name] = object_field_debug
+        objects_payload.append({
+            'name': object_name,
+            'full_name': object_full_name,
+            'pf_class': object_pf_class,
+        })
+
+    first_object_name = next(iter(values_by_object.keys())) if values_by_object else None
+    first_values = values_by_object.get(first_object_name, {}) if first_object_name else {}
 
     return {
         'status': 'ok',
@@ -3545,21 +3691,21 @@ def _read_pf_object_attributes_with_services(
         'instruction': instruction,
         'resolution': resolution,
         'entity_type': entity_type,
-        'object': {
-            'name': getattr(pf_object, 'loc_name', None),
-            'full_name': full_name,
-            'pf_class': pf_object.GetClassName() if hasattr(pf_object, 'GetClassName') else None,
-        },
+        'object': objects_payload[0] if objects_payload else {},
+        'objects': objects_payload,
         'data': {
             'entity_type': entity_type,
             'selected_attribute_handles': selected_handles,
             'field_metadata': field_metadata,
-            'values': values,
+            'values': first_values,
+            'values_by_object': values_by_object,
         },
         'loadflow': loadflow_info,
         'selected_data_source': selected_data_source,
         'debug': {
-            'field_reads': field_debug,
+            'field_reads': field_debug_by_object,
+            'missing_full_names': missing_full_names,
+            'selection_mode': selection_mode,
         },
     }
 
@@ -3573,9 +3719,74 @@ def _summarize_pf_object_data_result_with_services(
 
     data = result_payload.get('data', {}) if isinstance(result_payload, dict) else {}
     values = data.get('values', {}) if isinstance(data, dict) else {}
+    values_by_object = data.get('values_by_object', {}) if isinstance(data, dict) else {}
     field_metadata = data.get('field_metadata', {}) if isinstance(data, dict) else {}
     obj = result_payload.get('object', {}) if isinstance(result_payload, dict) else {}
+    objects = result_payload.get('objects', []) if isinstance(result_payload, dict) else []
     loadflow = result_payload.get('loadflow', {}) if isinstance(result_payload, dict) else {}
+
+    if isinstance(values_by_object, dict) and values_by_object:
+        object_parts: List[str] = []
+        messages: List[str] = []
+        data_sources = set()
+
+        object_metadata_by_name: Dict[str, Dict[str, Any]] = {}
+        if isinstance(objects, list):
+            for object_item in objects:
+                if isinstance(object_item, dict) and object_item.get('name'):
+                    object_metadata_by_name[object_item.get('name')] = object_item
+
+        for object_name, object_values in values_by_object.items():
+            object_meta = object_metadata_by_name.get(object_name, {})
+            object_pf_class = object_meta.get('pf_class') or '<unknown>'
+            parts: List[str] = []
+
+            if not isinstance(object_values, dict):
+                continue
+
+            for handle, value in object_values.items():
+                meta = field_metadata.get(handle, {}) if isinstance(field_metadata, dict) else {}
+                label = meta.get('label', handle)
+                unit = meta.get('unit')
+                data_source = meta.get('data_source', 'base')
+                data_sources.add(data_source)
+                source_label = 'Basisdaten' if data_source == 'base' else 'Lastflussergebnis'
+                if value is None:
+                    parts.append(f'{label}: nicht verfügbar ({source_label})')
+                    messages.append(f'{label} für {object_name}: nicht verfügbar ({source_label}).')
+                elif unit:
+                    parts.append(f'{label}: {value} {unit} ({source_label})')
+                    messages.append(f'{label} für {object_name}: {value} {unit} ({source_label}).')
+                else:
+                    parts.append(f'{label}: {value} ({source_label})')
+                    messages.append(f'{label} für {object_name}: {value} ({source_label}).')
+
+            if parts:
+                object_parts.append(f"'{object_name}' ({object_pf_class}): " + '; '.join(parts))
+            else:
+                object_parts.append(f"'{object_name}' ({object_pf_class}): keine Daten verfügbar")
+
+        if not object_parts:
+            answer = 'Für die ausgewählten Objekte konnten keine Daten gelesen werden.'
+        else:
+            if data_sources == {'result'}:
+                prefix = 'Lastflussergebnisse'
+            elif data_sources == {'base'}:
+                prefix = 'Basisdaten'
+            else:
+                prefix = 'Daten'
+            answer = f"{prefix} für {len(object_parts)} Objekte: " + ' | '.join(object_parts)
+
+        if loadflow.get('executed'):
+            answer += ' Für die angefragten Ergebnisgrößen wurde zuvor ein Lastfluss gerechnet.'
+
+        return {
+            'status': 'ok',
+            'tool': 'summarize_pf_object_data_result',
+            'project': project_name,
+            'answer': answer,
+            'messages': messages,
+        }
 
     object_name = obj.get('name') or obj.get('full_name') or '<unbekannt>'
     pf_class = obj.get('pf_class') or '<unknown>'
