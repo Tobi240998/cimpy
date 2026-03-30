@@ -1366,6 +1366,79 @@ def _snapshot_bus_voltages_with_debug(app: Any) -> Dict[str, Any]:
     }
 
 
+def _read_bus_voltage_limits_with_debug(bus: Any) -> Dict[str, Any]:
+    identity = _build_pf_object_identity(bus)
+    identity["bus_name"] = identity.get("name")
+
+    tried_limits: List[Dict[str, Any]] = []
+    limit_map: Dict[str, Optional[float]] = {}
+
+    for label, attr_candidates in {
+        "umin": ["umin", "u_min", "vmin"],
+        "umax": ["umax", "u_max", "vmax"],
+    }.items():
+        read_result = _read_first_available_attribute_with_debug(bus, attr_candidates, identity)
+        limit_map[label] = read_result.get("value") if read_result.get("ok") else None
+        tried_limits.append({
+            "limit": label,
+            "used_attr": read_result.get("used_attr"),
+            "tried_attrs": read_result.get("tried_attrs", []),
+            "value": read_result.get("value"),
+            "ok": read_result.get("ok", False),
+            "non_numeric_hits": read_result.get("non_numeric_hits", []),
+        })
+
+    return {
+        "ok": limit_map.get("umin") is not None or limit_map.get("umax") is not None,
+        "value": limit_map,
+        "tried_limits": tried_limits,
+        **identity,
+    }
+
+
+
+def _snapshot_bus_voltage_limits_with_debug(app: Any) -> Dict[str, Any]:
+    values: Dict[str, Dict[str, Optional[float]]] = {}
+    missing: List[Dict[str, Any]] = []
+    total_buses = 0
+    seen_ids: set[str] = set()
+
+    for obj in app.GetCalcRelevantObjects("*.ElmTerm") or []:
+        total_buses += 1
+        identity = _build_pf_object_identity(obj)
+        object_id = identity.get("full_name") or identity.get("name")
+        if not object_id or object_id in seen_ids:
+            continue
+        seen_ids.add(object_id)
+
+        read_result = _read_bus_voltage_limits_with_debug(obj)
+        bus_name = read_result.get("bus_name") or identity.get("name") or identity.get("full_name")
+        if not bus_name:
+            continue
+
+        value_map = read_result.get("value") or {}
+        if value_map.get("umin") is not None or value_map.get("umax") is not None:
+            values[bus_name] = value_map
+        else:
+            missing.append({
+                "bus": bus_name,
+                "pf_class": identity.get("pf_class"),
+                "full_name": identity.get("full_name"),
+                "tried_limits": read_result.get("tried_limits", []),
+            })
+
+    return {
+        "values": values,
+        "debug": {
+            "num_buses_total": total_buses,
+            "num_buses_with_limits": len(values),
+            "num_buses_missing_limits": len(missing),
+            "missing_buses": missing,
+            "object_queries": ["*.ElmTerm"],
+        },
+    }
+
+
 def _snapshot_bus_p_with_debug(app: Any) -> Dict[str, Any]:
     return _snapshot_objects_with_debug(
         app=app,
@@ -1418,9 +1491,13 @@ def _collect_requested_metric_snapshots(app: Any, result_requests: List[str]) ->
             before_data[metric] = snapshot_result.get("values", {})
             snapshot_debug[metric] = snapshot_result.get("debug", {})
 
+    voltage_limit_snapshot = _snapshot_bus_voltage_limits_with_debug(app)
+
     return {
         "values": before_data,
         "debug": snapshot_debug,
+        "voltage_limits": voltage_limit_snapshot.get("values", {}),
+        "voltage_limits_debug": voltage_limit_snapshot.get("debug", {}),
     }
 
 
@@ -1494,6 +1571,7 @@ def _build_metric_messages(
     after_map: Dict[str, Any],
     delta_map: Dict[str, float],
     result_agent: Any,
+    voltage_limits: Optional[Dict[str, Dict[str, Any]]] = None,
 ) -> List[str]:
     spec = METRIC_SPECS.get(metric, {})
     metric_label = spec.get("label", metric)
@@ -1501,7 +1579,12 @@ def _build_metric_messages(
 
     if metric == "bus_voltage" and hasattr(result_agent, "interpret_voltage_change"):
         try:
-            return result_agent.interpret_voltage_change(before_map, after_map)
+            return result_agent.interpret_voltage_change(before_map, after_map, voltage_limits=voltage_limits)
+        except TypeError:
+            try:
+                return result_agent.interpret_voltage_change(before_map, after_map)
+            except Exception:
+                pass
         except Exception:
             pass
 
@@ -1514,18 +1597,19 @@ def _build_metric_messages(
     return messages
 
 
-def _extract_metric_payload_from_result_payload(result_payload: Dict[str, Any]) -> Tuple[List[str], Dict[str, Any], Dict[str, Any], Dict[str, Any]]:
+def _extract_metric_payload_from_result_payload(result_payload: Dict[str, Any]) -> Tuple[List[str], Dict[str, Any], Dict[str, Any], Dict[str, Any], Dict[str, Any]]:
     data = result_payload.get("data", {}) if isinstance(result_payload, dict) else {}
     if not isinstance(data, dict):
-        return [], {}, {}, {}
+        return [], {}, {}, {}, {}
 
     requested_metrics = data.get("requested_metrics")
     before = data.get("before")
     after = data.get("after")
     delta = data.get("delta")
+    voltage_limits = data.get("voltage_limits", {})
 
     if isinstance(requested_metrics, list) and isinstance(before, dict) and isinstance(after, dict) and isinstance(delta, dict):
-        return requested_metrics, before, after, delta
+        return requested_metrics, before, after, delta, voltage_limits if isinstance(voltage_limits, dict) else {}
 
     legacy_u_before = data.get("u_before", {})
     legacy_u_after = data.get("u_after", {})
@@ -1536,9 +1620,10 @@ def _extract_metric_payload_from_result_payload(result_payload: Dict[str, Any]) 
             {"bus_voltage": legacy_u_before if isinstance(legacy_u_before, dict) else {}},
             {"bus_voltage": legacy_u_after if isinstance(legacy_u_after, dict) else {}},
             {"bus_voltage": legacy_delta_u if isinstance(legacy_delta_u, dict) else {}},
+            voltage_limits if isinstance(voltage_limits, dict) else {},
         )
 
-    return [], {}, {}, {}
+    return [], {}, {}, {}, {}
 def _execute_change_load_with_services(services: Dict[str, Any], instruction: dict) -> Dict[str, Any]:
     app = services["app"]
     studycase = services["studycase"]
@@ -1584,6 +1669,7 @@ def _execute_change_load_with_services(services: Dict[str, Any], instruction: di
 
     before_snapshot = _collect_requested_metric_snapshots(app, requested_metrics)
     values_before = before_snapshot["values"]
+    voltage_limits = before_snapshot.get("voltage_limits", {})
 
     try:
         _ = resolved_load.GetAttribute("plini")
@@ -1629,7 +1715,81 @@ def _execute_change_load_with_services(services: Dict[str, Any], instruction: di
         before=values_before,
         after=values_after,
         requested_metrics=requested_metrics,
-    )
+        )
+    # ============================================================
+    # DEBUG: Bus-Spannungen und Spannungsgrenzen aus PowerFactory
+    # ============================================================
+    try:
+        print("\n[DEBUG] Bus-Spannungen und Spannungsgrenzen:")
+
+        bus_voltage_after = values_after.get("bus_voltage", {}) if isinstance(values_after, dict) else {}
+        pf_buses = app.GetCalcRelevantObjects("*.ElmTerm") or []
+
+        bus_objects_by_name: Dict[str, Any] = {}
+        for bus_obj in pf_buses:
+            try:
+                bus_name = getattr(bus_obj, "loc_name", None)
+            except Exception:
+                bus_name = None
+            if bus_name and bus_name not in bus_objects_by_name:
+                bus_objects_by_name[bus_name] = bus_obj
+
+        for bus_name in sorted(bus_voltage_after.keys()):
+            u_value = bus_voltage_after.get(bus_name)
+            bus_obj = bus_objects_by_name.get(bus_name)
+
+            umin = None
+            umax = None
+            umin_attr = None
+            umax_attr = None
+
+            if bus_obj is not None:
+                for candidate in ["umin", "u_min", "vmin"]:
+                    try:
+                        raw = bus_obj.GetAttribute(candidate)
+                    except Exception:
+                        raw = None
+                    if raw is None:
+                        try:
+                            raw = getattr(bus_obj, candidate)
+                        except Exception:
+                            raw = None
+                    if raw is not None:
+                        umin = raw
+                        umin_attr = candidate
+                        break
+
+                for candidate in ["umax", "u_max", "vmax"]:
+                    try:
+                        raw = bus_obj.GetAttribute(candidate)
+                    except Exception:
+                        raw = None
+                    if raw is None:
+                        try:
+                            raw = getattr(bus_obj, candidate)
+                        except Exception:
+                            raw = None
+                    if raw is not None:
+                        umax = raw
+                        umax_attr = candidate
+                        break
+
+            try:
+                u_text = f"{float(u_value):.4f} p.u."
+            except Exception:
+                u_text = str(u_value)
+
+            print(
+                f"  {bus_name}: "
+                f"U_after={u_text} | "
+                f"umin={umin} ({umin_attr}) | "
+                f"umax={umax} ({umax_attr})"
+            )
+
+        print("[DEBUG END]\n")
+
+    except Exception as e:
+        print(f"[DEBUG ERROR] Spannungsgrenzen-Debug fehlgeschlagen: {e}")
 
     data_payload: Dict[str, Any] = {
         "requested_metrics": requested_metrics,
@@ -1637,6 +1797,7 @@ def _execute_change_load_with_services(services: Dict[str, Any], instruction: di
         "before": values_before,
         "after": values_after,
         "delta": delta_by_metric,
+        "voltage_limits": voltage_limits,
     }
 
     if "bus_voltage" in requested_metrics:
@@ -1659,6 +1820,7 @@ def _execute_change_load_with_services(services: Dict[str, Any], instruction: di
                 "before": before_snapshot["debug"],
                 "after": after_snapshot["debug"],
             },
+            "voltage_limits_debug": before_snapshot.get("voltage_limits_debug", {}),
             "before_snapshot_debug": before_snapshot["debug"].get("bus_voltage", {}),
             "after_snapshot_debug": after_snapshot["debug"].get("bus_voltage", {}),
         },
@@ -1675,7 +1837,7 @@ def _summarize_powerfactory_result_with_services(
     llm_result_agent = services["llm_result_agent"]
     project_name = services["project_name"]
 
-    requested_metrics, before, after, delta = _extract_metric_payload_from_result_payload(result_payload)
+    requested_metrics, before, after, delta, voltage_limits = _extract_metric_payload_from_result_payload(result_payload)
 
     messages: List[str] = []
     for metric in requested_metrics:
@@ -1685,6 +1847,7 @@ def _summarize_powerfactory_result_with_services(
             after_map=after.get(metric, {}),
             delta_map=delta.get(metric, {}),
             result_agent=result_agent,
+            voltage_limits=voltage_limits if metric == "bus_voltage" else None,
         )
         messages.extend(metric_messages)
 
