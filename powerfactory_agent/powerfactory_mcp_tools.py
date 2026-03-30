@@ -3299,6 +3299,70 @@ def _list_available_object_attributes_with_services(
     }
 
 
+
+def _score_semantic_attribute_option(user_input: str, item: Dict[str, Any]) -> int:
+    text = _safe_lower(user_input)
+    if not text:
+        return 0
+
+    score = 0
+    label = _safe_lower(item.get('label'))
+    field_name = _safe_lower(item.get('field_name'))
+    aliases = [_safe_lower(alias) for alias in (item.get('aliases', []) or [])]
+    candidate_attrs = [_safe_lower(attr) for attr in (item.get('candidate_attrs', []) or [])]
+
+    for token in [label, field_name]:
+        if token and token in text:
+            score += 6
+
+    for alias in aliases:
+        if alias and alias in text:
+            score += 8
+
+    for candidate_attr in candidate_attrs:
+        if candidate_attr and candidate_attr in text:
+            score += 5
+
+    field_tokens = []
+    for raw in [label, field_name, *aliases]:
+        field_tokens.extend(_tokenize(raw))
+    for token in set(field_tokens):
+        if token and token in text:
+            score += 1
+
+    if item.get('kind') == 'semantic_field':
+        score += 1
+
+    return score
+
+
+def _select_semantic_attribute_handles_from_request(
+    user_input: str,
+    attribute_options: List[Dict[str, Any]],
+) -> List[str]:
+    scored: List[Tuple[int, str]] = []
+
+    for item in attribute_options:
+        handle = item.get('handle')
+        if not handle or not str(handle).startswith('field::'):
+            continue
+        score = _score_semantic_attribute_option(user_input, item)
+        if score <= 0:
+            continue
+        scored.append((score, handle))
+
+    if not scored:
+        return []
+
+    scored.sort(key=lambda x: (-x[0], x[1]))
+    best_score = scored[0][0]
+    if best_score < 6:
+        return []
+
+    selected = [handle for score, handle in scored if score == best_score]
+    return selected[:10]
+
+
 def _select_pf_object_attributes_llm_with_services(
     services: Dict[str, Any],
     instruction: dict,
@@ -3323,6 +3387,9 @@ def _select_pf_object_attributes_llm_with_services(
     entity_type = instruction.get('entity_type') if isinstance(instruction, dict) else None
     requested_attribute_names = instruction.get('requested_attribute_names', []) if isinstance(instruction, dict) else []
     source_preference = instruction.get('data_source_preference', 'base') if isinstance(instruction, dict) else 'base'
+    request_text = instruction.get('attribute_request_text') or instruction.get('entity_name_raw') or '' if isinstance(instruction, dict) else ''
+    preferred_semantic_handles = _select_semantic_attribute_handles_from_request(request_text, attribute_options)
+
 
     llm_decision_dump: Dict[str, Any] = {}
     selected_handles: List[str] = []
@@ -3334,7 +3401,7 @@ def _select_pf_object_attributes_llm_with_services(
     try:
         chain, parser = _build_attribute_selection_chain()
         decision = chain.invoke({
-            'user_input': instruction.get('attribute_request_text') or instruction.get('entity_name_raw') or '',
+            'user_input': request_text,
             'entity_type': entity_type or '',
             'object_name': object_name or '',
             'attribute_options': _format_attribute_options_for_prompt(attribute_options),
@@ -3343,13 +3410,17 @@ def _select_pf_object_attributes_llm_with_services(
         llm_decision_dump = decision.model_dump()
         selected_handles = [handle for handle in decision.selected_attribute_handles if handle in available_handles]
         if source_preference in {'base', 'result'}:
-            filtered_llm_handles = [
-                handle for handle in selected_handles
-                if _attribute_option_matches_source_preference(
-                    next((item for item in attribute_options if item.get('handle') == handle), {}),
-                    source_preference,
-                ) or handle in {f'attr::{name}' for name in requested_attribute_names}
-            ]
+            filtered_llm_handles = []
+            explicit_attr_handles = {f'attr::{name}' for name in requested_attribute_names}
+            preferred_semantic_handle_set = set(preferred_semantic_handles)
+            for handle in selected_handles:
+                item = next((opt for opt in attribute_options if opt.get('handle') == handle), {})
+                if (
+                    _attribute_option_matches_source_preference(item, source_preference)
+                    or handle in explicit_attr_handles
+                    or handle in preferred_semantic_handle_set
+                ):
+                    filtered_llm_handles.append(handle)
             selected_handles = filtered_llm_handles
         confidence = decision.confidence
         rationale = decision.rationale
@@ -3370,19 +3441,29 @@ def _select_pf_object_attributes_llm_with_services(
         confidence = 'high'
         rationale = 'Direkt angegebene PowerFactory-Attribute wurden bevorzugt übernommen.'
 
+    if not selected_handles and preferred_semantic_handles:
+        selected_handles = preferred_semantic_handles
+        should_execute = True
+        confidence = 'high'
+        rationale = 'Semantisch eindeutig passende Attributfelder wurden vor dem generischen Fallback bevorzugt übernommen.'
+
     if not selected_handles:
         selected_handles = _fallback_select_attribute_handles(
-            instruction.get('attribute_request_text') or instruction.get('entity_name_raw') or '',
+            request_text,
             attribute_options,
         )
         if source_preference in {'base', 'result'}:
-            filtered_handles = [
-                handle for handle in selected_handles
-                if _attribute_option_matches_source_preference(
-                    next((item for item in attribute_options if item.get('handle') == handle), {}),
-                    source_preference,
-                ) or handle in {f'attr::{name}' for name in requested_attribute_names}
-            ]
+            filtered_handles = []
+            explicit_attr_handles = {f'attr::{name}' for name in requested_attribute_names}
+            preferred_semantic_handle_set = set(preferred_semantic_handles)
+            for handle in selected_handles:
+                item = next((opt for opt in attribute_options if opt.get('handle') == handle), {})
+                if (
+                    _attribute_option_matches_source_preference(item, source_preference)
+                    or handle in explicit_attr_handles
+                    or handle in preferred_semantic_handle_set
+                ):
+                    filtered_handles.append(handle)
             selected_handles = filtered_handles
         if selected_handles:
             should_execute = True
