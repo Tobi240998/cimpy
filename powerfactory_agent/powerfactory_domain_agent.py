@@ -17,7 +17,7 @@ from cimpy.powerfactory_agent.powerfactory_tool_registry import PowerFactoryTool
 
 class PFPlannerDecision(BaseModel):
     intent: str = Field(
-        description="One of: load_catalog, change_load, topology_query, change_switch_state, query_element_data, unsupported_powerfactory_request"
+        description="One of: load_catalog, change_load, topology_query, change_switch_state, query_element_data, list_element_attributes, unsupported_powerfactory_request"
     )
     confidence: str = Field(description="One of: high, medium, low")
     target_kind: str = Field(description="Main target type, e.g. load, topology_asset, switch, catalog, unknown")
@@ -64,6 +64,7 @@ class PowerFactoryDomainAgent:
                 "- topology_query\n"
                 "- change_switch_state\n"
                 "- query_element_data\n"
+                "- list_element_attributes\n"
                 "- unsupported_powerfactory_request\n\n"
                 "You may only use the internal steps defined below.\n"
                 "Use the step contracts exactly. If a step requires state, ensure that a producer step appears earlier in the plan.\n"
@@ -110,11 +111,15 @@ class PowerFactoryDomainAgent:
                 "Your job is to decide whether a PowerFactory user request should be split into multiple sequential subrequests.\n\n"
                 "Rules:\n"
                 "- Keep standard single-intent requests as a single request.\n"
-                "- Mark is_composite=true only if the request clearly contains multiple user goals or multiple sequential actions.\n"
+                "- Mark is_composite=true only if the request clearly contains multiple user goals, multiple sequential actions, or a reference that requires a previous result.\n"
                 "- If you split, each subrequest must be a standalone natural-language request in the same language as the original input.\n"
                 "- Preserve execution order.\n"
-                "- Do not invent details that are not stated by the user.\n"
+                "- Do not invent technical details that are not stated by the user.\n"
                 "- Do not split merely because a request is long; split only if there are multiple distinct tasks.\n"
+                "- References such as 'dazu', 'deren', 'diese', 'die dazugehörigen', 'those', 'their', or similar may refer to the result of the previous subrequest.\n"
+                "- Especially split requests where the first part identifies PowerFactory objects and the second part asks for data of those identified objects, for example topology first and element data second.\n"
+                "- Example: 'Welche Nachbarn hat Last A? Wie ist die Spannung dazu?' should become two sequential subrequests: first determine the neighbors of Last A, then ask for the voltage of those neighbors.\n"
+                "- Example: 'Welche Leitungen hängen an Bus 5 und wie hoch ist deren Auslastung?' should become two sequential subrequests: first identify the connected lines, then query their loading.\n"
                 "- If unsure, prefer is_composite=false.\n\n"
                 "Return only structured output.\n\n"
                 "{format_instructions}"
@@ -123,6 +128,26 @@ class PowerFactoryDomainAgent:
                 "user",
                 "Original user request:\n{user_input}\n\n"
                 "Current classification:\n{classification}\n"
+            ),
+        ])
+
+        self.contextual_subrequest_prompt = ChatPromptTemplate.from_messages([
+            (
+                "system",
+                "You rewrite a dependent PowerFactory follow-up request into a standalone request using the provided previous context.\n"
+                "Rules:\n"
+                "- Keep the same language as the original follow-up request.\n"
+                "- Preserve the user's intended meaning.\n"
+                "- Use the previous context only when it is needed to resolve references such as 'dazu', 'deren', 'diese', 'die dazugehörigen', 'those', 'their', or similar.\n"
+                "- Do not invent PowerFactory objects that are not present in the context.\n"
+                "- If the follow-up request is already standalone, return it unchanged.\n\n"
+                "Return only structured output.\n\n"
+                "{format_instructions}"
+            ),
+            (
+                "user",
+                "Previous context:\n{previous_context}\n\n"
+                "Current follow-up request:\n{current_subrequest}\n"
             ),
         ])
 
@@ -168,6 +193,58 @@ class PowerFactoryDomainAgent:
         }
 
     def classify_request(self, user_input: str) -> Dict[str, Any]:
+        """
+        Robust classification with retry fallback for JSON parsing failures.
+        """
+
+        def _normalize_result(raw: Any, classification_mode: str) -> Dict[str, Any] | None:
+            if raw is None:
+                return None
+            if hasattr(raw, "model_dump"):
+                result = raw.model_dump()
+            elif hasattr(raw, "dict"):
+                result = raw.dict()
+            elif isinstance(raw, dict):
+                result = dict(raw)
+            else:
+                return None
+
+            if not isinstance(result, dict):
+                return None
+
+            intent = result.get("intent")
+            if intent not in {
+                "load_catalog",
+                "change_load",
+                "topology_query",
+                "change_switch_state",
+                "query_element_data",
+                "list_element_attributes",
+                "unsupported_powerfactory_request",
+            }:
+                return None
+
+            required_steps = result.get("required_steps", []) if isinstance(result.get("required_steps", []), list) else []
+            if (
+                intent == "query_element_data"
+                and "list_available_object_attributes" in required_steps
+                and "read_pf_object_attributes" not in required_steps
+            ):
+                intent = "list_element_attributes"
+
+            return {
+                "status": "ok",
+                "classification_mode": classification_mode,
+                "intent": intent,
+                "confidence": result.get("confidence", "low"),
+                "target_kind": result.get("target_kind", "unknown"),
+                "safe_to_execute": bool(result.get("safe_to_execute", intent != "unsupported_powerfactory_request")),
+                "missing_context": result.get("missing_context", []) if isinstance(result.get("missing_context", []), list) else [],
+                "required_steps": required_steps,
+                "reasoning": result.get("reasoning", ""),
+            }
+
+        primary_error = None
         try:
             chain = self.build_planner_chain()
             decision = chain.invoke({
@@ -175,20 +252,64 @@ class PowerFactoryDomainAgent:
                 "step_contracts": self._render_step_contracts_for_prompt(),
                 "format_instructions": self.planner_parser.get_format_instructions(),
             })
-            result = decision.dict() if hasattr(decision, "dict") else dict(decision)
-            return {"status": "ok", "classification_mode": "llm", **result}
+            normalized = _normalize_result(decision, "llm")
+            if normalized is not None:
+                return normalized
+            primary_error = "Invalid or empty classification result"
         except Exception as e:
-            return {
-                "status": "ok",
-                "classification_mode": "fallback",
-                "intent": "unsupported_powerfactory_request",
-                "confidence": "low",
-                "target_kind": "unknown",
-                "safe_to_execute": False,
-                "missing_context": [],
-                "required_steps": ["unsupported_request"],
-                "reasoning": f"LLM planning failed: {str(e)}",
-            }
+            primary_error = str(e)
+
+        fallback_prompt = ChatPromptTemplate.from_messages([
+            (
+                "system",
+                "Classify the following PowerFactory request into exactly one supported intent.\n"
+                "Supported intents:\n"
+                "- load_catalog\n"
+                "- change_load\n"
+                "- topology_query\n"
+                "- change_switch_state\n"
+                "- query_element_data\n"
+                "- list_element_attributes\n"
+                "- unsupported_powerfactory_request\n\n"
+                "Return only structured output.\n\n"
+                "{format_instructions}"
+            ),
+            ("user", "User request:\n{user_input}"),
+        ])
+
+        fallback_error = None
+        try:
+            chain = fallback_prompt | self.llm | self.planner_parser
+            decision = chain.invoke({
+                "user_input": user_input,
+                "format_instructions": self.planner_parser.get_format_instructions(),
+            })
+            normalized = _normalize_result(decision, "fallback_llm_recovery")
+            if normalized is not None:
+                return normalized
+            fallback_error = "Fallback returned invalid classification result"
+        except Exception as e:
+            fallback_error = str(e)
+
+        return {
+            "status": "ok",
+            "classification_mode": "forced_fallback",
+            "intent": "query_element_data",
+            "confidence": "low",
+            "target_kind": "unknown",
+            "safe_to_execute": True,
+            "missing_context": [],
+            "required_steps": [
+                "build_data_inventory",
+                "interpret_data_query_instruction",
+                "resolve_pf_object_from_inventory_llm",
+                "list_available_object_attributes",
+                "select_pf_object_attributes_llm",
+                "read_pf_object_attributes",
+                "summarize_pf_object_data_result",
+            ],
+            "reasoning": f"Primary failed: {primary_error} | Fallback failed: {fallback_error}",
+        }
 
     def _decompose_request(self, user_input: str, classification: Dict[str, Any]) -> Dict[str, Any]:
         try:
@@ -402,6 +523,14 @@ class PowerFactoryDomainAgent:
                 {"step": "resolve_switch_from_inventory_llm", "description": allowed_steps["resolve_switch_from_inventory_llm"], **({"user_input_override": user_input_override} if user_input_override is not None else {}), **({"source_subrequest": source_subrequest} if source_subrequest is not None else {})},
                 {"step": "execute_switch_operation", "description": allowed_steps["execute_switch_operation"], **({"user_input_override": user_input_override} if user_input_override is not None else {}), **({"source_subrequest": source_subrequest} if source_subrequest is not None else {})},
                 {"step": "summarize_switch_result", "description": allowed_steps["summarize_switch_result"], **({"user_input_override": user_input_override} if user_input_override is not None else {}), **({"source_subrequest": source_subrequest} if source_subrequest is not None else {})},
+            ]
+
+        if intent == "list_element_attributes":
+            return [
+                {"step": "build_data_inventory", "description": allowed_steps["build_data_inventory"], **({"user_input_override": user_input_override} if user_input_override is not None else {}), **({"source_subrequest": source_subrequest} if source_subrequest is not None else {})},
+                {"step": "interpret_data_query_instruction", "description": allowed_steps["interpret_data_query_instruction"], **({"user_input_override": user_input_override} if user_input_override is not None else {}), **({"source_subrequest": source_subrequest} if source_subrequest is not None else {})},
+                {"step": "resolve_pf_object_from_inventory_llm", "description": allowed_steps["resolve_pf_object_from_inventory_llm"], **({"user_input_override": user_input_override} if user_input_override is not None else {}), **({"source_subrequest": source_subrequest} if source_subrequest is not None else {})},
+                {"step": "list_available_object_attributes", "description": allowed_steps["list_available_object_attributes"], **({"user_input_override": user_input_override} if user_input_override is not None else {}), **({"source_subrequest": source_subrequest} if source_subrequest is not None else {})},
             ]
 
         if intent == "query_element_data":
@@ -1095,6 +1224,157 @@ class PowerFactoryDomainAgent:
             debug_trace=debug_trace,
         )
 
+
+    def _build_generic_summary(
+        self,
+        user_input: str,
+        plan: List[Dict[str, Any]],
+        catalog_result: Dict[str, Any] | None,
+        topology_result: Dict[str, Any] | None,
+        entity_resolution: Dict[str, Any] | None,
+        switch_execution: Dict[str, Any] | None,
+        data_object_resolution: Dict[str, Any] | None,
+        data_attribute_listing: Dict[str, Any] | None,
+        data_query_execution: Dict[str, Any] | None,
+    ) -> Dict[str, Any] | None:
+        plan_steps = self._plan_to_steps(plan)
+
+        if isinstance(data_attribute_listing, dict):
+            selected_match = data_object_resolution.get("selected_match", {}) if isinstance(data_object_resolution, dict) else {}
+            selected_name = selected_match.get("name") or selected_match.get("loc_name") or selected_match.get("full_name") or "Objekt"
+            selected_class = selected_match.get("pf_class") or selected_match.get("class_name") or selected_match.get("type") or "unbekanntes Objekt"
+
+            attribute_options = data_attribute_listing.get("attribute_options", [])
+            attribute_names: List[str] = []
+            if isinstance(attribute_options, list):
+                for option in attribute_options:
+                    if not isinstance(option, dict):
+                        continue
+                    display_name = option.get("display_name") or option.get("label") or option.get("name") or option.get("handle")
+                    if isinstance(display_name, str) and display_name.strip():
+                        attribute_names.append(display_name.strip())
+
+            seen_names = set()
+            deduped_names: List[str] = []
+            for name in attribute_names:
+                if name not in seen_names:
+                    seen_names.add(name)
+                    deduped_names.append(name)
+
+            if deduped_names:
+                answer = (
+                    f"Verfügbare Attribute für '{selected_name}' ({selected_class}): "
+                    + "; ".join(deduped_names)
+                )
+            else:
+                answer = f"Für '{selected_name}' ({selected_class}) wurden keine verfügbaren Attribute gefunden."
+
+            return {
+                "status": "ok",
+                "tool": "summarize_generic_result",
+                "answer": answer,
+                "messages": [answer],
+                "source": "data_attribute_listing",
+                "plan_steps": plan_steps,
+            }
+
+        if isinstance(data_query_execution, dict):
+            payload_data = data_query_execution.get("data", {})
+            if isinstance(payload_data, dict) and payload_data:
+                answer = str(payload_data)
+            else:
+                answer = data_query_execution.get("answer", "") if isinstance(data_query_execution.get("answer", ""), str) else str(data_query_execution)
+
+            return {
+                "status": "ok",
+                "tool": "summarize_generic_result",
+                "answer": answer,
+                "messages": [answer] if answer else [],
+                "source": "data_query_execution",
+                "plan_steps": plan_steps,
+            }
+
+        if isinstance(topology_result, dict):
+            selected_node = topology_result.get("selected_node", {})
+            selected_name = selected_node.get("name") if isinstance(selected_node, dict) else None
+            neighbors = topology_result.get("neighbors", [])
+            neighbor_names: List[str] = []
+            if isinstance(neighbors, list):
+                for item in neighbors:
+                    if isinstance(item, dict):
+                        name = item.get("name") or item.get("full_name") or item.get("node_id")
+                        if isinstance(name, str) and name.strip():
+                            neighbor_names.append(name.strip())
+
+            if selected_name and neighbor_names:
+                answer = f"Direkte Nachbarn von '{selected_name}': " + ", ".join(neighbor_names)
+            elif neighbor_names:
+                answer = "Direkte Nachbarn: " + ", ".join(neighbor_names)
+            else:
+                answer = "Es wurden keine direkten Nachbarn gefunden."
+
+            return {
+                "status": "ok",
+                "tool": "summarize_generic_result",
+                "answer": answer,
+                "messages": [answer],
+                "source": "topology_result",
+                "plan_steps": plan_steps,
+            }
+
+        if isinstance(catalog_result, dict):
+            loads = catalog_result.get("loads", [])
+            if isinstance(loads, list):
+                load_names: List[str] = []
+                for item in loads:
+                    if isinstance(item, dict):
+                        name = item.get("name") or item.get("loc_name")
+                        if isinstance(name, str) and name.strip():
+                            load_names.append(name.strip())
+                answer = "Verfügbare Lasten: " + ", ".join(load_names) if load_names else "Es wurden keine Lasten gefunden."
+                return {
+                    "status": "ok",
+                    "tool": "summarize_generic_result",
+                    "answer": answer,
+                    "messages": [answer],
+                    "source": "catalog_result",
+                    "plan_steps": plan_steps,
+                }
+
+        if isinstance(switch_execution, dict):
+            switch_info = switch_execution.get("switch", {})
+            switch_name = switch_info.get("name") if isinstance(switch_info, dict) else None
+            state_before = switch_execution.get("state_before")
+            state_after = switch_execution.get("state_after")
+            if switch_name:
+                answer = f"Schalter '{switch_name}': Zustand vorher={state_before}, nachher={state_after}."
+            else:
+                answer = "Die Schalteroperation wurde ausgeführt."
+            return {
+                "status": "ok",
+                "tool": "summarize_generic_result",
+                "answer": answer,
+                "messages": [answer],
+                "source": "switch_execution",
+                "plan_steps": plan_steps,
+            }
+
+        if isinstance(entity_resolution, dict):
+            selected_match = entity_resolution.get("selected_match", {})
+            name = selected_match.get("name") if isinstance(selected_match, dict) else None
+            if name:
+                answer = f"Aufgelöstes Objekt: {name}"
+                return {
+                    "status": "ok",
+                    "tool": "summarize_generic_result",
+                    "answer": answer,
+                    "messages": [answer],
+                    "source": "entity_resolution",
+                    "plan_steps": plan_steps,
+                }
+
+        return None
+
     def build_success_result(
         self,
         services: Dict[str, Any],
@@ -1133,6 +1413,23 @@ class PowerFactoryDomainAgent:
 
         answer = final_summary.get("answer", "") if isinstance(final_summary, dict) else ""
         messages = final_summary.get("messages", []) if isinstance(final_summary, dict) else []
+
+        if not isinstance(final_summary, dict) or not str(answer).strip():
+            generic_summary = self._build_generic_summary(
+                user_input=user_input,
+                plan=plan,
+                catalog_result=catalog_result,
+                topology_result=topology_result,
+                entity_resolution=entity_resolution,
+                switch_execution=switch_execution,
+                data_object_resolution=data_object_resolution,
+                data_attribute_listing=data_attribute_listing,
+                data_query_execution=data_query_execution,
+            )
+            if isinstance(generic_summary, dict):
+                final_summary = generic_summary
+                answer = final_summary.get("answer", "") if isinstance(final_summary, dict) else ""
+                messages = final_summary.get("messages", []) if isinstance(final_summary, dict) else []
 
         result = {
             "status": "ok",
