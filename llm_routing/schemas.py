@@ -7,8 +7,6 @@ from pydantic import BaseModel, Field
 # Erzeugung von Struktur der Antworten
 
 class HistoricalArgs(BaseModel):
-    # Für den Anfang lassen wir user_input als fallback drin.
-    # Später kannst du echte Felder wie equipment_type/equipment_id/time_range/metric ergänzen.
     user_input: str = Field(..., description="Originale Nutzeranfrage oder normalisierte Frage")
     equipment_type: Optional[str] = Field(None, description="z.B. transformer/line/busbar/...")
     equipment_id: Optional[str] = Field(None, description="Konkrete ID falls bekannt")

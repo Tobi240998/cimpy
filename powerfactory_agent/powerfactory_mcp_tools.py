@@ -1130,6 +1130,54 @@ def _safe_get_pf_attribute(obj: Any, attr_name: str) -> Any:
         return None
 
 
+def _get_pf_attribute_unit(obj: Any, attr_name: str) -> Optional[str]:
+    if obj is None or not attr_name:
+        return None
+
+    method_names = [
+        'GetAttributeUnit',
+        'GetAttributeUnits',
+    ]
+    for method_name in method_names:
+        try:
+            method = getattr(obj, method_name, None)
+            if callable(method):
+                unit = method(attr_name)
+                if unit not in (None, ''):
+                    return str(unit)
+        except Exception:
+            pass
+
+    try:
+        desc = obj.GetAttributeDescription(attr_name)
+        if desc is not None:
+            unit = getattr(desc, 'unit', None)
+            if unit not in (None, ''):
+                return str(unit)
+    except Exception:
+        pass
+
+    unit_suffix_candidates = [
+        f'{attr_name}:unit',
+        f'{attr_name}.unit',
+    ]
+    for unit_attr in unit_suffix_candidates:
+        try:
+            unit = obj.GetAttribute(unit_attr)
+            if unit not in (None, ''):
+                return str(unit)
+        except Exception:
+            pass
+        try:
+            unit = getattr(obj, unit_attr)
+            if unit not in (None, ''):
+                return str(unit)
+        except Exception:
+            pass
+
+    return None
+
+
 def _build_pf_object_identity(obj: Any) -> Dict[str, Any]:
     name = None
     pf_class = None
@@ -2708,13 +2756,19 @@ def _list_readable_raw_attributes(obj: Any, entity_type: str) -> List[Dict[str, 
             display_value = read_result.get('numeric_value')
         if display_value is None:
             display_value = read_result.get('raw_value')
+        pf_unit = read_result.get('pf_unit')
+        heuristic_unit = _infer_unit_from_attribute_name(attr_name)
+        unit = pf_unit or heuristic_unit
+        unit_source = 'powerfactory' if pf_unit else ('heuristic' if heuristic_unit else None)
         options.append({
             'handle': key,
             'kind': 'raw_attribute',
             'label': _normalize_attr_option_label(attr_name),
             'attribute_name': attr_name,
             'sample_value': display_value,
-            'unit': _infer_unit_from_attribute_name(attr_name),
+            'unit': unit,
+            'unit_source': unit_source,
+            'pf_unit': pf_unit,
             'requires_loadflow': _attribute_name_likely_requires_loadflow(attr_name),
             'data_source': _infer_data_source_from_attr_name(attr_name),
         })
@@ -2835,6 +2889,7 @@ def _build_semantic_field_options(entity_type: str) -> List[Dict[str, Any]]:
             'candidate_attrs': meta.get('attr_candidates', []),
             'special_reader': meta.get('special_reader'),
             'unit': meta.get('unit'),
+            'unit_source': 'semantic' if meta.get('unit') else None,
             'requires_loadflow': bool(meta.get('requires_loadflow', False)),
             'data_source': 'result' if bool(meta.get('requires_loadflow', False)) else 'base',
         })
@@ -3156,12 +3211,18 @@ def _read_pf_attribute_candidates(obj: Any, attr_candidates: List[str]) -> Dict[
             except Exception:
                 raw_value = None
         numeric_value = _try_numeric(raw_value)
+        pf_unit = _get_pf_attribute_unit(obj, attr_name)
+        heuristic_unit = _infer_unit_from_attribute_name(attr_name)
+        unit = pf_unit or heuristic_unit
+        unit_source = 'powerfactory' if pf_unit else ('heuristic' if heuristic_unit else None)
         tried.append({
             'attribute': attr_name,
             'source': source,
             'raw_value': _serialize_pf_value(raw_value),
             'numeric_value': numeric_value,
-            'unit': _infer_unit_from_attribute_name(attr_name),
+            'unit': unit,
+            'unit_source': unit_source,
+            'pf_unit': pf_unit,
             'data_source': _infer_data_source_from_attr_name(attr_name),
         })
         if raw_value is not None:
@@ -3171,7 +3232,9 @@ def _read_pf_attribute_candidates(obj: Any, attr_candidates: List[str]) -> Dict[
                 'source': source,
                 'raw_value': _serialize_pf_value(raw_value),
                 'numeric_value': numeric_value,
-                'unit': _infer_unit_from_attribute_name(attr_name),
+                'unit': unit,
+                'unit_source': unit_source,
+                'pf_unit': pf_unit,
                 'data_source': _infer_data_source_from_attr_name(attr_name),
                 'tried': tried,
             }
@@ -3528,7 +3591,8 @@ def _read_attribute_handle(obj: Any, entity_type: str, handle: str) -> Dict[str,
                 'handle': handle,
                 'field_name': field_name,
                 'label': meta.get('label', field_name),
-                'unit': meta.get('unit') or read_result.get('unit'),
+                'unit': read_result.get('pf_unit') or meta.get('unit') or read_result.get('unit'),
+                'unit_source': 'powerfactory' if read_result.get('pf_unit') else ('semantic' if meta.get('unit') else read_result.get('unit_source')),
                 'requires_loadflow': bool(meta.get('requires_loadflow', False)),
                 'data_source': 'result' if bool(meta.get('requires_loadflow', False)) else 'base',
                 'value': display_value,
@@ -3539,7 +3603,8 @@ def _read_attribute_handle(obj: Any, entity_type: str, handle: str) -> Dict[str,
             'handle': handle,
             'field_name': field_name,
             'label': meta.get('label', field_name),
-            'unit': meta.get('unit') or read_result.get('unit'),
+            'unit': read_result.get('pf_unit') or meta.get('unit') or read_result.get('unit'),
+            'unit_source': 'powerfactory' if read_result.get('pf_unit') else ('semantic' if meta.get('unit') else read_result.get('unit_source')),
             'requires_loadflow': bool(meta.get('requires_loadflow', False)),
             'data_source': 'result' if bool(meta.get('requires_loadflow', False)) else 'base',
             'read_debug': read_result,
@@ -3560,6 +3625,8 @@ def _read_attribute_handle(obj: Any, entity_type: str, handle: str) -> Dict[str,
                 'attribute_name': attr_name,
                 'label': attr_name,
                 'unit': read_result.get('unit'),
+                'unit_source': read_result.get('unit_source'),
+                'pf_unit': read_result.get('pf_unit'),
                 'requires_loadflow': _attribute_name_likely_requires_loadflow(attr_name),
                 'data_source': read_result.get('data_source') or _infer_data_source_from_attr_name(attr_name),
                 'value': display_value,
@@ -3571,6 +3638,8 @@ def _read_attribute_handle(obj: Any, entity_type: str, handle: str) -> Dict[str,
             'attribute_name': attr_name,
             'label': attr_name,
             'unit': read_result.get('unit'),
+            'unit_source': read_result.get('unit_source'),
+            'pf_unit': read_result.get('pf_unit'),
             'requires_loadflow': _attribute_name_likely_requires_loadflow(attr_name),
             'data_source': read_result.get('data_source') or _infer_data_source_from_attr_name(attr_name),
             'read_debug': read_result,

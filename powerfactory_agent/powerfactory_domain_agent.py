@@ -1506,6 +1506,7 @@ class PowerFactoryDomainAgent:
         print("\n================ DEBUG START ================")
         print(f"[INPUT] {user_input}")
 
+        #PowerFactory starten, Projekt aktivieren etc.
         services = build_powerfactory_services(project_name=self.project_name)
         if services["status"] != "ok":
             print("[ERROR] Services konnten nicht gebaut werden")
