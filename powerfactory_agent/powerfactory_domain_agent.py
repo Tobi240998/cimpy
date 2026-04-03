@@ -537,6 +537,7 @@ class PowerFactoryDomainAgent:
             return [
                 {"step": "build_data_inventory", "description": allowed_steps["build_data_inventory"], **({"user_input_override": user_input_override} if user_input_override is not None else {}), **({"source_subrequest": source_subrequest} if source_subrequest is not None else {})},
                 {"step": "interpret_data_query_instruction", "description": allowed_steps["interpret_data_query_instruction"], **({"user_input_override": user_input_override} if user_input_override is not None else {}), **({"source_subrequest": source_subrequest} if source_subrequest is not None else {})},
+                {"step": "classify_data_source", "description": allowed_steps["classify_data_source"], **({"user_input_override": user_input_override} if user_input_override is not None else {}), **({"source_subrequest": source_subrequest} if source_subrequest is not None else {})},
                 {"step": "resolve_pf_object_from_inventory_llm", "description": allowed_steps["resolve_pf_object_from_inventory_llm"], **({"user_input_override": user_input_override} if user_input_override is not None else {}), **({"source_subrequest": source_subrequest} if source_subrequest is not None else {})},
                 {"step": "list_available_object_attributes", "description": allowed_steps["list_available_object_attributes"], **({"user_input_override": user_input_override} if user_input_override is not None else {}), **({"source_subrequest": source_subrequest} if source_subrequest is not None else {})},
                 {"step": "select_pf_object_attributes_llm", "description": allowed_steps["select_pf_object_attributes_llm"], **({"user_input_override": user_input_override} if user_input_override is not None else {}), **({"source_subrequest": source_subrequest} if source_subrequest is not None else {})},
@@ -1051,6 +1052,8 @@ class PowerFactoryDomainAgent:
         elif step == "interpret_data_query_instruction":
             tool_kwargs["user_input"] = effective_user_input
             tool_kwargs["inventory"] = state["data_inventory_result"]["inventory"] if isinstance(state["data_inventory_result"], dict) else {}
+        elif step == "classify_data_source":
+            tool_kwargs["instruction"] = state["data_query_instruction"]
         elif step == "resolve_pf_object_from_inventory_llm":
             tool_kwargs["instruction"] = state["data_query_instruction"]
             tool_kwargs["inventory"] = state["data_inventory_result"]["inventory"] if isinstance(state["data_inventory_result"], dict) else {}
@@ -1111,6 +1114,9 @@ class PowerFactoryDomainAgent:
             state["data_inventory_result"] = result
         elif step == "interpret_data_query_instruction":
             state["data_query_instruction"] = result["instruction"]
+        elif step == "classify_data_source":
+            state["data_query_instruction"] = result["instruction"]
+            state["data_source_decision"] = result
         elif step == "resolve_pf_object_from_inventory_llm":
             state["data_object_resolution"] = result
         elif step == "list_available_object_attributes":
@@ -1150,6 +1156,7 @@ class PowerFactoryDomainAgent:
             "switch_summary": None,
             "data_inventory_result": None,
             "data_query_instruction": None,
+            "data_source_decision": None,
             "data_object_resolution": None,
             "data_attribute_listing": None,
             "data_attribute_selection": None,
@@ -1216,6 +1223,7 @@ class PowerFactoryDomainAgent:
             switch_summary=state["switch_summary"],
             data_inventory_result=state["data_inventory_result"],
             data_query_instruction=state["data_query_instruction"],
+            data_source_decision=state["data_source_decision"],
             data_object_resolution=state["data_object_resolution"],
             data_attribute_listing=state["data_attribute_listing"],
             data_attribute_selection=state["data_attribute_selection"],
@@ -1398,6 +1406,7 @@ class PowerFactoryDomainAgent:
         switch_summary: Dict[str, Any] | None,
         data_inventory_result: Dict[str, Any] | None,
         data_query_instruction: Dict[str, Any] | None,
+        data_source_decision: Dict[str, Any] | None,
         data_object_resolution: Dict[str, Any] | None,
         data_attribute_listing: Dict[str, Any] | None,
         data_attribute_selection: Dict[str, Any] | None,
@@ -1470,6 +1479,7 @@ class PowerFactoryDomainAgent:
             "data_query": {
                 "inventory": data_inventory_result,
                 "instruction": data_query_instruction,
+                "data_source_decision": data_source_decision,
                 "resolution": data_object_resolution,
                 "attribute_listing": data_attribute_listing,
                 "attribute_selection": data_attribute_selection,

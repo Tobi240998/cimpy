@@ -1,0 +1,7 @@
+﻿object_type,loc_name,full_name,pf_class,loading_pct,loading_pct__attr,current_ka,current_ka__attr,length_km,length_km__attr,rated_current_a,rated_current_a__attr,outserv,outserv__attr
+line,Line 4-5,\STELLER.IntUser\Nine-bus System(2).IntPrj\Network Model.IntPrjfolder\Network Data.IntPrjfolder\Nine-bus System.ElmNet\Line 4-5.ElmLne,ElmLne,30.553112413725653,c:loading,,,1.0,dline,1.0,Inom,0,outserv
+line,Line 4-6,\STELLER.IntUser\Nine-bus System(2).IntPrj\Network Model.IntPrjfolder\Network Data.IntPrjfolder\Nine-bus System.ElmNet\Line 4-6.ElmLne,ElmLne,11.158608796644545,c:loading,,,1.0,dline,1.0,Inom,0,outserv
+line,Line 5-7,\STELLER.IntUser\Nine-bus System(2).IntPrj\Network Model.IntPrjfolder\Network Data.IntPrjfolder\Nine-bus System.ElmNet\Line 5-7.ElmLne,ElmLne,24.954767533940682,c:loading,,,1.0,dline,1.0,Inom,0,outserv
+line,Line 6-9,\STELLER.IntUser\Nine-bus System(2).IntPrj\Network Model.IntPrjfolder\Network Data.IntPrjfolder\Nine-bus System.ElmNet\Line 6-9.ElmLne,ElmLne,13.659897092495715,c:loading,,,1.0,dline,1.0,Inom,0,outserv
+line,Line 7-8,\STELLER.IntUser\Nine-bus System(2).IntPrj\Network Model.IntPrjfolder\Network Data.IntPrjfolder\Nine-bus System.ElmNet\Line 7-8.ElmLne,ElmLne,15.881281237056092,c:loading,,,1.0,dline,1.0,Inom,0,outserv
+line,Line 8-9,\STELLER.IntUser\Nine-bus System(2).IntPrj\Network Model.IntPrjfolder\Network Data.IntPrjfolder\Nine-bus System.ElmNet\Line 8-9.ElmLne,ElmLne,9.87401161433298,c:loading,,,1.0,dline,1.0,Inom,0,outserv

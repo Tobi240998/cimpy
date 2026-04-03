@@ -1,135 +1,22 @@
 from __future__ import annotations
 
+import argparse
 import csv
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
-
-try:
-    from openpyxl import Workbook
-    HAS_OPENPYXL = True
-except Exception:
-    HAS_OPENPYXL = False
+from typing import Any, Dict, Iterable, List, Optional, Tuple
 
 from cimpy.powerfactory_agent.config import DEFAULT_PROJECT_NAME
 from cimpy.powerfactory_agent.pf_runner import _get_pf, _get_app, _activate_project_by_name
 
 
-OBJECT_PATTERNS: Dict[str, List[str]] = {
-    "bus": ["*.ElmTerm"],
-    "line": ["*.ElmLne", "*.ElmCabl", "*.ElmCable"],
-    "load": ["*.ElmLod*"],
-    "transformer": ["*.ElmTr*"],
-    "generator": ["*.ElmSym", "*.ElmAsm", "*.ElmGenstat", "*.ElmPvsys", "*.ElmSgen"],
-    "switch": ["*.Sta*", "*.ElmCoup*", "*.RelFuse*"],
+# Optional filter to reduce very noisy Python-side attributes from dir(obj)
+EXCLUDED_DIR_NAMES = {
+    "this",
+    "thisown",
 }
 
 
-RESULT_PREFIXES = ("m:", "c:", "n:", "s:")
-BASE_HINT_PREFIXES = ("e:", "b:")
-
-# Deliberately conservative helper-field filter.
-# Goal: keep potentially useful engineering data, filter obvious internal/technical helper fields.
-TECHNICAL_HELPER_NAME_PATTERNS = [
-    "loc_name",
-    "for_name",
-    "fold_id",
-    "cpgrid",
-    "cpzone",
-    "cparea",
-    "cpsubstat",
-    "desc",
-    "idetail",
-    "ishclne",
-    "gps",
-    "gco",
-    "chr",
-    "colour",
-    "color",
-    "sym",
-    "diagram",
-    "display",
-    "plot",
-    "vis",
-    "icon",
-    "grf",
-    "graphic",
-    "intmon",
-    "outserv",
-    "isclosed",
-    "on_off",
-    "ukid",
-    "busid",
-    "fold",
-    "frnom",
-    "ausage",
-    "iusage",
-    "cpfeed",
-    "cptrf",
-    "cpterm",
-    "cpnode",
-    "cpobj",
-    "typ_id",
-    "type_id",
-]
-
-TECHNICAL_HELPER_LABEL_PATTERNS = [
-    "access time",
-    "locacctime",
-    "accesstime",
-    "graphic",
-    "diagram",
-    "layout",
-    "display",
-    "icon",
-    "colour",
-    "color",
-    "usage",
-    "identifier",
-    "internal",
-    "folder",
-    "database",
-]
-
-ENGINEERING_LABEL_PATTERNS = [
-    "spannung",
-    "voltage",
-    "strom",
-    "current",
-    "leistung",
-    "power",
-    "blindleistung",
-    "wirkleistung",
-    "loading",
-    "auslastung",
-    "nenn",
-    "rated",
-    "impedance",
-    "resistance",
-    "reactance",
-    "admittance",
-    "frequency",
-    "length",
-    "länge",
-    "tap",
-    "ratio",
-    "setpoint",
-    "soll",
-    "limit",
-    "grenze",
-    "phase",
-    "earth",
-    "ground",
-    "r0",
-    "x0",
-    "r1",
-    "x1",
-    "sn",
-    "uknom",
-    "inom",
-]
-
-
-def _to_py_list(value: Any) -> List[Any]:
+def _to_list(value: Any) -> List[Any]:
     if value is None:
         return []
     try:
@@ -138,11 +25,15 @@ def _to_py_list(value: Any) -> List[Any]:
         return []
 
 
-def _safe_get_name(obj: Any) -> Optional[str]:
+def _safe_getattr(obj: Any, name: str) -> Any:
     try:
-        return getattr(obj, "loc_name", None)
+        return getattr(obj, name)
     except Exception:
         return None
+
+
+def _safe_get_name(obj: Any) -> Optional[str]:
+    return _safe_getattr(obj, "loc_name")
 
 
 def _safe_get_full_name(obj: Any) -> Optional[str]:
@@ -157,6 +48,62 @@ def _safe_get_class_name(obj: Any) -> Optional[str]:
         return obj.GetClassName()
     except Exception:
         return None
+
+
+def _connect_powerfactory(project_name: str) -> Dict[str, Any]:
+    pf = _get_pf()
+    app = _get_app(pf)
+    if app is None:
+        raise RuntimeError("PowerFactory nicht erreichbar (GetApplication/GetApplicationExt ist None).")
+
+    ok = _activate_project_by_name(app, project_name)
+    if not ok:
+        raise RuntimeError(f"Projekt konnte nicht aktiviert werden: {project_name}")
+
+    project = app.GetActiveProject()
+    if project is None:
+        raise RuntimeError("Kein aktives Projekt.")
+
+    studycase = app.GetActiveStudyCase()
+    if studycase is None:
+        raise RuntimeError("Kein aktiver Study Case.")
+
+    return {
+        "pf": pf,
+        "app": app,
+        "project": project,
+        "studycase": studycase,
+        "project_name": project_name,
+    }
+
+
+def _ensure_loadflow(studycase: Any) -> Dict[str, Any]:
+    ldf_list = _to_list(studycase.GetContents("*.ComLdf", 1))
+    if not ldf_list:
+        ldf = studycase.CreateObject("ComLdf", "LoadFlow")
+    else:
+        ldf = ldf_list[0]
+
+    rc = ldf.Execute()
+    return {
+        "status": "ok",
+        "return_code": rc,
+        "loadflow_name": _safe_getattr(ldf, "loc_name") or "LoadFlow",
+    }
+
+
+def _iter_unique_objects(app: Any, patterns: List[str]) -> List[Any]:
+    seen: set[str] = set()
+    unique: List[Any] = []
+    for pattern in patterns:
+        for obj in _to_list(app.GetCalcRelevantObjects(pattern)):
+            key = _safe_get_full_name(obj) or _safe_get_name(obj)
+            if not key or key in seen:
+                continue
+            seen.add(key)
+            unique.append(obj)
+    unique.sort(key=lambda obj: ((_safe_get_name(obj) or ""), (_safe_get_full_name(obj) or "")))
+    return unique
 
 
 def _discover_object_attribute_names(obj: Any) -> List[str]:
@@ -184,12 +131,12 @@ def _discover_object_attribute_names(obj: Any) -> List[str]:
                 result = method(*args)
             except Exception:
                 continue
-            for item in _to_py_list(result):
+            for item in _to_list(result):
                 _add(item)
 
     try:
         for name in dir(obj):
-            if name.startswith("_"):
+            if name.startswith("_") or name in EXCLUDED_DIR_NAMES:
                 continue
             try:
                 value = getattr(obj, name)
@@ -201,431 +148,312 @@ def _discover_object_attribute_names(obj: Any) -> List[str]:
     except Exception:
         pass
 
-    names.sort()
+    names.sort(key=str.lower)
     return names
 
 
-def _coerce_numeric(value: Any) -> Optional[float]:
-    if value is None:
-        return None
-    if isinstance(value, bool):
-        return float(value)
-    if isinstance(value, (int, float)):
-        return float(value)
+def _safe_get_attribute(obj: Any, attr_name: str) -> Any:
     try:
-        return float(value)
+        value = obj.GetAttribute(attr_name)
+        if value is not None:
+            return value
     except Exception:
         pass
+
     try:
-        if hasattr(value, "__len__") and len(value) == 1:
-            return float(value[0])
+        value = getattr(obj, attr_name)
+        if value is not None:
+            return value
     except Exception:
         pass
+
     return None
 
 
-def _get_pf_attribute_unit(obj: Any, attr_name: str) -> Optional[str]:
-    if not obj or not attr_name:
+def _safe_get_attribute_description_text(obj: Any, attr_name: str) -> Optional[str]:
+    if obj is None or not attr_name:
+        return None
+
+    try:
+        desc = obj.GetAttributeDescription(attr_name)
+    except Exception:
+        desc = None
+
+    if desc is None:
+        return None
+
+    if isinstance(desc, str):
+        cleaned = desc.strip()
+        return cleaned or None
+
+    parts: List[str] = []
+    for key in ["short", "short_text", "description", "text", "label", "name"]:
+        try:
+            value = getattr(desc, key, None)
+        except Exception:
+            value = None
+        if value is None:
+            continue
+        try:
+            value_text = str(value).strip()
+        except Exception:
+            value_text = ""
+        if value_text and value_text not in parts:
+            parts.append(value_text)
+
+    if parts:
+        return " | ".join(parts)
+
+    try:
+        value_text = str(desc).strip()
+    except Exception:
+        value_text = ""
+    return value_text or None
+
+
+def _safe_get_attribute_unit(obj: Any, attr_name: str) -> Optional[str]:
+    if obj is None or not attr_name:
         return None
 
     for method_name in ["GetAttributeUnit", "GetAttributeUnits"]:
         try:
-            method = getattr(obj, method_name)
-            unit = method(attr_name)
-            if unit:
+            method = getattr(obj, method_name, None)
+            if callable(method):
+                unit = method(attr_name)
+                if unit not in (None, ""):
+                    return str(unit)
+        except Exception:
+            pass
+
+    try:
+        desc = obj.GetAttributeDescription(attr_name)
+        unit = getattr(desc, "unit", None)
+        if unit not in (None, ""):
+            return str(unit)
+    except Exception:
+        pass
+
+    for unit_attr in [f"{attr_name}:unit", f"{attr_name}.unit"]:
+        try:
+            unit = obj.GetAttribute(unit_attr)
+            if unit not in (None, ""):
+                return str(unit)
+        except Exception:
+            pass
+        try:
+            unit = getattr(obj, unit_attr)
+            if unit not in (None, ""):
                 return str(unit)
         except Exception:
             pass
 
-    for method_name in ["GetAttributeDescription", "GetAttributeInfo", "GetVarInfo"]:
-        try:
-            method = getattr(obj, method_name)
-            desc = method(attr_name)
-            if desc is None:
-                continue
-            for field_name in ["unit", "Unit", "sUnit"]:
-                try:
-                    value = getattr(desc, field_name)
-                    if value:
-                        return str(value)
-                except Exception:
-                    pass
-            if isinstance(desc, dict):
-                for field_name in ["unit", "Unit", "sUnit"]:
-                    value = desc.get(field_name)
-                    if value:
-                        return str(value)
-        except Exception:
-            pass
+    return None
+
+
+def _coerce_scalar(value: Any) -> Tuple[Any, str]:
+    if value is None:
+        return None, "NoneType"
+    if isinstance(value, (str, int, float, bool)):
+        return value, type(value).__name__
 
     try:
-        value = obj.GetAttribute(f"{attr_name}:unit")
-        if value:
-            return str(value)
+        if hasattr(value, "__len__") and len(value) == 1:
+            first = value[0]
+            return first, type(first).__name__
     except Exception:
         pass
 
-    return None
+    return value, type(value).__name__
 
 
-def _extract_text_from_pf_metadata(value: Any) -> Optional[str]:
+def _stringify_value(value: Any) -> str:
     if value is None:
-        return None
+        return ""
+    if isinstance(value, bool):
+        return "true" if value else "false"
+    if isinstance(value, (int, float)):
+        return str(value)
     if isinstance(value, str):
-        text = value.strip()
-        return text or None
-    if isinstance(value, dict):
-        for key in ["label", "name", "description", "desc", "short", "text", "title"]:
-            item = value.get(key)
-            if item is not None:
-                text = str(item).strip()
-                if text:
-                    return text
-        return None
-    for attr in ["label", "name", "description", "desc", "short", "text", "title"]:
-        try:
-            item = getattr(value, attr)
-            if item is not None:
-                text = str(item).strip()
-                if text:
-                    return text
-        except Exception:
-            pass
+        return value
     try:
-        text = str(value).strip()
-        return text or None
+        return repr(value)
     except Exception:
-        return None
-
-
-def _get_pf_attribute_label(obj: Any, attr_name: str) -> Optional[str]:
-    if not obj or not attr_name:
-        return None
-
-    for method_name in ["GetAttributeLabel", "GetAttributeName", "GetVarName"]:
         try:
-            method = getattr(obj, method_name)
-            value = method(attr_name)
-            text = _extract_text_from_pf_metadata(value)
-            if text:
-                return text
+            return str(value)
         except Exception:
-            pass
-
-    for method_name in ["GetAttributeDescription", "GetAttributeInfo", "GetVarInfo"]:
-        try:
-            method = getattr(obj, method_name)
-            desc = method(attr_name)
-            if desc is None:
-                continue
-            for field_name in ["label", "Label", "name", "Name", "short", "Short", "title", "Title"]:
-                try:
-                    value = getattr(desc, field_name)
-                    text = _extract_text_from_pf_metadata(value)
-                    if text:
-                        return text
-                except Exception:
-                    pass
-            if isinstance(desc, dict):
-                for field_name in ["label", "Label", "name", "Name", "short", "Short", "title", "Title"]:
-                    text = _extract_text_from_pf_metadata(desc.get(field_name))
-                    if text:
-                        return text
-        except Exception:
-            pass
-
-    return None
+            return "<unprintable>"
 
 
-def _get_pf_attribute_description(obj: Any, attr_name: str) -> Optional[str]:
-    if not obj or not attr_name:
-        return None
-
-    for method_name in ["GetAttributeDescription", "GetAttributeInfo", "GetVarInfo"]:
-        try:
-            method = getattr(obj, method_name)
-            desc = method(attr_name)
-            if desc is None:
-                continue
-
-            if isinstance(desc, str):
-                text = desc.strip()
-                if text:
-                    return text
-
-            for field_name in ["description", "Description", "desc", "Desc", "help", "Help", "text", "Text"]:
-                try:
-                    value = getattr(desc, field_name)
-                    text = _extract_text_from_pf_metadata(value)
-                    if text:
-                        return text
-                except Exception:
-                    pass
-
-            if isinstance(desc, dict):
-                for field_name in ["description", "Description", "desc", "Desc", "help", "Help", "text", "Text"]:
-                    text = _extract_text_from_pf_metadata(desc.get(field_name))
-                    if text:
-                        return text
-        except Exception:
-            pass
-
-    return None
-
-
-def _read_attribute(obj: Any, attr_name: str) -> Dict[str, Any]:
-    raw_value = None
-    read_ok = False
-
-    try:
-        raw_value = obj.GetAttribute(attr_name)
-        read_ok = raw_value is not None
-    except Exception:
-        raw_value = None
-
-    if raw_value is None:
-        try:
-            raw_value = getattr(obj, attr_name)
-            read_ok = raw_value is not None
-        except Exception:
-            raw_value = None
-
-    numeric_value = _coerce_numeric(raw_value)
-    pf_unit = _get_pf_attribute_unit(obj, attr_name)
-    pf_label = _get_pf_attribute_label(obj, attr_name)
-    pf_description = _get_pf_attribute_description(obj, attr_name)
+def _read_attribute_record(obj: Any, attr_name: str) -> Dict[str, Any]:
+    raw_value = _safe_get_attribute(obj, attr_name)
+    scalar_value, value_type = _coerce_scalar(raw_value)
+    description = _safe_get_attribute_description_text(obj, attr_name)
+    unit = _safe_get_attribute_unit(obj, attr_name)
+    readable = raw_value is not None
 
     return {
-        "read_ok": read_ok,
-        "raw_value": raw_value,
-        "numeric_value": numeric_value,
-        "display_value": numeric_value if numeric_value is not None else raw_value,
-        "pf_unit": pf_unit,
-        "unit_source": "powerfactory" if pf_unit else None,
-        "pf_label": pf_label,
-        "pf_description": pf_description,
-        "value_type": type(raw_value).__name__ if raw_value is not None else None,
+        "attribute_name": attr_name,
+        "attribute_description": description,
+        "value": scalar_value,
+        "value_text": _stringify_value(scalar_value),
+        "raw_value_text": _stringify_value(raw_value),
+        "value_type": value_type,
+        "unit": unit,
+        "readable": readable,
+        "data_source_hint": "result" if attr_name.startswith(("m:", "c:")) else "base",
     }
 
 
-def _classify_data_origin(attr_name: str) -> str:
-    lower = (attr_name or "").strip().lower()
-    if lower.startswith(RESULT_PREFIXES):
-        return "result"
-    if lower.startswith(BASE_HINT_PREFIXES):
-        return "base"
-    return "base_or_parameter"
-
-
-def _contains_any(text: str, patterns: List[str]) -> bool:
-    lower = (text or "").strip().lower()
-    return any(pattern in lower for pattern in patterns)
-
-
-def _classify_attribute_for_queryability(
-    attr_name: str,
-    pf_label: Optional[str],
-    pf_description: Optional[str],
-    read_ok: bool,
-    pf_unit: Optional[str],
-    value_type: Optional[str],
-) -> Tuple[str, str]:
-    """
-    Returns (queryability_filter, filter_reason)
-
-    queryability_filter:
-      - keep
-      - review
-      - helper_filtered
-    """
-    attr_lower = (attr_name or "").strip().lower()
-    label_lower = (pf_label or "").strip().lower()
-    desc_lower = (pf_description or "").strip().lower()
-    merged_text = " | ".join(x for x in [attr_lower, label_lower, desc_lower] if x)
-
-    if _contains_any(attr_lower, TECHNICAL_HELPER_NAME_PATTERNS):
-        return "helper_filtered", "attr_name_matches_helper_pattern"
-
-    if _contains_any(label_lower, TECHNICAL_HELPER_LABEL_PATTERNS) or _contains_any(desc_lower, TECHNICAL_HELPER_LABEL_PATTERNS):
-        return "helper_filtered", "pf_metadata_matches_helper_pattern"
-
-    if pf_unit:
-        return "keep", "pf_unit_available"
-
-    if _classify_data_origin(attr_name) == "result":
-        return "keep", "result_attribute_prefix"
-
-    if _contains_any(merged_text, ENGINEERING_LABEL_PATTERNS):
-        if read_ok:
-            return "keep", "engineering_metadata_or_name_match"
-        return "review", "engineering_match_but_not_readable"
-
-    if read_ok and value_type in {"int", "float", "list", "tuple"}:
-        return "review", "readable_but_no_pf_unit_or_clear_metadata"
-
-    if read_ok:
-        return "review", "readable_textual_or_untyped_attribute"
-
-    return "helper_filtered", "not_readable_and_no_engineering_signal"
-
-
-def _collect_objects(app: Any, patterns: List[str]) -> List[Any]:
-    objects: List[Any] = []
-    seen = set()
-    for pattern in patterns:
-        try:
-            found = app.GetCalcRelevantObjects(pattern) or []
-        except Exception:
-            found = []
-        for obj in found:
-            key = _safe_get_full_name(obj) or _safe_get_name(obj)
-            if not key or key in seen:
-                continue
-            seen.add(key)
-            objects.append(obj)
-    return objects
-
-
-def export_attributes(
-    project_name: str = DEFAULT_PROJECT_NAME,
-    output_dir: str = ".",
-    max_objects_per_type: Optional[int] = None,
-    only_readable: bool = False,
-) -> Dict[str, Any]:
-    pf = _get_pf()
-    app = _get_app(pf)
-    if app is None:
-        raise RuntimeError("PowerFactory nicht erreichbar (GetApplication/GetApplicationExt ist None).")
-
-    ok = _activate_project_by_name(app, project_name)
-    if not ok:
-        raise RuntimeError(f"Projekt konnte nicht aktiviert werden: {project_name}")
-
-    project = app.GetActiveProject()
-    studycase = app.GetActiveStudyCase()
-    if project is None:
-        raise RuntimeError("Kein aktives Projekt.")
-    if studycase is None:
-        raise RuntimeError("Kein aktiver Study Case.")
-
-    output_path = Path(output_dir)
-    output_path.mkdir(parents=True, exist_ok=True)
-
+def _build_attribute_rows(
+    app: Any,
+    *,
+    object_type: str,
+    patterns: List[str],
+    max_objects: Optional[int] = None,
+    readable_only: bool = False,
+) -> List[Dict[str, Any]]:
     rows: List[Dict[str, Any]] = []
+    objects = _iter_unique_objects(app, patterns)
+    if max_objects is not None:
+        objects = objects[: max(0, max_objects)]
 
-    for entity_type, patterns in OBJECT_PATTERNS.items():
-        objects = _collect_objects(app, patterns)
-        if max_objects_per_type is not None:
-            objects = objects[:max_objects_per_type]
+    for obj in objects:
+        object_info = {
+            "object_type": object_type,
+            "loc_name": _safe_get_name(obj),
+            "full_name": _safe_get_full_name(obj),
+            "pf_class": _safe_get_class_name(obj),
+        }
+        for attr_name in _discover_object_attribute_names(obj):
+            record = _read_attribute_record(obj, attr_name)
+            if readable_only and not record["readable"]:
+                continue
+            rows.append({**object_info, **record})
+    return rows
 
-        for obj in objects:
-            object_name = _safe_get_name(obj)
-            full_name = _safe_get_full_name(obj)
-            pf_class = _safe_get_class_name(obj)
-            attr_names = _discover_object_attribute_names(obj)
 
-            for attr_name in attr_names:
-                read_result = _read_attribute(obj, attr_name)
+def _write_csv(path: Path, rows: List[Dict[str, Any]]) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    fieldnames: List[str] = []
+    seen: set[str] = set()
+    for row in rows:
+        for key in row.keys():
+            if key not in seen:
+                seen.add(key)
+                fieldnames.append(key)
 
-                if only_readable and not read_result["read_ok"]:
-                    continue
-
-                queryability_filter, filter_reason = _classify_attribute_for_queryability(
-                    attr_name=attr_name,
-                    pf_label=read_result["pf_label"],
-                    pf_description=read_result["pf_description"],
-                    read_ok=read_result["read_ok"],
-                    pf_unit=read_result["pf_unit"],
-                    value_type=read_result["value_type"],
-                )
-
-                rows.append({
-                    "entity_type": entity_type,
-                    "pf_class": pf_class,
-                    "object_name": object_name,
-                    "full_name": full_name,
-                    "attribute_name": attr_name,
-                    "attribute_label": read_result["pf_label"],
-                    "attribute_description": read_result["pf_description"],
-                    "data_origin": _classify_data_origin(attr_name),
-                    "read_ok": read_result["read_ok"],
-                    "display_value": read_result["display_value"],
-                    "raw_value_repr": repr(read_result["raw_value"]) if read_result["raw_value"] is not None else None,
-                    "numeric_value": read_result["numeric_value"],
-                    "unit": read_result["pf_unit"],
-                    "unit_source": read_result["unit_source"],
-                    "value_type": read_result["value_type"],
-                    "queryability_filter": queryability_filter,
-                    "filter_reason": filter_reason,
-                })
-
-    csv_path = output_path / "powerfactory_attribute_export.csv"
-    fieldnames = [
-        "entity_type",
-        "pf_class",
-        "object_name",
-        "full_name",
-        "attribute_name",
-        "attribute_label",
-        "attribute_description",
-        "data_origin",
-        "read_ok",
-        "display_value",
-        "raw_value_repr",
-        "numeric_value",
-        "unit",
-        "unit_source",
-        "value_type",
-        "queryability_filter",
-        "filter_reason",
-    ]
-
-    with csv_path.open("w", newline="", encoding="utf-8-sig") as f:
-        writer = csv.DictWriter(f, fieldnames=fieldnames, delimiter=";")
+    with path.open("w", newline="", encoding="utf-8-sig") as f:
+        writer = csv.DictWriter(f, fieldnames=fieldnames, extrasaction="ignore")
         writer.writeheader()
         writer.writerows(rows)
 
-    xlsx_path = None
-    if HAS_OPENPYXL:
-        wb = Workbook()
-        ws = wb.active
-        ws.title = "PF Attributes"
-        ws.append(fieldnames)
-        for row in rows:
-            ws.append([row.get(col) for col in fieldnames])
-        for col in ws.columns:
-            max_len = 0
-            col_letter = col[0].column_letter
-            for cell in col:
-                value = "" if cell.value is None else str(cell.value)
-                max_len = max(max_len, len(value))
-            ws.column_dimensions[col_letter].width = min(max_len + 2, 80)
-        xlsx_path = output_path / "powerfactory_attribute_export.xlsx"
-        wb.save(xlsx_path)
 
-    summary_counts: Dict[str, Dict[str, int]] = {}
-    for row in rows:
-        entity_type = row["entity_type"]
-        filter_name = row["queryability_filter"]
-        summary_counts.setdefault(entity_type, {})
-        summary_counts[entity_type][filter_name] = summary_counts[entity_type].get(filter_name, 0) + 1
-
+def _build_summary(rows: List[Dict[str, Any]]) -> Dict[str, Any]:
+    object_names = {(row.get("object_type"), row.get("full_name") or row.get("loc_name")) for row in rows}
+    readable_count = sum(1 for row in rows if row.get("readable"))
+    result_attr_count = sum(1 for row in rows if row.get("attribute_name", "").startswith(("m:", "c:")))
     return {
-        "status": "ok",
-        "project_name": project_name,
-        "studycase": getattr(studycase, "loc_name", None),
-        "rows": len(rows),
-        "csv_path": str(csv_path),
-        "xlsx_path": str(xlsx_path) if xlsx_path else None,
-        "summary_counts": summary_counts,
+        "row_count": len(rows),
+        "object_count": len(object_names),
+        "readable_row_count": readable_count,
+        "result_attr_row_count": result_attr_count,
     }
 
 
-if __name__ == "__main__":
-    result = export_attributes(
-        project_name=DEFAULT_PROJECT_NAME,
-        output_dir=".",
-        max_objects_per_type=None,
-        only_readable=False,
+def export_all_loadflow_attributes_csv(
+    project_name: str = DEFAULT_PROJECT_NAME,
+    output_dir: str = "./pf_loadflow_all_attributes_export",
+    max_bus_objects: Optional[int] = None,
+    max_line_objects: Optional[int] = None,
+    readable_only: bool = False,
+) -> Dict[str, Any]:
+    ctx = _connect_powerfactory(project_name)
+    app = ctx["app"]
+    studycase = ctx["studycase"]
+
+    loadflow_info = _ensure_loadflow(studycase)
+
+    bus_rows = _build_attribute_rows(
+        app,
+        object_type="bus",
+        patterns=["*.ElmTerm"],
+        max_objects=max_bus_objects,
+        readable_only=readable_only,
     )
-    print(result)
+    line_rows = _build_attribute_rows(
+        app,
+        object_type="line",
+        patterns=["*.ElmLne", "*.ElmCabl"],
+        max_objects=max_line_objects,
+        readable_only=readable_only,
+    )
+
+    output_path = Path(output_dir)
+    buses_csv = output_path / "pf_loadflow_buses_all_attributes.csv"
+    lines_csv = output_path / "pf_loadflow_lines_all_attributes.csv"
+
+    _write_csv(buses_csv, bus_rows)
+    _write_csv(lines_csv, line_rows)
+
+    return {
+        "status": "ok",
+        "project": project_name,
+        "studycase": _safe_getattr(studycase, "loc_name"),
+        "loadflow": loadflow_info,
+        "buses_csv": str(buses_csv.resolve()),
+        "lines_csv": str(lines_csv.resolve()),
+        "bus_summary": _build_summary(bus_rows),
+        "line_summary": _build_summary(line_rows),
+        "readable_only": readable_only,
+        "max_bus_objects": max_bus_objects,
+        "max_line_objects": max_line_objects,
+    }
+
+
+def main() -> None:
+    parser = argparse.ArgumentParser(
+        description=(
+            "Führt einen Lastfluss aus und exportiert möglichst alle entdeckbaren Attribute "
+            "von Bussen und Leitungen in Long-Format-CSV-Dateien."
+        )
+    )
+    parser.add_argument("--project", default=DEFAULT_PROJECT_NAME, help="PowerFactory-Projektname")
+    parser.add_argument(
+        "--output-dir",
+        default="./pf_loadflow_all_attributes_export",
+        help="Zielordner für die CSV-Dateien",
+    )
+    parser.add_argument(
+        "--max-bus-objects",
+        type=int,
+        default=None,
+        help="Optional: nur die ersten N Bus-Objekte exportieren",
+    )
+    parser.add_argument(
+        "--max-line-objects",
+        type=int,
+        default=None,
+        help="Optional: nur die ersten N Leitungs-/Kabelobjekte exportieren",
+    )
+    parser.add_argument(
+        "--readable-only",
+        action="store_true",
+        help="Nur Attribute exportieren, deren Wert aktuell lesbar ist",
+    )
+    args = parser.parse_args()
+
+    result = export_all_loadflow_attributes_csv(
+        project_name=args.project,
+        output_dir=args.output_dir,
+        max_bus_objects=args.max_bus_objects,
+        max_line_objects=args.max_line_objects,
+        readable_only=args.readable_only,
+    )
+
+    print("[LOADFLOW ALL-ATTRIBUTES CSV EXPORT]")
+    for key, value in result.items():
+        print(f"{key}: {value}")
+
+
+if __name__ == "__main__":
+    main()
