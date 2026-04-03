@@ -2615,7 +2615,6 @@ def _build_requested_attribute_extraction_chain():
         (
             'user',
             'User request:\n{user_input}\n\n'
-            '{format_instructions}'
         ),
     ])
     return _build_structured_chain(prompt, RequestedAttributeNameDecision)
@@ -4082,20 +4081,62 @@ def _select_pf_object_attributes_llm_with_services(
             entity_type=entity_type or '',
             object_name=object_name or '',
             user_input=request_text,
-            source_preference='base',  # aktuell bewusst ohne Relevanz
+            source_preference='base',
         )
 
         pf_description_attribute_count = len(pf_description_match.get('attribute_options', []) or [])
-        pf_description_match_handles = [
-            handle for handle in (pf_description_match.get('selected_attribute_handles', []) or [])
-            if handle in available_handles
-        ]
         pf_description_match_candidates = pf_description_match.get('matched_candidates', []) or []
+
+        seen_handles = set()
+        for item in pf_description_match_candidates:
+            if not isinstance(item, dict):
+                continue
+
+            handle = item.get('handle')
+            if not handle:
+                attr_name = item.get('attribute_name')
+                if attr_name:
+                    handle = f'attr::{attr_name}'
+
+            if not handle:
+                continue
+
+            if available_handles and handle not in available_handles:
+                continue
+
+            if handle in seen_handles:
+                continue
+
+            seen_handles.add(handle)
+        pf_description_match_handles.append(handle)
+
+        pf_description_match_handles = []
+        seen_handles = set()
+
+        for item in pf_description_match_candidates:
+            if not isinstance(item, dict):
+                continue
+
+            handle = item.get('handle')
+            if not handle:
+                attr_name = item.get('attribute_name')
+                if attr_name:
+                    handle = f'attr::{attr_name}'
+
+            if not handle or handle in seen_handles:
+                continue
+
+            seen_handles.add(handle)
+            pf_description_match_handles.append(handle)
+
+    pf_description_confidence = str(
+        pf_description_match.get('llm_decision', {}).get('confidence', '')
+    ).strip().lower()
 
     if (
         pf_description_match.get('status') == 'ok'
         and pf_description_match.get('llm_decision', {}).get('should_execute')
-        and str(pf_description_match.get('llm_decision', {}).get('confidence', '')).lower() == 'high'
+        and pf_description_confidence == 'high'
         and pf_description_match_handles
     ):
         selection_debug = {

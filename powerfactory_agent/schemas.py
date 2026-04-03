@@ -27,24 +27,22 @@ class DataQueryInstruction(BaseModel):
 
 class RequestedAttributeNameDecision(BaseModel):
     requested_attribute_names: List[str] = Field(default_factory=list)
-    confidence: str = Field(description="One of: high, medium, low")
-    rationale: str = Field(description="Short explanation for the extraction decision")
-    should_execute: bool = Field(description="True if the extracted attribute names are grounded in the user request.")
+    confidence: Literal["high", "medium", "low"]
+    rationale: str
+    should_execute: bool
 
 
 class AttributeDescriptionShortlistDecision(BaseModel):
     shortlisted_attribute_names: List[str] = Field(default_factory=list)
-    confidence: str = Field(description="One of: high, medium, low")
-    rationale: str = Field(description="Short explanation for the shortlist decision")
+    confidence: Literal["high", "medium", "low"]
+    rationale: str
     missing_context: List[str] = Field(default_factory=list)
-    should_execute: bool = Field(description="True if the shortlist is grounded enough to continue with final disambiguation.")
+    should_execute: bool
 
 
 class AttributeDescriptionMatchDecision(BaseModel):
     selected_attribute_names: List[str] = Field(default_factory=list)
-    confidence: str = Field(description="One of: high, medium, low")
-    rationale: str = Field(description="Short explanation for the description-based match decision")
+    confidence: Literal["high", "medium", "low"]
+    rationale: str
     missing_context: List[str] = Field(default_factory=list)
-    should_execute: bool = Field(
-        description="True only if the selected attributes are a safe grounded match against PowerFactory attribute descriptions."
-    )
+    should_execute: bool
