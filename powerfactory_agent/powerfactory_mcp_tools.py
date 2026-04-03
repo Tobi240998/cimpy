@@ -3737,6 +3737,10 @@ def _build_pf_attribute_description_shortlist_chain():
             'Your task is NOT to make the final choice yet.\n'
             'Return 3 to 8 candidate attribute names only if they are grounded in the request.\n'
             'If nothing is grounded enough, return an empty shortlist and should_execute=false.\n'
+            'Highest priority rule: if the user request literally contains an exported attribute_description, or a distinctive left-hand part of it before a colon, you MUST include the corresponding attribute_name in the shortlist.\n'
+            'For example, if a candidate description is "Maximale Thermische Auslastung: Max. Auslastung" and the request contains "Maximale Thermische Auslastung", that candidate must be shortlisted.\n'
+            'Prefer lexical grounding in attribute_description over domain reasoning. Do not replace a literal description hit with semantically related attributes.\n'
+            'If the request says "Attribut ..." and the text after that is not a valid attribute_name, first treat it as a possible exported attribute_description.\n'
             'Be especially careful with conflicts such as Leiter-Erde vs Leiter-Leiter, nominal/base vs result/load-flow values, and setpoint vs measured values.'
         ),
         (
@@ -3777,6 +3781,76 @@ def _build_pf_attribute_description_match_chain():
     ])
     return _build_structured_chain(prompt, AttributeDescriptionMatchDecision)
 
+
+def _normalize_pf_description_match_text(value: Any) -> str:
+    text = _safe_lower(value)
+    text = text.replace('-', ' ')
+    text = re.sub(r'\s+', ' ', text)
+    return text.strip()
+
+
+
+def _build_description_match_variants(description: str) -> List[str]:
+    normalized = _normalize_pf_description_match_text(description)
+    if not normalized:
+        return []
+
+    variants: List[str] = []
+    seen = set()
+
+    def _add(value: str) -> None:
+        cleaned = _normalize_pf_description_match_text(value)
+        if cleaned and cleaned not in seen:
+            seen.add(cleaned)
+            variants.append(cleaned)
+
+    _add(normalized)
+    for part in re.split(r'[:;|,/]', normalized):
+        _add(part)
+
+    return variants
+
+
+
+def _shortlist_pf_attributes_by_description_literal_text(
+    attribute_options: List[Dict[str, Any]],
+    user_input: str,
+) -> Dict[str, Any]:
+    request_text = _normalize_pf_description_match_text(user_input)
+    if not request_text:
+        return {
+            'status': 'ok',
+            'shortlisted_attribute_names': [],
+            'shortlisted_options': [],
+            'match_type': 'none',
+        }
+
+    matched_options: List[Dict[str, Any]] = []
+    seen = set()
+
+    for item in attribute_options:
+        attr_name = item.get('attribute_name')
+        description = item.get('attribute_description') or ''
+        if not attr_name or not description:
+            continue
+
+        variants = _build_description_match_variants(description)
+        if not variants:
+            continue
+
+        if any(variant and variant in request_text for variant in variants):
+            if attr_name not in seen:
+                seen.add(attr_name)
+                matched_options.append(item)
+
+    return {
+        'status': 'ok',
+        'shortlisted_attribute_names': [item.get('attribute_name') for item in matched_options if item.get('attribute_name')],
+        'shortlisted_options': matched_options,
+        'match_type': 'literal_description_substring' if matched_options else 'none',
+    }
+
+
 def _shortlist_pf_attributes_by_description_with_llm(
     obj: Any,
     entity_type: str,
@@ -3793,6 +3867,28 @@ def _shortlist_pf_attributes_by_description_with_llm(
         }
 
     filtered_options = list(attribute_options)
+
+    literal_shortlist = _shortlist_pf_attributes_by_description_literal_text(
+        attribute_options=filtered_options,
+        user_input=user_input,
+    )
+    literal_shortlisted_names = literal_shortlist.get('shortlisted_attribute_names', []) or []
+    literal_shortlisted_options = literal_shortlist.get('shortlisted_options', []) or []
+    if literal_shortlisted_names and literal_shortlisted_options:
+        return {
+            'status': 'ok',
+            'llm_decision': {
+                'shortlisted_attribute_names': literal_shortlisted_names,
+                'confidence': 'high',
+                'rationale': 'Deterministischer Literal-Treffer auf exported attribute_description.',
+                'missing_context': [],
+                'should_execute': True,
+            },
+            'shortlisted_attribute_names': literal_shortlisted_names,
+            'shortlisted_options': literal_shortlisted_options,
+            'attribute_options': filtered_options,
+            'chain_mode': 'deterministic_literal_description',
+        }
 
     try:
         chain, parser, chain_mode = _build_pf_attribute_description_shortlist_chain()
