@@ -1496,6 +1496,16 @@ class PowerFactoryDomainAgent:
         result = dict(error_result)
         result["agent"] = "PowerFactoryDomainAgent"
         result["available_tools"] = self.get_available_tools()
+
+        answer = result.get("answer")
+        if not isinstance(answer, str) or not answer.strip():
+            error_code = result.get("error", "unknown_error")
+            details = result.get("details", "")
+            if isinstance(details, str) and details.strip():
+                result["answer"] = f"Die Anfrage konnte nicht sauber ausgeführt werden ({error_code}). Details: {details}"
+            else:
+                result["answer"] = f"Die Anfrage konnte nicht sauber ausgeführt werden ({error_code})."
+
         result["debug"] = {
             "planning": self._last_planning_debug,
             "trace": debug_trace,

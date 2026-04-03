@@ -31,6 +31,12 @@ from cimpy.powerfactory_agent.powerfactory_topology_graph import (
     query_powerfactory_topology_neighbors_from_services,
 )
 
+from cimpy.powerfactory_agent.schemas import (
+    DataQueryInstruction,
+    RequestedAttributeNameDecision,
+    AttributeDescriptionShortlistDecision,
+    AttributeDescriptionMatchDecision,
+)
 
 # ------------------------------------------------------------------
 # LLM OUTPUT MODEL FOR SWITCH MATCHING
@@ -2122,21 +2128,6 @@ class AttributeSelectionDecision(BaseModel):
     should_execute: bool = Field(description="True only if the selected attributes are a safe grounded match.")
 
 
-class RequestedAttributeNameDecision(BaseModel):
-    requested_attribute_names: List[str] = Field(default_factory=list)
-    confidence: str = Field(description="One of: high, medium, low")
-    rationale: str = Field(description="Short explanation for the extraction decision")
-    should_execute: bool = Field(description="True if the extracted attribute names are grounded in the user request.")
-
-
-class AttributeDescriptionMatchDecision(BaseModel):
-    selected_attribute_names: List[str] = Field(default_factory=list)
-    confidence: str = Field(description="One of: high, medium, low")
-    rationale: str = Field(description="Short explanation for the description-based match decision")
-    missing_context: List[str] = Field(default_factory=list)
-    should_execute: bool = Field(description="True only if the selected attributes are a safe grounded match against PowerFactory attribute descriptions.")
-
-
 # ------------------------------------------------------------------
 # LIGHTWEIGHT DATA INVENTORY (NO TOPOLOGY GRAPH)
 # ------------------------------------------------------------------
@@ -2589,7 +2580,6 @@ def _build_attribute_selection_chain():
             'system',
             'You select the best matching PowerFactory data attributes from a provided option list.\n'
             'You may only choose handles that appear exactly in the provided options.\n'
-            'Prefer semantic field handles (field::<name>) when they clearly match.\n'
             'Use raw attribute handles (attr::<name>) when they are a better match to the user wording or the desired concept.\n'
             'Do not invent handles.\n'
             'Return should_execute=false if the match is not grounded enough.\n\n'
@@ -2608,41 +2598,52 @@ def _build_attribute_selection_chain():
 
 
 def _build_requested_attribute_extraction_chain():
-    parser = PydanticOutputParser(pydantic_object=RequestedAttributeNameDecision)
     prompt = ChatPromptTemplate.from_messages([
         (
             'system',
-            """You extract explicit literal PowerFactory attribute names from a user request.
-Return only attribute names that the user literally wrote or clearly quoted, such as Ice, phiz1, inom, m:loading, c:loading, R1, X0, uknom.
-Do not return object names like Line 4-5, bus names, filler words like Wert, value, von, of, is, wie, or semantic paraphrases like Nennstrom unless the literal PF attribute name appears in the request.
-Keep technical lowercase names if the user wrote them in lowercase.
-Examples:
-- "wie ist der Wert phiz1 von Line 4-5?" -> ["phiz1"]
-- "Gib mir Ice von Line 4-5" -> ["Ice"]
-- "Wie hoch ist inom der Leitung Line 4-5" -> ["inom"]
-- "Was ist die Auslastung von Line 4-5" -> []
-Return an empty list if no literal PowerFactory attribute name is present.
-
-{format_instructions}"""
+            'You are a strict JSON extraction component for PowerFactory attribute-name extraction.\n'
+            'Extract only attribute names that the user explicitly wrote as literal technical names.\n'
+            'Do NOT infer semantic equivalents.\n'
+            'Do NOT map descriptive phrases to PowerFactory names.\n'
+            'Examples:\n'
+            '- "m:u" -> keep\n'
+            '- "uknom" -> keep\n'
+            '- "Nennspannung" -> do NOT convert to "uknom"\n'
+            '- "Leiter-Erde Nennspannung" -> do NOT invent an attribute name\n'
+            'Return ONLY valid structured output matching the required schema.'
         ),
         (
             'user',
-            """User request:
-{user_input}"""
+            'User request:\n{user_input}\n\n'
+            '{format_instructions}'
         ),
     ])
-    llm = get_llm()
-    return prompt | llm | parser, parser
+    return _build_structured_chain(prompt, RequestedAttributeNameDecision)
 
 
 def _extract_requested_attribute_names_llm(user_input: str) -> Dict[str, Any]:
     try:
-        chain, parser = _build_requested_attribute_extraction_chain()
-        decision = chain.invoke({
+        chain, parser, chain_mode = _build_requested_attribute_extraction_chain()
+
+        invoke_payload = {
             'user_input': user_input or '',
-            'format_instructions': parser.get_format_instructions(),
-        })
-        raw_names = decision.requested_attribute_names or []
+        }
+        if parser is not None:
+            invoke_payload['format_instructions'] = parser.get_format_instructions()
+
+        decision = chain.invoke(invoke_payload)
+
+        if hasattr(decision, 'model_dump'):
+            decision_dict = decision.model_dump()
+        elif hasattr(decision, 'dict'):
+            decision_dict = decision.dict()
+        elif isinstance(decision, dict):
+            decision_dict = dict(decision)
+        else:
+            decision_dict = {}
+
+        raw_names = decision_dict.get('requested_attribute_names', []) or []
+
         normalized: List[str] = []
         seen = set()
         for name in raw_names:
@@ -2654,16 +2655,20 @@ def _extract_requested_attribute_names_llm(user_input: str) -> Dict[str, Any]:
                 continue
             seen.add(cleaned)
             normalized.append(cleaned)
+
         return {
             'status': 'ok',
             'requested_attribute_names': normalized[:20],
-            'llm_decision': decision.model_dump(),
+            'llm_decision': decision_dict,
+            'chain_mode': chain_mode,
         }
+
     except Exception as e:
         return {
             'status': 'error',
             'requested_attribute_names': [],
             'llm_decision': {'error': str(e)},
+            'chain_mode': 'failed',
         }
 
 
@@ -3475,7 +3480,7 @@ def _list_available_object_attributes_with_services(
 
     semantic_options = _build_semantic_field_options(entity_type)
     raw_options = _list_readable_raw_attributes(pf_object, entity_type)
-    attribute_options = semantic_options + raw_options
+    attribute_options = raw_options
 
     return {
         'status': 'ok',
@@ -3699,20 +3704,41 @@ def _format_pf_description_options_for_prompt(attribute_options: List[Dict[str, 
         lines.append(f'- {handle}: name={attr_name}; description={description}; ' + '; '.join(details))
     return '\n'.join(lines)
 
+def _build_structured_chain(prompt: ChatPromptTemplate, schema_model: Any):
+    """
+    Prefer native structured output if the LLM wrapper supports it.
+    Fall back to PydanticOutputParser otherwise.
+    """
+    llm = get_llm()
 
-def _build_pf_attribute_description_match_chain():
-    parser = PydanticOutputParser(pydantic_object=AttributeDescriptionMatchDecision)
+    if hasattr(llm, "with_structured_output"):
+        try:
+            structured_llm = llm.with_structured_output(schema_model)
+            return prompt | structured_llm, None, "native_structured_output"
+        except Exception:
+            pass
+
+    parser = PydanticOutputParser(pydantic_object=schema_model)
+    return prompt | llm | parser, parser, "pydantic_output_parser"
+
+
+
+def _build_pf_attribute_description_shortlist_chain():
     prompt = ChatPromptTemplate.from_messages([
         (
             'system',
-            'You match a user request to real PowerFactory attributes of one concrete object using the exported PowerFactory attribute descriptions.\n'
-            'You may only select attribute names that appear exactly in the provided candidate list.\n'
-            'Prefer attributes whose description is semantically consistent with the full user request.\n'
+            'You are a strict JSON extraction component for PowerFactory attribute matching.\n'
+            'Your ONLY task is to shortlist candidate attribute names from the provided candidate list.\n'
+            'You are NOT allowed to answer the user question.\n'
+            'You are NOT allowed to explain electrical concepts.\n'
+            'You are NOT allowed to produce tables, markdown, prose, commentary, derivations, or examples.\n'
+            'Return ONLY valid structured output matching the required schema.\n'
+            'You may only return attribute names that appear EXACTLY in the provided candidate list.\n'
             'Do not invent names.\n'
-            'Be careful with conflicts such as nominal/base values vs result/load-flow values, or Leiter-Erde vs Leiter-Leiter.\n'
-            'Return should_execute=true only for a safe grounded match with high confidence.\n'
-            'If multiple attributes are plausible or the request conflicts with the description, return should_execute=false.\n\n'
-            '{format_instructions}'
+            'Your task is NOT to make the final choice yet.\n'
+            'Return 3 to 8 candidate attribute names only if they are grounded in the request.\n'
+            'If nothing is grounded enough, return an empty shortlist and should_execute=false.\n'
+            'Be especially careful with conflicts such as Leiter-Erde vs Leiter-Leiter, nominal/base vs result/load-flow values, and setpoint vs measured values.'
         ),
         (
             'user',
@@ -3722,11 +3748,37 @@ def _build_pf_attribute_description_match_chain():
             'Available real PowerFactory attributes with descriptions:\n{attribute_options}'
         ),
     ])
-    llm = get_llm()
-    return prompt | llm | parser, parser
+    return _build_structured_chain(prompt, AttributeDescriptionShortlistDecision)
 
 
-def _match_pf_attributes_by_description_with_llm(
+def _build_pf_attribute_description_match_chain():
+    prompt = ChatPromptTemplate.from_messages([
+        (
+            'system',
+            'You are a strict JSON extraction component for PowerFactory attribute matching.\n'
+            'Your ONLY task is to perform the FINAL disambiguation against the provided shortlist.\n'
+            'You are NOT allowed to answer the user question.\n'
+            'You are NOT allowed to explain electrical concepts.\n'
+            'You are NOT allowed to produce tables, markdown, prose, commentary, derivations, or examples.\n'
+            'Return ONLY valid structured output matching the required schema.\n'
+            'You may only select attribute names that appear EXACTLY in the provided shortlist.\n'
+            'Do not invent names.\n'
+            'Choose an attribute only if it is clearly better than the alternatives.\n'
+            'You must consider the FULL user request, not only one keyword.\n'
+            'Be especially careful with conflicts such as Leiter-Erde vs Leiter-Leiter, nominal/base vs result/load-flow values, and setpoint vs measured values.\n'
+            'If multiple candidates remain plausible or the request conflicts with the shortlist, return should_execute=false.'
+        ),
+        (
+            'user',
+            'User request:\n{user_input}\n\n'
+            'Entity type: {entity_type}\n'
+            'Selected object: {object_name}\n\n'
+            'Shortlisted real PowerFactory attributes with descriptions:\n{attribute_options}'
+        ),
+    ])
+    return _build_structured_chain(prompt, AttributeDescriptionMatchDecision)
+
+def _shortlist_pf_attributes_by_description_with_llm(
     obj: Any,
     entity_type: str,
     object_name: str,
@@ -3744,25 +3796,115 @@ def _match_pf_attributes_by_description_with_llm(
     filtered_options = list(attribute_options)
 
     try:
-        chain, parser = _build_pf_attribute_description_match_chain()
-        decision = chain.invoke({
+        chain, parser, chain_mode = _build_pf_attribute_description_shortlist_chain()
+        invoke_payload = {
             'user_input': user_input or '',
             'entity_type': entity_type or '',
             'object_name': object_name or '',
             'attribute_options': _format_pf_description_options_for_prompt(filtered_options),
-            'format_instructions': parser.get_format_instructions(),
-        })
+        }
+        if parser is not None:
+            invoke_payload['format_instructions'] = parser.get_format_instructions()
+
+        decision = chain.invoke(invoke_payload)
+    except Exception as e:
+        return {
+            'status': 'error',
+            'error': 'pf_attribute_description_shortlist_failed',
+            'details': str(e),
+            'attribute_options': filtered_options,
+        }
+
+    shortlisted_names: List[str] = []
+    seen = set()
+    valid_names = {item.get('attribute_name') for item in filtered_options if item.get('attribute_name')}
+
+    for name in decision.shortlisted_attribute_names or []:
+        try:
+            cleaned = str(name).strip()
+        except Exception:
+            cleaned = ''
+        if not cleaned or cleaned not in valid_names or cleaned in seen:
+            continue
+        seen.add(cleaned)
+        shortlisted_names.append(cleaned)
+
+    shortlisted_options = [
+        item for item in filtered_options
+        if item.get('attribute_name') in shortlisted_names
+    ]
+
+    return {
+        'status': 'ok',
+        'llm_decision': decision.model_dump(),
+        'shortlisted_attribute_names': shortlisted_names,
+        'shortlisted_options': shortlisted_options,
+        'attribute_options': filtered_options,
+        'chain_mode': chain_mode,
+    }
+
+
+def _match_pf_attributes_by_description_with_llm(
+    obj: Any,
+    entity_type: str,
+    object_name: str,
+    user_input: str,
+    source_preference: str = 'base',
+) -> Dict[str, Any]:
+    shortlist_result = _shortlist_pf_attributes_by_description_with_llm(
+        obj=obj,
+        entity_type=entity_type,
+        object_name=object_name,
+        user_input=user_input,
+        source_preference=source_preference,
+    )
+
+    if shortlist_result.get('status') != 'ok':
+        return shortlist_result
+
+    shortlisted_options = shortlist_result.get('shortlisted_options', []) or []
+    if not shortlisted_options:
+        return {
+            'status': 'ok',
+            'llm_decision': {
+                'selected_attribute_names': [],
+                'confidence': 'low',
+                'rationale': 'Die Shortlist-Stufe hat keine ausreichend plausiblen PF-Attribute gefunden.',
+                'missing_context': ['attribute_selection'],
+                'should_execute': False,
+            },
+            'selected_attribute_names': [],
+            'selected_attribute_handles': [],
+            'matched_candidates': [],
+            'attribute_options': shortlist_result.get('attribute_options', []),
+            'shortlist': shortlist_result,
+        }
+
+    try:
+        chain, parser, chain_mode = _build_pf_attribute_description_match_chain()
+        invoke_payload = {
+            'user_input': user_input or '',
+            'entity_type': entity_type or '',
+            'object_name': object_name or '',
+            'attribute_options': _format_pf_description_options_for_prompt(shortlisted_options),
+        }
+        if parser is not None:
+            invoke_payload['format_instructions'] = parser.get_format_instructions()
+
+        decision = chain.invoke(invoke_payload)
     except Exception as e:
         return {
             'status': 'error',
             'error': 'pf_attribute_description_match_failed',
             'details': str(e),
-            'attribute_options': filtered_options,
+            'attribute_options': shortlisted_options,
+            'shortlist': shortlist_result,
         }
 
-    selected_names = []
+    selected_names: List[str] = []
     seen = set()
-    valid_names = {item.get('attribute_name') for item in filtered_options if item.get('attribute_name')}
+    valid_names = {item.get('attribute_name') for item in shortlisted_options if item.get('attribute_name')}
+
     for name in decision.selected_attribute_names or []:
         try:
             cleaned = str(name).strip()
@@ -3774,7 +3916,7 @@ def _match_pf_attributes_by_description_with_llm(
         selected_names.append(cleaned)
 
     selected_handles = [f'attr::{name}' for name in selected_names]
-    matched_candidates = [item for item in filtered_options if item.get('attribute_name') in selected_names]
+    matched_candidates = [item for item in shortlisted_options if item.get('attribute_name') in selected_names]
 
     return {
         'status': 'ok',
@@ -3782,7 +3924,50 @@ def _match_pf_attributes_by_description_with_llm(
         'selected_attribute_names': selected_names,
         'selected_attribute_handles': selected_handles,
         'matched_candidates': matched_candidates,
-        'attribute_options': filtered_options,
+        'attribute_options': shortlisted_options,
+        'shortlist': shortlist_result,
+        'chain_mode': chain_mode,
+    }
+
+def _match_requested_attribute_names_exact(
+    requested_attribute_names: List[str],
+    attribute_options: List[Dict[str, Any]],
+) -> Dict[str, Any]:
+    selected_attribute_names: List[str] = []
+    selected_attribute_handles: List[str] = []
+    matched_candidates: List[Dict[str, Any]] = []
+    seen_names = set()
+
+    valid_by_name: Dict[str, Dict[str, Any]] = {}
+    for item in attribute_options or []:
+        attr_name = item.get('attribute_name')
+        handle = item.get('handle')
+        if not attr_name or not handle:
+            continue
+        valid_by_name[str(attr_name)] = item
+
+    for raw_name in requested_attribute_names or []:
+        if not isinstance(raw_name, str):
+            continue
+        if raw_name in valid_by_name and raw_name not in seen_names:
+            seen_names.add(raw_name)
+            item = valid_by_name[raw_name]
+            selected_attribute_names.append(raw_name)
+            selected_attribute_handles.append(item['handle'])
+            matched_candidates.append(item)
+
+    return {
+        'status': 'ok',
+        'selected_attribute_names': selected_attribute_names,
+        'selected_attribute_handles': selected_attribute_handles,
+        'matched_candidates': matched_candidates,
+        'should_execute': bool(selected_attribute_handles),
+        'confidence': 'high' if selected_attribute_handles else 'low',
+        'rationale': (
+            'Exakter Treffer auf attribute_name.'
+            if selected_attribute_handles
+            else 'Kein exakter Treffer auf attribute_name.'
+        ),
     }
 
 
@@ -3805,54 +3990,91 @@ def _select_pf_object_attributes_llm_with_services(
             'details': 'Für das ausgewählte Objekt stehen keine Attributoptionen zur Verfügung.',
         }
 
-    available_handles = [item.get('handle') for item in attribute_options if item.get('handle')]
     object_payload = (attribute_listing.get('object', {}) or {}) if isinstance(attribute_listing, dict) else {}
     object_name = object_payload.get('name')
     entity_type = instruction.get('entity_type') if isinstance(instruction, dict) else None
+    request_text = (
+        instruction.get('attribute_request_text')
+        or instruction.get('entity_name_raw')
+        or ''
+    ) if isinstance(instruction, dict) else ''
+
+    available_handles = {
+        item.get('handle')
+        for item in attribute_options
+        if item.get('handle')
+    }
+
     requested_attribute_names = instruction.get('requested_attribute_names', []) if isinstance(instruction, dict) else []
-    source_preference = None
-    request_text = instruction.get('attribute_request_text') or instruction.get('entity_name_raw') or '' if isinstance(instruction, dict) else ''
+    object_full_name = object_payload.get('full_name')
+    pf_object = _get_object_by_full_name(services['app'], object_full_name) if object_full_name else None
 
     llm_decision_dump: Dict[str, Any] = {}
-    llm_selected_handles_raw: List[str] = []
-    llm_selected_handles_filtered: List[str] = []
-    preferred_semantic_handles: List[str] = []
-    selected_handles: List[str] = []
-    confidence = 'low'
-    rationale = 'Keine sichere Attributauswahl vorhanden.'
     missing_context: List[str] = []
-    should_execute = False
-    fallback_exact_matches: List[Dict[str, Any]] = []
-    fallback_exact_handles: List[str] = []
+    candidate_attribute_handles: List[str] = []
+    candidate_attributes: List[Dict[str, Any]] = []
+
+    # ============================================================
+    # 1) STRICT EXACT MATCH GEGEN attribute_name
+    # ============================================================
+    exact_match_result = _match_requested_attribute_names_exact(
+        requested_attribute_names=requested_attribute_names,
+        attribute_options=attribute_options,
+    )
+
+    if exact_match_result.get('should_execute'):
+        selected_handles = [
+            handle for handle in exact_match_result.get('selected_attribute_handles', [])
+            if handle in available_handles
+        ]
+        selected_attributes = exact_match_result.get('matched_candidates', [])
+
+        selection_debug = {
+            'project': project_name,
+            'entity_type': entity_type,
+            'object_name': object_name,
+            'request_text': request_text,
+            'requested_attribute_names': requested_attribute_names,
+            'requested_attribute_name_extraction': instruction.get('requested_attribute_name_extraction'),
+            'selection_mode': 'exact_attribute_name',
+            'exact_match_result': exact_match_result,
+            'final_selected_handles': selected_handles,
+            'final_rationale': exact_match_result.get('rationale'),
+            'final_should_execute': True,
+            'final_confidence': 'high',
+        }
+        _print_debug_block('Attribute Selection', selection_debug)
+
+        instruction_out = dict(instruction)
+        instruction_out['selected_attribute_handles'] = selected_handles
+        instruction_out['attribute_selection_debug'] = selection_debug
+
+        return {
+            'status': 'ok',
+            'tool': 'select_pf_object_attributes_llm',
+            'project': project_name,
+            'instruction': instruction_out,
+            'resolution': resolution,
+            'attribute_listing': attribute_listing,
+            'selected_attribute_handles': selected_handles,
+            'selected_attributes': selected_attributes,
+            'llm_decision': {
+                'path': 'exact_attribute_name',
+                'selected_attribute_names': exact_match_result.get('selected_attribute_names', []),
+                'confidence': 'high',
+                'rationale': exact_match_result.get('rationale'),
+                'should_execute': True,
+            },
+            'selection_debug': selection_debug,
+        }
+
+    # ============================================================
+    # 2) ZWEISTUFIGER MATCH GEGEN attribute_description
+    # ============================================================
     pf_description_match: Dict[str, Any] = {}
     pf_description_match_handles: List[str] = []
     pf_description_match_candidates: List[Dict[str, Any]] = []
     pf_description_attribute_count = 0
-    candidate_attribute_handles: List[str] = []
-    candidate_attributes: List[Dict[str, Any]] = []
-
-    preferred_explicit_handles: List[str] = []
-    for attr_name in requested_attribute_names:
-        direct_handle = f'attr::{attr_name}'
-        if direct_handle in available_handles:
-            preferred_explicit_handles.append(direct_handle)
-
-    object_full_name = object_payload.get('full_name')
-    pf_object = _get_object_by_full_name(services['app'], object_full_name) if object_full_name else None
-
-    if requested_attribute_names and pf_object is not None:
-        seen_handles = set()
-        for requested_attr_name in requested_attribute_names:
-            for match in _fallback_match_full_attribute_list(
-                obj=pf_object,
-                user_input=requested_attr_name,
-            ):
-                handle = match.get('handle')
-                if not handle or handle in seen_handles:
-                    continue
-                seen_handles.add(handle)
-                fallback_exact_matches.append(match)
-        fallback_exact_handles = [item.get('handle') for item in fallback_exact_matches if item.get('handle')]
 
     if pf_object is not None:
         pf_description_match = _match_pf_attributes_by_description_with_llm(
@@ -3860,88 +4082,90 @@ def _select_pf_object_attributes_llm_with_services(
             entity_type=entity_type or '',
             object_name=object_name or '',
             user_input=request_text,
-            source_preference=source_preference,
+            source_preference='base',  # aktuell bewusst ohne Relevanz
         )
+
         pf_description_attribute_count = len(pf_description_match.get('attribute_options', []) or [])
         pf_description_match_handles = [
             handle for handle in (pf_description_match.get('selected_attribute_handles', []) or [])
-            if handle in {f"attr::{item.get('attribute_name')}" for item in (pf_description_match.get('attribute_options', []) or []) if item.get('attribute_name')}
+            if handle in available_handles
         ]
         pf_description_match_candidates = pf_description_match.get('matched_candidates', []) or []
 
-    if fallback_exact_handles:
-        selected_handles = list(fallback_exact_handles)
-        should_execute = True
-        confidence = 'high'
-        rationale = 'Exakter Match auf vollständige PowerFactory-Attributliste.'
-    elif preferred_explicit_handles:
-        selected_handles = preferred_explicit_handles
-        should_execute = True
-        confidence = 'high'
-        rationale = 'Direkt angegebene PowerFactory-Attribute wurden bevorzugt übernommen.'
-    elif (
+    if (
         pf_description_match.get('status') == 'ok'
         and pf_description_match.get('llm_decision', {}).get('should_execute')
         and str(pf_description_match.get('llm_decision', {}).get('confidence', '')).lower() == 'high'
         and pf_description_match_handles
     ):
-        selected_handles = list(pf_description_match_handles)
-        should_execute = True
-        confidence = pf_description_match.get('llm_decision', {}).get('confidence', 'high')
-        rationale = pf_description_match.get('llm_decision', {}).get('rationale') or 'Match auf PowerFactory-Attributbeschreibung.'
-    else:
-        preferred_semantic_handles = _select_semantic_attribute_handles_from_request(request_text, attribute_options)
+        selection_debug = {
+            'project': project_name,
+            'entity_type': entity_type,
+            'object_name': object_name,
+            'request_text': request_text,
+            'requested_attribute_names': requested_attribute_names,
+            'requested_attribute_name_extraction': instruction.get('requested_attribute_name_extraction'),
+            'selection_mode': 'attribute_description_llm',
+            'pf_description_attribute_count': pf_description_attribute_count,
+            'pf_description_shortlist': (
+                (pf_description_match.get('shortlist') or {}).get('llm_decision')
+                if isinstance(pf_description_match, dict) else None
+            ),
+            'pf_description_shortlisted_attribute_names': (
+                (pf_description_match.get('shortlist') or {}).get('shortlisted_attribute_names', [])
+                if isinstance(pf_description_match, dict) else []
+            ),
+            'pf_description_match': pf_description_match.get('llm_decision') if isinstance(pf_description_match, dict) else None,
+            'pf_description_match_handles': pf_description_match_handles,
+            'pf_description_match_candidates': pf_description_match_candidates,
+            'final_selected_handles': pf_description_match_handles,
+            'final_rationale': pf_description_match.get('llm_decision', {}).get('rationale'),
+            'final_should_execute': True,
+            'final_confidence': pf_description_match.get('llm_decision', {}).get('confidence', 'high'),
+            'pf_description_status': pf_description_match.get('status') if isinstance(pf_description_match, dict) else None,
+        }
+        _print_debug_block('Attribute Selection', selection_debug)
 
-        try:
-            chain, parser = _build_attribute_selection_chain()
-            decision = chain.invoke({
-                'user_input': request_text,
-                'entity_type': entity_type or '',
-                'object_name': object_name or '',
-                'attribute_options': _format_attribute_options_for_prompt(attribute_options),
-                'format_instructions': parser.get_format_instructions(),
-            })
-            llm_decision_dump = decision.model_dump()
-            llm_selected_handles_raw = [handle for handle in decision.selected_attribute_handles if handle in available_handles]
-            llm_selected_handles_filtered = list(llm_selected_handles_raw)
-            selected_handles = list(llm_selected_handles_filtered)
-            confidence = decision.confidence
-            rationale = decision.rationale
-            missing_context = decision.missing_context or []
-            should_execute = bool(decision.should_execute)
-        except Exception as e:
-            llm_decision_dump = {'error': str(e)}
+        instruction_out = dict(instruction)
+        instruction_out['selected_attribute_handles'] = pf_description_match_handles
+        instruction_out['attribute_selection_debug'] = selection_debug
 
-        if not selected_handles and preferred_semantic_handles:
-            selected_handles = preferred_semantic_handles
-            should_execute = True
-            confidence = 'high'
-            rationale = 'Semantisch eindeutig passende Attributfelder wurden übernommen.'
-        elif selected_handles and should_execute and str(confidence).lower() == 'high':
-            selected_handles = list(selected_handles)
-        else:
-            selected_handles = []
-            should_execute = False
-            if 'attribute_selection' not in missing_context:
-                missing_context.append('attribute_selection')
+        return {
+            'status': 'ok',
+            'tool': 'select_pf_object_attributes_llm',
+            'project': project_name,
+            'instruction': instruction_out,
+            'resolution': resolution,
+            'attribute_listing': attribute_listing,
+            'selected_attribute_handles': pf_description_match_handles,
+            'selected_attributes': pf_description_match_candidates,
+            'llm_decision': {
+                'path': 'attribute_description_llm',
+                **(pf_description_match.get('llm_decision') or {}),
+            },
+            'selection_debug': selection_debug,
+        }
 
-    candidate_attribute_handles = []
-    for handle_list in [
-        fallback_exact_handles,
-        preferred_explicit_handles,
-        pf_description_match_handles,
-        llm_selected_handles_filtered,
-        llm_selected_handles_raw,
-        preferred_semantic_handles,
-    ]:
-        for handle in handle_list:
-            if handle and handle not in candidate_attribute_handles:
-                candidate_attribute_handles.append(handle)
+    # ============================================================
+    # 3) KEIN TREFFER
+    # ============================================================
+    for handle in pf_description_match_handles:
+        if handle and handle not in candidate_attribute_handles:
+            candidate_attribute_handles.append(handle)
+
     candidate_attributes = _build_attribute_candidate_suggestions(
         attribute_options=attribute_options,
         handles=candidate_attribute_handles,
         max_items=5,
     )
+
+    llm_decision_dump = (
+        pf_description_match.get('llm_decision', {})
+        if isinstance(pf_description_match, dict)
+        else {}
+    )
+
+    missing_context = ['attribute_selection']
 
     selection_debug = {
         'project': project_name,
@@ -3950,55 +4174,43 @@ def _select_pf_object_attributes_llm_with_services(
         'request_text': request_text,
         'requested_attribute_names': requested_attribute_names,
         'requested_attribute_name_extraction': instruction.get('requested_attribute_name_extraction'),
-        'source_preference': source_preference,
-        'llm_selected_handles_raw': llm_selected_handles_raw,
-        'llm_selected_handles_filtered': llm_selected_handles_filtered,
-        'preferred_explicit_handles': preferred_explicit_handles,
-        'preferred_semantic_handles': preferred_semantic_handles,
-        'fallback_exact_handles': fallback_exact_handles,
-        'fallback_exact_matches': fallback_exact_matches,
+        'selection_mode': 'no_match',
+        'exact_match_result': exact_match_result,
         'pf_description_attribute_count': pf_description_attribute_count,
+        'pf_description_shortlist': (
+            (pf_description_match.get('shortlist') or {}).get('llm_decision')
+            if isinstance(pf_description_match, dict) else None
+        ),
+        'pf_description_shortlisted_attribute_names': (
+            (pf_description_match.get('shortlist') or {}).get('shortlisted_attribute_names', [])
+            if isinstance(pf_description_match, dict) else []
+        ),
         'pf_description_match': pf_description_match.get('llm_decision') if isinstance(pf_description_match, dict) else None,
         'pf_description_match_handles': pf_description_match_handles,
         'pf_description_match_candidates': pf_description_match_candidates,
         'candidate_attribute_handles': candidate_attribute_handles,
         'candidate_attributes': candidate_attributes,
-        'final_selected_handles': selected_handles,
-        'final_rationale': rationale,
-        'final_should_execute': should_execute,
-        'final_confidence': confidence,
+        'final_selected_handles': [],
+        'final_rationale': 'Weder exakter attribute_name-Treffer noch sicherer attribute_description-Treffer.',
+        'final_should_execute': False,
+        'final_confidence': 'low',
+        'pf_description_status': pf_description_match.get('status') if isinstance(pf_description_match, dict) else None,
+        'pf_description_error': pf_description_match.get('error') if isinstance(pf_description_match, dict) else None,
+        'pf_description_details': pf_description_match.get('details') if isinstance(pf_description_match, dict) else None,
     }
     _print_debug_block('Attribute Selection', selection_debug)
 
-    if not should_execute or not selected_handles:
-        return {
-            'status': 'error',
-            'tool': 'select_pf_object_attributes_llm',
-            'project': project_name,
-            'instruction': instruction,
-            'resolution': resolution,
-            'attribute_listing': attribute_listing,
-            'error': 'attribute_selection_not_safe',
-            'details': 'Die Attributauswahl konnte nicht sicher genug aufgelöst werden. Kandidaten wurden zurückgegeben.',
-            'llm_decision': llm_decision_dump,
-            'missing_context': sorted(set(missing_context)),
-            'selection_debug': selection_debug,
-            'candidate_attribute_handles': candidate_attribute_handles,
-            'candidate_attributes': candidate_attributes,
-        }
-
-    instruction_out = dict(instruction)
-    instruction_out['selected_attribute_handles'] = selected_handles
-    instruction_out['attribute_selection_debug'] = selection_debug
     return {
-        'status': 'ok',
+        'status': 'error',
         'tool': 'select_pf_object_attributes_llm',
         'project': project_name,
-        'instruction': instruction_out,
-        'selected_attribute_handles': selected_handles,
+        'instruction': instruction,
+        'resolution': resolution,
+        'attribute_listing': attribute_listing,
+        'error': 'attribute_selection_not_safe',
+        'details': 'Die Attributauswahl konnte nicht sicher genug aufgelöst werden. Kandidaten wurden zurückgegeben.',
         'llm_decision': llm_decision_dump,
-        'confidence': confidence,
-        'rationale': rationale,
+        'missing_context': missing_context,
         'selection_debug': selection_debug,
         'candidate_attribute_handles': candidate_attribute_handles,
         'candidate_attributes': candidate_attributes,
