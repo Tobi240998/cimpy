@@ -3977,17 +3977,6 @@ def _select_pf_object_attributes_llm_with_services(
     attribute_listing: dict,
 ) -> Dict[str, Any]:
     project_name = services['project_name']
-    attribute_options = attribute_listing.get('attribute_options', []) if isinstance(attribute_listing, dict) else []
-    if not attribute_options:
-        return {
-            'status': 'error',
-            'tool': 'select_pf_object_attributes_llm',
-            'project': project_name,
-            'instruction': instruction,
-            'resolution': resolution,
-            'error': 'empty_attribute_options',
-            'details': 'Für das ausgewählte Objekt stehen keine Attributoptionen zur Verfügung.',
-        }
 
     object_payload = (attribute_listing.get('object', {}) or {}) if isinstance(attribute_listing, dict) else {}
     object_name = object_payload.get('name')
@@ -3998,27 +3987,52 @@ def _select_pf_object_attributes_llm_with_services(
         or ''
     ) if isinstance(instruction, dict) else ''
 
-    available_handles = {
-        item.get('handle')
-        for item in attribute_options
-        if item.get('handle')
-    }
-
     requested_attribute_names = instruction.get('requested_attribute_names', []) if isinstance(instruction, dict) else []
     object_full_name = object_payload.get('full_name')
     pf_object = _get_object_by_full_name(services['app'], object_full_name) if object_full_name else None
 
-    llm_decision_dump: Dict[str, Any] = {}
-    missing_context: List[str] = []
-    candidate_attribute_handles: List[str] = []
-    candidate_attributes: List[Dict[str, Any]] = []
+    if pf_object is None:
+        return {
+            'status': 'error',
+            'tool': 'select_pf_object_attributes_llm',
+            'project': project_name,
+            'instruction': instruction,
+            'resolution': resolution,
+            'attribute_listing': attribute_listing,
+            'error': 'pf_object_not_found',
+            'details': f'Das aufgelöste Objekt konnte in PowerFactory nicht geladen werden: {object_full_name}',
+        }
 
     # ============================================================
-    # 1) STRICT EXACT MATCH GEGEN attribute_name
+    # SINGLE SOURCE OF TRUTH: PF-EXPORT-LISTE (attribute_name + attribute_description)
+    # ============================================================
+    export_attribute_options = _build_pf_description_attribute_options(pf_object)
+    if not export_attribute_options:
+        return {
+            'status': 'error',
+            'tool': 'select_pf_object_attributes_llm',
+            'project': project_name,
+            'instruction': instruction,
+            'resolution': resolution,
+            'attribute_listing': attribute_listing,
+            'error': 'empty_attribute_options',
+            'details': 'Für das ausgewählte Objekt stehen keine exportierten PowerFactory-Attribute zur Verfügung.',
+        }
+
+    available_handles = {
+        item.get('handle')
+        for item in export_attribute_options
+        if item.get('handle')
+    }
+
+    candidate_attribute_handles: List[str] = []
+
+    # ============================================================
+    # 1) STRICT EXACT MATCH GEGEN attribute_name (PF-EXPORT)
     # ============================================================
     exact_match_result = _match_requested_attribute_names_exact(
         requested_attribute_names=requested_attribute_names,
-        attribute_options=attribute_options,
+        attribute_options=export_attribute_options,
     )
 
     if exact_match_result.get('should_execute'):
@@ -4026,7 +4040,10 @@ def _select_pf_object_attributes_llm_with_services(
             handle for handle in exact_match_result.get('selected_attribute_handles', [])
             if handle in available_handles
         ]
-        selected_attributes = exact_match_result.get('matched_candidates', [])
+        selected_attributes = [
+            item for item in exact_match_result.get('matched_candidates', [])
+            if item.get('handle') in selected_handles
+        ]
 
         selection_debug = {
             'project': project_name,
@@ -4037,6 +4054,7 @@ def _select_pf_object_attributes_llm_with_services(
             'requested_attribute_name_extraction': instruction.get('requested_attribute_name_extraction'),
             'selection_mode': 'exact_attribute_name',
             'exact_match_result': exact_match_result,
+            'pf_description_attribute_count': len(export_attribute_options),
             'final_selected_handles': selected_handles,
             'final_rationale': exact_match_result.get('rationale'),
             'final_should_execute': True,
@@ -4054,7 +4072,10 @@ def _select_pf_object_attributes_llm_with_services(
             'project': project_name,
             'instruction': instruction_out,
             'resolution': resolution,
-            'attribute_listing': attribute_listing,
+            'attribute_listing': {
+                **(attribute_listing if isinstance(attribute_listing, dict) else {}),
+                'attribute_options': export_attribute_options,
+            },
             'selected_attribute_handles': selected_handles,
             'selected_attributes': selected_attributes,
             'llm_decision': {
@@ -4068,77 +4089,53 @@ def _select_pf_object_attributes_llm_with_services(
         }
 
     # ============================================================
-    # 2) ZWEISTUFIGER MATCH GEGEN attribute_description
+    # 2) ZWEISTUFIGER MATCH GEGEN attribute_description (PF-EXPORT)
     # ============================================================
-    pf_description_match: Dict[str, Any] = {}
+    pf_description_match = _match_pf_attributes_by_description_with_llm(
+        obj=pf_object,
+        entity_type=entity_type or '',
+        object_name=object_name or '',
+        user_input=request_text,
+        source_preference='base',
+    )
+
+    pf_description_attribute_count = len(export_attribute_options)
+    pf_description_match_candidates = pf_description_match.get('matched_candidates', []) or []
+
     pf_description_match_handles: List[str] = []
-    pf_description_match_candidates: List[Dict[str, Any]] = []
-    pf_description_attribute_count = 0
+    seen_handles = set()
+    for item in pf_description_match_candidates:
+        if not isinstance(item, dict):
+            continue
 
-    if pf_object is not None:
-        pf_description_match = _match_pf_attributes_by_description_with_llm(
-            obj=pf_object,
-            entity_type=entity_type or '',
-            object_name=object_name or '',
-            user_input=request_text,
-            source_preference='base',
-        )
+        handle = item.get('handle')
+        if not handle:
+            attr_name = item.get('attribute_name')
+            if attr_name:
+                handle = f'attr::{attr_name}'
 
-        pf_description_attribute_count = len(pf_description_match.get('attribute_options', []) or [])
-        pf_description_match_candidates = pf_description_match.get('matched_candidates', []) or []
+        if not handle or handle not in available_handles or handle in seen_handles:
+            continue
 
-        seen_handles = set()
-        for item in pf_description_match_candidates:
-            if not isinstance(item, dict):
-                continue
-
-            handle = item.get('handle')
-            if not handle:
-                attr_name = item.get('attribute_name')
-                if attr_name:
-                    handle = f'attr::{attr_name}'
-
-            if not handle:
-                continue
-
-            if available_handles and handle not in available_handles:
-                continue
-
-            if handle in seen_handles:
-                continue
-
-            seen_handles.add(handle)
+        seen_handles.add(handle)
         pf_description_match_handles.append(handle)
 
-        pf_description_match_handles = []
-        seen_handles = set()
-
-        for item in pf_description_match_candidates:
-            if not isinstance(item, dict):
-                continue
-
-            handle = item.get('handle')
-            if not handle:
-                attr_name = item.get('attribute_name')
-                if attr_name:
-                    handle = f'attr::{attr_name}'
-
-            if not handle or handle in seen_handles:
-                continue
-
-            seen_handles.add(handle)
-            pf_description_match_handles.append(handle)
-
     pf_description_confidence = str(
-        pf_description_match.get('llm_decision', {}).get('confidence', '')
+        (pf_description_match.get('llm_decision') or {}).get('confidence', '')
     ).strip().lower()
 
     if (
         pf_description_match.get('status') == 'ok'
-        and pf_description_match.get('llm_decision', {}).get('should_execute')
+        and (pf_description_match.get('llm_decision') or {}).get('should_execute')
         and pf_description_confidence == 'high'
         and pf_description_match_handles
     ):
+        selected_attributes = [
+            item for item in pf_description_match_candidates
+            if item.get('handle') in pf_description_match_handles
+            or (item.get('attribute_name') and f"attr::{item.get('attribute_name')}" in pf_description_match_handles)
+        ]
+
         selection_debug = {
             'project': project_name,
             'entity_type': entity_type,
@@ -4147,6 +4144,7 @@ def _select_pf_object_attributes_llm_with_services(
             'requested_attribute_names': requested_attribute_names,
             'requested_attribute_name_extraction': instruction.get('requested_attribute_name_extraction'),
             'selection_mode': 'attribute_description_llm',
+            'exact_match_result': exact_match_result,
             'pf_description_attribute_count': pf_description_attribute_count,
             'pf_description_shortlist': (
                 (pf_description_match.get('shortlist') or {}).get('llm_decision')
@@ -4158,11 +4156,11 @@ def _select_pf_object_attributes_llm_with_services(
             ),
             'pf_description_match': pf_description_match.get('llm_decision') if isinstance(pf_description_match, dict) else None,
             'pf_description_match_handles': pf_description_match_handles,
-            'pf_description_match_candidates': pf_description_match_candidates,
+            'pf_description_match_candidates': selected_attributes,
             'final_selected_handles': pf_description_match_handles,
-            'final_rationale': pf_description_match.get('llm_decision', {}).get('rationale'),
+            'final_rationale': (pf_description_match.get('llm_decision') or {}).get('rationale'),
             'final_should_execute': True,
-            'final_confidence': pf_description_match.get('llm_decision', {}).get('confidence', 'high'),
+            'final_confidence': (pf_description_match.get('llm_decision') or {}).get('confidence', 'high'),
             'pf_description_status': pf_description_match.get('status') if isinstance(pf_description_match, dict) else None,
         }
         _print_debug_block('Attribute Selection', selection_debug)
@@ -4177,12 +4175,15 @@ def _select_pf_object_attributes_llm_with_services(
             'project': project_name,
             'instruction': instruction_out,
             'resolution': resolution,
-            'attribute_listing': attribute_listing,
+            'attribute_listing': {
+                **(attribute_listing if isinstance(attribute_listing, dict) else {}),
+                'attribute_options': export_attribute_options,
+            },
             'selected_attribute_handles': pf_description_match_handles,
-            'selected_attributes': pf_description_match_candidates,
+            'selected_attributes': selected_attributes,
             'llm_decision': {
                 'path': 'attribute_description_llm',
-                **(pf_description_match.get('llm_decision') or {}),
+                **((pf_description_match.get('llm_decision') or {})),
             },
             'selection_debug': selection_debug,
         }
@@ -4195,18 +4196,10 @@ def _select_pf_object_attributes_llm_with_services(
             candidate_attribute_handles.append(handle)
 
     candidate_attributes = _build_attribute_candidate_suggestions(
-        attribute_options=attribute_options,
+        attribute_options=export_attribute_options,
         handles=candidate_attribute_handles,
         max_items=5,
     )
-
-    llm_decision_dump = (
-        pf_description_match.get('llm_decision', {})
-        if isinstance(pf_description_match, dict)
-        else {}
-    )
-
-    missing_context = ['attribute_selection']
 
     selection_debug = {
         'project': project_name,
@@ -4247,14 +4240,20 @@ def _select_pf_object_attributes_llm_with_services(
         'project': project_name,
         'instruction': instruction,
         'resolution': resolution,
-        'attribute_listing': attribute_listing,
+        'attribute_listing': {
+            **(attribute_listing if isinstance(attribute_listing, dict) else {}),
+            'attribute_options': export_attribute_options,
+        },
         'error': 'attribute_selection_not_safe',
         'details': 'Die Attributauswahl konnte nicht sicher genug aufgelöst werden. Kandidaten wurden zurückgegeben.',
-        'llm_decision': llm_decision_dump,
-        'missing_context': missing_context,
-        'selection_debug': selection_debug,
         'candidate_attribute_handles': candidate_attribute_handles,
         'candidate_attributes': candidate_attributes,
+        'llm_decision': {
+            'path': 'attribute_description_llm',
+            **((pf_description_match.get('llm_decision') or {})),
+        },
+        'missing_context': ['attribute_selection'],
+        'selection_debug': selection_debug,
     }
 
 def _read_attribute_handle(obj: Any, entity_type: str, handle: str) -> Dict[str, Any]:
