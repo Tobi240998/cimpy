@@ -4191,23 +4191,82 @@ def _build_pf_description_attribute_options(obj: Any) -> List[Dict[str, Any]]:
 def _format_pf_description_options_for_prompt(attribute_options: List[Dict[str, Any]]) -> str:
     lines: List[str] = []
     for item in attribute_options:
-        handle = item.get('handle')
-        attr_name = item.get('attribute_name') or handle
+        attr_name = item.get('attribute_name') or item.get('handle') or '<unknown>'
         description = item.get('attribute_description') or '<keine Beschreibung>'
-        unit = item.get('unit')
-        sample_value = item.get('sample_value')
-        readable = item.get('readable')
-        data_source = item.get('data_source')
-        details: List[str] = []
-        if data_source:
-            details.append(f'data_source={data_source}')
-        if unit:
-            details.append(f'unit={unit}')
-        details.append(f'readable={readable}')
-        if sample_value is not None:
-            details.append(f'sample={sample_value}')
-        lines.append(f'- {handle}: name={attr_name}; description={description}; ' + '; '.join(details))
+        lines.append(
+            f'- ID: {attr_name}\n'
+            f'  DESCRIPTION: {description}'
+        )
     return '\n'.join(lines)
+
+
+def _fallback_shortlist_pf_attributes_by_description(
+    attribute_options: List[Dict[str, Any]],
+    user_input: str,
+    max_candidates: int = 5,
+) -> Dict[str, Any]:
+    text = _safe_lower(user_input)
+    query_tokens = [t for t in _tokenize(text) if len(t) >= 3]
+
+    stopwords = {
+        'der', 'die', 'das', 'dem', 'den', 'des', 'ein', 'eine', 'einer', 'eines',
+        'und', 'oder', 'mit', 'von', 'für', 'auf', 'im', 'in', 'am', 'an', 'zu',
+        'ist', 'sind', 'was', 'welche', 'welcher', 'welches', 'line'
+    }
+    query_tokens = [t for t in query_tokens if t not in stopwords]
+
+    def _score(item: Dict[str, Any]) -> tuple[float, int, str]:
+        description = _safe_lower(item.get('attribute_description') or '')
+        attr_name = str(item.get('attribute_name') or '')
+        score = 0.0
+        matched_tokens = 0
+
+        for token in query_tokens:
+            if token and token in description:
+                matched_tokens += 1
+                score += 2.0
+
+        if any('therm' in token for token in query_tokens) and 'thermal' in description:
+            score += 4.0
+        if any(('auslast' in token) or ('belast' in token) for token in query_tokens) and 'loading' in description:
+            score += 5.0
+        if any('max' in token for token in query_tokens) and ('maximum' in description or 'max' in description):
+            score += 2.0
+        if any('spann' in token for token in query_tokens) and 'voltage' in description:
+            score += 3.0
+        if any('strom' in token for token in query_tokens) and 'current' in description:
+            score += 3.0
+        if any('nenn' in token for token in query_tokens) and ('nominal' in description or 'rated' in description):
+            score += 3.0
+        if any('grenz' in token for token in query_tokens) and 'limit' in description:
+            score += 3.0
+        if any('soll' in token for token in query_tokens) and 'setpoint' in description:
+            score += 3.0
+        if any('max' in token for token in query_tokens) and 'max' in attr_name.lower():
+            score += 1.0
+
+        return score, matched_tokens, attr_name
+
+    ranked = []
+    for item in attribute_options or []:
+        attr_name = item.get('attribute_name')
+        if not attr_name:
+            continue
+        score, matched_tokens, attr_name = _score(item)
+        if score <= 0:
+            continue
+        ranked.append((score, matched_tokens, attr_name, item))
+
+    ranked.sort(key=lambda x: (-x[0], -x[1], x[2]))
+    shortlisted = [name for _, _, name, _ in ranked[:max_candidates]]
+
+    return {
+        'shortlisted_attribute_names': shortlisted,
+        'confidence': 'low',
+        'rationale': 'Heuristische Fallback-Shortlist auf Basis der attribute_description, weil die strukturierte LLM-Antwort nicht parsebar war.',
+        'missing_context': [],
+        'should_execute': bool(shortlisted),
+    }
 
 def _build_structured_chain(prompt: ChatPromptTemplate, schema_model: Any):
     """
@@ -4232,25 +4291,27 @@ def _build_pf_attribute_description_shortlist_chain():
     prompt = ChatPromptTemplate.from_messages([
         (
             'system',
-            'You are a strict JSON extraction component for PowerFactory attribute matching.\n'
-            'Your ONLY task is to shortlist candidate attribute names from the provided candidate list.\n'
+            'You are a strict JSON extraction component for PowerFactory attribute shortlisting.\n'
+            'Your ONLY task is to shortlist candidate attribute names from the provided list.\n'
             'You are NOT allowed to answer the user question.\n'
             'You are NOT allowed to explain electrical concepts.\n'
-            'You are NOT allowed to produce tables, markdown, prose, commentary, derivations, or examples.\n'
+            'You are NOT allowed to request additional context.\n'
             'Return ONLY valid structured output matching the required schema.\n'
-            'You may only return attribute names that appear EXACTLY in the provided candidate list.\n'
-            'Do not invent names.\n'
-            'Your task is NOT to make the final choice yet.\n'
-            'Return 3 to 8 candidate attribute names only if they are grounded in the request.\n'
-            'If nothing is grounded enough, return an empty shortlist and should_execute=false.\n'
-            'Be especially careful with conflicts such as Leiter-Erde vs Leiter-Leiter, nominal/base vs result/load-flow values, and setpoint vs measured values.'
+            'Use ONLY the DESCRIPTION text for semantic matching.\n'
+            'IGNORE the attribute ID/name for semantic interpretation.\n'
+            'Treat the attribute ID only as the identifier you return.\n'
+            'Do NOT use naming patterns, prefixes, abbreviations, units, readability flags, sample values, or data-source hints.\n'
+            'Compare the FULL user request against the provided descriptions only.\n'
+            'Select 3 to 8 candidate attribute names only if their descriptions are genuinely plausible matches.\n'
+            'If nothing is grounded enough in the provided descriptions, return an empty shortlist and should_execute=false.\n'
+            'Do not invent attribute names.'
         ),
         (
             'user',
             'User request:\n{user_input}\n\n'
             'Entity type: {entity_type}\n'
             'Selected object: {object_name}\n\n'
-            'Available real PowerFactory attributes with descriptions:\n{attribute_options}'
+            'Available PowerFactory attribute descriptions:\n{attribute_options}'
         ),
     ])
     return _build_structured_chain(prompt, AttributeDescriptionShortlistDecision)
@@ -4313,11 +4374,28 @@ def _shortlist_pf_attributes_by_description_with_llm(
 
         decision = chain.invoke(invoke_payload)
     except Exception as e:
+        fallback_decision = _fallback_shortlist_pf_attributes_by_description(
+            attribute_options=filtered_options,
+            user_input=user_input,
+            max_candidates=5,
+        )
+        shortlisted_names = [
+            name for name in fallback_decision.get('shortlisted_attribute_names', []) or []
+            if name in {item.get('attribute_name') for item in filtered_options if item.get('attribute_name')}
+        ]
+        shortlisted_options = [
+            item for item in filtered_options
+            if item.get('attribute_name') in shortlisted_names
+        ]
         return {
-            'status': 'error',
-            'error': 'pf_attribute_description_shortlist_failed',
-            'details': str(e),
+            'status': 'ok',
+            'llm_decision': fallback_decision,
+            'shortlisted_attribute_names': shortlisted_names,
+            'shortlisted_options': shortlisted_options,
             'attribute_options': filtered_options,
+            'chain_mode': 'heuristic_fallback_after_parse_error',
+            'fallback_trigger': 'pf_attribute_description_shortlist_failed',
+            'fallback_details': str(e),
         }
 
     shortlisted_names: List[str] = []
