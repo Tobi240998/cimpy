@@ -2136,6 +2136,13 @@ class DataSourceDecision(BaseModel):
     should_execute: bool = Field(description="True if the decision is grounded enough to use directly without fallback.")
 
 
+class ResultPredefinedFieldDecision(BaseModel):
+    selected_field_names: List[str] = Field(default_factory=list)
+    confidence: str = Field(description="One of: high, medium, low")
+    rationale: str = Field(description="Short explanation for the selection decision")
+    should_execute: bool = Field(description="True only if the selected predefined result fields are a safe grounded match.")
+
+
 # ------------------------------------------------------------------
 # LIGHTWEIGHT DATA INVENTORY (NO TOPOLOGY GRAPH)
 # ------------------------------------------------------------------
@@ -3666,6 +3673,169 @@ def _build_result_attribute_options(
     return options
 
 
+def _get_predefined_result_field_names(entity_type: Optional[str]) -> List[str]:
+    mapping = {
+        'bus': ['voltage_ln', 'voltage_ll', 'p', 'q'],
+        'line': ['loading'],
+    }
+    return list(mapping.get(entity_type or '', []))
+
+
+def _get_predefined_result_attribute_options(
+    entity_type: Optional[str],
+    attribute_options: List[Dict[str, Any]],
+) -> List[Dict[str, Any]]:
+    allowed = set(_get_predefined_result_field_names(entity_type))
+    if not allowed:
+        return []
+    result: List[Dict[str, Any]] = []
+    for item in attribute_options or []:
+        if item.get('kind') != 'semantic_field':
+            continue
+        field_name = item.get('field_name')
+        if field_name in allowed:
+            result.append(item)
+    result.sort(key=lambda item: str(item.get('field_name') or ''))
+    return result
+
+
+def _build_predefined_result_field_selection_chain():
+    prompt = ChatPromptTemplate.from_messages([
+        (
+            'system',
+            'You select the best matching predefined PowerFactory load-flow result fields from a provided option list.\n'
+            'You may only return field names that appear EXACTLY in the provided predefined candidate list.\n'
+            'Do not invent field names.\n'
+            'Focus on the user request meaning.\n'
+            'Spannung is not the same as Wirkleistung or Blindleistung.\n'
+            'Wirkleistung is not the same as Blindleistung.\n'
+            'For bus voltage requests: Leiter-Leiter and Leiter-Erde are different concepts and must not be confused.\n'
+            'If the request does not safely identify a predefined result field, return an empty selection and should_execute=false.\n'
+            'Return ONLY valid structured output matching the required schema.'
+        ),
+        (
+            'user',
+            'User request:\n{user_input}\n\n'
+            'Entity type: {entity_type}\n\n'
+            'Available predefined result fields:\n{field_options}'
+        ),
+    ])
+    return _build_structured_chain(prompt, ResultPredefinedFieldDecision)
+
+
+def _format_predefined_result_field_options_for_prompt(attribute_options: List[Dict[str, Any]]) -> str:
+    lines: List[str] = []
+    for item in attribute_options or []:
+        field_name = item.get('field_name')
+        label = item.get('label') or field_name
+        aliases = ', '.join(str(x) for x in (item.get('aliases', []) or [])[:8])
+        candidate_attrs = ', '.join(str(x) for x in (item.get('candidate_attrs', []) or [])[:8])
+        unit = item.get('unit')
+        details: List[str] = []
+        if label:
+            details.append(f'label={label}')
+        if aliases:
+            details.append(f'aliases={aliases}')
+        if candidate_attrs:
+            details.append(f'pf_candidates={candidate_attrs}')
+        if unit:
+            details.append(f'unit={unit}')
+        lines.append(f'- {field_name}: ' + '; '.join(details))
+    return '\n'.join(lines)
+
+
+def _select_predefined_result_field_handles_llm(
+    entity_type: Optional[str],
+    request_text: str,
+    attribute_options: List[Dict[str, Any]],
+) -> Dict[str, Any]:
+    predefined_options = _get_predefined_result_attribute_options(entity_type, attribute_options)
+    available_field_names = [item.get('field_name') for item in predefined_options if item.get('field_name')]
+    available_handles = {item.get('field_name'): item.get('handle') for item in predefined_options if item.get('field_name') and item.get('handle')}
+
+    if not predefined_options:
+        return {
+            'status': 'error',
+            'selected_attribute_handles': [],
+            'selected_field_names': [],
+            'matched_candidates': [],
+            'should_execute': False,
+            'confidence': 'low',
+            'rationale': 'Keine vordefinierten Resultatfelder für diesen Entity-Typ verfügbar.',
+            'llm_decision': {},
+            'chain_mode': 'not_applicable',
+        }
+
+    try:
+        chain, parser, chain_mode = _build_predefined_result_field_selection_chain()
+        invoke_payload = {
+            'user_input': request_text or '',
+            'entity_type': entity_type or '',
+            'field_options': _format_predefined_result_field_options_for_prompt(predefined_options),
+        }
+        if parser is not None:
+            invoke_payload['format_instructions'] = parser.get_format_instructions()
+        decision = chain.invoke(invoke_payload)
+
+        if hasattr(decision, 'model_dump'):
+            decision_dict = decision.model_dump()
+        elif hasattr(decision, 'dict'):
+            decision_dict = decision.dict()
+        elif isinstance(decision, dict):
+            decision_dict = dict(decision)
+        else:
+            decision_dict = {}
+
+        selected_field_names: List[str] = []
+        seen = set()
+        for name in decision_dict.get('selected_field_names', []) or []:
+            cleaned = str(name).strip()
+            if cleaned and cleaned in available_field_names and cleaned not in seen:
+                seen.add(cleaned)
+                selected_field_names.append(cleaned)
+
+        matched_candidates = [item for item in predefined_options if item.get('field_name') in selected_field_names]
+        selected_attribute_handles = [available_handles[name] for name in selected_field_names if name in available_handles]
+
+        return {
+            'status': 'ok',
+            'selected_attribute_handles': selected_attribute_handles,
+            'selected_field_names': selected_field_names,
+            'matched_candidates': matched_candidates,
+            'should_execute': bool(decision_dict.get('should_execute')) and bool(selected_attribute_handles),
+            'confidence': decision_dict.get('confidence', 'low'),
+            'rationale': decision_dict.get('rationale', ''),
+            'llm_decision': decision_dict,
+            'chain_mode': chain_mode,
+        }
+    except Exception as e:
+        return {
+            'status': 'error',
+            'selected_attribute_handles': [],
+            'selected_field_names': [],
+            'matched_candidates': [],
+            'should_execute': False,
+            'confidence': 'low',
+            'rationale': f'LLM-Auswahl für vordefinierte Resultatfelder fehlgeschlagen: {e}',
+            'llm_decision': {'error': str(e)},
+            'chain_mode': 'failed',
+        }
+
+
+def _is_generic_bus_voltage_request(request_text: str) -> bool:
+    text = _safe_lower(request_text)
+    if not text:
+        return False
+    if 'spannung' not in text and 'voltage' not in text:
+        return False
+    disambiguating_tokens = [
+        'leiter-erde', 'leiter erde', 'phase to ground', 'phase-ground', 'phase ground', 'ln',
+        'leiter-leiter', 'leiter leiter', 'line to line', 'phase to phase', 'll',
+        'wirkleistung', 'blindleistung', 'reactive', 'active power',
+    ]
+    return not any(token in text for token in disambiguating_tokens)
+
+
 def _match_requested_result_handles_exact(
     requested_attribute_names: List[str],
     attribute_options: List[Dict[str, Any]],
@@ -3717,38 +3887,41 @@ def _select_pf_object_result_attributes_llm_with_services(
     request_text = (instruction.get('attribute_request_text') or instruction.get('entity_name_raw') or '') if isinstance(instruction, dict) else ''
     requested_attribute_names = instruction.get('requested_attribute_names', []) if isinstance(instruction, dict) else []
     object_payload = (attribute_listing.get('object', {}) or {}) if isinstance(attribute_listing, dict) else {}
+    entity_type = (instruction or {}).get('entity_type')
 
-    available_handles = {item.get('handle') for item in attribute_options if item.get('handle')}
-    exact_match_result = _match_requested_result_handles_exact(requested_attribute_names, attribute_options)
-    semantic_handles = [handle for handle in _select_semantic_attribute_handles_from_request(request_text, attribute_options) if handle in available_handles]
+    predefined_options = _get_predefined_result_attribute_options(entity_type, attribute_options)
+    predefined_llm_result = _select_predefined_result_field_handles_llm(
+        entity_type=entity_type,
+        request_text=request_text,
+        attribute_options=attribute_options,
+    )
 
     selected_handles: List[str] = []
+    selected_attributes: List[Dict[str, Any]] = []
     selection_mode = 'no_match'
     rationale = ''
     confidence = 'low'
+    selection_notes: List[str] = []
 
-    if exact_match_result.get('should_execute'):
-        selected_handles = [handle for handle in exact_match_result.get('selected_attribute_handles', []) if handle in available_handles]
-        selection_mode = 'exact_result_attribute_name'
-        rationale = exact_match_result.get('rationale') or ''
-        confidence = exact_match_result.get('confidence', 'high')
-    elif semantic_handles:
-        selected_handles = semantic_handles
-        selection_mode = 'result_semantic_field'
-        rationale = 'Resultatattribute wurden aus den vordefinierten Lastfluss-Feldern aus der Anfrage abgeleitet.'
-        confidence = 'high' if len(selected_handles) == 1 else 'medium'
-    else:
-        candidate_attribute_handles = _fallback_select_attribute_handles(request_text, attribute_options)
-        selected_handles = [handle for handle in candidate_attribute_handles if handle in available_handles]
-        if selected_handles:
-            selection_mode = 'result_fallback_attribute_match'
-            rationale = 'Fallback-Match auf verfügbare Resultatattribute.'
+    if predefined_llm_result.get('status') == 'ok' and predefined_llm_result.get('should_execute'):
+        selected_handles = list(predefined_llm_result.get('selected_attribute_handles', []))
+        selected_attributes = list(predefined_llm_result.get('matched_candidates', []))
+        selection_mode = 'predefined_result_fields_llm'
+        rationale = predefined_llm_result.get('rationale') or ''
+        confidence = predefined_llm_result.get('confidence', 'low')
+    elif entity_type == 'bus' and _is_generic_bus_voltage_request(request_text):
+        fallback_attr = next((item for item in predefined_options if item.get('field_name') == 'voltage_ll' and item.get('handle')), None)
+        if fallback_attr is not None:
+            selected_handles = [fallback_attr.get('handle')]
+            selected_attributes = [fallback_attr]
+            selection_mode = 'result_voltage_default_ll'
             confidence = 'medium'
+            rationale = 'Allgemeine Spannungsanfrage im Result-Pfad ohne Leiter-Leiter/Leiter-Erde-Angabe; standardmäßig wurde Leiter-Leiter gewählt.'
+            selection_notes.append('Da nicht angegeben wurde, ob Leiter-Leiter oder Leiter-Erde gemeint ist, wurde standardmäßig Leiter-Leiter verwendet.')
 
-    selected_attributes = [item for item in attribute_options if item.get('handle') in selected_handles]
     selection_debug = {
         'project': project_name,
-        'entity_type': (instruction or {}).get('entity_type'),
+        'entity_type': entity_type,
         'object_name': object_payload.get('name'),
         'request_text': request_text,
         'requested_attribute_names': requested_attribute_names,
@@ -3756,10 +3929,11 @@ def _select_pf_object_result_attributes_llm_with_services(
         'data_source_decision': (instruction or {}).get('data_source_decision'),
         'attribute_search_mode': 'result',
         'available_result_attribute_count': len(attribute_options),
-        'available_result_attribute_handles_preview': [item.get('handle') for item in attribute_options[:12]],
-        'semantic_candidate_handles': semantic_handles,
-        'exact_match_result': exact_match_result,
+        'predefined_result_attribute_count': len(predefined_options),
+        'predefined_result_attribute_handles_preview': [item.get('handle') for item in predefined_options],
+        'predefined_llm_result': predefined_llm_result,
         'selection_mode': selection_mode,
+        'selection_notes': selection_notes,
         'final_selected_handles': selected_handles,
         'final_rationale': rationale,
         'final_should_execute': bool(selected_handles),
@@ -3768,7 +3942,11 @@ def _select_pf_object_result_attributes_llm_with_services(
     _print_debug_block('Result Attribute Selection', selection_debug)
 
     if not selected_handles:
-        candidate_attributes = _build_attribute_candidate_suggestions(attribute_options=attribute_options, handles=[item.get('handle') for item in attribute_options[:10] if item.get('handle')], max_items=10)
+        candidate_attributes = _build_attribute_candidate_suggestions(
+            attribute_options=predefined_options or attribute_options,
+            handles=[item.get('handle') for item in (predefined_options or attribute_options)[:10] if item.get('handle')],
+            max_items=10,
+        )
         return {
             'status': 'error',
             'tool': 'select_pf_object_result_attributes_llm',
@@ -3778,7 +3956,7 @@ def _select_pf_object_result_attributes_llm_with_services(
             'attribute_listing': attribute_listing,
             'error': 'result_attribute_selection_not_safe',
             'details': 'Die Resultat-Attributauswahl konnte nicht sicher genug aufgelöst werden.',
-            'candidate_attribute_handles': [item.get('handle') for item in attribute_options[:10] if item.get('handle')],
+            'candidate_attribute_handles': [item.get('handle') for item in (predefined_options or attribute_options)[:10] if item.get('handle')],
             'candidate_attributes': candidate_attributes,
             'selection_debug': selection_debug,
         }
@@ -3787,6 +3965,12 @@ def _select_pf_object_result_attributes_llm_with_services(
     instruction_out['selected_attribute_handles'] = selected_handles
     instruction_out['attribute_selection_debug'] = selection_debug
     instruction_out['data_source_preference'] = 'result'
+    if selection_notes:
+        existing_notes = list(instruction_out.get('result_selection_notes', []) or [])
+        for note in selection_notes:
+            if note not in existing_notes:
+                existing_notes.append(note)
+        instruction_out['result_selection_notes'] = existing_notes
 
     return {
         'status': 'ok',
@@ -3803,6 +3987,7 @@ def _select_pf_object_result_attributes_llm_with_services(
             'confidence': confidence,
             'rationale': rationale,
             'should_execute': bool(selected_handles),
+            'selection_notes': selection_notes,
         },
     }
 
@@ -4827,6 +5012,7 @@ def _read_pf_object_attributes_with_services(
             },
             'loadflow': loadflow_info,
             'selected_data_source': selected_data_source,
+            'selection_notes': list((instruction or {}).get('result_selection_notes', []) or []),
             'debug': {
                 'attribute_selection': instruction.get('attribute_selection_debug', {}),
                 'field_reads': field_debug,
@@ -4904,6 +5090,7 @@ def _read_pf_object_attributes_with_services(
         },
         'loadflow': loadflow_info,
         'selected_data_source': selected_data_source,
+        'selection_notes': list((instruction or {}).get('result_selection_notes', []) or []),
         'debug': {
             'attribute_selection': instruction.get('attribute_selection_debug', {}),
             'field_reads': field_debug_by_object,
@@ -4927,6 +5114,9 @@ def _summarize_pf_object_data_result_with_services(
     obj = result_payload.get('object', {}) if isinstance(result_payload, dict) else {}
     objects = result_payload.get('objects', []) if isinstance(result_payload, dict) else []
     loadflow = result_payload.get('loadflow', {}) if isinstance(result_payload, dict) else {}
+    selection_notes = result_payload.get('selection_notes', []) if isinstance(result_payload, dict) else []
+    if not isinstance(selection_notes, list):
+        selection_notes = []
 
     if isinstance(values_by_object, dict) and values_by_object:
         object_parts: List[str] = []
@@ -4982,6 +5172,10 @@ def _summarize_pf_object_data_result_with_services(
 
         if loadflow.get('executed'):
             answer += ' Für die angefragten Ergebnisgrößen wurde zuvor ein Lastfluss gerechnet.'
+        for note in selection_notes:
+            if isinstance(note, str) and note.strip():
+                answer += ' ' + note.strip()
+                messages.append(note.strip())
 
         return {
             'status': 'ok',
@@ -5026,6 +5220,10 @@ def _summarize_pf_object_data_result_with_services(
         answer = f"{prefix} für '{object_name}' ({pf_class}): " + '; '.join(parts)
     if loadflow.get('executed'):
         answer += ' Für die angefragten Ergebnisgrößen wurde zuvor ein Lastfluss gerechnet.'
+    for note in selection_notes:
+        if isinstance(note, str) and note.strip():
+            answer += ' ' + note.strip()
+            messages.append(note.strip())
 
     return {
         'status': 'ok',

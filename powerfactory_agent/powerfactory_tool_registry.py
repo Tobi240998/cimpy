@@ -4,6 +4,7 @@ from dataclasses import dataclass, field
 from typing import Any, Callable, Dict, List
 
 from cimpy.powerfactory_agent.powerfactory_mcp_tools import (
+    _classify_pf_object_data_source_with_services,
     _get_load_catalog_from_services,
     _interpret_instruction_with_services,
     _resolve_load_with_services,
@@ -20,7 +21,6 @@ from cimpy.powerfactory_agent.powerfactory_mcp_tools import (
     _summarize_switch_result_with_services,
     _build_data_inventory_from_services,
     _interpret_data_query_instruction_with_services,
-    _classify_pf_object_data_source_with_services,
     _resolve_pf_object_from_inventory_llm_with_services,
     _list_available_object_attributes_with_services,
     _select_pf_object_attributes_llm_with_services,
@@ -393,6 +393,25 @@ class PowerFactoryToolRegistry:
                 is_summary=False,
                 handler=self._tool_unsupported_request,
             ),
+            "classify_data_source": PowerFactoryToolSpec(
+                name="classify_data_source",
+                description="Classify whether the data query should use base data or load-flow result data.",
+                input_schema={
+                    "type": "object",
+                    "properties": {
+                        "services": {"type": "object"},
+                        "instruction": {"type": "object"},
+                    },
+                    "required": ["services", "instruction"],
+                },
+                output_schema_hint={"status": "ok|error", "tool": "classify_data_source", "instruction": "dict", "effective_data_source": "base|result"},
+                capability_tags=["powerfactory", "data_query", "classification", "llm"],
+                mutating=False,
+                requires_state=["data_query_instruction"],
+                produces_state=["data_query_instruction", "data_source_decision"],
+                is_summary=False,
+                handler=self._tool_classify_data_source,
+            ),
             "build_data_inventory": PowerFactoryToolSpec(
                 name="build_data_inventory",
                 description="Build a lightweight PowerFactory inventory for data queries without topology graph.",
@@ -428,25 +447,6 @@ class PowerFactoryToolRegistry:
                 produces_state=["data_query_instruction"],
                 is_summary=False,
                 handler=self._tool_interpret_data_query_instruction,
-            ),
-            "classify_data_source": PowerFactoryToolSpec(
-                name="classify_data_source",
-                description="Classify whether the PowerFactory data query targets base data or load-flow result data and enrich the instruction accordingly.",
-                input_schema={
-                    "type": "object",
-                    "properties": {
-                        "services": {"type": "object"},
-                        "instruction": {"type": "object"},
-                    },
-                    "required": ["services", "instruction"],
-                },
-                output_schema_hint={"status": "ok|error", "tool": "classify_data_source", "instruction": "dict", "effective_data_source": "base|result"},
-                capability_tags=["powerfactory", "data_query", "routing", "llm"],
-                mutating=False,
-                requires_state=["data_query_instruction"],
-                produces_state=["data_query_instruction", "data_source_decision"],
-                is_summary=False,
-                handler=self._tool_classify_data_source,
             ),
             "resolve_pf_object_from_inventory_llm": PowerFactoryToolSpec(
                 name="resolve_pf_object_from_inventory_llm",
@@ -806,6 +806,17 @@ class PowerFactoryToolRegistry:
             classification=classification,
         )
 
+    def _tool_classify_data_source(
+        self,
+        services: Dict[str, Any],
+        instruction: dict,
+        **kwargs: Any,
+    ) -> Dict[str, Any]:
+        return _classify_pf_object_data_source_with_services(
+            services=services,
+            instruction=instruction,
+        )
+
     def _tool_build_data_inventory(self, services: Dict[str, Any], **kwargs: Any) -> Dict[str, Any]:
         return _build_data_inventory_from_services(services=services)
 
@@ -820,17 +831,6 @@ class PowerFactoryToolRegistry:
             services=services,
             user_input=user_input,
             inventory=inventory,
-        )
-
-    def _tool_classify_data_source(
-        self,
-        services: Dict[str, Any],
-        instruction: dict,
-        **kwargs: Any,
-    ) -> Dict[str, Any]:
-        return _classify_pf_object_data_source_with_services(
-            services=services,
-            instruction=instruction,
         )
 
     def _tool_resolve_pf_object_from_inventory_llm(
