@@ -10,6 +10,50 @@ from cimpy.cimpy_time_analysis.cim_tool_registry import CIMToolRegistry
 from cimpy.cimpy_time_analysis.langchain_llm import get_llm
 
 
+
+def _looks_like_type_listing_request(user_input: str) -> bool:
+    text = (user_input or "").strip().lower()
+    if not text:
+        return False
+
+    listing_markers = [
+        "welche",
+        "welcher",
+        "welches",
+        "gibt es",
+        "zeige alle",
+        "liste alle",
+        "alle ",
+        "list all",
+        "show all",
+        "which",
+        "what",
+    ]
+    metric_markers = [
+        "spannung",
+        "voltage",
+        "leistung",
+        "power",
+        "wirkleistung",
+        "blindleistung",
+        "scheinleistung",
+        "auslastung",
+        "loading",
+        "nachbarn",
+        "neighbors",
+        "connected",
+        "komponente",
+        "path",
+        "pfad",
+        "über die zeit",
+        "over time",
+    ]
+
+    has_listing = any(marker in text for marker in listing_markers)
+    has_metric_or_topology = any(marker in text for marker in metric_markers)
+    return has_listing and not has_metric_or_topology
+
+
 class CIMPlannerDecision(BaseModel):
     intent: str = Field(
         description="One of: historical_analysis, topology_query, asset_lookup, unsupported_cim_request"
@@ -85,7 +129,8 @@ Critical rules:
 
 Practical guidance:
 - Use scan_snapshot_inventory whenever structure / network index is needed.
-- Use resolve_cim_object to resolve equipment and parse the user query.
+- Use list_equipment_of_type for requests that ask which objects of a CIM equipment type exist, for example list/show/which/all requests about transformers, lines, loads or generators.
+- Use resolve_cim_object to resolve equipment and parse the user query when a concrete equipment instance is needed.
 - Use load_snapshot_cache for historical state / metric questions.
 - Use query_cim for the actual domain query.
 - Use summarize_cim_result at the end.
@@ -160,6 +205,13 @@ Practical guidance:
                 for step in requested_steps
                 if isinstance(step, str) and step in allowed_names
             ]
+
+            if _looks_like_type_listing_request(user_input) and "list_equipment_of_type" in allowed_names:
+                result["safe_to_execute"] = True
+                result["required_steps"] = ["list_equipment_of_type"]
+                reasoning = str(result.get("reasoning", "") or "").strip()
+                heuristic_reason = "type-listing heuristic selected list_equipment_of_type"
+                result["reasoning"] = f"{reasoning} | {heuristic_reason}" if reasoning else heuristic_reason
 
             if not result["required_steps"] and result.get("safe_to_execute", False):
                 result["safe_to_execute"] = False
@@ -237,6 +289,11 @@ Practical guidance:
                 add("resolve_cim_object")
                 continue
 
+            if step == "list_equipment_of_type":
+                add("scan_snapshot_inventory")
+                add("list_equipment_of_type")
+                continue
+
             if step == "scan_snapshot_inventory":
                 add("scan_snapshot_inventory")
                 continue
@@ -264,7 +321,11 @@ Practical guidance:
                     "description": "Return a controlled unsupported-workflow message",
                 }]
 
-        if "summarize_cim_result" in allowed_names and "summarize_cim_result" not in normalized_steps:
+        if (
+            "summarize_cim_result" in allowed_names
+            and "summarize_cim_result" not in normalized_steps
+            and "list_equipment_of_type" not in normalized_steps
+        ):
             normalized_steps.append("summarize_cim_result")
 
         plan: List[Dict[str, Any]] = []

@@ -94,6 +94,17 @@ DEFAULT_STATE_TYPES = {
     "SvPowerFlow",
 }
 
+POWERFLOW_TARGET_EQUIPMENT_TYPES = {
+    "SynchronousMachine",
+    "AsynchronousMachine",
+    "ConformLoad",
+    "EnergyConsumer",
+    "PowerTransformer",
+    "ACLineSegment",
+    "EquivalentInjection",
+    "ExternalNetworkInjection",
+}
+
 Metric = Optional[Literal["P", "Q", "S"]]
 
 
@@ -232,9 +243,11 @@ Synonyme:
 - Verbraucher/Last/Load/ConformLoad => ConformLoad
 - Spannung/Voltage => SvVoltage
 - Leistung/Power/Powerflow => SvPowerFlow
-- Wirkleistung/P => metric "P"
-- Blindleistung/Q => metric "Q"
-- Scheinleistung/S => metric "S"
+- Allgemeine Leistung/Power/power output => meist metric "P"
+- Wirkleistung/active power/real power/P => metric "P"
+- Blindleistung/reactive power/Q => metric "Q"
+- Scheinleistung/apparent power/S => metric "S"
+- Loading/Utilization/Auslastung => meist metric "S"
 - Auslastung eines Trafos => meist metric "S"
 """.strip()
 
@@ -265,6 +278,126 @@ Regeln:
 
 
 CLARIFY_SYSTEM = "Du stellst genau EINE kurze Rückfrage auf Deutsch. Kein Zusatztext."
+
+
+METRIC_INFERENCE_SYSTEM = """
+Du interpretierst, welche elektrische Leistungsmetrik in einer User-Anfrage gemeint ist.
+
+Gib AUSSCHLIESSLICH JSON zurück, ohne Markdown, ohne Zusatztext.
+
+Schema:
+{
+  "metric": "P" | "Q" | "S" | null
+}
+
+Regeln:
+- P = Wirkleistung / active power / real power / power output / MW
+- Q = Blindleistung / reactive power / MVAr
+- S = Scheinleistung / apparent power / loading / utilization / MVA
+- Allgemeine Formulierungen wie "Leistung", "power", "Leistungswert", "power output" meinen normalerweise P.
+- Wenn der Nutzer explizit Blindleistung oder reactive power meint, gib Q zurück.
+- Wenn der Nutzer explizit Scheinleistung, apparent power, loading, utilization oder Auslastung meint, gib S zurück.
+- Wenn es wirklich nicht ableitbar ist, gib null zurück.
+""".strip()
+
+
+def infer_metric_from_context(llm, context: str) -> Metric:
+    user_prompt = f"""
+Kontext:
+{context}
+""".strip()
+
+    try:
+        resp = llm.invoke([("system", METRIC_INFERENCE_SYSTEM), ("user", user_prompt)])
+        text = getattr(resp, "content", str(resp))
+        data = extract_json(text)
+        metric = data.get("metric")
+        if metric in {"P", "Q", "S"}:
+            return metric
+    except Exception:
+        pass
+
+    context_l = (context or "").lower()
+    if any(w in context_l for w in ["blindleistung", "reactive power", "mvar"]):
+        return "Q"
+    if any(w in context_l for w in ["scheinleistung", "apparent power", "loading", "utilization", "auslastung", "mva"]):
+        return "S"
+    if any(w in context_l for w in ["wirkleistung", "active power", "real power", "power output", "leistung", " power", "mw"]):
+        return "P"
+    return None
+
+
+
+POWERFLOW_TYPE_INFERENCE_SYSTEM = """
+Du interpretierst für eine Leistungs- oder PowerFlow-Anfrage, welcher konkrete netzseitige CIM-Equipment-Typ verwendet werden soll.
+
+Gib AUSSCHLIESSLICH JSON zurück, ohne Markdown, ohne Zusatztext.
+
+Schema:
+{
+  "equipment_type": "<genau einer der erlaubten Typen>" | null
+}
+
+Regeln:
+- Wähle nur einen Typ aus der erlaubten Liste.
+- Für Generator/Erzeuger/generator/mechine im elektrischen Netz ist meist SynchronousMachine der richtige Zieltyp.
+- GeneratingUnit ist keine gute Zielwahl für terminalbasierte SvPowerFlow-Abfragen, wenn ein netzseitiger Maschinentyp verfügbar ist.
+- Für Last/Verbraucher/load ist meist ConformLoad oder EnergyConsumer passend.
+- Für Trafo/Transformator/transformer ist PowerTransformer passend.
+- Für Leitung/line/kabel ist ACLineSegment passend.
+- Wenn kein sicherer Typ aus der erlaubten Liste passt, gib null zurück.
+""".strip()
+
+
+def infer_powerflow_equipment_type_from_context(
+    llm,
+    context: str,
+    *,
+    available_equipment_types: List[str],
+) -> Optional[str]:
+    allowed = [t for t in available_equipment_types if t in POWERFLOW_TARGET_EQUIPMENT_TYPES]
+    if not allowed:
+        return None
+
+    user_prompt = f"""
+Kontext:
+{context}
+
+Erlaubte netzseitige PowerFlow-Zieltypen:
+{chr(10).join(f"- {t}" for t in allowed)}
+""".strip()
+
+    try:
+        resp = llm.invoke([("system", POWERFLOW_TYPE_INFERENCE_SYSTEM), ("user", user_prompt)])
+        text = getattr(resp, "content", str(resp))
+        data = extract_json(text)
+        equipment_type = data.get("equipment_type")
+        if equipment_type in allowed:
+            return equipment_type
+    except Exception:
+        pass
+
+    context_l = (context or "").lower()
+    if any(w in context_l for w in ["generator", "erzeuger", "synchronousmachine", "synchronous machine"]):
+        if "SynchronousMachine" in allowed:
+            return "SynchronousMachine"
+    if any(w in context_l for w in ["asynchronousmachine", "asynchronous machine", "induction machine"]):
+        if "AsynchronousMachine" in allowed:
+            return "AsynchronousMachine"
+    if any(w in context_l for w in ["last", "verbraucher", "load"]):
+        if "ConformLoad" in allowed:
+            return "ConformLoad"
+        if "EnergyConsumer" in allowed:
+            return "EnergyConsumer"
+    if any(w in context_l for w in ["trafo", "transformator", "transformer"]):
+        if "PowerTransformer" in allowed:
+            return "PowerTransformer"
+    if any(w in context_l for w in ["leitung", "line", "kabel"]):
+        if "ACLineSegment" in allowed:
+            return "ACLineSegment"
+
+    return None
+
 
 
 def make_clarify_prompt(context: str, missing: str) -> List[tuple]:
@@ -508,6 +641,89 @@ def _ensure_time_window(
     return None, None, label, final_context
 
 
+
+
+# =============================================================================
+# 9a) interpret_equipment_type_query
+# =============================================================================
+def interpret_equipment_type_query(
+    user_input: str,
+    *,
+    network_index: dict,
+    ask_user: Optional[Callable[[str], str]] = None,
+    max_rounds: int = 4,
+    allowed_equipment_types: Optional[List[str]] = None,
+) -> Dict[str, Any]:
+    """
+    Resolve only the CIM equipment *type* from a natural-language query.
+
+    This is a dedicated path for type-only requests like
+    'Welche PowerTransformer gibt es?' and intentionally does *not*
+    resolve a concrete equipment instance.
+    """
+    if ask_user is None:
+        ask_user = default_ask_user
+
+    llm = get_llm()
+    equipment_name_index = (network_index or {}).get("equipment_name_index", {}) or {}
+
+    effective_allowed_equipment_types = _normalize_allowed_set(
+        allowed_equipment_types or list(equipment_name_index.keys()) or (network_index or {}).get("equipment_types", []),
+        set(equipment_name_index.keys()) or set((network_index or {}).get("equipment_types", [])) or DEFAULT_EQUIPMENT_TYPES,
+    )
+
+    system_prompt_parse = build_system_prompt_parse(
+        allowed_equipment_types=effective_allowed_equipment_types,
+        allowed_state_types=set(),
+    )
+
+    context_lines: List[str] = [f"User: {user_input}"]
+
+    def parse_types_with_llm(context: str) -> Optional[QueryParse]:
+        resp = llm.invoke([("system", system_prompt_parse), ("user", context)])
+        text = getattr(resp, "content", str(resp))
+        data = extract_json(text)
+        parsed = QueryParse(**data)
+        return normalize_query(
+            parsed,
+            allowed_equipment_types=effective_allowed_equipment_types,
+            allowed_state_types=set(),
+        )
+
+    for _ in range(max_rounds):
+        context = "\n".join(context_lines)
+
+        try:
+            parsed = parse_types_with_llm(context)
+        except (ValidationError, ValueError, json.JSONDecodeError):
+            parsed = None
+
+        if parsed is None or not parsed.equipment_detected:
+            q = llm.invoke(make_clarify_prompt(context, "equipment")).content.strip()
+            a = (ask_user(q) or "").strip() or "Ich bin mir nicht sicher."
+            context_lines += [f"Assistant: {q}", f"User: {a}"]
+            continue
+
+        selected_type = parsed.equipment_detected[0]
+        return {
+            "equipment_detected": list(parsed.equipment_detected),
+            "selected_type": selected_type,
+            "time_start": None,
+            "time_end": None,
+            "time_label": None,
+            "mode": "equipment_type_only",
+        }
+
+    return {
+        "equipment_detected": [],
+        "selected_type": None,
+        "time_start": None,
+        "time_end": None,
+        "time_label": None,
+        "mode": "equipment_type_only",
+    }
+
+
 # =============================================================================
 # 9) interpret_user_query
 # =============================================================================
@@ -588,6 +804,25 @@ def interpret_user_query(
             "auslastung" in context_l or "utilization" in context_l or "loading" in context_l
         ) and not explicit_metric:
             parsed.metric = "S"
+
+        if parsed.metric is None and "SvPowerFlow" in parsed.state_detected:
+            inferred_metric = infer_metric_from_context(llm, context)
+            if inferred_metric in {"P", "Q", "S"}:
+                parsed.metric = inferred_metric
+
+        if parsed.equipment_detected and "SvPowerFlow" in parsed.state_detected:
+            inferred_pf_equipment_type = infer_powerflow_equipment_type_from_context(
+                llm,
+                context,
+                available_equipment_types=sorted(effective_allowed_equipment_types),
+            )
+            if inferred_pf_equipment_type in effective_allowed_equipment_types:
+                parsed.equipment_detected = [inferred_pf_equipment_type]
+                parsed = normalize_query(
+                    parsed,
+                    allowed_equipment_types=effective_allowed_equipment_types,
+                    allowed_state_types=effective_allowed_state_types,
+                )
 
         if not parsed.equipment_detected:
             q = llm.invoke(make_clarify_prompt(context, "equipment")).content.strip()

@@ -7,6 +7,7 @@ from cimpy.cimpy_time_analysis.cim_mcp_tools import (
     build_cim_services,
     _scan_snapshot_inventory_with_services,
     _resolve_cim_object_with_services,
+    _list_equipment_of_type_with_services,
     _load_snapshot_cache_with_services,
     _query_cim_with_services,
     _summarize_cim_result_with_services,
@@ -54,12 +55,14 @@ class CIMToolRegistry:
                     "snapshot_inventory": "dict",
                     "base_snapshot": "dict",
                     "network_index": "dict",
+                    "equipment_catalog_summary": "dict",
                 },
-                capability_tags=["inventory", "network_index", "read_only"],
+                capability_tags=["inventory", "network_index", "equipment_catalog", "read_only"],
                 mutating=False,
                 requires_state=[],
-                produces_state=["snapshot_inventory", "base_snapshot", "network_index"],
+                produces_state=["snapshot_inventory", "base_snapshot", "network_index", "equipment_catalog_summary"],
                 is_summary=False,
+                domain_notes=["Builds and merges a deterministic equipment catalog from the base snapshot."],
             ),
             "resolve_cim_object": CIMToolSpec(
                 name="resolve_cim_object",
@@ -78,12 +81,42 @@ class CIMToolRegistry:
                     "tool": "resolve_cim_object",
                     "parsed_query": "dict",
                     "resolved_object": "Any",
+                    "resolution_mode": "string",
+                    "equipment_resolution_debug": "dict",
                 },
-                capability_tags=["object_resolution", "query_parsing", "read_only"],
+                capability_tags=["object_resolution", "query_parsing", "equipment_catalog", "llm_match", "read_only"],
                 mutating=False,
                 requires_state=["network_index"],
-                produces_state=["parsed_query", "resolved_object"],
+                produces_state=["parsed_query", "resolved_object", "resolution_mode", "equipment_resolution_debug"],
                 is_summary=False,
+                domain_notes=["Falls back to two-stage catalog resolution: equipment type first, equipment instance second."],
+            ),
+            "list_equipment_of_type": CIMToolSpec(
+                name="list_equipment_of_type",
+                description="List all concrete CIM objects of a resolved equipment type from the deterministic equipment catalog",
+                input_schema={
+                    "type": "object",
+                    "properties": {
+                        "cim_root": {"type": "string"},
+                        "user_input": {"type": "string"},
+                        "network_index": {"type": "object"},
+                    },
+                    "required": ["user_input", "network_index"],
+                },
+                output_schema_hint={
+                    "status": "ok|error",
+                    "tool": "list_equipment_of_type",
+                    "selected_type": "string",
+                    "equipment_items": "list[dict]",
+                    "equipment_count": "integer",
+                    "answer": "string",
+                },
+                capability_tags=["equipment_catalog", "asset_lookup", "read_only"],
+                mutating=False,
+                requires_state=["network_index"],
+                produces_state=["selected_type", "equipment_items", "equipment_count", "answer"],
+                is_summary=False,
+                domain_notes=["Uses the same type-resolution stage as equipment resolution, but returns all objects of the selected type."],
             ),
             "load_snapshot_cache": CIMToolSpec(
                 name="load_snapshot_cache",
@@ -166,6 +199,7 @@ class CIMToolRegistry:
         self._handlers: Dict[str, Callable[[Dict[str, Any]], Dict[str, Any]]] = {
             "scan_snapshot_inventory": self._tool_scan_snapshot_inventory,
             "resolve_cim_object": self._tool_resolve_cim_object,
+            "list_equipment_of_type": self._tool_list_equipment_of_type,
             "load_snapshot_cache": self._tool_load_snapshot_cache,
             "query_cim": self._tool_query_cim,
             "summarize_cim_result": self._tool_summarize_cim_result,
@@ -251,6 +285,16 @@ class CIMToolRegistry:
         if services.get("status") != "ok":
             return services
         return _resolve_cim_object_with_services(
+            services=services,
+            user_input=context["user_input"],
+            network_index=context.get("network_index"),
+        )
+
+    def _tool_list_equipment_of_type(self, context: Dict[str, Any]) -> Dict[str, Any]:
+        services = self._build_services(context)
+        if services.get("status") != "ok":
+            return services
+        return _list_equipment_of_type_with_services(
             services=services,
             user_input=context["user_input"],
             network_index=context.get("network_index"),
