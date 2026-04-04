@@ -1,39 +1,39 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Any, Callable, Dict, List, Optional
 
-from cimpy.cimpy_time_analysis.load_cim_data import (
-    scan_snapshot_inventory,
-    load_base_snapshot,
-    build_network_index_from_snapshot,
-    load_snapshots_for_time_window,
-    load_cim_snapshots,
+from cimpy.cimpy_time_analysis.cim_mcp_tools import (
+    build_cim_services,
+    _scan_snapshot_inventory_with_services,
+    _resolve_cim_object_with_services,
+    _load_snapshot_cache_with_services,
+    _query_cim_with_services,
+    _summarize_cim_result_with_services,
 )
-from cimpy.cimpy_time_analysis.cim_snapshot_cache import (
-    preprocess_snapshots_for_states,
-    summarize_snapshot_cache,
-)
-from cimpy.cimpy_time_analysis.llm_object_mapping import interpret_user_query
-from cimpy.cimpy_time_analysis.llm_cim_orchestrator import handle_user_query
 
 
 @dataclass(frozen=True)
 class CIMToolSpec:
     name: str
     description: str
-    capability_tags: List[str]
+    input_schema: Dict[str, Any]
+    output_schema_hint: Dict[str, Any]
+    capability_tags: List[str] = field(default_factory=list)
     mutating: bool = False
+    requires_state: List[str] = field(default_factory=list)
+    produces_state: List[str] = field(default_factory=list)
+    is_summary: bool = False
+    domain_notes: List[str] = field(default_factory=list)
 
 
 class CIMToolRegistry:
     """
-    Minimale, lauffähige CIM Tool Registry.
+    CIM registry aligned structurally with the PowerFactory registry pattern:
+    - registry = step contracts / source of truth / dispatch
+    - cim_mcp_tools = concrete tool implementation layer
 
-    Ziel:
-    - stabile interne Tools für den CIMDomainAgent
-    - historisch/state-basierte Queries mit Snapshot-Cache ermöglichen
-    - später 1:1 als MCP-Tools nutzbar
+    The domain logic remains unchanged; only the layering is refactored.
     """
 
     def __init__(self, cim_root: str):
@@ -43,36 +43,132 @@ class CIMToolRegistry:
             "scan_snapshot_inventory": CIMToolSpec(
                 name="scan_snapshot_inventory",
                 description="Scan snapshot inventory and build base network index",
+                input_schema={
+                    "type": "object",
+                    "properties": {"cim_root": {"type": "string"}},
+                    "required": [],
+                },
+                output_schema_hint={
+                    "status": "ok|error",
+                    "tool": "scan_snapshot_inventory",
+                    "snapshot_inventory": "dict",
+                    "base_snapshot": "dict",
+                    "network_index": "dict",
+                },
                 capability_tags=["inventory", "network_index", "read_only"],
+                mutating=False,
+                requires_state=[],
+                produces_state=["snapshot_inventory", "base_snapshot", "network_index"],
+                is_summary=False,
             ),
             "resolve_cim_object": CIMToolSpec(
                 name="resolve_cim_object",
                 description="Resolve asset or equipment from user query and parse time/state intent",
+                input_schema={
+                    "type": "object",
+                    "properties": {
+                        "cim_root": {"type": "string"},
+                        "user_input": {"type": "string"},
+                        "network_index": {"type": "object"},
+                    },
+                    "required": ["user_input", "network_index"],
+                },
+                output_schema_hint={
+                    "status": "ok|error",
+                    "tool": "resolve_cim_object",
+                    "parsed_query": "dict",
+                    "resolved_object": "Any",
+                },
                 capability_tags=["object_resolution", "query_parsing", "read_only"],
+                mutating=False,
+                requires_state=["network_index"],
+                produces_state=["parsed_query", "resolved_object"],
+                is_summary=False,
             ),
             "load_snapshot_cache": CIMToolSpec(
                 name="load_snapshot_cache",
                 description="Load relevant snapshots for the parsed time window and build snapshot cache",
+                input_schema={
+                    "type": "object",
+                    "properties": {
+                        "cim_root": {"type": "string"},
+                        "parsed_query": {"type": "object"},
+                        "snapshot_inventory": {"type": "object"},
+                    },
+                    "required": ["parsed_query", "snapshot_inventory"],
+                },
+                output_schema_hint={
+                    "status": "ok|error",
+                    "tool": "load_snapshot_cache",
+                    "cim_snapshots": "dict",
+                    "required_state_types": "list[str]",
+                    "snapshot_cache": "dict",
+                    "snapshot_cache_summary": "dict",
+                },
                 capability_tags=["snapshot_loading", "state_cache", "read_only"],
+                mutating=False,
+                requires_state=["parsed_query", "snapshot_inventory"],
+                produces_state=["cim_snapshots", "required_state_types", "snapshot_cache", "snapshot_cache_summary"],
+                is_summary=False,
             ),
             "query_cim": CIMToolSpec(
                 name="query_cim",
                 description="Run CIM analysis query using parsed query, network index and snapshot cache",
+                input_schema={
+                    "type": "object",
+                    "properties": {
+                        "cim_root": {"type": "string"},
+                        "user_input": {"type": "string"},
+                        "snapshot_cache": {"type": "object"},
+                        "network_index": {"type": "object"},
+                        "parsed_query": {"type": "object"},
+                        "classification": {"type": "object"},
+                    },
+                    "required": ["user_input", "network_index"],
+                },
+                output_schema_hint={
+                    "status": "ok|error",
+                    "tool": "query_cim",
+                    "answer": "string",
+                },
                 capability_tags=["analysis", "read_only"],
+                mutating=False,
+                requires_state=["network_index", "parsed_query"],
+                produces_state=["answer"],
+                is_summary=False,
             ),
             "summarize_cim_result": CIMToolSpec(
                 name="summarize_cim_result",
                 description="Return final CIM result with debug information",
+                input_schema={
+                    "type": "object",
+                    "properties": {
+                        "cim_root": {"type": "string"},
+                        "result_payload": {"type": "object"},
+                        "user_input": {"type": "string"},
+                    },
+                    "required": ["user_input"],
+                },
+                output_schema_hint={
+                    "status": "ok|error",
+                    "tool": "summarize_cim_result",
+                    "answer": "string",
+                    "debug": "dict",
+                },
                 capability_tags=["result", "read_only"],
+                mutating=False,
+                requires_state=["answer"],
+                produces_state=["summary"],
+                is_summary=True,
             ),
         }
 
         self._handlers: Dict[str, Callable[[Dict[str, Any]], Dict[str, Any]]] = {
-            "scan_snapshot_inventory": self._scan_snapshot_inventory,
-            "resolve_cim_object": self._resolve_object,
-            "load_snapshot_cache": self._load_snapshot_cache,
-            "query_cim": self._query_cim,
-            "summarize_cim_result": self._summarize,
+            "scan_snapshot_inventory": self._tool_scan_snapshot_inventory,
+            "resolve_cim_object": self._tool_resolve_cim_object,
+            "load_snapshot_cache": self._tool_load_snapshot_cache,
+            "query_cim": self._tool_query_cim,
+            "summarize_cim_result": self._tool_summarize_cim_result,
         }
 
     # ------------------------------------------------------------------
@@ -83,11 +179,33 @@ class CIMToolRegistry:
             {
                 "name": spec.name,
                 "description": spec.description,
+                "input_schema": spec.input_schema,
+                "output_schema_hint": spec.output_schema_hint,
                 "capability_tags": list(spec.capability_tags),
                 "mutating": spec.mutating,
+                "requires_state": list(spec.requires_state),
+                "produces_state": list(spec.produces_state),
+                "is_summary": spec.is_summary,
+                "domain_notes": list(spec.domain_notes),
             }
             for spec in self._tool_specs.values()
         ]
+
+    def get_step_contracts(self) -> Dict[str, Dict[str, Any]]:
+        return {
+            spec.name: {
+                "description": spec.description,
+                "input_schema": spec.input_schema,
+                "output_schema_hint": spec.output_schema_hint,
+                "capability_tags": list(spec.capability_tags),
+                "mutating": spec.mutating,
+                "requires_state": list(spec.requires_state),
+                "produces_state": list(spec.produces_state),
+                "is_summary": spec.is_summary,
+                "domain_notes": list(spec.domain_notes),
+            }
+            for spec in self._tool_specs.values()
+        }
 
     def get_tool_spec(self, name: str) -> Optional[CIMToolSpec]:
         return self._tool_specs.get(name)
@@ -116,144 +234,57 @@ class CIMToolRegistry:
     # ------------------------------------------------------------------
     # INTERNAL HELPERS
     # ------------------------------------------------------------------
-    def _extract_required_state_types(self, parsed_query: Dict[str, Any] | None) -> List[str]:
-        parsed_query = parsed_query or {}
-        state_detected = parsed_query.get("state_detected", []) or []
-
-        state_types: List[str] = []
-
-        if "SvVoltage" in state_detected:
-            state_types.append("SvVoltage")
-        if "SvPowerFlow" in state_detected:
-            state_types.append("SvPowerFlow")
-
-        out: List[str] = []
-        seen = set()
-
-        for state_type in state_types:
-            if state_type not in seen:
-                out.append(state_type)
-                seen.add(state_type)
-
-        return out
-
-    def _should_load_states(self, parsed_query: Dict[str, Any] | None) -> bool:
-        return len(self._extract_required_state_types(parsed_query)) > 0
+    def _build_services(self, context: Dict[str, Any]) -> Dict[str, Any]:
+        return build_cim_services(cim_root=context.get("cim_root", self.cim_root))
 
     # ------------------------------------------------------------------
-    # TOOL IMPLEMENTATIONS
+    # TOOL HANDLERS (delegate to cim_mcp_tools)
     # ------------------------------------------------------------------
-    def _scan_snapshot_inventory(self, context: Dict[str, Any]) -> Dict[str, Any]:
-        inventory = scan_snapshot_inventory(self.cim_root)
+    def _tool_scan_snapshot_inventory(self, context: Dict[str, Any]) -> Dict[str, Any]:
+        services = self._build_services(context)
+        if services.get("status") != "ok":
+            return services
+        return _scan_snapshot_inventory_with_services(services)
 
-        base_snapshot = load_base_snapshot(
-            root_folder=self.cim_root,
-            snapshot_inventory=inventory,
-        )
-
-        network_index = build_network_index_from_snapshot(base_snapshot)
-
-        if not network_index or not network_index.get("equipment_name_index"):
-            return {
-                "status": "error",
-                "tool": "scan_snapshot_inventory",
-                "error": "invalid_network_index",
-                "answer": "Es konnte kein gültiger Netzwerkindex aus dem Basissnapshot aufgebaut werden.",
-            }
-
-        return {
-            "status": "ok",
-            "snapshot_inventory": inventory,
-            "base_snapshot": base_snapshot,
-            "network_index": network_index,
-        }
-
-    def _resolve_object(self, context: Dict[str, Any]) -> Dict[str, Any]:
-        parsed_query = interpret_user_query(
+    def _tool_resolve_cim_object(self, context: Dict[str, Any]) -> Dict[str, Any]:
+        services = self._build_services(context)
+        if services.get("status") != "ok":
+            return services
+        return _resolve_cim_object_with_services(
+            services=services,
             user_input=context["user_input"],
             network_index=context.get("network_index"),
         )
 
-        equipment_selection = parsed_query.get("equipment_selection", []) or []
-        resolved = equipment_selection[0] if equipment_selection else None
+    def _tool_load_snapshot_cache(self, context: Dict[str, Any]) -> Dict[str, Any]:
+        services = self._build_services(context)
+        if services.get("status") != "ok":
+            return services
+        return _load_snapshot_cache_with_services(
+            services=services,
+            parsed_query=context.get("parsed_query"),
+            snapshot_inventory=context.get("snapshot_inventory"),
+        )
 
-        return {
-            "status": "ok",
-            "parsed_query": parsed_query,
-            "resolved_object": resolved,
-        }
-
-    def _load_snapshot_cache(self, context: Dict[str, Any]) -> Dict[str, Any]:
-        parsed_query = context.get("parsed_query") or {}
-        snapshot_inventory = context.get("snapshot_inventory")
-
-        required_state_types = self._extract_required_state_types(parsed_query)
-        cim_snapshots: Dict[str, Any] = {}
-
-        if self._should_load_states(parsed_query):
-            cim_snapshots = load_snapshots_for_time_window(
-                root_folder=self.cim_root,
-                start_time=parsed_query.get("time_start"),
-                end_time=parsed_query.get("time_end"),
-                snapshot_inventory=snapshot_inventory,
-            )
-
-            if not cim_snapshots:
-                cim_snapshots = load_cim_snapshots(self.cim_root)
-
-        if cim_snapshots and required_state_types:
-            snapshot_cache = preprocess_snapshots_for_states(
-                cim_snapshots=cim_snapshots,
-                state_types=required_state_types,
-            )
-        else:
-            snapshot_cache = {}
-
-        snapshot_cache_summary = summarize_snapshot_cache(snapshot_cache)
-
-        return {
-            "status": "ok",
-            "cim_snapshots": cim_snapshots,
-            "required_state_types": required_state_types,
-            "snapshot_cache": snapshot_cache,
-            "snapshot_cache_summary": snapshot_cache_summary,
-        }
-
-    def _query_cim(self, context: Dict[str, Any]) -> Dict[str, Any]:
-        answer = handle_user_query(
+    def _tool_query_cim(self, context: Dict[str, Any]) -> Dict[str, Any]:
+        services = self._build_services(context)
+        if services.get("status") != "ok":
+            return services
+        return _query_cim_with_services(
+            services=services,
             user_input=context["user_input"],
             snapshot_cache=context.get("snapshot_cache", {}),
             network_index=context.get("network_index", {}),
             parsed_query=context.get("parsed_query"),
-            analysis_plan=context.get("classification"),
+            classification=context.get("classification"),
         )
 
-        return {
-            "status": "ok",
-            "answer": answer,
-        }
-
-    def _summarize(self, context: Dict[str, Any]) -> Dict[str, Any]:
-        snapshot_inventory = context.get("snapshot_inventory") or {}
-        network_index = context.get("network_index") or {}
-        cim_snapshots = context.get("cim_snapshots") or {}
-        snapshot_cache_summary = context.get("snapshot_cache_summary") or {}
-
-        debug = {
-            "num_inventory_snapshots": len(snapshot_inventory.get("snapshots", []))
-            if snapshot_inventory else 0,
-            "index_source_snapshot": network_index.get("index_source_snapshot"),
-            "index_source_time_str": network_index.get("index_source_time_str"),
-            "required_state_types": context.get("required_state_types", []) or [],
-            "num_loaded_snapshots": len(cim_snapshots),
-            "loaded_snapshot_names": list(cim_snapshots.keys()),
-            "snapshot_cache_summary": snapshot_cache_summary,
-            "parsed_query": context.get("parsed_query", {}) or {},
-            "resolved_object": context.get("resolved_object"),
-        }
-
-        return {
-            "status": "ok",
-            "answer": context.get("answer", ""),
-            "debug": debug,
-        }
+    def _tool_summarize_cim_result(self, context: Dict[str, Any]) -> Dict[str, Any]:
+        services = self._build_services(context)
+        if services.get("status") != "ok":
+            return services
+        return _summarize_cim_result_with_services(
+            services=services,
+            result_payload=context,
+            user_input=context.get("user_input", ""),
+        )
