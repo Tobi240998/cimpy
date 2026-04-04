@@ -8,6 +8,7 @@ from cimpy.cimpy_time_analysis.cim_mcp_tools import (
     _scan_snapshot_inventory_with_services,
     _resolve_cim_object_with_services,
     _list_equipment_of_type_with_services,
+    _read_cim_base_values_with_services,
     _load_snapshot_cache_with_services,
     _query_cim_with_services,
     _summarize_cim_result_with_services,
@@ -118,6 +119,33 @@ class CIMToolRegistry:
                 is_summary=False,
                 domain_notes=["Uses the same type-resolution stage as equipment resolution, but returns all objects of the selected type."],
             ),
+
+            "read_cim_base_values": CIMToolSpec(
+                name="read_cim_base_values",
+                description="Read static CIM base or nameplate attributes from a resolved equipment object",
+                input_schema={
+                    "type": "object",
+                    "properties": {
+                        "cim_root": {"type": "string"},
+                        "user_input": {"type": "string"},
+                        "resolved_object": {"type": "object"},
+                    },
+                    "required": ["user_input", "resolved_object"],
+                },
+                output_schema_hint={
+                    "status": "ok|error",
+                    "tool": "read_cim_base_values",
+                    "selected_attributes": "list[str]",
+                    "base_values": "dict[str, Any]",
+                    "answer": "string",
+                },
+                capability_tags=["base_values", "nameplate_data", "read_only"],
+                mutating=False,
+                requires_state=["resolved_object"],
+                produces_state=["selected_attributes", "base_values", "answer", "base_attribute_debug"],
+                is_summary=False,
+                domain_notes=["Supports direct technical attribute matching and controlled semantic LLM mapping."],
+            ),
             "load_snapshot_cache": CIMToolSpec(
                 name="load_snapshot_cache",
                 description="Load relevant snapshots for the parsed time window and build snapshot cache",
@@ -200,6 +228,7 @@ class CIMToolRegistry:
             "scan_snapshot_inventory": self._tool_scan_snapshot_inventory,
             "resolve_cim_object": self._tool_resolve_cim_object,
             "list_equipment_of_type": self._tool_list_equipment_of_type,
+            "read_cim_base_values": self._tool_read_cim_base_values,
             "load_snapshot_cache": self._tool_load_snapshot_cache,
             "query_cim": self._tool_query_cim,
             "summarize_cim_result": self._tool_summarize_cim_result,
@@ -298,6 +327,19 @@ class CIMToolRegistry:
             services=services,
             user_input=context["user_input"],
             network_index=context.get("network_index"),
+        )
+
+
+    def _tool_read_cim_base_values(self, context: Dict[str, Any]) -> Dict[str, Any]:
+        services = self._build_services(context)
+        if services.get("status") != "ok":
+            return services
+        return _read_cim_base_values_with_services(
+            services=services,
+            user_input=context["user_input"],
+            resolved_object=context.get("resolved_object") or context.get("equipment_obj"),
+            parsed_query=context.get("parsed_query"),
+            analysis_plan=context.get("classification"),
         )
 
     def _tool_load_snapshot_cache(self, context: Dict[str, Any]) -> Dict[str, Any]:

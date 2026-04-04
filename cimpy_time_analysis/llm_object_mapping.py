@@ -6,6 +6,8 @@ from difflib import get_close_matches
 from typing import List, Optional, Literal, Set, Dict, Any, Callable, Tuple
 
 from pydantic import BaseModel, Field, ValidationError
+from langchain_core.output_parsers import PydanticOutputParser
+from langchain_core.prompts import ChatPromptTemplate
 from langchain_ollama import ChatOllama
 
 from datetime import datetime, timedelta, timezone
@@ -120,6 +122,26 @@ VOLTAGE_TARGET_EQUIPMENT_TYPES = {
 Metric = Optional[Literal["P", "Q", "S"]]
 
 
+BASE_ATTRIBUTE_SPECS: Dict[str, Dict[str, Any]] = {
+    "name": {"aliases": ["name", "bezeichnung", "gerätebezeichnung", "equipment name"]},
+    "mRID": {"aliases": ["mrid", "m rid", "id", "uuid", "kennung", "technical id"]},
+    "description": {"aliases": ["description", "beschreibung", "desc"]},
+    "ratedS": {"aliases": ["rateds", "rated s", "rated power", "bemessungsleistung", "nennleistung", "rating"]},
+    "ratedU": {"aliases": ["ratedu", "rated u", "rated voltage", "bemessungsspannung", "nennspannung"]},
+    "p": {"aliases": ["p", "wirkleistung", "active power", "real power"]},
+    "q": {"aliases": ["q", "blindleistung", "reactive power"]},
+    "maxQ": {"aliases": ["maxq", "max q", "max reactive power", "blindleistungsobergrenze", "maximale blindleistung"]},
+    "minQ": {"aliases": ["minq", "min q", "min reactive power", "blindleistungsuntergrenze", "minimale blindleistung"]},
+    "initialP": {"aliases": ["initialp", "initial p", "initial active power", "startwert wirkleistung", "initialleistung"]},
+    "nominalP": {"aliases": ["nominalp", "nominal p", "nominal active power", "nennwirkleistung", "nominalleistung"]},
+    "maxOperatingP": {"aliases": ["maxoperatingp", "max operating p", "max operating power", "maximale wirkleistung", "maximalleistung"]},
+    "minOperatingP": {"aliases": ["minoperatingp", "min operating p", "min operating power", "minimale wirkleistung", "minimalleistung"]},
+    "operatingMode": {"aliases": ["operatingmode", "operating mode", "betriebsmodus", "betriebspunktmodus"]},
+    "type": {"aliases": ["type", "typ", "equipment type", "gerätetyp"]},
+}
+
+
+
 class EquipmentSelection(BaseModel):
     equipment_type: str
     equipment_key: str
@@ -141,6 +163,11 @@ class CandidateChoice(BaseModel):
     equipment_key: Optional[str] = None
     need_clarification: bool = False
     clarification_question: Optional[str] = None
+
+class BaseAttributeSelectionDecision(BaseModel):
+    selected_attributes: List[str] = Field(default_factory=list)
+    confidence: str = Field(description="One of: high, medium, low")
+    rationale: str = Field(default="")
 
 
 def _dedup_keep_order(items: List[str]) -> List[str]:
@@ -485,6 +512,146 @@ Erlaubte netzseitige Spannungs-Zieltypen:
             return "ACLineSegment"
 
     return None
+
+
+
+
+BASE_ATTRIBUTE_SELECTION_SYSTEM = """
+Du interpretierst, welche statischen CIM-Basisattribute in einer User-Anfrage gemeint sind.
+
+Gib AUSSCHLIESSLICH JSON zurück, ohne Markdown, ohne Zusatztext.
+
+Schema:
+{
+  "selected_attributes": ["<genau einer der erlaubten Attributnamen>", ...],
+  "confidence": "high" | "medium" | "low",
+  "rationale": "<kurze Begründung>"
+}
+
+Regeln:
+- Wähle nur Attributnamen aus der erlaubten Liste.
+- Erfinde niemals Attributnamen.
+- Führe keine Tippfehlerkorrektur, keine semantische Annäherung und kein nearest-match durch.
+- Wenn der Nutzer einen technischen Attributnamen nennt, darf nur dann gemappt werden, wenn dieser Name exakt oder nach sehr naheliegender Formatnormalisierung (Leerzeichen, Bindestriche, Groß/Kleinschreibung, Unterstriche) zu einem erlaubten Attribut oder Alias passt.
+- Mappe unbekannte technische Namen NICHT auf "ähnliche" Attribute.
+- Berücksichtige deutsche und englische Begriffe.
+- Wähle nur Attribute, die fachlich wirklich zur Anfrage passen.
+- Wenn nichts sicher passt, gib eine leere Liste zurück.
+""".strip()
+
+
+def normalize_attr_text(s: str) -> str:
+    return re.sub(r"[\s_\-]", "", (s or "").lower())
+
+
+def _iter_base_attribute_values(equipment_obj: Any, attr_name: str) -> List[Any]:
+    values: List[Any] = []
+
+    if equipment_obj is None or not attr_name:
+        return values
+
+    if hasattr(equipment_obj, attr_name):
+        value = getattr(equipment_obj, attr_name, None)
+        if value is not None:
+            values.append(value)
+
+    class_name = equipment_obj.__class__.__name__
+
+    if class_name == "PowerTransformer":
+        ends = getattr(equipment_obj, "PowerTransformerEnd", None) or []
+        for end in ends:
+            if hasattr(end, attr_name):
+                value = getattr(end, attr_name, None)
+                if value is not None:
+                    values.append(value)
+
+    if class_name == "SynchronousMachine":
+        generating_unit = getattr(equipment_obj, "GeneratingUnit", None)
+        if generating_unit is not None and hasattr(generating_unit, attr_name):
+            value = getattr(generating_unit, attr_name, None)
+            if value is not None:
+                values.append(value)
+
+    return values
+
+
+def _get_available_base_attributes(equipment_obj: Any) -> List[str]:
+    available: List[str] = []
+    for attr_name in BASE_ATTRIBUTE_SPECS.keys():
+        if _iter_base_attribute_values(equipment_obj, attr_name):
+            available.append(attr_name)
+    return available
+
+
+def _llm_match_base_attributes(
+    llm,
+    user_input: str,
+    available_attributes: List[str],
+    equipment_obj: Any,
+) -> BaseAttributeSelectionDecision:
+    parser = PydanticOutputParser(pydantic_object=BaseAttributeSelectionDecision)
+    prompt = ChatPromptTemplate.from_messages([
+        ("system", BASE_ATTRIBUTE_SELECTION_SYSTEM.replace("{", "{{").replace("}", "}}") + "\n\n{format_instructions}"),
+        (
+            "user",
+            "User request:\n{user_input}\n\n"
+            "Equipment class: {equipment_class}\n"
+            "Available attributes:\n{available_attributes}\n"
+        ),
+    ])
+
+    attr_lines = []
+    for attr_name in available_attributes:
+        values = _iter_base_attribute_values(equipment_obj, attr_name)
+        example_value = values[0] if values else None
+        aliases = BASE_ATTRIBUTE_SPECS.get(attr_name, {}).get("aliases", []) or []
+        alias_text = ", ".join(aliases[:6])
+        attr_lines.append(f"- {attr_name} | example_value={example_value!r} | aliases={alias_text}")
+
+    chain = prompt | llm | parser
+    decision = chain.invoke({
+        "user_input": user_input,
+        "equipment_class": equipment_obj.__class__.__name__,
+        "available_attributes": "\n".join(attr_lines),
+        "format_instructions": parser.get_format_instructions(),
+    })
+    return decision
+
+
+def resolve_requested_base_attributes(
+    user_input: str,
+    equipment_obj: Any,
+) -> Dict[str, Any]:
+    available_attributes = _get_available_base_attributes(equipment_obj)
+    if not available_attributes:
+        return {
+            "selected_attributes": [],
+            "resolution_mode": "no_available_attributes",
+            "available_attributes": [],
+        }
+
+    llm = get_llm()
+    try:
+        decision = _llm_match_base_attributes(
+            llm=llm,
+            user_input=user_input,
+            available_attributes=available_attributes,
+            equipment_obj=equipment_obj,
+        )
+        selected = [attr for attr in decision.selected_attributes if attr in available_attributes]
+        return {
+            "selected_attributes": _dedup_keep_order(selected),
+            "resolution_mode": "semantic_llm_match",
+            "available_attributes": available_attributes,
+            "llm_decision": decision.model_dump() if hasattr(decision, "model_dump") else decision.dict(),
+        }
+    except Exception as exc:
+        return {
+            "selected_attributes": [],
+            "resolution_mode": "semantic_llm_match_failed",
+            "available_attributes": available_attributes,
+            "error": str(exc),
+        }
 
 
 def make_clarify_prompt(context: str, missing: str) -> List[tuple]:

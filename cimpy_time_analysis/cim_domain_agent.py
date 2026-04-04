@@ -54,6 +54,87 @@ def _looks_like_type_listing_request(user_input: str) -> bool:
     return has_listing and not has_metric_or_topology
 
 
+def _looks_like_base_value_request(user_input: str) -> bool:
+    text = (user_input or "").strip().lower()
+    if not text:
+        return False
+
+    topology_or_listing_markers = [
+        "welche",
+        "welcher",
+        "welches",
+        "gibt es",
+        "zeige alle",
+        "liste alle",
+        "alle ",
+        "list all",
+        "show all",
+        "which",
+        "what types",
+        "nachbarn",
+        "neighbors",
+        "connected",
+        "komponente",
+        "path",
+        "pfad",
+    ]
+    historical_markers = [
+        "über die zeit",
+        "over time",
+        "verlauf",
+        "trend",
+        "histor",
+        "zeitreihe",
+        "maximal",
+        "minimal",
+        "minimum",
+        "maximum",
+        "peak",
+        "wann",
+    ]
+    attribute_request_markers = [
+        "was ist",
+        "wie ist",
+        "welcher wert",
+        "what is",
+        "value of",
+        "wert von",
+        "von ",
+        "für ",
+    ]
+    explicit_base_semantics = [
+        "nenn",
+        "bemess",
+        "rated",
+        "nominal",
+        "initial",
+        "technical id",
+        "kennung",
+        "mrid",
+        "betriebsmodus",
+        "operating mode",
+        "maxq",
+        "minq",
+    ]
+
+    has_topology_or_listing = any(marker in text for marker in topology_or_listing_markers)
+    has_historical = any(marker in text for marker in historical_markers)
+    has_attribute_request_shape = any(marker in text for marker in attribute_request_markers)
+    has_explicit_base_semantics = any(marker in text for marker in explicit_base_semantics)
+
+    if has_topology_or_listing or has_historical:
+        return False
+
+    if has_explicit_base_semantics:
+        return True
+
+    # Flexible fallback: if the request is phrased like asking for an attribute/value
+    # of a concrete equipment instance, route to attribute lookup. Attribute validity is
+    # resolved later by the base-attribute selection step, not here in the planner.
+    return has_attribute_request_shape and (" von " in f" {text} " or " of " in f" {text} ")
+
+
+
 class CIMPlannerDecision(BaseModel):
     intent: str = Field(
         description="One of: historical_analysis, topology_query, asset_lookup, unsupported_cim_request"
@@ -131,6 +212,13 @@ Practical guidance:
 - Use scan_snapshot_inventory whenever structure / network index is needed.
 - Use list_equipment_of_type for requests that ask which objects of a CIM equipment type exist, for example list/show/which/all requests about transformers, lines, loads or generators.
 - Use resolve_cim_object to resolve equipment and parse the user query when a concrete equipment instance is needed.
+- Use read_cim_base_values for static equipment base or nameplate attributes such as ratedS, ratedU, maxQ, minQ, operatingMode or technical attribute names.
+- If the request structurally asks for the value of an attribute of a concrete equipment instance, prefer the attribute path resolve_cim_object + read_cim_base_values even if the attribute name is unfamiliar.
+- The planner is not responsible for validating whether an attribute is actually supported or exists on the resolved object. Attribute validation happens later in the base-attribute resolution step.
+- Examples of attribute-shaped requests that should usually go to read_cim_base_values:
+  - "Was ist r0 von Trafo 19-20?"
+  - "Wie ist x0 von Leitung 3?"
+  - "Was ist der Wert abcParameter von Generator G 01?"
 - Use load_snapshot_cache for historical state / metric questions.
 - Use query_cim for the actual domain query.
 - Use summarize_cim_result at the end.
@@ -213,6 +301,13 @@ Practical guidance:
                 heuristic_reason = "type-listing heuristic selected list_equipment_of_type"
                 result["reasoning"] = f"{reasoning} | {heuristic_reason}" if reasoning else heuristic_reason
 
+            if _looks_like_base_value_request(user_input) and "read_cim_base_values" in allowed_names:
+                result["safe_to_execute"] = True
+                result["required_steps"] = ["read_cim_base_values"]
+                reasoning = str(result.get("reasoning", "") or "").strip()
+                heuristic_reason = "base-value heuristic selected read_cim_base_values"
+                result["reasoning"] = f"{reasoning} | {heuristic_reason}" if reasoning else heuristic_reason
+
             if not result["required_steps"] and result.get("safe_to_execute", False):
                 result["safe_to_execute"] = False
                 result["missing_context"] = list(result.get("missing_context", []) or [])
@@ -292,6 +387,12 @@ Practical guidance:
             if step == "list_equipment_of_type":
                 add("scan_snapshot_inventory")
                 add("list_equipment_of_type")
+                continue
+
+            if step == "read_cim_base_values":
+                add("scan_snapshot_inventory")
+                add("resolve_cim_object")
+                add("read_cim_base_values")
                 continue
 
             if step == "scan_snapshot_inventory":

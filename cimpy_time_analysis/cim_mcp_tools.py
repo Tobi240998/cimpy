@@ -21,6 +21,7 @@ from cimpy.cimpy_time_analysis.cim_snapshot_cache import (
 from cimpy.cimpy_time_analysis.llm_object_mapping import (
     interpret_user_query,
     interpret_equipment_type_query,
+    resolve_requested_base_attributes,
 )
 from cimpy.cimpy_time_analysis.llm_cim_orchestrator import handle_user_query
 from cimpy.cimpy_time_analysis.langchain_llm import get_llm
@@ -668,11 +669,30 @@ def _resolve_cim_object_with_services(
     if not isinstance(parsed_query, dict):
         parsed_query = {}
 
+    network_index = network_index or {}
+    equipment_name_index = network_index.get("equipment_name_index", {}) or {}
+    equipment_by_mrid = network_index.get("equipment_by_mrid", {}) or {}
+
     equipment_selection = parsed_query.get("equipment_selection", []) or []
-    resolved = equipment_selection[0] if equipment_selection else None
+    resolved = None
+
+    if equipment_selection:
+        first_sel = equipment_selection[0]
+        if isinstance(first_sel, dict):
+            eq_type = first_sel.get("equipment_type")
+            eq_key = first_sel.get("equipment_key")
+            eq_id = first_sel.get("equipment_id")
+            if eq_type and eq_key:
+                resolved = equipment_name_index.get(eq_type, {}).get(eq_key)
+            if resolved is None and eq_id:
+                resolved = equipment_by_mrid.get(_canonical_cim_id(eq_id))
+        else:
+            resolved = first_sel
 
     resolution_mode = "interpret_user_query"
-    equipment_resolution_debug: Dict[str, Any] = {}
+    equipment_resolution_debug: Dict[str, Any] = {
+        "parsed_query_equipment_selection": equipment_selection,
+    }
 
     if resolved is None:
         catalog_resolution = _resolve_equipment_via_catalog(
@@ -684,7 +704,6 @@ def _resolve_cim_object_with_services(
 
         if catalog_resolution.get("status") == "ok":
             resolved = catalog_resolution.get("resolved_object")
-            parsed_query["equipment_selection"] = [resolved] if resolved is not None else []
             parsed_query["resolved_equipment_type"] = catalog_resolution.get("selected_type")
             parsed_query["resolved_equipment_id"] = catalog_resolution.get("selected_equipment_id")
             parsed_query["equipment_resolution_strategy"] = "catalog_type_then_instance_llm"
@@ -697,6 +716,7 @@ def _resolve_cim_object_with_services(
         "user_input": user_input,
         "parsed_query": parsed_query,
         "resolved_object": resolved,
+        "equipment_obj": resolved,
         "resolution_mode": resolution_mode,
         "equipment_resolution_debug": equipment_resolution_debug,
     }
@@ -810,6 +830,199 @@ def _list_equipment_of_type_with_services(
         "equipment_resolution_debug": resolution_debug,
     }
 
+
+
+
+
+
+
+_CGMES_BASE_ATTRIBUTE_UNITS: Dict[str, str | None] = {
+    # CGMES exchange multiplier rule:
+    # - k for volt
+    # - M for W, VA, VAr
+    # - 1 for all remaining UnitSymbol values
+    # Non-quantitative attributes intentionally map to None.
+    "name": None,
+    "mRID": None,
+    "description": None,
+    "type": None,
+    "operatingMode": None,
+    "connectionKind": None,
+    "grounded": None,
+    "endNumber": None,
+    "phaseAngleClock": None,
+    "ratedU": "kV",
+    "maxU": "kV",
+    "minU": "kV",
+    "ratedS": "MVA",
+    "p": "MW",
+    "initialP": "MW",
+    "nominalP": "MW",
+    "maxOperatingP": "MW",
+    "minOperatingP": "MW",
+    "q": "MVAr",
+    "baseQ": "MVAr",
+    "maxQ": "MVAr",
+    "minQ": "MVAr",
+    "r": "ohm",
+    "r0": "ohm",
+    "r2": "ohm",
+    "rground": "ohm",
+    "x": "ohm",
+    "x0": "ohm",
+    "x2": "ohm",
+    "xground": "ohm",
+    "b": "S",
+    "b0": "S",
+    "g": "S",
+    "g0": "S",
+}
+
+
+def _get_cgmes_unit_for_base_attribute(attr_name: str) -> str | None:
+    if not attr_name:
+        return None
+    return _CGMES_BASE_ATTRIBUTE_UNITS.get(str(attr_name).strip())
+
+
+def _format_base_value_for_answer(value: Any, unit: str | None) -> str:
+    if isinstance(value, list):
+        rendered_rows = []
+        for row in value:
+            if isinstance(row, dict):
+                row_value = row.get("value")
+                row_unit = row.get("unit") or unit
+                suffix = f" {row_unit}" if row_unit else ""
+                rendered_rows.append(
+                    "{end_label}{value}{suffix}".format(
+                        end_label=(f"Ende {row.get('endNumber')}: " if row.get('endNumber') is not None else ""),
+                        value=row_value,
+                        suffix=suffix,
+                    )
+                )
+            else:
+                suffix = f" {unit}" if unit else ""
+                rendered_rows.append(f"{row!r}{suffix}")
+        return "[" + ", ".join(rendered_rows) + "]"
+
+    suffix = f" {unit}" if unit else ""
+    return f"{value!r}{suffix}"
+
+
+def _collect_base_attribute_value(resolved_object: Any, attr_name: str) -> Any:
+    if resolved_object is None or not attr_name:
+        return None
+
+    class_name = resolved_object.__class__.__name__
+
+    if class_name == "PowerTransformer":
+        ends = getattr(resolved_object, "PowerTransformerEnd", None) or []
+        end_rows = []
+        for end in ends:
+            if not hasattr(end, attr_name):
+                continue
+            value = getattr(end, attr_name, None)
+            if value is None:
+                continue
+            end_rows.append({
+                "endNumber": getattr(end, "endNumber", None),
+                "terminal_id": _canonical_cim_id(getattr(end, "Terminal", None)),
+                "value": value,
+                "unit": _get_cgmes_unit_for_base_attribute(attr_name),
+            })
+        if end_rows:
+            end_rows.sort(key=lambda row: ((row.get("endNumber") is None), row.get("endNumber"), row.get("terminal_id") or ""))
+            return end_rows
+
+    if class_name == "SynchronousMachine":
+        generating_unit = getattr(resolved_object, "GeneratingUnit", None)
+        if generating_unit is not None and hasattr(generating_unit, attr_name):
+            value = getattr(generating_unit, attr_name, None)
+            if value is not None:
+                return value
+
+    return getattr(resolved_object, attr_name, None)
+
+def _read_cim_base_values_with_services(
+    services: Dict[str, Any],
+    user_input: str,
+    resolved_object: Any,
+    parsed_query: Dict[str, Any] | None = None,
+    analysis_plan: Dict[str, Any] | None = None,
+) -> Dict[str, Any]:
+    parsed_query = parsed_query or {}
+
+    if analysis_plan is not None:
+        print(f"analysis_plan: {analysis_plan}")
+    print(f"equipment_detected: {parsed_query.get('equipment_detected', [])}")
+    print(f"state_detected: {parsed_query.get('state_detected', [])}")
+    print(f"metric: {parsed_query.get('metric')}")
+    print(f"time_label: {parsed_query.get('time_label')}")
+
+    if resolved_object is None:
+        print("equipment_obj: None")
+        return {
+            "status": "error",
+            "tool": "read_cim_base_values",
+            "cim_root": services["cim_root"],
+            "error": "missing_resolved_object",
+            "answer": "Es wurde kein aufgelöstes CIM-Equipment für die Basiswertabfrage gefunden.",
+            "base_attribute_debug": {
+                "resolution_mode": "missing_resolved_object",
+                "available_attributes": [],
+                "selected_attributes": [],
+            },
+        }
+
+    print(f"equipment_obj type: {type(resolved_object)}")
+    print(f"equipment_obj name: {_safe_name(resolved_object)}")
+    print(f"equipment_obj id: {_canonical_cim_id(resolved_object)} {getattr(resolved_object, 'mRID', None)}")
+
+    selection_result = resolve_requested_base_attributes(
+        user_input=user_input,
+        equipment_obj=resolved_object,
+    )
+
+    print(f"base_attribute_debug: {selection_result}")
+
+    selected_attributes = selection_result.get("selected_attributes", []) or []
+    if not selected_attributes:
+        return {
+            "status": "error",
+            "tool": "read_cim_base_values",
+            "cim_root": services["cim_root"],
+            "error": "no_matching_base_attributes",
+            "answer": "Für die Anfrage konnten keine passenden technischen Basisattribute gefunden werden.",
+            "base_attribute_debug": selection_result,
+        }
+
+    values: Dict[str, Any] = {}
+    units: Dict[str, str | None] = {}
+    for attr_name in selected_attributes:
+        values[attr_name] = _collect_base_attribute_value(resolved_object, attr_name)
+        units[attr_name] = _get_cgmes_unit_for_base_attribute(attr_name)
+
+    print(f"selected_attributes: {selected_attributes}")
+    print(f"base_values: {values}")
+    print(f"base_value_units: {units}")
+
+    equipment_name = _safe_name(resolved_object) or getattr(resolved_object, "mRID", None) or "<unbekannt>"
+    parts = [
+        f"{attr}={_format_base_value_for_answer(values.get(attr), units.get(attr))}"
+        for attr in selected_attributes
+    ]
+    answer = f"Basiswerte für {equipment_name}: " + ", ".join(parts)
+
+    return {
+        "status": "ok",
+        "tool": "read_cim_base_values",
+        "cim_root": services["cim_root"],
+        "selected_attributes": selected_attributes,
+        "base_values": values,
+        "base_value_units": units,
+        "answer": answer,
+        "base_attribute_debug": selection_result,
+    }
 
 
 def _load_snapshot_cache_with_services(
@@ -965,6 +1178,35 @@ def list_equipment_of_type(
         services=services,
         user_input=user_input,
         network_index=scan_result.get("network_index"),
+    )
+
+
+
+
+def read_cim_base_values(
+    user_input: str,
+    cim_root: Optional[str] = None,
+) -> Dict[str, Any]:
+    services = build_cim_services(cim_root=cim_root)
+    if services.get("status") != "ok":
+        return services
+
+    scan_result = _scan_snapshot_inventory_with_services(services)
+    if scan_result.get("status") != "ok":
+        return scan_result
+
+    resolve_result = _resolve_cim_object_with_services(
+        services=services,
+        user_input=user_input,
+        network_index=scan_result.get("network_index"),
+    )
+    if resolve_result.get("status") != "ok":
+        return resolve_result
+
+    return _read_cim_base_values_with_services(
+        services=services,
+        user_input=user_input,
+        resolved_object=resolve_result.get("resolved_object"),
     )
 
 
