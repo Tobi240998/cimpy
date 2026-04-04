@@ -105,6 +105,18 @@ POWERFLOW_TARGET_EQUIPMENT_TYPES = {
     "ExternalNetworkInjection",
 }
 
+VOLTAGE_TARGET_EQUIPMENT_TYPES = {
+    "BusbarSection",
+    "SynchronousMachine",
+    "AsynchronousMachine",
+    "ConformLoad",
+    "EnergyConsumer",
+    "PowerTransformer",
+    "ACLineSegment",
+    "EquivalentInjection",
+    "ExternalNetworkInjection",
+}
+
 Metric = Optional[Literal["P", "Q", "S"]]
 
 
@@ -398,6 +410,81 @@ Erlaubte netzseitige PowerFlow-Zieltypen:
 
     return None
 
+
+
+VOLTAGE_TYPE_INFERENCE_SYSTEM = """
+Du interpretierst für eine Spannungs- oder SvVoltage-Anfrage, welcher konkrete netzseitige CIM-Equipment-Typ verwendet werden soll.
+
+Gib AUSSCHLIESSLICH JSON zurück, ohne Markdown, ohne Zusatztext.
+
+Schema:
+{
+  "equipment_type": "<genau einer der erlaubten Typen>" | null
+}
+
+Regeln:
+- Wähle nur einen Typ aus der erlaubten Liste.
+- Für Generator/Erzeuger/generator/machine im elektrischen Netz ist meist SynchronousMachine der richtige Zieltyp.
+- GeneratingUnit ist keine gute Zielwahl für terminal- bzw. knotengebundene SvVoltage-Abfragen, wenn ein netzseitiger Maschinentyp verfügbar ist.
+- Für Bus/Sammelschiene/busbar ist BusbarSection passend.
+- Für Last/Verbraucher/load ist meist ConformLoad oder EnergyConsumer passend.
+- Für Trafo/Transformator/transformer ist PowerTransformer passend.
+- Für Leitung/line/kabel ist ACLineSegment passend.
+- Wenn kein sicherer Typ aus der erlaubten Liste passt, gib null zurück.
+""".strip()
+
+
+def infer_voltage_equipment_type_from_context(
+    llm,
+    context: str,
+    *,
+    available_equipment_types: List[str],
+) -> Optional[str]:
+    allowed = [t for t in available_equipment_types if t in VOLTAGE_TARGET_EQUIPMENT_TYPES]
+    if not allowed:
+        return None
+
+    user_prompt = f"""
+Kontext:
+{context}
+
+Erlaubte netzseitige Spannungs-Zieltypen:
+{chr(10).join(f"- {t}" for t in allowed)}
+""".strip()
+
+    try:
+        resp = llm.invoke([("system", VOLTAGE_TYPE_INFERENCE_SYSTEM), ("user", user_prompt)])
+        text = getattr(resp, "content", str(resp))
+        data = extract_json(text)
+        equipment_type = data.get("equipment_type")
+        if equipment_type in allowed:
+            return equipment_type
+    except Exception:
+        pass
+
+    context_l = (context or "").lower()
+    if any(w in context_l for w in ["busbarsection", "busbar section", "busbar", "sammelschiene", "bus "]):
+        if "BusbarSection" in allowed:
+            return "BusbarSection"
+    if any(w in context_l for w in ["generator", "erzeuger", "synchronousmachine", "synchronous machine"]):
+        if "SynchronousMachine" in allowed:
+            return "SynchronousMachine"
+    if any(w in context_l for w in ["asynchronousmachine", "asynchronous machine", "induction machine"]):
+        if "AsynchronousMachine" in allowed:
+            return "AsynchronousMachine"
+    if any(w in context_l for w in ["last", "verbraucher", "load"]):
+        if "ConformLoad" in allowed:
+            return "ConformLoad"
+        if "EnergyConsumer" in allowed:
+            return "EnergyConsumer"
+    if any(w in context_l for w in ["trafo", "transformator", "transformer"]):
+        if "PowerTransformer" in allowed:
+            return "PowerTransformer"
+    if any(w in context_l for w in ["leitung", "line", "kabel"]):
+        if "ACLineSegment" in allowed:
+            return "ACLineSegment"
+
+    return None
 
 
 def make_clarify_prompt(context: str, missing: str) -> List[tuple]:
@@ -818,6 +905,20 @@ def interpret_user_query(
             )
             if inferred_pf_equipment_type in effective_allowed_equipment_types:
                 parsed.equipment_detected = [inferred_pf_equipment_type]
+                parsed = normalize_query(
+                    parsed,
+                    allowed_equipment_types=effective_allowed_equipment_types,
+                    allowed_state_types=effective_allowed_state_types,
+                )
+
+        if parsed.equipment_detected and "SvVoltage" in parsed.state_detected:
+            inferred_voltage_equipment_type = infer_voltage_equipment_type_from_context(
+                llm,
+                context,
+                available_equipment_types=sorted(effective_allowed_equipment_types),
+            )
+            if inferred_voltage_equipment_type in effective_allowed_equipment_types:
+                parsed.equipment_detected = [inferred_voltage_equipment_type]
                 parsed = normalize_query(
                     parsed,
                     allowed_equipment_types=effective_allowed_equipment_types,
