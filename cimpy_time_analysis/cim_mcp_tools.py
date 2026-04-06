@@ -102,7 +102,7 @@ _COMPARISON_DEFINITIONS: Dict[str, Dict[str, Any]] = {
         "sv_metric": "voltage",
         "base_attributes": ["lowVoltageLimit", "highVoltageLimit"],
         "comparison_mode": "range_limit_per_timestamp",
-        "observed_value_mode": "per_timestamp",
+        "observed_value_mode": "mean",
         "lower_attribute": "lowVoltageLimit",
         "upper_attribute": "highVoltageLimit",
     },
@@ -113,7 +113,7 @@ _COMPARISON_DEFINITIONS: Dict[str, Dict[str, Any]] = {
         "sv_metric": "S",
         "base_attributes": ["ratedS"],
         "comparison_mode": "upper_limit",
-        "observed_value_mode": "abs_peak",
+        "observed_value_mode": "abs_peak_timestamp",
         "limit_attribute": "ratedS",
     },
     "generator_active_power_limit": {
@@ -1705,24 +1705,44 @@ def _compare_cim_values_with_services(
         observed_value = observed_rows[-1]["value"]
         result_payload["observed_value"] = observed_value
     else:
-        observed_values = _extract_observed_series(query_result_data)
-        if not observed_values:
-            return {
-                "status": "error",
-                "tool": "compare_cim_values",
-                "cim_root": services["cim_root"],
-                "error": "missing_sv_values",
-                "answer": "Es konnten keine SV-Werte für den Vergleich ermittelt werden.",
-            }
+        if observed_mode in {"abs_peak_timestamp", "peak_timestamp"}:
+            observed_rows = _extract_observed_rows(query_result_data)
+            if not observed_rows:
+                return {
+                    "status": "error",
+                    "tool": "compare_cim_values",
+                    "cim_root": services["cim_root"],
+                    "error": "missing_sv_values",
+                    "answer": "Es konnten keine SV-Werte für den Vergleich ermittelt werden.",
+                }
 
-        if observed_mode == "abs_peak":
-            observed_value = max(abs(v) for v in observed_values)
-        elif observed_mode == "mean":
-            observed_value = sum(observed_values) / len(observed_values)
+            if observed_mode == "abs_peak_timestamp":
+                selected_observed = max(observed_rows, key=lambda item: abs(item["value"]))
+            else:
+                selected_observed = max(observed_rows, key=lambda item: item["value"])
+
+            observed_value = selected_observed["value"]
+            result_payload["observed_value"] = observed_value
+            result_payload["observed_timestamp"] = selected_observed.get("timestamp")
         else:
-            observed_value = max(observed_values)
+            observed_values = _extract_observed_series(query_result_data)
+            if not observed_values:
+                return {
+                    "status": "error",
+                    "tool": "compare_cim_values",
+                    "cim_root": services["cim_root"],
+                    "error": "missing_sv_values",
+                    "answer": "Es konnten keine SV-Werte für den Vergleich ermittelt werden.",
+                }
 
-        result_payload["observed_value"] = observed_value
+            if observed_mode == "abs_peak":
+                observed_value = max(abs(v) for v in observed_values)
+            elif observed_mode == "mean":
+                observed_value = sum(observed_values) / len(observed_values)
+            else:
+                observed_value = max(observed_values)
+
+            result_payload["observed_value"] = observed_value
 
     equipment_name = _safe_name(resolved_object) or getattr(resolved_object, "mRID", None) or "<unbekannt>"
     answer = None
@@ -1747,10 +1767,17 @@ def _compare_cim_values_with_services(
             "exceeds_limit": exceeds,
         })
         status_text = "überschreitet" if exceeds else "liegt innerhalb von"
-        answer = (
-            f"Vergleich für {equipment_name}: beobachteter Wert={observed_value:.3f}, "
-            f"{limit_attr}={limit_value:.3f} -> {status_text} dem Grenzwert"
-        )
+        observed_timestamp = result_payload.get("observed_timestamp")
+        if observed_timestamp:
+            answer = (
+                f"Vergleich für {equipment_name}: höchster beobachteter Wert={observed_value:.3f} "
+                f"am Zeitpunkt {observed_timestamp}, {limit_attr}={limit_value:.3f} -> {status_text} dem Grenzwert"
+            )
+        else:
+            answer = (
+                f"Vergleich für {equipment_name}: beobachteter Wert={observed_value:.3f}, "
+                f"{limit_attr}={limit_value:.3f} -> {status_text} dem Grenzwert"
+            )
     elif comparison_mode == "range_limit":
         lower_attr = comparison_resolution.get("lower_attribute")
         upper_attr = comparison_resolution.get("upper_attribute")

@@ -150,6 +150,7 @@ Practical guidance:
 - If such terms are explicitly modified by base-attribute semantics such as "Nenn-", "Bemessungs-", "rated", "nominal", "initial", "max", "min", "operating mode", "technical id", "mRID" or similar static wording, they usually mean standard_base.
 - Requests asking which transformers, lines, loads, generators or other CIM equipment objects exist usually mean standard_listing.
 - Requests asking for overload, loading, utilization, threshold violations, limit violations, voltage limit checks or a comparison between an SV value and a base value usually mean standard_comparison.
+- Requests asking when the highest loading or utilization occurred for a specific asset in a given time window also usually mean standard_comparison.
 - "Auslastung" of a transformer is normally standard_comparison, not standard_sv.
 - A request such as "Wie war die Spannung ... im Vergleich zu den Spannungsgrenzen?" is standard_comparison, not unsupported.
 - A concrete value request for a concrete equipment instance should usually be standard_sv or standard_base, not unsupported.
@@ -197,6 +198,7 @@ Examples:
 - "Was war die Auslastung von Trafo 19-20 am 2026-01-09?" => standard_comparison
 - "Wie war die Spannung des Trafos 19-20 am 2026-01-09 im Vergleich zu den Spannungsgrenzen?" => standard_comparison
 - "Wie hoch war die Spannung des Trafos 19-20 am 2026-01-09?" => standard_sv
+- "Wann war die höchste Auslastung von Trafo 19-20 am 2026-01-09?" => standard_comparison
 - "Was ist die Nennspannung von Trafo 19-20?" => standard_base
 
 {format_instructions}
