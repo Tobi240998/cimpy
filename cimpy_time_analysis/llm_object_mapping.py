@@ -153,6 +153,13 @@ BASE_ATTRIBUTE_SPECS: Dict[str, Dict[str, Any]] = {
 }
 
 
+TECHNICAL_FALLBACK_ATTRIBUTES = [
+    "lowVoltageLimit",
+    "highVoltageLimit",
+]
+
+GENERIC_METADATA_ATTRIBUTES = {"name", "mRID", "description", "type"}
+
 
 class EquipmentSelection(BaseModel):
     equipment_type: str
@@ -562,6 +569,17 @@ def _iter_base_attribute_values(equipment_obj: Any, attr_name: str) -> List[Any]
     if equipment_obj is None or not attr_name:
         return values
 
+    if attr_name in {"lowVoltageLimit", "highVoltageLimit"}:
+        try:
+            from cimpy.cimpy_time_analysis.cim_mcp_tools import _resolve_voltage_limits_from_node
+            resolved = _resolve_voltage_limits_from_node(equipment_obj)
+            value = resolved.get(attr_name)
+            if value is not None:
+                values.append(value)
+        except Exception:
+            pass
+        return values
+
     if hasattr(equipment_obj, attr_name):
         value = getattr(equipment_obj, attr_name, None)
         if value is not None:
@@ -593,6 +611,91 @@ def _get_available_base_attributes(equipment_obj: Any) -> List[str]:
         if _iter_base_attribute_values(equipment_obj, attr_name):
             available.append(attr_name)
     return available
+
+
+def _is_simple_base_value(value: Any) -> bool:
+    return isinstance(value, (str, int, float, bool))
+
+
+def _iter_direct_readable_attribute_names(equipment_obj: Any) -> List[str]:
+    names: List[str] = []
+    if equipment_obj is None:
+        return names
+
+    raw_attrs: List[str] = []
+    obj_dict = getattr(equipment_obj, "__dict__", None)
+    if isinstance(obj_dict, dict):
+        raw_attrs.extend(str(k) for k in obj_dict.keys())
+
+    for attr_name in raw_attrs:
+        if not attr_name or attr_name.startswith("_") or attr_name in names:
+            continue
+        try:
+            value = getattr(equipment_obj, attr_name, None)
+        except Exception:
+            continue
+        if value is None or callable(value):
+            continue
+        if _is_simple_base_value(value):
+            names.append(attr_name)
+
+    if hasattr(equipment_obj, "value") and "value" not in names:
+        try:
+            value = getattr(equipment_obj, "value", None)
+        except Exception:
+            value = None
+        if value is not None and _is_simple_base_value(value):
+            names.append("value")
+
+    return names
+
+
+def _get_all_readable_base_attributes(equipment_obj: Any) -> List[str]:
+    candidates: List[str] = []
+
+    for attr_name in BASE_ATTRIBUTE_SPECS.keys():
+        if _iter_base_attribute_values(equipment_obj, attr_name):
+            candidates.append(attr_name)
+
+    for attr_name in TECHNICAL_FALLBACK_ATTRIBUTES:
+        if attr_name not in candidates and _iter_base_attribute_values(equipment_obj, attr_name):
+            candidates.append(attr_name)
+
+    for attr_name in _iter_direct_readable_attribute_names(equipment_obj):
+        if attr_name not in candidates and _iter_base_attribute_values(equipment_obj, attr_name):
+            candidates.append(attr_name)
+
+    return _dedup_keep_order(candidates)
+
+
+def _should_retry_attribute_match_with_fallback(
+    user_input: str,
+    primary_selected: List[str],
+    equipment_obj: Any,
+    fallback_available_attributes: List[str],
+) -> bool:
+    if not fallback_available_attributes:
+        return False
+
+    if not primary_selected:
+        return True
+
+    selected_set = set(primary_selected)
+    fallback_set = set(fallback_available_attributes)
+
+    if equipment_obj is not None and equipment_obj.__class__.__name__ == "VoltageLimit":
+        if "value" in fallback_set and selected_set.issubset(GENERIC_METADATA_ATTRIBUTES):
+            return True
+
+    text = (user_input or "").lower()
+    limit_markers = ["grenze", "grenzwert", "limit", "minimum", "maximum", "minim", "maxim"]
+    if any(marker in text for marker in limit_markers):
+        if selected_set.issubset(GENERIC_METADATA_ATTRIBUTES):
+            additional_candidates = fallback_set - selected_set
+            if additional_candidates:
+                return True
+
+    return False
 
 
 def _llm_match_base_attributes(
@@ -634,36 +737,89 @@ def resolve_requested_base_attributes(
     user_input: str,
     equipment_obj: Any,
 ) -> Dict[str, Any]:
-    available_attributes = _get_available_base_attributes(equipment_obj)
-    if not available_attributes:
-        return {
-            "selected_attributes": [],
-            "resolution_mode": "no_available_attributes",
-            "available_attributes": [],
-        }
-
+    primary_available_attributes = _get_available_base_attributes(equipment_obj)
+    fallback_available_attributes = _get_all_readable_base_attributes(equipment_obj)
     llm = get_llm()
-    try:
-        decision = _llm_match_base_attributes(
-            llm=llm,
-            user_input=user_input,
-            available_attributes=available_attributes,
-            equipment_obj=equipment_obj,
-        )
-        selected = [attr for attr in decision.selected_attributes if attr in available_attributes]
-        return {
-            "selected_attributes": _dedup_keep_order(selected),
-            "resolution_mode": "semantic_llm_match",
-            "available_attributes": available_attributes,
-            "llm_decision": decision.model_dump() if hasattr(decision, "model_dump") else decision.dict(),
-        }
-    except Exception as exc:
-        return {
-            "selected_attributes": [],
-            "resolution_mode": "semantic_llm_match_failed",
-            "available_attributes": available_attributes,
-            "error": str(exc),
-        }
+
+    primary_error = None
+    primary_selected: List[str] = []
+    primary_decision_payload = None
+
+    if primary_available_attributes:
+        try:
+            decision = _llm_match_base_attributes(
+                llm=llm,
+                user_input=user_input,
+                available_attributes=primary_available_attributes,
+                equipment_obj=equipment_obj,
+            )
+            primary_decision_payload = decision.model_dump() if hasattr(decision, "model_dump") else decision.dict()
+            primary_selected = [
+                attr for attr in decision.selected_attributes
+                if attr in primary_available_attributes
+            ]
+            primary_selected = _dedup_keep_order(primary_selected)
+
+            should_retry_with_fallback = _should_retry_attribute_match_with_fallback(
+                user_input=user_input,
+                primary_selected=primary_selected,
+                equipment_obj=equipment_obj,
+                fallback_available_attributes=fallback_available_attributes,
+            )
+
+            if primary_selected and not should_retry_with_fallback:
+                return {
+                    "selected_attributes": primary_selected,
+                    "resolution_mode": "semantic_llm_match_primary",
+                    "available_attributes": primary_available_attributes,
+                    "llm_decision": primary_decision_payload,
+                }
+        except Exception as exc:
+            primary_error = str(exc)
+
+    if fallback_available_attributes:
+        try:
+            decision = _llm_match_base_attributes(
+                llm=llm,
+                user_input=user_input,
+                available_attributes=fallback_available_attributes,
+                equipment_obj=equipment_obj,
+            )
+            selected = [
+                attr for attr in decision.selected_attributes
+                if attr in fallback_available_attributes
+            ]
+            return {
+                "selected_attributes": _dedup_keep_order(selected),
+                "resolution_mode": "semantic_llm_match_fallback_all_readable",
+                "available_attributes": fallback_available_attributes,
+                "primary_available_attributes": primary_available_attributes,
+                "primary_selected_attributes": primary_selected,
+                "primary_error": primary_error,
+                "primary_llm_decision": primary_decision_payload,
+                "llm_decision": decision.model_dump() if hasattr(decision, "model_dump") else decision.dict(),
+            }
+        except Exception as exc:
+            return {
+                "selected_attributes": primary_selected,
+                "resolution_mode": "semantic_llm_match_fallback_failed",
+                "available_attributes": fallback_available_attributes,
+                "primary_available_attributes": primary_available_attributes,
+                "primary_selected_attributes": primary_selected,
+                "primary_error": primary_error,
+                "primary_llm_decision": primary_decision_payload,
+                "error": str(exc),
+            }
+
+    return {
+        "selected_attributes": primary_selected,
+        "resolution_mode": "no_available_attributes",
+        "available_attributes": [],
+        "primary_available_attributes": primary_available_attributes,
+        "primary_selected_attributes": primary_selected,
+        "primary_error": primary_error,
+        "primary_llm_decision": primary_decision_payload,
+    }
 
 
 def make_clarify_prompt(context: str, missing: str) -> List[tuple]:

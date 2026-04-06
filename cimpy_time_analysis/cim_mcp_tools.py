@@ -96,6 +96,17 @@ def _normalize_cim_root(cim_root: Optional[str] = None) -> str:
 
 
 _COMPARISON_DEFINITIONS: Dict[str, Dict[str, Any]] = {
+    "bus_voltage_limits": {
+        "equipment_types": ["TopologicalNode", "BusbarSection"],
+        "required_state_type": "SvVoltage",
+        "sv_metric": "voltage",
+        "base_attributes": ["lowVoltageLimit", "highVoltageLimit"],
+        "comparison_mode": "range_limit",
+        "observed_value_mode": "mean",
+        "lower_attribute": "lowVoltageLimit",
+        "upper_attribute": "highVoltageLimit",
+    },
+
     "transformer_loading": {
         "equipment_types": ["PowerTransformer"],
         "required_state_type": "SvPowerFlow",
@@ -189,12 +200,23 @@ _BASE_ATTRIBUTE_UNITS: Dict[str, Optional[str]] = {
 }
 
 
-def _base_attribute_unit(attr_name: str) -> Optional[str]:
+def _base_attribute_unit(attr_name: str, equipment_obj: Any = None) -> Optional[str]:
     if not attr_name:
         return None
 
     if attr_name in _BASE_ATTRIBUTE_UNITS:
         return _BASE_ATTRIBUTE_UNITS[attr_name]
+
+    if attr_name == "value" and equipment_obj is not None:
+        class_name = equipment_obj.__class__.__name__
+        if class_name == "VoltageLimit":
+            return "kV"
+        if class_name == "CurrentLimit":
+            return "A"
+        if class_name == "ActivePowerLimit":
+            return "MW"
+        if class_name == "ApparentPowerLimit":
+            return "MVA"
 
     spec = BASE_ATTRIBUTE_SPECS.get(attr_name, {}) if isinstance(BASE_ATTRIBUTE_SPECS, dict) else {}
     unit = spec.get("unit")
@@ -204,8 +226,8 @@ def _base_attribute_unit(attr_name: str) -> Optional[str]:
     return None
 
 
-def _format_base_value_for_answer(attr_name: str, value: Any) -> str:
-    unit = _base_attribute_unit(attr_name)
+def _format_base_value_for_answer(attr_name: str, value: Any, equipment_obj: Any = None) -> str:
+    unit = _base_attribute_unit(attr_name, equipment_obj)
 
     if isinstance(value, list):
         formatted_items: List[str] = []
@@ -239,11 +261,11 @@ def _format_base_value_for_answer(attr_name: str, value: Any) -> str:
     return repr(value)
 
 
-def _build_base_values_with_units(values: Dict[str, Any]) -> Dict[str, Any]:
+def _build_base_values_with_units(values: Dict[str, Any], equipment_obj: Any = None) -> Dict[str, Any]:
     enriched: Dict[str, Any] = {}
 
     for attr_name, value in (values or {}).items():
-        unit = _base_attribute_unit(attr_name)
+        unit = _base_attribute_unit(attr_name, equipment_obj)
         enriched[attr_name] = {
             "value": value,
             "unit": unit,
@@ -488,6 +510,11 @@ def _safe_description(value):
 
 def _read_base_attribute_value(equipment_obj: Any, attr_name: str) -> Any:
     if equipment_obj is None or not attr_name:
+        return None
+
+    if attr_name in {"lowVoltageLimit", "highVoltageLimit"}:
+        return _resolve_voltage_limits_from_node(equipment_obj).get(attr_name)
+
         return None
 
     if hasattr(equipment_obj, attr_name):
@@ -1261,14 +1288,14 @@ def _read_cim_base_values_with_services(
     for attr_name in selected_attributes:
         values[attr_name] = _read_base_attribute_value(resolved_object, attr_name)
 
-    enriched_base_values = _build_base_values_with_units(values)
+    enriched_base_values = _build_base_values_with_units(values, resolved_object)
 
     print(f"selected_attributes: {selected_attributes}")
     print(f"base_values: {values}")
     print(f"base_values_with_units: {enriched_base_values}")
 
     equipment_name = _safe_name(resolved_object) or getattr(resolved_object, "mRID", None) or "<unbekannt>"
-    parts = [f"{attr}={_format_base_value_for_answer(attr, values.get(attr))}" for attr in selected_attributes]
+    parts = [f"{attr}={_format_base_value_for_answer(attr, values.get(attr), resolved_object)}" for attr in selected_attributes]
     answer = f"Basiswerte für {equipment_name}: " + ", ".join(parts)
 
     return {
@@ -1978,3 +2005,51 @@ def summarize_cim_execution(
         user_input=user_input,
         cim_root=cim_root,
     )
+
+
+def _resolve_voltage_limits_from_node(node_obj: Any) -> Dict[str, Any]:
+    lows = []
+    highs = []
+
+    limit_sets = []
+
+    # Direct limits on node (important fix)
+    direct_limit_sets = getattr(node_obj, "OperationalLimitSet", None) or []
+    if not isinstance(direct_limit_sets, list):
+        direct_limit_sets = [direct_limit_sets]
+    limit_sets.extend(direct_limit_sets)
+
+    # Limits via terminals
+    terminals = getattr(node_obj, "Terminal", None) or getattr(node_obj, "Terminals", None) or []
+    if not isinstance(terminals, list):
+        terminals = [terminals]
+
+    for t in terminals:
+        term_limit_sets = getattr(t, "OperationalLimitSet", None) or []
+        if not isinstance(term_limit_sets, list):
+            term_limit_sets = [term_limit_sets]
+        limit_sets.extend(term_limit_sets)
+
+    for s in limit_sets:
+        limits = getattr(s, "OperationalLimitValue", None) or getattr(s, "OperationalLimit", None) or []
+        if not isinstance(limits, list):
+            limits = [limits]
+
+        for o in limits:
+            if o is None:
+                continue
+
+            name = (getattr(o, "name", "") or "").lower()
+            val = getattr(o, "value", None)
+            if val is None:
+                continue
+
+            if "high" in name or "max" in name:
+                highs.append(float(val))
+            elif "low" in name or "min" in name:
+                lows.append(float(val))
+
+    return {
+        "lowVoltageLimit": min(lows) if lows else None,
+        "highVoltageLimit": max(highs) if highs else None,
+    }
