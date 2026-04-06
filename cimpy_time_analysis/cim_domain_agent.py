@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Any, Dict, List, Literal, Set
+from typing import Any, Dict, List, Set
 
 from pydantic import BaseModel, Field
 from langchain_core.output_parsers import PydanticOutputParser
@@ -10,56 +10,46 @@ from cimpy.cimpy_time_analysis.cim_tool_registry import CIMToolRegistry
 from cimpy.cimpy_time_analysis.langchain_llm import get_llm
 
 
-RequestMode = Literal[
+_ALLOWED_REQUEST_MODES = {
     "standard_sv",
     "standard_base",
     "standard_listing",
     "standard_comparison",
     "custom_plan",
     "clarification_needed",
-]
+}
 
-PlannerIntent = Literal[
+_ALLOWED_INTENTS = {
     "historical_analysis",
     "topology_query",
     "asset_lookup",
     "unsupported_cim_request",
-]
+}
 
-PlannerConfidence = Literal["high", "medium", "low"]
-PlannerTargetKind = Literal["asset", "metric", "topology", "unknown"]
+_ALLOWED_CONFIDENCE = {"high", "medium", "low"}
+_ALLOWED_TARGET_KINDS = {"asset", "metric", "topology", "unknown"}
 
 
 class CIMRequestModeDecision(BaseModel):
-    intent: PlannerIntent = Field(
-        description="One of: historical_analysis, topology_query, asset_lookup, unsupported_cim_request"
-    )
-    confidence: PlannerConfidence = Field(
-        description="One of: high, medium, low"
-    )
-    target_kind: PlannerTargetKind = Field(
-        description="asset, metric, topology, unknown"
-    )
-    request_mode: RequestMode = Field(
-        description=(
-            "One of: standard_sv, standard_base, standard_listing, "
-            "standard_comparison, custom_plan, clarification_needed"
-        )
-    )
+    intent: str = Field(description="Allowed values are provided in the prompt.")
+    confidence: str = Field(description="Allowed values are provided in the prompt.")
+    target_kind: str = Field(description="Allowed values are provided in the prompt.")
+    request_mode: str = Field(description="Allowed values are provided in the prompt.")
     safe_to_execute: bool = Field(
         description="True if the workflow can be executed with the currently supported capabilities"
     )
     missing_context: List[str] = Field(default_factory=list)
-    reasoning: str = Field(
-        description="Short explanation of the decision"
-    )
+    reasoning: str = Field(description="Short explanation of the decision")
+
+
+class CIMRequestModeOnlyDecision(BaseModel):
+    request_mode: str = Field(description="Allowed values are provided in the prompt.")
+    reasoning: str = Field(description="Short explanation of the decision")
 
 
 class CIMCustomPlanDecision(BaseModel):
     required_steps: List[str] = Field(default_factory=list)
-    reasoning: str = Field(
-        description="Short explanation of the planning decision"
-    )
+    reasoning: str = Field(description="Short explanation of the planning decision")
 
 
 class CIMDomainAgent:
@@ -71,6 +61,8 @@ class CIMDomainAgent:
     - Standardfälle werden deterministisch auf feste Steps gemappt
     - freie Planung nur für Nicht-Standardfälle
     - Planner wählt nur aus expliziten Auswahlmöglichkeiten
+    - Comparison-Priorisierung bleibt LLM-basiert, nicht heuristisch
+    - robustere Parser-Validierung ohne fragile Literal-Zwänge
     - Registry bleibt die ausführende Schicht
     """
 
@@ -81,6 +73,9 @@ class CIMDomainAgent:
 
         self.mode_parser = PydanticOutputParser(
             pydantic_object=CIMRequestModeDecision
+        )
+        self.mode_only_parser = PydanticOutputParser(
+            pydantic_object=CIMRequestModeOnlyDecision
         )
         self.custom_plan_parser = PydanticOutputParser(
             pydantic_object=CIMCustomPlanDecision
@@ -96,12 +91,24 @@ Your task:
 - classify the request semantically
 - decide whether it is safe to execute
 - choose exactly one request_mode from the allowed list
+- choose intent, confidence and target_kind only from the allowed lists
 
 Allowed intents:
 - historical_analysis
 - topology_query
 - asset_lookup
 - unsupported_cim_request
+
+Allowed confidence values:
+- high
+- medium
+- low
+
+Allowed target_kind values:
+- asset
+- metric
+- topology
+- unknown
 
 Allowed request modes:
 - standard_sv
@@ -114,6 +121,7 @@ Allowed request modes:
 Critical rules:
 - You must choose exactly one request_mode from the allowed list.
 - Do not invent request modes.
+- Do not invent intent, confidence or target_kind values.
 - Do not plan execution steps here.
 - Do not reject a request only because a date looks like it is in the future relative to today's calendar date.
 - Calendar-based "future date" rejection is forbidden.
@@ -133,13 +141,63 @@ Semantic guidance:
 - custom_plan: request is CIM-related and executable, but deviates from the standard cases and needs explicit step planning.
 - clarification_needed: request is CIM-related, but not safely executable because essential context is missing.
 
+Priority rule:
+- When a request contains both a dynamic state quantity and an explicit comparison / utilization / loading / limit-check meaning, choose standard_comparison over standard_sv.
+- Comparison semantics take precedence over pure state-value semantics.
+
 Practical guidance:
 - Requests about "Leistung", "Power", "Spannung", "Voltage", P, Q, S or similar dynamic state values usually mean standard_sv.
 - If such terms are explicitly modified by base-attribute semantics such as "Nenn-", "Bemessungs-", "rated", "nominal", "initial", "max", "min", "operating mode", "technical id", "mRID" or similar static wording, they usually mean standard_base.
 - Requests asking which transformers, lines, loads, generators or other CIM equipment objects exist usually mean standard_listing.
 - Requests asking for overload, loading, utilization, threshold violations, limit violations, voltage limit checks or a comparison between an SV value and a base value usually mean standard_comparison.
-- "Auslastung" of a transformer is normally standard_comparison, not unsupported.
+- "Auslastung" of a transformer is normally standard_comparison, not standard_sv.
+- A request such as "Wie war die Spannung ... im Vergleich zu den Spannungsgrenzen?" is standard_comparison, not unsupported.
 - A concrete value request for a concrete equipment instance should usually be standard_sv or standard_base, not unsupported.
+
+{format_instructions}
+"""
+            ),
+            ("user", "User request:\n{user_input}")
+        ])
+
+        self.mode_only_prompt = ChatPromptTemplate.from_messages([
+            (
+                "system",
+                """
+You are a fallback request-mode classifier for a CIM domain agent.
+
+Your only task:
+- choose exactly one request_mode from the allowed list
+
+Allowed request modes:
+- standard_sv
+- standard_base
+- standard_listing
+- standard_comparison
+- custom_plan
+- clarification_needed
+
+Critical rules:
+- You must choose exactly one request_mode from the allowed list.
+- Do not invent request modes.
+- Return only structured output.
+
+Priority rule:
+- If the request mixes a dynamic state quantity with comparison / utilization / loading / limit-check semantics,
+  choose standard_comparison over standard_sv.
+
+Key semantic anchors:
+- standard_listing: asks which objects of a CIM equipment type exist
+- standard_base: asks for static nameplate / technical base attributes
+- standard_sv: asks for a dynamic state value only
+- standard_comparison: asks for utilization, loading, overload, threshold/limit checks, or compares a dynamic value against a base/reference/limit
+- clarification_needed: essential context is missing
+
+Examples:
+- "Was war die Auslastung von Trafo 19-20 am 2026-01-09?" => standard_comparison
+- "Wie war die Spannung des Trafos 19-20 am 2026-01-09 im Vergleich zu den Spannungsgrenzen?" => standard_comparison
+- "Wie hoch war die Spannung des Trafos 19-20 am 2026-01-09?" => standard_sv
+- "Was ist die Nennspannung von Trafo 19-20?" => standard_base
 
 {format_instructions}
 """
@@ -249,34 +307,101 @@ Practical guidance:
             if isinstance(step, str) and step in allowed_names and step != "unsupported_request"
         ]
 
+    def _clean_enum_value(self, value: Any) -> str:
+        return str(value or "").strip()
+
+    def _normalize_mode_result(self, raw: Dict[str, Any]) -> Dict[str, Any]:
+        request_mode = self._clean_enum_value(raw.get("request_mode"))
+        intent = self._clean_enum_value(raw.get("intent"))
+        confidence = self._clean_enum_value(raw.get("confidence"))
+        target_kind = self._clean_enum_value(raw.get("target_kind"))
+
+        if request_mode not in _ALLOWED_REQUEST_MODES:
+            request_mode = "clarification_needed"
+
+        if intent not in _ALLOWED_INTENTS:
+            intent = "historical_analysis"
+
+        if confidence not in _ALLOWED_CONFIDENCE:
+            confidence = "medium"
+
+        if target_kind not in _ALLOWED_TARGET_KINDS:
+            target_kind = "unknown"
+
+        safe_to_execute = bool(raw.get("safe_to_execute", False))
+        missing_context = raw.get("missing_context", [])
+        if not isinstance(missing_context, list):
+            missing_context = []
+
+        reasoning = str(raw.get("reasoning", "") or "").strip()
+
+        return {
+            "intent": intent,
+            "confidence": confidence,
+            "target_kind": target_kind,
+            "request_mode": request_mode,
+            "safe_to_execute": safe_to_execute,
+            "missing_context": [str(x) for x in missing_context if str(x).strip()],
+            "required_steps": [],
+            "reasoning": reasoning,
+        }
+
+    def _fallback_request_mode_via_llm(self, user_input: str) -> Dict[str, Any]:
+        chain = self.mode_only_prompt | self.llm | self.mode_only_parser
+        decision = chain.invoke({
+            "user_input": user_input,
+            "format_instructions": self.mode_only_parser.get_format_instructions(),
+        })
+
+        if hasattr(decision, "dict"):
+            result = decision.dict()
+        else:
+            result = dict(decision)
+
+        request_mode = self._clean_enum_value(result.get("request_mode"))
+        if request_mode not in _ALLOWED_REQUEST_MODES:
+            request_mode = "clarification_needed"
+
+        reasoning = str(result.get("reasoning", "") or "").strip()
+
+        return {
+            "intent": "historical_analysis",
+            "confidence": "medium",
+            "target_kind": "metric",
+            "request_mode": request_mode,
+            "safe_to_execute": request_mode != "clarification_needed",
+            "missing_context": [],
+            "required_steps": [],
+            "reasoning": f"fallback_llm_mode_classifier: {reasoning}".strip(),
+        }
+
     # ------------------------------------------------------------------
     # PLANNING
     # ------------------------------------------------------------------
     def classify_request(self, user_input: str) -> Dict[str, Any]:
         try:
-            mode_chain = self.mode_prompt | self.llm | self.mode_parser
+            try:
+                mode_chain = self.mode_prompt | self.llm | self.mode_parser
 
-            mode_decision = mode_chain.invoke({
-                "user_input": user_input,
-                "format_instructions": self.mode_parser.get_format_instructions(),
-            })
+                mode_decision = mode_chain.invoke({
+                    "user_input": user_input,
+                    "format_instructions": self.mode_parser.get_format_instructions(),
+                })
 
-            if hasattr(mode_decision, "dict"):
-                mode_result = mode_decision.dict()
-            else:
-                mode_result = dict(mode_decision)
+                if hasattr(mode_decision, "dict"):
+                    mode_result = mode_decision.dict()
+                else:
+                    mode_result = dict(mode_decision)
 
-            request_mode = str(mode_result.get("request_mode", "") or "").strip()
-            result: Dict[str, Any] = {
-                "intent": mode_result.get("intent", "unsupported_cim_request"),
-                "confidence": mode_result.get("confidence", "low"),
-                "target_kind": mode_result.get("target_kind", "unknown"),
-                "request_mode": request_mode,
-                "safe_to_execute": bool(mode_result.get("safe_to_execute", False)),
-                "missing_context": list(mode_result.get("missing_context", []) or []),
-                "required_steps": [],
-                "reasoning": str(mode_result.get("reasoning", "") or "").strip(),
-            }
+                result = self._normalize_mode_result(mode_result)
+
+            except Exception as primary_exc:
+                result = self._fallback_request_mode_via_llm(user_input)
+                result["reasoning"] = (
+                    f"{result['reasoning']} | primary_mode_classifier_error: {primary_exc}"
+                ).strip(" |")
+
+            request_mode = str(result.get("request_mode", "") or "").strip()
 
             if request_mode in {
                 "standard_sv",
@@ -288,6 +413,7 @@ Practical guidance:
                 result["safe_to_execute"] = True
                 template_reason = f"standard request mode '{request_mode}' mapped to fixed step template"
                 result["reasoning"] = f"{result['reasoning']} | {template_reason}".strip(" |")
+
             elif request_mode == "custom_plan":
                 if result["safe_to_execute"]:
                     custom_chain = self.custom_plan_prompt | self.llm | self.custom_plan_parser
@@ -319,6 +445,8 @@ Practical guidance:
                             result["missing_context"].append("planner returned no executable steps for custom_plan")
             else:
                 result["safe_to_execute"] = False
+                if request_mode == "clarification_needed" and not result["missing_context"]:
+                    result["missing_context"].append("request classification requires clarification")
 
             if (
                 not result.get("safe_to_execute", False)

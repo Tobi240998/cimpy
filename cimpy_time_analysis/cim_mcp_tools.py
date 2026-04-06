@@ -22,6 +22,7 @@ from cimpy.cimpy_time_analysis.llm_object_mapping import (
     interpret_user_query,
     interpret_equipment_type_query,
     resolve_requested_base_attributes,
+    BASE_ATTRIBUTE_SPECS,
 )
 from cimpy.cimpy_time_analysis.llm_cim_orchestrator import handle_user_query
 from cimpy.cimpy_time_analysis.langchain_llm import get_llm
@@ -140,6 +141,112 @@ _COMPARISON_DEFINITIONS: Dict[str, Dict[str, Any]] = {
         "limit_attribute": "ratedU",
     },
 }
+_BASE_ATTRIBUTE_UNITS: Dict[str, Optional[str]] = {
+    # Voltage
+    "ratedU": "kV",
+
+    # Apparent Power
+    "ratedS": "MVA",
+
+    # Active Power
+    "p": "MW",
+    "initialP": "MW",
+    "nominalP": "MW",
+    "maxOperatingP": "MW",
+    "minOperatingP": "MW",
+
+    # Reactive Power
+    "q": "MVAr",
+    "maxQ": "MVAr",
+    "minQ": "MVAr",
+
+    # Impedance
+    "r": "ohm",
+    "r0": "ohm",
+    "x": "ohm",
+    "x0": "ohm",
+
+    # Admittance
+    "g": "S",
+    "g0": "S",
+    "b": "S",
+    "b0": "S",
+
+    # Dimensionless / meta
+    "name": None,
+    "mRID": None,
+    "description": None,
+    "type": None,
+    "operatingMode": None,
+    "connectionKind": None,
+    "grounded": None,
+    "endNumber": None,
+    "phaseAngleClock": None,
+}
+
+
+def _base_attribute_unit(attr_name: str) -> Optional[str]:
+    if not attr_name:
+        return None
+
+    if attr_name in _BASE_ATTRIBUTE_UNITS:
+        return _BASE_ATTRIBUTE_UNITS[attr_name]
+
+    spec = BASE_ATTRIBUTE_SPECS.get(attr_name, {}) if isinstance(BASE_ATTRIBUTE_SPECS, dict) else {}
+    unit = spec.get("unit")
+    if isinstance(unit, str) and unit.strip():
+        return unit.strip()
+
+    return None
+
+
+def _format_base_value_for_answer(attr_name: str, value: Any) -> str:
+    unit = _base_attribute_unit(attr_name)
+
+    if isinstance(value, list):
+        formatted_items: List[str] = []
+        for item in value:
+            if isinstance(item, dict):
+                raw_value = item.get("value")
+                raw_unit = item.get("unit") or unit
+                if raw_value is None:
+                    formatted_items.append(repr(item))
+                elif raw_unit:
+                    formatted_items.append(f"{raw_value!r} {raw_unit}")
+                else:
+                    formatted_items.append(f"{raw_value!r}")
+            else:
+                if unit and isinstance(item, (int, float)):
+                    formatted_items.append(f"{item!r} {unit}")
+                else:
+                    formatted_items.append(repr(item))
+        return "[" + ", ".join(formatted_items) + "]"
+
+    if isinstance(value, dict):
+        raw_value = value.get("value")
+        raw_unit = value.get("unit") or unit
+        if raw_value is not None:
+            return f"{raw_value!r} {raw_unit}".strip() if raw_unit else f"{raw_value!r}"
+        return repr(value)
+
+    if unit and isinstance(value, (int, float)):
+        return f"{value!r} {unit}"
+
+    return repr(value)
+
+
+def _build_base_values_with_units(values: Dict[str, Any]) -> Dict[str, Any]:
+    enriched: Dict[str, Any] = {}
+
+    for attr_name, value in (values or {}).items():
+        unit = _base_attribute_unit(attr_name)
+        enriched[attr_name] = {
+            "value": value,
+            "unit": unit,
+        }
+
+    return enriched
+
 
 
 def _extract_scalar_base_value(value: Any, *, prefer_max: bool = True) -> Optional[float]:
@@ -1150,11 +1257,14 @@ def _read_cim_base_values_with_services(
     for attr_name in selected_attributes:
         values[attr_name] = _read_base_attribute_value(resolved_object, attr_name)
 
+    enriched_base_values = _build_base_values_with_units(values)
+
     print(f"selected_attributes: {selected_attributes}")
     print(f"base_values: {values}")
+    print(f"base_values_with_units: {enriched_base_values}")
 
     equipment_name = _safe_name(resolved_object) or getattr(resolved_object, "mRID", None) or "<unbekannt>"
-    parts = [f"{attr}={values.get(attr)!r}" for attr in selected_attributes]
+    parts = [f"{attr}={_format_base_value_for_answer(attr, values.get(attr))}" for attr in selected_attributes]
     answer = f"Basiswerte für {equipment_name}: " + ", ".join(parts)
 
     return {
@@ -1163,6 +1273,7 @@ def _read_cim_base_values_with_services(
         "cim_root": services["cim_root"],
         "selected_attributes": selected_attributes,
         "base_values": values,
+        "base_values_with_units": enriched_base_values,
         "answer": answer,
         "base_attribute_debug": selection_result,
     }

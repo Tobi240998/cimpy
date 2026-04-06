@@ -397,6 +397,7 @@ class CIMToolRegistry:
             resolved_object=context.get("resolved_object") or context.get("equipment_obj"),
             parsed_query=context.get("parsed_query"),
             analysis_plan=context.get("classification"),
+            requested_attributes=context.get("requested_base_attributes"),
         )
 
     def _tool_resolve_cim_comparison(self, context: Dict[str, Any]) -> Dict[str, Any]:
