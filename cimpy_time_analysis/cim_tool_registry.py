@@ -9,8 +9,10 @@ from cimpy.cimpy_time_analysis.cim_mcp_tools import (
     _resolve_cim_object_with_services,
     _list_equipment_of_type_with_services,
     _read_cim_base_values_with_services,
+    _resolve_cim_comparison_with_services,
     _load_snapshot_cache_with_services,
     _query_cim_with_services,
+    _compare_cim_values_with_services,
     _summarize_cim_result_with_services,
 )
 
@@ -146,6 +148,33 @@ class CIMToolRegistry:
                 is_summary=False,
                 domain_notes=["Supports direct technical attribute matching and controlled semantic LLM mapping."],
             ),
+            "resolve_cim_comparison": CIMToolSpec(
+                name="resolve_cim_comparison",
+                description="Resolve a supported CIM comparison intent into required SV metric and base attributes",
+                input_schema={
+                    "type": "object",
+                    "properties": {
+                        "cim_root": {"type": "string"},
+                        "user_input": {"type": "string"},
+                        "resolved_object": {"type": "object"},
+                        "parsed_query": {"type": "object"},
+                    },
+                    "required": ["user_input", "resolved_object"],
+                },
+                output_schema_hint={
+                    "status": "ok|error",
+                    "tool": "resolve_cim_comparison",
+                    "comparison_resolution": "dict",
+                    "requested_base_attributes": "list[str]",
+                    "parsed_query": "dict",
+                },
+                capability_tags=["comparison_resolution", "read_only"],
+                mutating=False,
+                requires_state=["resolved_object", "parsed_query"],
+                produces_state=["comparison_resolution", "requested_base_attributes", "parsed_query"],
+                is_summary=False,
+                domain_notes=["Determines which standard comparison should be executed before reading SV and base values."],
+            ),
             "load_snapshot_cache": CIMToolSpec(
                 name="load_snapshot_cache",
                 description="Load relevant snapshots for the parsed time window and build snapshot cache",
@@ -198,6 +227,32 @@ class CIMToolRegistry:
                 produces_state=["answer"],
                 is_summary=False,
             ),
+            "compare_cim_values": CIMToolSpec(
+                name="compare_cim_values",
+                description="Compare resolved SV results against resolved CIM base values using a standard comparison definition",
+                input_schema={
+                    "type": "object",
+                    "properties": {
+                        "cim_root": {"type": "string"},
+                        "resolved_object": {"type": "object"},
+                        "comparison_resolution": {"type": "object"},
+                        "query_result_data": {"type": "object"},
+                        "base_values": {"type": "object"},
+                    },
+                    "required": ["resolved_object", "comparison_resolution", "query_result_data", "base_values"],
+                },
+                output_schema_hint={
+                    "status": "ok|error",
+                    "tool": "compare_cim_values",
+                    "comparison_result": "dict",
+                    "answer": "string",
+                },
+                capability_tags=["comparison", "read_only"],
+                mutating=False,
+                requires_state=["resolved_object", "comparison_resolution", "query_result_data", "base_values"],
+                produces_state=["comparison_result", "answer"],
+                is_summary=False,
+            ),
             "summarize_cim_result": CIMToolSpec(
                 name="summarize_cim_result",
                 description="Return final CIM result with debug information",
@@ -229,8 +284,10 @@ class CIMToolRegistry:
             "resolve_cim_object": self._tool_resolve_cim_object,
             "list_equipment_of_type": self._tool_list_equipment_of_type,
             "read_cim_base_values": self._tool_read_cim_base_values,
+            "resolve_cim_comparison": self._tool_resolve_cim_comparison,
             "load_snapshot_cache": self._tool_load_snapshot_cache,
             "query_cim": self._tool_query_cim,
+            "compare_cim_values": self._tool_compare_cim_values,
             "summarize_cim_result": self._tool_summarize_cim_result,
         }
 
@@ -342,6 +399,17 @@ class CIMToolRegistry:
             analysis_plan=context.get("classification"),
         )
 
+    def _tool_resolve_cim_comparison(self, context: Dict[str, Any]) -> Dict[str, Any]:
+        services = self._build_services(context)
+        if services.get("status") != "ok":
+            return services
+        return _resolve_cim_comparison_with_services(
+            services=services,
+            user_input=context["user_input"],
+            resolved_object=context.get("resolved_object"),
+            parsed_query=context.get("parsed_query"),
+        )
+
     def _tool_load_snapshot_cache(self, context: Dict[str, Any]) -> Dict[str, Any]:
         services = self._build_services(context)
         if services.get("status") != "ok":
@@ -363,6 +431,20 @@ class CIMToolRegistry:
             network_index=context.get("network_index", {}),
             parsed_query=context.get("parsed_query"),
             classification=context.get("classification"),
+            resolved_object=context.get("resolved_object"),
+            comparison_resolution=context.get("comparison_resolution"),
+        )
+
+    def _tool_compare_cim_values(self, context: Dict[str, Any]) -> Dict[str, Any]:
+        services = self._build_services(context)
+        if services.get("status") != "ok":
+            return services
+        return _compare_cim_values_with_services(
+            services=services,
+            resolved_object=context.get("resolved_object"),
+            comparison_resolution=context.get("comparison_resolution"),
+            query_result_data=context.get("query_result_data"),
+            base_values=context.get("base_values"),
         )
 
     def _tool_summarize_cim_result(self, context: Dict[str, Any]) -> Dict[str, Any]:

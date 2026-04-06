@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Any, Dict, List, Set
+from typing import Any, Dict, List, Literal, Set
 
 from pydantic import BaseModel, Field
 from langchain_core.output_parsers import PydanticOutputParser
@@ -10,145 +10,52 @@ from cimpy.cimpy_time_analysis.cim_tool_registry import CIMToolRegistry
 from cimpy.cimpy_time_analysis.langchain_llm import get_llm
 
 
+RequestMode = Literal[
+    "standard_sv",
+    "standard_base",
+    "standard_listing",
+    "standard_comparison",
+    "custom_plan",
+    "clarification_needed",
+]
 
-def _looks_like_type_listing_request(user_input: str) -> bool:
-    text = (user_input or "").strip().lower()
-    if not text:
-        return False
+PlannerIntent = Literal[
+    "historical_analysis",
+    "topology_query",
+    "asset_lookup",
+    "unsupported_cim_request",
+]
 
-    listing_markers = [
-        "welche",
-        "welcher",
-        "welches",
-        "gibt es",
-        "zeige alle",
-        "liste alle",
-        "alle ",
-        "list all",
-        "show all",
-        "which",
-        "what",
-    ]
-    metric_markers = [
-        "spannung",
-        "voltage",
-        "leistung",
-        "power",
-        "wirkleistung",
-        "blindleistung",
-        "scheinleistung",
-        "auslastung",
-        "loading",
-        "nachbarn",
-        "neighbors",
-        "connected",
-        "komponente",
-        "path",
-        "pfad",
-        "über die zeit",
-        "over time",
-    ]
-
-    has_listing = any(marker in text for marker in listing_markers)
-    has_metric_or_topology = any(marker in text for marker in metric_markers)
-    return has_listing and not has_metric_or_topology
+PlannerConfidence = Literal["high", "medium", "low"]
+PlannerTargetKind = Literal["asset", "metric", "topology", "unknown"]
 
 
-def _looks_like_base_value_request(user_input: str) -> bool:
-    text = (user_input or "").strip().lower()
-    if not text:
-        return False
-
-    topology_or_listing_markers = [
-        "welche",
-        "welcher",
-        "welches",
-        "gibt es",
-        "zeige alle",
-        "liste alle",
-        "alle ",
-        "list all",
-        "show all",
-        "which",
-        "what types",
-        "nachbarn",
-        "neighbors",
-        "connected",
-        "komponente",
-        "path",
-        "pfad",
-    ]
-    historical_markers = [
-        "über die zeit",
-        "over time",
-        "verlauf",
-        "trend",
-        "histor",
-        "zeitreihe",
-        "maximal",
-        "minimal",
-        "minimum",
-        "maximum",
-        "peak",
-        "wann",
-    ]
-    attribute_request_markers = [
-        "was ist",
-        "wie ist",
-        "welcher wert",
-        "what is",
-        "value of",
-        "wert von",
-        "von ",
-        "für ",
-    ]
-    explicit_base_semantics = [
-        "nenn",
-        "bemess",
-        "rated",
-        "nominal",
-        "initial",
-        "technical id",
-        "kennung",
-        "mrid",
-        "betriebsmodus",
-        "operating mode",
-        "maxq",
-        "minq",
-    ]
-
-    has_topology_or_listing = any(marker in text for marker in topology_or_listing_markers)
-    has_historical = any(marker in text for marker in historical_markers)
-    has_attribute_request_shape = any(marker in text for marker in attribute_request_markers)
-    has_explicit_base_semantics = any(marker in text for marker in explicit_base_semantics)
-
-    if has_topology_or_listing or has_historical:
-        return False
-
-    if has_explicit_base_semantics:
-        return True
-
-    # Flexible fallback: if the request is phrased like asking for an attribute/value
-    # of a concrete equipment instance, route to attribute lookup. Attribute validity is
-    # resolved later by the base-attribute selection step, not here in the planner.
-    return has_attribute_request_shape and (" von " in f" {text} " or " of " in f" {text} ")
-
-
-
-class CIMPlannerDecision(BaseModel):
-    intent: str = Field(
+class CIMRequestModeDecision(BaseModel):
+    intent: PlannerIntent = Field(
         description="One of: historical_analysis, topology_query, asset_lookup, unsupported_cim_request"
     )
-    confidence: str = Field(
+    confidence: PlannerConfidence = Field(
         description="One of: high, medium, low"
     )
-    target_kind: str = Field(
+    target_kind: PlannerTargetKind = Field(
         description="asset, metric, topology, unknown"
+    )
+    request_mode: RequestMode = Field(
+        description=(
+            "One of: standard_sv, standard_base, standard_listing, "
+            "standard_comparison, custom_plan, clarification_needed"
+        )
     )
     safe_to_execute: bool = Field(
         description="True if the workflow can be executed with the currently supported capabilities"
     )
     missing_context: List[str] = Field(default_factory=list)
+    reasoning: str = Field(
+        description="Short explanation of the decision"
+    )
+
+
+class CIMCustomPlanDecision(BaseModel):
     required_steps: List[str] = Field(default_factory=list)
     reasoning: str = Field(
         description="Short explanation of the planning decision"
@@ -160,9 +67,10 @@ class CIMDomainAgent:
     Schlanker LLM-basierter Domain Agent für die CIM-Seite.
 
     Ziel dieses Stands:
-    - aufgabenabhängige Planung durch den LLM
-    - keine starre Intent->Workflow-Verdrahtung
-    - minimale technische Plan-Normalisierung
+    - LLM-basierte Request-Entscheidung
+    - Standardfälle werden deterministisch auf feste Steps gemappt
+    - freie Planung nur für Nicht-Standardfälle
+    - Planner wählt nur aus expliziten Auswahlmöglichkeiten
     - Registry bleibt die ausführende Schicht
     """
 
@@ -171,56 +79,103 @@ class CIMDomainAgent:
         self.llm = get_llm()
         self.registry = CIMToolRegistry(cim_root=cim_root)
 
-        self.parser = PydanticOutputParser(
-            pydantic_object=CIMPlannerDecision
+        self.mode_parser = PydanticOutputParser(
+            pydantic_object=CIMRequestModeDecision
+        )
+        self.custom_plan_parser = PydanticOutputParser(
+            pydantic_object=CIMCustomPlanDecision
         )
 
-        self.prompt = ChatPromptTemplate.from_messages([
+        self.mode_prompt = ChatPromptTemplate.from_messages([
             (
                 "system",
                 """
-You are the planner for a CIM domain agent.
+You are the request classifier for a CIM domain agent.
 
 Your task:
-- classify the request
+- classify the request semantically
 - decide whether it is safe to execute
-- choose the required internal execution steps from the available tool list
+- choose exactly one request_mode from the allowed list
 
-Supported intents:
+Allowed intents:
 - historical_analysis
 - topology_query
 - asset_lookup
 - unsupported_cim_request
 
+Allowed request modes:
+- standard_sv
+- standard_base
+- standard_listing
+- standard_comparison
+- custom_plan
+- clarification_needed
+
+Critical rules:
+- You must choose exactly one request_mode from the allowed list.
+- Do not invent request modes.
+- Do not plan execution steps here.
+- Do not reject a request only because a date looks like it is in the future relative to today's calendar date.
+- Calendar-based "future date" rejection is forbidden.
+- Date feasibility is validated later against available snapshot data during execution.
+- A request with an explicit date can still be safe to execute.
+- Do NOT mark a request unsupported only because an attribute or value may later turn out to be unavailable on the resolved object.
+- Attribute/value validation happens later during execution.
+- If the request is unclear or not safely executable for domain reasons, set safe_to_execute=false.
+- Keep missing_context specific and real.
+- Return only structured output.
+
+Semantic guidance:
+- standard_sv: standard dynamic SV/state value request such as power, voltage, P, Q, S or similar state values.
+- standard_base: standard static base/nameplate attribute request.
+- standard_listing: standard type-listing request asking which objects of a CIM equipment type exist.
+- standard_comparison: standard comparison/limit-check request comparing SV values against base values.
+- custom_plan: request is CIM-related and executable, but deviates from the standard cases and needs explicit step planning.
+- clarification_needed: request is CIM-related, but not safely executable because essential context is missing.
+
+Practical guidance:
+- Requests about "Leistung", "Power", "Spannung", "Voltage", P, Q, S or similar dynamic state values usually mean standard_sv.
+- If such terms are explicitly modified by base-attribute semantics such as "Nenn-", "Bemessungs-", "rated", "nominal", "initial", "max", "min", "operating mode", "technical id", "mRID" or similar static wording, they usually mean standard_base.
+- Requests asking which transformers, lines, loads, generators or other CIM equipment objects exist usually mean standard_listing.
+- Requests asking for overload, loading, utilization, threshold violations, limit violations, voltage limit checks or a comparison between an SV value and a base value usually mean standard_comparison.
+- "Auslastung" of a transformer is normally standard_comparison, not unsupported.
+- A concrete value request for a concrete equipment instance should usually be standard_sv or standard_base, not unsupported.
+
+{format_instructions}
+"""
+            ),
+            ("user", "User request:\n{user_input}")
+        ])
+
+        self.custom_plan_prompt = ChatPromptTemplate.from_messages([
+            (
+                "system",
+                """
+You are the custom planner for a CIM domain agent.
+
+Your task:
+- choose the required internal execution steps for a non-standard but supported CIM request
+
 Available internal tools:
 {available_tools_text}
 
 Critical rules:
-- Only use tool names from the available internal tools list.
+- You may only choose tool names from the available internal tools list.
+- Do not invent tool names.
 - Choose only the steps needed for this specific request.
 - Do NOT assume a fixed workflow for every request.
-- Do NOT reject a request only because a date looks like it is in the future relative to today's calendar date.
-- Calendar-based "future date" rejection is forbidden.
-- Date feasibility is validated later against available snapshot data during execution.
-- A request with an explicit date can still be safe to execute.
-- If the request is unclear or not safely executable for domain reasons, set safe_to_execute=false.
-- In that case, use required_steps=["unsupported_request"] and fill missing_context only with real missing information.
-- For supported flows, summarize_cim_result should usually be the final step.
+- For supported custom flows, summarize_cim_result should usually be the final step.
 - Return only structured output.
 
 Practical guidance:
 - Use scan_snapshot_inventory whenever structure / network index is needed.
-- Use list_equipment_of_type for requests that ask which objects of a CIM equipment type exist, for example list/show/which/all requests about transformers, lines, loads or generators.
+- Use list_equipment_of_type for requests that ask which objects of a CIM equipment type exist.
 - Use resolve_cim_object to resolve equipment and parse the user query when a concrete equipment instance is needed.
-- Use read_cim_base_values for static equipment base or nameplate attributes such as ratedS, ratedU, maxQ, minQ, operatingMode or technical attribute names.
-- If the request structurally asks for the value of an attribute of a concrete equipment instance, prefer the attribute path resolve_cim_object + read_cim_base_values even if the attribute name is unfamiliar.
-- The planner is not responsible for validating whether an attribute is actually supported or exists on the resolved object. Attribute validation happens later in the base-attribute resolution step.
-- Examples of attribute-shaped requests that should usually go to read_cim_base_values:
-  - "Was ist r0 von Trafo 19-20?"
-  - "Wie ist x0 von Leitung 3?"
-  - "Was ist der Wert abcParameter von Generator G 01?"
+- Use read_cim_base_values for static equipment base or nameplate attributes.
 - Use load_snapshot_cache for historical state / metric questions.
 - Use query_cim for the actual domain query.
+- Use resolve_cim_comparison before reading SV and base values when the request is a comparison/limit-check.
+- Use compare_cim_values only after both SV values and base values are available.
 - Use summarize_cim_result at the end.
 
 {format_instructions}
@@ -261,59 +216,115 @@ Practical guidance:
                 f"- {name}: {description} | tags={tags_text} | mutating={mutating}"
             )
 
-        lines.append("- unsupported_request: Return a controlled unsupported-workflow message")
         return "\n".join(lines)
+
+    def _standard_required_steps(self, request_mode: str) -> List[str]:
+        if request_mode == "standard_listing":
+            return ["list_equipment_of_type"]
+
+        if request_mode == "standard_base":
+            return ["read_cim_base_values"]
+
+        if request_mode == "standard_sv":
+            return ["query_cim"]
+
+        if request_mode == "standard_comparison":
+            return [
+                "resolve_cim_comparison",
+                "query_cim",
+                "read_cim_base_values",
+                "compare_cim_values",
+            ]
+
+        return []
+
+    def _normalize_custom_steps(self, requested_steps: List[Any]) -> List[str]:
+        allowed_names = self._available_tool_names()
+        if not isinstance(requested_steps, list):
+            return []
+
+        return [
+            step
+            for step in requested_steps
+            if isinstance(step, str) and step in allowed_names and step != "unsupported_request"
+        ]
 
     # ------------------------------------------------------------------
     # PLANNING
     # ------------------------------------------------------------------
     def classify_request(self, user_input: str) -> Dict[str, Any]:
         try:
-            chain = self.prompt | self.llm | self.parser
+            mode_chain = self.mode_prompt | self.llm | self.mode_parser
 
-            decision = chain.invoke({
+            mode_decision = mode_chain.invoke({
                 "user_input": user_input,
-                "available_tools_text": self._build_available_tools_text(),
-                "format_instructions": self.parser.get_format_instructions(),
+                "format_instructions": self.mode_parser.get_format_instructions(),
             })
 
-            if hasattr(decision, "dict"):
-                result = decision.dict()
+            if hasattr(mode_decision, "dict"):
+                mode_result = mode_decision.dict()
             else:
-                result = dict(decision)
+                mode_result = dict(mode_decision)
 
-            allowed_names = self._available_tool_names()
-            requested_steps = result.get("required_steps", [])
+            request_mode = str(mode_result.get("request_mode", "") or "").strip()
+            result: Dict[str, Any] = {
+                "intent": mode_result.get("intent", "unsupported_cim_request"),
+                "confidence": mode_result.get("confidence", "low"),
+                "target_kind": mode_result.get("target_kind", "unknown"),
+                "request_mode": request_mode,
+                "safe_to_execute": bool(mode_result.get("safe_to_execute", False)),
+                "missing_context": list(mode_result.get("missing_context", []) or []),
+                "required_steps": [],
+                "reasoning": str(mode_result.get("reasoning", "") or "").strip(),
+            }
 
-            if not isinstance(requested_steps, list):
-                requested_steps = []
-
-            result["required_steps"] = [
-                step
-                for step in requested_steps
-                if isinstance(step, str) and step in allowed_names
-            ]
-
-            if _looks_like_type_listing_request(user_input) and "list_equipment_of_type" in allowed_names:
+            if request_mode in {
+                "standard_sv",
+                "standard_base",
+                "standard_listing",
+                "standard_comparison",
+            }:
+                result["required_steps"] = self._standard_required_steps(request_mode)
                 result["safe_to_execute"] = True
-                result["required_steps"] = ["list_equipment_of_type"]
-                reasoning = str(result.get("reasoning", "") or "").strip()
-                heuristic_reason = "type-listing heuristic selected list_equipment_of_type"
-                result["reasoning"] = f"{reasoning} | {heuristic_reason}" if reasoning else heuristic_reason
+                template_reason = f"standard request mode '{request_mode}' mapped to fixed step template"
+                result["reasoning"] = f"{result['reasoning']} | {template_reason}".strip(" |")
+            elif request_mode == "custom_plan":
+                if result["safe_to_execute"]:
+                    custom_chain = self.custom_plan_prompt | self.llm | self.custom_plan_parser
+                    custom_decision = custom_chain.invoke({
+                        "user_input": user_input,
+                        "available_tools_text": self._build_available_tools_text(),
+                        "format_instructions": self.custom_plan_parser.get_format_instructions(),
+                    })
 
-            if _looks_like_base_value_request(user_input) and "read_cim_base_values" in allowed_names:
-                result["safe_to_execute"] = True
-                result["required_steps"] = ["read_cim_base_values"]
-                reasoning = str(result.get("reasoning", "") or "").strip()
-                heuristic_reason = "base-value heuristic selected read_cim_base_values"
-                result["reasoning"] = f"{reasoning} | {heuristic_reason}" if reasoning else heuristic_reason
+                    if hasattr(custom_decision, "dict"):
+                        custom_result = custom_decision.dict()
+                    else:
+                        custom_result = dict(custom_decision)
 
-            if not result["required_steps"] and result.get("safe_to_execute", False):
+                    normalized_steps = self._normalize_custom_steps(
+                        custom_result.get("required_steps", [])
+                    )
+                    result["required_steps"] = normalized_steps
+
+                    custom_reasoning = str(custom_result.get("reasoning", "") or "").strip()
+                    if custom_reasoning:
+                        result["reasoning"] = (
+                            f"{result['reasoning']} | {custom_reasoning}".strip(" |")
+                        )
+
+                    if not normalized_steps:
+                        result["safe_to_execute"] = False
+                        if "planner returned no executable steps for custom_plan" not in result["missing_context"]:
+                            result["missing_context"].append("planner returned no executable steps for custom_plan")
+            else:
                 result["safe_to_execute"] = False
-                result["missing_context"] = list(result.get("missing_context", []) or [])
+
+            if (
+                not result.get("safe_to_execute", False)
+                and "unsupported_request" not in result["required_steps"]
+            ):
                 result["required_steps"] = ["unsupported_request"]
-                if "planner returned no executable steps" not in result["missing_context"]:
-                    result["missing_context"].append("planner returned no executable steps")
 
             return {
                 "status": "ok",
@@ -328,8 +339,9 @@ Practical guidance:
                 "intent": "unsupported_cim_request",
                 "confidence": "low",
                 "target_kind": "unknown",
+                "request_mode": "clarification_needed",
                 "safe_to_execute": False,
-                "missing_context": [],
+                "missing_context": ["planner_error"],
                 "required_steps": ["unsupported_request"],
                 "reasoning": f"planner_error: {exc}",
             }
@@ -343,6 +355,8 @@ Practical guidance:
 
         allowed_names = set(available_specs.keys())
         required_steps = classification.get("required_steps", [])
+        request_mode = str(classification.get("request_mode", "") or "").strip()
+
         if not isinstance(required_steps, list):
             required_steps = []
 
@@ -366,9 +380,17 @@ Practical guidance:
                     "description": "Return a controlled unsupported-workflow message",
                 }]
 
+            if step == "resolve_cim_comparison":
+                add("scan_snapshot_inventory")
+                add("resolve_cim_object")
+                add("resolve_cim_comparison")
+                continue
+
             if step == "query_cim":
                 add("scan_snapshot_inventory")
                 add("resolve_cim_object")
+                if "resolve_cim_comparison" in required_steps:
+                    add("resolve_cim_comparison")
                 add("load_snapshot_cache")
                 add("query_cim")
                 continue
@@ -392,7 +414,19 @@ Practical guidance:
             if step == "read_cim_base_values":
                 add("scan_snapshot_inventory")
                 add("resolve_cim_object")
+                if "resolve_cim_comparison" in required_steps:
+                    add("resolve_cim_comparison")
                 add("read_cim_base_values")
+                continue
+
+            if step == "compare_cim_values":
+                add("scan_snapshot_inventory")
+                add("resolve_cim_object")
+                add("resolve_cim_comparison")
+                add("load_snapshot_cache")
+                add("query_cim")
+                add("read_cim_base_values")
+                add("compare_cim_values")
                 continue
 
             if step == "scan_snapshot_inventory":
@@ -407,20 +441,44 @@ Practical guidance:
                 add(step)
 
         if not normalized_steps:
-            intent = classification.get("intent", "")
-
-            if intent in {"historical_analysis", "topology_query", "asset_lookup"}:
+            if request_mode == "standard_listing":
+                add("scan_snapshot_inventory")
+                add("list_equipment_of_type")
+            elif request_mode == "standard_base":
                 add("scan_snapshot_inventory")
                 add("resolve_cim_object")
-                if intent == "historical_analysis":
-                    add("load_snapshot_cache")
+                add("read_cim_base_values")
+                add("summarize_cim_result")
+            elif request_mode == "standard_sv":
+                add("scan_snapshot_inventory")
+                add("resolve_cim_object")
+                add("load_snapshot_cache")
                 add("query_cim")
                 add("summarize_cim_result")
+            elif request_mode == "standard_comparison":
+                add("scan_snapshot_inventory")
+                add("resolve_cim_object")
+                add("resolve_cim_comparison")
+                add("load_snapshot_cache")
+                add("query_cim")
+                add("read_cim_base_values")
+                add("compare_cim_values")
+                add("summarize_cim_result")
             else:
-                return [{
-                    "step": "unsupported_request",
-                    "description": "Return a controlled unsupported-workflow message",
-                }]
+                intent = classification.get("intent", "")
+
+                if intent in {"historical_analysis", "topology_query", "asset_lookup"}:
+                    add("scan_snapshot_inventory")
+                    add("resolve_cim_object")
+                    if intent == "historical_analysis":
+                        add("load_snapshot_cache")
+                    add("query_cim")
+                    add("summarize_cim_result")
+                else:
+                    return [{
+                        "step": "unsupported_request",
+                        "description": "Return a controlled unsupported-workflow message",
+                    }]
 
         if (
             "summarize_cim_result" in allowed_names

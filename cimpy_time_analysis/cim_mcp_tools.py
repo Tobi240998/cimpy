@@ -25,6 +25,12 @@ from cimpy.cimpy_time_analysis.llm_object_mapping import (
 )
 from cimpy.cimpy_time_analysis.llm_cim_orchestrator import handle_user_query
 from cimpy.cimpy_time_analysis.langchain_llm import get_llm
+from cimpy.cimpy_time_analysis.cim_queries import (
+    query_equipment_metric_over_time,
+    query_equipment_voltage_over_time,
+    summarize_metric,
+    summarize_voltage,
+)
 
 
 _EXCLUDED_EQUIPMENT_CLASS_NAMES = {
@@ -74,8 +80,218 @@ class ParsedQueryNormalizationDecision(BaseModel):
     equipment_name_hint: Optional[str] = Field(default=None)
 
 
+class ComparisonResolutionDecision(BaseModel):
+    comparison_type: Optional[str] = Field(default=None)
+    should_execute: bool = Field(default=False)
+    rationale: str = Field(default="")
+
+
 def _normalize_cim_root(cim_root: Optional[str] = None) -> str:
     return cim_root or CIM_ROOT
+
+
+_COMPARISON_DEFINITIONS: Dict[str, Dict[str, Any]] = {
+    "transformer_loading": {
+        "equipment_types": ["PowerTransformer"],
+        "required_state_type": "SvPowerFlow",
+        "sv_metric": "S",
+        "base_attributes": ["ratedS"],
+        "comparison_mode": "upper_limit",
+        "observed_value_mode": "abs_peak",
+        "limit_attribute": "ratedS",
+    },
+    "generator_active_power_limit": {
+        "equipment_types": ["SynchronousMachine", "AsynchronousMachine"],
+        "required_state_type": "SvPowerFlow",
+        "sv_metric": "P",
+        "base_attributes": ["minOperatingP", "maxOperatingP"],
+        "comparison_mode": "range_limit",
+        "observed_value_mode": "abs_peak",
+        "lower_attribute": "minOperatingP",
+        "upper_attribute": "maxOperatingP",
+    },
+    "generator_reactive_power_limit": {
+        "equipment_types": ["SynchronousMachine", "AsynchronousMachine"],
+        "required_state_type": "SvPowerFlow",
+        "sv_metric": "Q",
+        "base_attributes": ["minQ", "maxQ"],
+        "comparison_mode": "range_limit",
+        "observed_value_mode": "peak",
+        "lower_attribute": "minQ",
+        "upper_attribute": "maxQ",
+    },
+    "voltage_vs_rated_voltage": {
+        "equipment_types": [
+            "PowerTransformer",
+            "SynchronousMachine",
+            "AsynchronousMachine",
+            "ConformLoad",
+            "EnergyConsumer",
+            "BusbarSection",
+            "ACLineSegment",
+            "EquivalentInjection",
+            "ExternalNetworkInjection",
+        ],
+        "required_state_type": "SvVoltage",
+        "sv_metric": "U",
+        "base_attributes": ["ratedU"],
+        "comparison_mode": "upper_limit",
+        "observed_value_mode": "peak",
+        "limit_attribute": "ratedU",
+    },
+}
+
+
+def _extract_scalar_base_value(value: Any, *, prefer_max: bool = True) -> Optional[float]:
+    if value is None:
+        return None
+    if isinstance(value, (int, float)):
+        return float(value)
+    if isinstance(value, list):
+        candidates: List[float] = []
+        for item in value:
+            if isinstance(item, dict):
+                raw = item.get("value")
+            else:
+                raw = item
+            try:
+                if raw is not None:
+                    candidates.append(float(raw))
+            except Exception:
+                continue
+        if not candidates:
+            return None
+        return max(candidates) if prefer_max else min(candidates)
+    return None
+
+
+def _extract_observed_series(query_result_data: Dict[str, Any] | None) -> List[float]:
+    query_result_data = query_result_data or {}
+    rows = query_result_data.get("rows", []) or []
+    metric = str(query_result_data.get("metric") or "").upper()
+    values: List[float] = []
+    key = None
+    if metric == "P":
+        key = "active_power_MW"
+    elif metric == "Q":
+        key = "reactive_power_MVAr"
+    elif metric == "S":
+        key = "apparent_power_MVA"
+    elif metric == "U":
+        key = "voltage_kV"
+    if key is None:
+        return values
+    for row in rows:
+        try:
+            raw = row.get(key) if isinstance(row, dict) else None
+            if raw is not None:
+                values.append(float(raw))
+        except Exception:
+            continue
+    return values
+
+
+def _looks_like_comparison_request(user_input: str) -> bool:
+    text = (user_input or "").strip().lower()
+    if not text:
+        return False
+    markers = [
+        "überlast", "overload", "auslastung", "loading",
+        "grenze", "grenzwert", "limit", "überschreit",
+        "im verhältnis", "verglich", "compare", "against",
+        "zulässig", "zulässige",
+    ]
+    return any(marker in text for marker in markers)
+
+
+def _build_comparison_resolution_chain():
+    parser = PydanticOutputParser(pydantic_object=ComparisonResolutionDecision)
+    prompt = ChatPromptTemplate.from_messages([
+        (
+            "system",
+            "You classify a CIM comparison request into one allowed comparison type.\n"
+            "Return only structured output.\n"
+            "Choose only from the provided allowed comparison types.\n"
+            "Do not invent attributes or comparison types.\n"
+            "If the request is not clearly a comparison/limit check, set comparison_type=null and should_execute=false.\n\n"
+            "Allowed comparison types:\n{comparison_definitions}\n\n"
+            "{format_instructions}"
+        ),
+        (
+            "user",
+            "User request:\n{user_input}\n\n"
+            "Resolved equipment class: {equipment_class}\n"
+            "Resolved equipment name: {equipment_name}"
+        ),
+    ])
+    llm = get_llm()
+    return prompt | llm | parser, parser
+
+
+def _resolve_comparison_definition(user_input: str, resolved_object: Any, parsed_query: Dict[str, Any] | None = None) -> Dict[str, Any]:
+    parsed_query = parsed_query or {}
+    equipment_class = resolved_object.__class__.__name__ if resolved_object is not None else None
+    equipment_name = _safe_name(resolved_object) or getattr(resolved_object, "mRID", None) if resolved_object is not None else None
+
+    allowed = {
+        name: spec for name, spec in _COMPARISON_DEFINITIONS.items()
+        if equipment_class in spec.get("equipment_types", [])
+    }
+    if not allowed:
+        return {
+            "status": "error",
+            "error": "no_allowed_comparisons_for_equipment",
+            "details": f"No comparison definitions configured for equipment class '{equipment_class}'.",
+        }
+
+    try:
+        chain, parser = _build_comparison_resolution_chain()
+        definitions_text = "\n".join(
+            f"- {name}: state_type={spec.get('required_state_type')} | sv_metric={spec.get('sv_metric')} | base_attributes={spec.get('base_attributes')} | mode={spec.get('comparison_mode')}"
+            for name, spec in allowed.items()
+        )
+        decision = chain.invoke({
+            "user_input": user_input,
+            "equipment_class": equipment_class,
+            "equipment_name": equipment_name,
+            "comparison_definitions": definitions_text,
+            "format_instructions": parser.get_format_instructions(),
+        })
+        comparison_type = decision.comparison_type
+        if not decision.should_execute or comparison_type not in allowed:
+            raise ValueError("comparison_not_safely_resolved")
+        selected = dict(allowed[comparison_type])
+        selected.update({
+            "comparison_type": comparison_type,
+            "status": "ok",
+            "resolution_mode": "semantic_llm_match",
+            "llm_decision": decision.model_dump() if hasattr(decision, "model_dump") else decision.dict(),
+        })
+        return selected
+    except Exception as exc:
+        text = (user_input or "").lower()
+        fallback_type = None
+        if equipment_class == "PowerTransformer" and any(m in text for m in ["überlast", "overload", "auslastung", "loading"]):
+            fallback_type = "transformer_loading"
+        elif equipment_class in {"SynchronousMachine", "AsynchronousMachine"} and any(m in text for m in ["überlast", "overload", "auslastung", "loading"]):
+            fallback_type = "generator_active_power_limit"
+        elif any(m in text for m in ["spannung", "voltage", "spannungsgrenze", "spannungsgrenzen"]):
+            fallback_type = "voltage_vs_rated_voltage"
+        if fallback_type and fallback_type in allowed:
+            selected = dict(allowed[fallback_type])
+            selected.update({
+                "comparison_type": fallback_type,
+                "status": "ok",
+                "resolution_mode": "heuristic_fallback",
+                "llm_error": str(exc),
+            })
+            return selected
+        return {
+            "status": "error",
+            "error": "comparison_resolution_failed",
+            "details": str(exc),
+            "allowed_comparison_types": sorted(allowed.keys()),
+        }
 
 
 # ------------------------------------------------------------------
@@ -155,6 +371,36 @@ def _safe_description(value):
         text = getattr(value, attr, None)
         if isinstance(text, str) and text.strip():
             return text.strip()
+    return None
+
+
+
+def _read_base_attribute_value(equipment_obj: Any, attr_name: str) -> Any:
+    if equipment_obj is None or not attr_name:
+        return None
+
+    if hasattr(equipment_obj, attr_name):
+        value = getattr(equipment_obj, attr_name, None)
+        if value is not None:
+            return value
+
+    class_name = equipment_obj.__class__.__name__
+
+    if class_name == "PowerTransformer":
+        ends = getattr(equipment_obj, "PowerTransformerEnd", None) or []
+        for end in ends:
+            if hasattr(end, attr_name):
+                value = getattr(end, attr_name, None)
+                if value is not None:
+                    return value
+
+    if class_name == "SynchronousMachine":
+        generating_unit = getattr(equipment_obj, "GeneratingUnit", None)
+        if generating_unit is not None and hasattr(generating_unit, attr_name):
+            value = getattr(generating_unit, attr_name, None)
+            if value is not None:
+                return value
+
     return None
 
 
@@ -834,121 +1080,13 @@ def _list_equipment_of_type_with_services(
 
 
 
-
-
-_CGMES_BASE_ATTRIBUTE_UNITS: Dict[str, str | None] = {
-    # CGMES exchange multiplier rule:
-    # - k for volt
-    # - M for W, VA, VAr
-    # - 1 for all remaining UnitSymbol values
-    # Non-quantitative attributes intentionally map to None.
-    "name": None,
-    "mRID": None,
-    "description": None,
-    "type": None,
-    "operatingMode": None,
-    "connectionKind": None,
-    "grounded": None,
-    "endNumber": None,
-    "phaseAngleClock": None,
-    "ratedU": "kV",
-    "maxU": "kV",
-    "minU": "kV",
-    "ratedS": "MVA",
-    "p": "MW",
-    "initialP": "MW",
-    "nominalP": "MW",
-    "maxOperatingP": "MW",
-    "minOperatingP": "MW",
-    "q": "MVAr",
-    "baseQ": "MVAr",
-    "maxQ": "MVAr",
-    "minQ": "MVAr",
-    "r": "ohm",
-    "r0": "ohm",
-    "r2": "ohm",
-    "rground": "ohm",
-    "x": "ohm",
-    "x0": "ohm",
-    "x2": "ohm",
-    "xground": "ohm",
-    "b": "S",
-    "b0": "S",
-    "g": "S",
-    "g0": "S",
-}
-
-
-def _get_cgmes_unit_for_base_attribute(attr_name: str) -> str | None:
-    if not attr_name:
-        return None
-    return _CGMES_BASE_ATTRIBUTE_UNITS.get(str(attr_name).strip())
-
-
-def _format_base_value_for_answer(value: Any, unit: str | None) -> str:
-    if isinstance(value, list):
-        rendered_rows = []
-        for row in value:
-            if isinstance(row, dict):
-                row_value = row.get("value")
-                row_unit = row.get("unit") or unit
-                suffix = f" {row_unit}" if row_unit else ""
-                rendered_rows.append(
-                    "{end_label}{value}{suffix}".format(
-                        end_label=(f"Ende {row.get('endNumber')}: " if row.get('endNumber') is not None else ""),
-                        value=row_value,
-                        suffix=suffix,
-                    )
-                )
-            else:
-                suffix = f" {unit}" if unit else ""
-                rendered_rows.append(f"{row!r}{suffix}")
-        return "[" + ", ".join(rendered_rows) + "]"
-
-    suffix = f" {unit}" if unit else ""
-    return f"{value!r}{suffix}"
-
-
-def _collect_base_attribute_value(resolved_object: Any, attr_name: str) -> Any:
-    if resolved_object is None or not attr_name:
-        return None
-
-    class_name = resolved_object.__class__.__name__
-
-    if class_name == "PowerTransformer":
-        ends = getattr(resolved_object, "PowerTransformerEnd", None) or []
-        end_rows = []
-        for end in ends:
-            if not hasattr(end, attr_name):
-                continue
-            value = getattr(end, attr_name, None)
-            if value is None:
-                continue
-            end_rows.append({
-                "endNumber": getattr(end, "endNumber", None),
-                "terminal_id": _canonical_cim_id(getattr(end, "Terminal", None)),
-                "value": value,
-                "unit": _get_cgmes_unit_for_base_attribute(attr_name),
-            })
-        if end_rows:
-            end_rows.sort(key=lambda row: ((row.get("endNumber") is None), row.get("endNumber"), row.get("terminal_id") or ""))
-            return end_rows
-
-    if class_name == "SynchronousMachine":
-        generating_unit = getattr(resolved_object, "GeneratingUnit", None)
-        if generating_unit is not None and hasattr(generating_unit, attr_name):
-            value = getattr(generating_unit, attr_name, None)
-            if value is not None:
-                return value
-
-    return getattr(resolved_object, attr_name, None)
-
 def _read_cim_base_values_with_services(
     services: Dict[str, Any],
     user_input: str,
     resolved_object: Any,
     parsed_query: Dict[str, Any] | None = None,
     analysis_plan: Dict[str, Any] | None = None,
+    requested_attributes: List[str] | None = None,
 ) -> Dict[str, Any]:
     parsed_query = parsed_query or {}
 
@@ -978,10 +1116,22 @@ def _read_cim_base_values_with_services(
     print(f"equipment_obj name: {_safe_name(resolved_object)}")
     print(f"equipment_obj id: {_canonical_cim_id(resolved_object)} {getattr(resolved_object, 'mRID', None)}")
 
-    selection_result = resolve_requested_base_attributes(
-        user_input=user_input,
-        equipment_obj=resolved_object,
-    )
+    if requested_attributes:
+        available_attributes = [
+            attr_name for attr_name in requested_attributes
+            if _read_base_attribute_value(resolved_object, attr_name) is not None
+        ]
+        selection_result = {
+            "selected_attributes": available_attributes,
+            "resolution_mode": "preselected_attributes",
+            "available_attributes": available_attributes,
+            "requested_attributes": list(requested_attributes),
+        }
+    else:
+        selection_result = resolve_requested_base_attributes(
+            user_input=user_input,
+            equipment_obj=resolved_object,
+        )
 
     print(f"base_attribute_debug: {selection_result}")
 
@@ -997,20 +1147,14 @@ def _read_cim_base_values_with_services(
         }
 
     values: Dict[str, Any] = {}
-    units: Dict[str, str | None] = {}
     for attr_name in selected_attributes:
-        values[attr_name] = _collect_base_attribute_value(resolved_object, attr_name)
-        units[attr_name] = _get_cgmes_unit_for_base_attribute(attr_name)
+        values[attr_name] = _read_base_attribute_value(resolved_object, attr_name)
 
     print(f"selected_attributes: {selected_attributes}")
     print(f"base_values: {values}")
-    print(f"base_value_units: {units}")
 
     equipment_name = _safe_name(resolved_object) or getattr(resolved_object, "mRID", None) or "<unbekannt>"
-    parts = [
-        f"{attr}={_format_base_value_for_answer(values.get(attr), units.get(attr))}"
-        for attr in selected_attributes
-    ]
+    parts = [f"{attr}={values.get(attr)!r}" for attr in selected_attributes]
     answer = f"Basiswerte für {equipment_name}: " + ", ".join(parts)
 
     return {
@@ -1019,9 +1163,184 @@ def _read_cim_base_values_with_services(
         "cim_root": services["cim_root"],
         "selected_attributes": selected_attributes,
         "base_values": values,
-        "base_value_units": units,
         "answer": answer,
         "base_attribute_debug": selection_result,
+    }
+
+
+def _resolve_cim_comparison_with_services(
+    services: Dict[str, Any],
+    user_input: str,
+    resolved_object: Any,
+    parsed_query: Dict[str, Any] | None = None,
+) -> Dict[str, Any]:
+    parsed_query = parsed_query or {}
+
+    if resolved_object is None:
+        return {
+            "status": "error",
+            "tool": "resolve_cim_comparison",
+            "cim_root": services["cim_root"],
+            "error": "missing_resolved_object",
+            "answer": "Es wurde kein aufgelöstes CIM-Equipment für den Vergleich gefunden.",
+        }
+
+    resolution = _resolve_comparison_definition(
+        user_input=user_input,
+        resolved_object=resolved_object,
+        parsed_query=parsed_query,
+    )
+    if resolution.get("status") != "ok":
+        return {
+            "status": "error",
+            "tool": "resolve_cim_comparison",
+            "cim_root": services["cim_root"],
+            "error": resolution.get("error", "comparison_resolution_failed"),
+            "answer": "Die gewünschte Vergleichslogik konnte nicht sicher aufgelöst werden.",
+            "comparison_resolution_debug": resolution,
+        }
+
+    updated_parsed_query = dict(parsed_query)
+    required_state_type = resolution.get("required_state_type")
+    if required_state_type:
+        updated_parsed_query["state_detected"] = [required_state_type]
+    sv_metric = resolution.get("sv_metric")
+    if sv_metric in {"P", "Q", "S"}:
+        updated_parsed_query["metric"] = sv_metric
+
+    return {
+        "status": "ok",
+        "tool": "resolve_cim_comparison",
+        "cim_root": services["cim_root"],
+        "comparison_resolution": resolution,
+        "parsed_query": updated_parsed_query,
+        "requested_base_attributes": list(resolution.get("base_attributes", []) or []),
+        "comparison_resolution_debug": resolution,
+        "answer": f"Vergleichslogik aufgelöst: {resolution.get('comparison_type')}",
+    }
+
+
+def _compare_cim_values_with_services(
+    services: Dict[str, Any],
+    resolved_object: Any,
+    comparison_resolution: Dict[str, Any] | None,
+    query_result_data: Dict[str, Any] | None,
+    base_values: Dict[str, Any] | None,
+) -> Dict[str, Any]:
+    comparison_resolution = comparison_resolution or {}
+    query_result_data = query_result_data or {}
+    base_values = base_values or {}
+
+    if comparison_resolution.get("status") != "ok":
+        return {
+            "status": "error",
+            "tool": "compare_cim_values",
+            "cim_root": services["cim_root"],
+            "error": "missing_comparison_resolution",
+            "answer": "Es liegt keine aufgelöste Vergleichsdefinition vor.",
+        }
+
+    observed_values = _extract_observed_series(query_result_data)
+    if not observed_values:
+        return {
+            "status": "error",
+            "tool": "compare_cim_values",
+            "cim_root": services["cim_root"],
+            "error": "missing_sv_values",
+            "answer": "Es konnten keine SV-Werte für den Vergleich ermittelt werden.",
+        }
+
+    observed_mode = comparison_resolution.get("observed_value_mode") or "peak"
+    if observed_mode == "abs_peak":
+        observed_value = max(abs(v) for v in observed_values)
+    else:
+        observed_value = max(observed_values)
+
+    comparison_type = comparison_resolution.get("comparison_type")
+    result_payload: Dict[str, Any] = {
+        "comparison_type": comparison_type,
+        "observed_value": observed_value,
+        "observed_value_mode": observed_mode,
+        "sv_metric": query_result_data.get("metric"),
+    }
+
+    equipment_name = _safe_name(resolved_object) or getattr(resolved_object, "mRID", None) or "<unbekannt>"
+    answer = None
+
+    if comparison_resolution.get("comparison_mode") == "upper_limit":
+        limit_attr = comparison_resolution.get("limit_attribute")
+        limit_value = _extract_scalar_base_value(base_values.get(limit_attr), prefer_max=True)
+        if limit_value is None:
+            return {
+                "status": "error",
+                "tool": "compare_cim_values",
+                "cim_root": services["cim_root"],
+                "error": "missing_limit_value",
+                "answer": f"Für den Vergleich fehlt der Basiswert '{limit_attr}'.",
+            }
+        ratio = (observed_value / limit_value * 100.0) if limit_value not in {None, 0} else None
+        exceeds = bool(limit_value is not None and observed_value > limit_value)
+        result_payload.update({
+            "limit_attribute": limit_attr,
+            "limit_value": limit_value,
+            "ratio_percent": ratio,
+            "exceeds_limit": exceeds,
+        })
+        status_text = "überschreitet" if exceeds else "liegt innerhalb von"
+        answer = (
+            f"Vergleich für {equipment_name}: beobachteter Wert={observed_value:.3f}, "
+            f"{limit_attr}={limit_value:.3f} -> {status_text} dem Grenzwert"
+        )
+    elif comparison_resolution.get("comparison_mode") == "range_limit":
+        lower_attr = comparison_resolution.get("lower_attribute")
+        upper_attr = comparison_resolution.get("upper_attribute")
+        lower_value = _extract_scalar_base_value(base_values.get(lower_attr), prefer_max=False)
+        upper_value = _extract_scalar_base_value(base_values.get(upper_attr), prefer_max=True)
+        if lower_value is None and upper_value is None:
+            return {
+                "status": "error",
+                "tool": "compare_cim_values",
+                "cim_root": services["cim_root"],
+                "error": "missing_limit_value",
+                "answer": f"Für den Vergleich fehlen die Basiswerte '{lower_attr}' und '{upper_attr}'.",
+            }
+        below = bool(lower_value is not None and observed_value < lower_value)
+        above = bool(upper_value is not None and observed_value > upper_value)
+        within = not below and not above
+        result_payload.update({
+            "lower_attribute": lower_attr,
+            "lower_value": lower_value,
+            "upper_attribute": upper_attr,
+            "upper_value": upper_value,
+            "within_limits": within,
+            "below_lower_limit": below,
+            "above_upper_limit": above,
+        })
+        if within:
+            verdict = "liegt innerhalb der zulässigen Grenzen"
+        elif above:
+            verdict = "überschreitet die obere Grenze"
+        else:
+            verdict = "unterschreitet die untere Grenze"
+        answer = (
+            f"Vergleich für {equipment_name}: beobachteter Wert={observed_value:.3f}, "
+            f"{lower_attr}={lower_value!r}, {upper_attr}={upper_value!r} -> {verdict}"
+        )
+    else:
+        return {
+            "status": "error",
+            "tool": "compare_cim_values",
+            "cim_root": services["cim_root"],
+            "error": "unsupported_comparison_mode",
+            "answer": "Der Vergleichsmodus wird aktuell nicht unterstützt.",
+        }
+
+    return {
+        "status": "ok",
+        "tool": "compare_cim_values",
+        "cim_root": services["cim_root"],
+        "comparison_result": result_payload,
+        "answer": answer,
     }
 
 
@@ -1077,7 +1396,20 @@ def _query_cim_with_services(
     network_index: Dict[str, Any] | None,
     parsed_query: Dict[str, Any] | None,
     classification: Dict[str, Any] | None,
+    resolved_object: Any | None = None,
+    comparison_resolution: Dict[str, Any] | None = None,
 ) -> Dict[str, Any]:
+    parsed_query = dict(parsed_query or {})
+    comparison_resolution = comparison_resolution or {}
+
+    if comparison_resolution.get("status") == "ok":
+        required_state_type = comparison_resolution.get("required_state_type")
+        if required_state_type:
+            parsed_query["state_detected"] = [required_state_type]
+        sv_metric = comparison_resolution.get("sv_metric")
+        if sv_metric in {"P", "Q", "S"}:
+            parsed_query["metric"] = sv_metric
+
     answer = handle_user_query(
         user_input=user_input,
         snapshot_cache=snapshot_cache or {},
@@ -1086,11 +1418,48 @@ def _query_cim_with_services(
         analysis_plan=classification,
     )
 
+    query_result_data: Dict[str, Any] = {}
+    try:
+        state_detected = parsed_query.get("state_detected", []) or []
+        metric = parsed_query.get("metric")
+        if resolved_object is not None and "SvVoltage" in state_detected:
+            rows = query_equipment_voltage_over_time(
+                snapshot_cache=snapshot_cache or {},
+                network_index=network_index or {},
+                equipment_obj=resolved_object,
+            )
+            query_result_data = {
+                "query_mode": "voltage_over_time",
+                "metric": "U",
+                "rows": rows,
+                "summary": summarize_voltage(rows),
+            }
+        elif resolved_object is not None and "SvPowerFlow" in state_detected and metric in {"P", "Q", "S"}:
+            rows = query_equipment_metric_over_time(
+                snapshot_cache=snapshot_cache or {},
+                network_index=network_index or {},
+                equipment_obj=resolved_object,
+                metric=metric,
+            )
+            query_result_data = {
+                "query_mode": "metric_over_time",
+                "metric": metric,
+                "rows": rows,
+                "summary": summarize_metric(rows),
+            }
+    except Exception as exc:
+        query_result_data = {
+            "query_mode": "structured_query_failed",
+            "error": str(exc),
+        }
+
     return {
         "status": "ok",
         "tool": "query_cim",
         "cim_root": services["cim_root"],
+        "parsed_query": parsed_query,
         "answer": answer,
+        "query_result_data": query_result_data,
     }
 
 
@@ -1119,6 +1488,9 @@ def _summarize_cim_result_with_services(
         "resolution_mode": result_payload.get("resolution_mode"),
         "equipment_resolution_debug": result_payload.get("equipment_resolution_debug", {}),
         "equipment_catalog_summary": result_payload.get("equipment_catalog_summary", {}),
+        "comparison_resolution": result_payload.get("comparison_resolution", {}),
+        "comparison_result": result_payload.get("comparison_result", {}),
+        "requested_base_attributes": result_payload.get("requested_base_attributes", []),
     }
 
     return {
