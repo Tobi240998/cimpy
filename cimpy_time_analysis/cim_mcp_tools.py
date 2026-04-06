@@ -87,6 +87,10 @@ class ComparisonResolutionDecision(BaseModel):
     rationale: str = Field(default="")
 
 
+class FinalAnswerDecision(BaseModel):
+    answer: str = Field(default="")
+
+
 def _normalize_cim_root(cim_root: Optional[str] = None) -> str:
     return cim_root or CIM_ROOT
 
@@ -1575,6 +1579,74 @@ def _query_cim_with_services(
 
 
 
+
+def _build_final_answer_chain():
+    parser = PydanticOutputParser(pydantic_object=FinalAnswerDecision)
+    prompt = ChatPromptTemplate.from_messages([
+        (
+            "system",
+            "You are the final answer formatter for a CIM domain agent.\n"
+            "Your task is to produce the final German user-facing answer.\n"
+            "Return only structured output.\n"
+            "Use the raw execution result and align the answer tightly to the user's question.\n"
+            "Do not invent values. Use only the provided execution data.\n"
+            "If the user asked for utilization/loading (Auslastung), answer explicitly with the utilization semantics.\n"
+            "If ratio_percent is available, prefer stating the utilization in percent.\n"
+            "If the user asked whether something was within limits, answer explicitly yes/no in German and then add the supporting value.\n"
+            "If the user asked for a comparison against a limit/base value, mention observed value and the relevant limit/base value.\n"
+            "If the raw answer is already good, you may keep it concise but still adapt it to the user's wording.\n\n"
+            "{format_instructions}"
+        ),
+        (
+            "user",
+            "User request:\n{user_input}\n\n"
+            "Raw answer:\n{raw_answer}\n\n"
+            "Comparison resolution:\n{comparison_resolution}\n\n"
+            "Comparison result:\n{comparison_result}\n\n"
+            "Base values with units:\n{base_values_with_units}\n\n"
+            "Query result data:\n{query_result_data}\n\n"
+            "Parsed query:\n{parsed_query}\n\n"
+            "Resolved equipment name:\n{equipment_name}"
+        ),
+    ])
+    llm = get_llm()
+    return prompt | llm | parser, parser
+
+
+def _generate_user_aligned_answer(
+    user_input: str,
+    result_payload: Dict[str, Any],
+) -> str:
+    raw_answer = str(result_payload.get("answer", "") or "").strip()
+    comparison_result = result_payload.get("comparison_result", {}) or {}
+    comparison_resolution = result_payload.get("comparison_resolution", {}) or {}
+    base_values_with_units = result_payload.get("base_values_with_units", {}) or {}
+    query_result_data = result_payload.get("query_result_data", {}) or {}
+    parsed_query = result_payload.get("parsed_query", {}) or {}
+    resolved_object = result_payload.get("resolved_object")
+    equipment_name = _safe_name(resolved_object) or getattr(resolved_object, "mRID", None) or "<unbekannt>"
+
+    if not raw_answer:
+        return raw_answer
+
+    try:
+        chain, parser = _build_final_answer_chain()
+        decision = chain.invoke({
+            "user_input": user_input,
+            "raw_answer": raw_answer,
+            "comparison_resolution": comparison_resolution,
+            "comparison_result": comparison_result,
+            "base_values_with_units": base_values_with_units,
+            "query_result_data": query_result_data,
+            "parsed_query": parsed_query,
+            "equipment_name": equipment_name,
+            "format_instructions": parser.get_format_instructions(),
+        })
+        answer = str(getattr(decision, "answer", "") or "").strip()
+        return answer or raw_answer
+    except Exception:
+        return raw_answer
+
 def _summarize_cim_result_with_services(
     services: Dict[str, Any],
     result_payload: Dict[str, Any],
@@ -1604,12 +1676,17 @@ def _summarize_cim_result_with_services(
         "requested_base_attributes": result_payload.get("requested_base_attributes", []),
     }
 
+    final_answer = _generate_user_aligned_answer(
+        user_input=user_input,
+        result_payload=result_payload,
+    )
+
     return {
         "status": "ok",
         "tool": "summarize_cim_result",
         "cim_root": services["cim_root"],
         "user_input": user_input,
-        "answer": result_payload.get("answer", ""),
+        "answer": final_answer,
         "debug": debug,
     }
 
