@@ -101,8 +101,8 @@ _COMPARISON_DEFINITIONS: Dict[str, Dict[str, Any]] = {
         "required_state_type": "SvVoltage",
         "sv_metric": "voltage",
         "base_attributes": ["lowVoltageLimit", "highVoltageLimit"],
-        "comparison_mode": "range_limit",
-        "observed_value_mode": "mean",
+        "comparison_mode": "range_limit_per_timestamp",
+        "observed_value_mode": "per_timestamp",
         "lower_attribute": "lowVoltageLimit",
         "upper_attribute": "highVoltageLimit",
     },
@@ -321,6 +321,51 @@ def _extract_observed_series(query_result_data: Dict[str, Any] | None) -> List[f
                 values.append(float(raw))
         except Exception:
             continue
+    return values
+
+
+def _extract_observed_rows(query_result_data: Dict[str, Any] | None) -> List[Dict[str, Any]]:
+    query_result_data = query_result_data or {}
+    rows = query_result_data.get("rows", []) or []
+    metric = str(query_result_data.get("metric") or "").upper()
+    values: List[Dict[str, Any]] = []
+    key = None
+
+    if metric == "P":
+        key = "active_power_MW"
+    elif metric == "Q":
+        key = "reactive_power_MVAr"
+    elif metric == "S":
+        key = "apparent_power_MVA"
+    elif metric == "U":
+        key = "voltage_kV"
+
+    if key is None:
+        return values
+
+    for row in rows:
+        if not isinstance(row, dict):
+            continue
+        raw = row.get(key)
+        if raw is None:
+            continue
+        try:
+            numeric_value = float(raw)
+        except Exception:
+            continue
+
+        timestamp = (
+            row.get("timestamp")
+            or row.get("time")
+            or row.get("datetime")
+            or row.get("ts")
+        )
+
+        values.append({
+            "timestamp": timestamp,
+            "value": numeric_value,
+        })
+
     return values
 
 
@@ -1637,29 +1682,47 @@ def _compare_cim_values_with_services(
             "answer": "Es liegt keine aufgelöste Vergleichsdefinition vor.",
         }
 
-    observed_values = _extract_observed_series(query_result_data)
-    if not observed_values:
-        return {
-            "status": "error",
-            "tool": "compare_cim_values",
-            "cim_root": services["cim_root"],
-            "error": "missing_sv_values",
-            "answer": "Es konnten keine SV-Werte für den Vergleich ermittelt werden.",
-        }
-
-    observed_mode = comparison_resolution.get("observed_value_mode") or "peak"
-    if observed_mode == "abs_peak":
-        observed_value = max(abs(v) for v in observed_values)
-    else:
-        observed_value = max(observed_values)
-
     comparison_type = comparison_resolution.get("comparison_type")
+    comparison_mode = comparison_resolution.get("comparison_mode")
+    observed_mode = comparison_resolution.get("observed_value_mode") or "peak"
+
     result_payload: Dict[str, Any] = {
         "comparison_type": comparison_type,
-        "observed_value": observed_value,
         "observed_value_mode": observed_mode,
         "sv_metric": query_result_data.get("metric"),
     }
+
+    if comparison_mode == "range_limit_per_timestamp":
+        observed_rows = _extract_observed_rows(query_result_data)
+        if not observed_rows:
+            return {
+                "status": "error",
+                "tool": "compare_cim_values",
+                "cim_root": services["cim_root"],
+                "error": "missing_sv_values",
+                "answer": "Es konnten keine SV-Werte für den Vergleich ermittelt werden.",
+            }
+        observed_value = observed_rows[-1]["value"]
+        result_payload["observed_value"] = observed_value
+    else:
+        observed_values = _extract_observed_series(query_result_data)
+        if not observed_values:
+            return {
+                "status": "error",
+                "tool": "compare_cim_values",
+                "cim_root": services["cim_root"],
+                "error": "missing_sv_values",
+                "answer": "Es konnten keine SV-Werte für den Vergleich ermittelt werden.",
+            }
+
+        if observed_mode == "abs_peak":
+            observed_value = max(abs(v) for v in observed_values)
+        elif observed_mode == "mean":
+            observed_value = sum(observed_values) / len(observed_values)
+        else:
+            observed_value = max(observed_values)
+
+        result_payload["observed_value"] = observed_value
 
     equipment_name = _safe_name(resolved_object) or getattr(resolved_object, "mRID", None) or "<unbekannt>"
     answer = None
@@ -1688,7 +1751,7 @@ def _compare_cim_values_with_services(
             f"Vergleich für {equipment_name}: beobachteter Wert={observed_value:.3f}, "
             f"{limit_attr}={limit_value:.3f} -> {status_text} dem Grenzwert"
         )
-    elif comparison_resolution.get("comparison_mode") == "range_limit":
+    elif comparison_mode == "range_limit":
         lower_attr = comparison_resolution.get("lower_attribute")
         upper_attr = comparison_resolution.get("upper_attribute")
         lower_value = _extract_scalar_base_value(base_values.get(lower_attr), prefer_max=False)
@@ -1723,6 +1786,65 @@ def _compare_cim_values_with_services(
             f"Vergleich für {equipment_name}: beobachteter Wert={observed_value:.3f}, "
             f"{lower_attr}={lower_value!r}, {upper_attr}={upper_value!r} -> {verdict}"
         )
+    elif comparison_mode == "range_limit_per_timestamp":
+        lower_attr = comparison_resolution.get("lower_attribute")
+        upper_attr = comparison_resolution.get("upper_attribute")
+        lower_value = _extract_scalar_base_value(base_values.get(lower_attr), prefer_max=False)
+        upper_value = _extract_scalar_base_value(base_values.get(upper_attr), prefer_max=True)
+        if lower_value is None and upper_value is None:
+            return {
+                "status": "error",
+                "tool": "compare_cim_values",
+                "cim_root": services["cim_root"],
+                "error": "missing_limit_value",
+                "answer": f"Für den Vergleich fehlen die Basiswerte '{lower_attr}' und '{upper_attr}'.",
+            }
+
+        violations: List[Dict[str, Any]] = []
+        for item in observed_rows:
+            point_value = item["value"]
+            below = bool(lower_value is not None and point_value < lower_value)
+            above = bool(upper_value is not None and point_value > upper_value)
+            if below or above:
+                violations.append({
+                    "timestamp": item.get("timestamp"),
+                    "observed_value": point_value,
+                    "below_lower_limit": below,
+                    "above_upper_limit": above,
+                })
+
+        within = len(violations) == 0
+        result_payload.update({
+            "lower_attribute": lower_attr,
+            "lower_value": lower_value,
+            "upper_attribute": upper_attr,
+            "upper_value": upper_value,
+            "within_limits": within,
+            "num_points": len(observed_rows),
+            "num_violations": len(violations),
+            "violations": violations,
+        })
+
+        if within:
+            answer = (
+                f"Die zulässigen Grenzen für {equipment_name} wurden an allen {len(observed_rows)} verfügbaren Zeitpunkten eingehalten."
+            )
+        elif len(violations) == 1:
+            violation = violations[0]
+            ts = violation.get("timestamp") or "unbekannt"
+            direction = "oberhalb der oberen Grenze" if violation.get("above_upper_limit") else "unterhalb der unteren Grenze"
+            answer = (
+                f"Die zulässigen Grenzen für {equipment_name} wurden nicht durchgehend eingehalten. "
+                f"Am Zeitpunkt {ts} lag der beobachtete Wert bei {violation['observed_value']:.3f} und damit {direction}; "
+                f"an den übrigen Zeitpunkten wurden die Grenzwerte eingehalten."
+            )
+        else:
+            first_ts = violations[0].get("timestamp") or "unbekannt"
+            answer = (
+                f"Die zulässigen Grenzen für {equipment_name} wurden nicht durchgehend eingehalten. "
+                f"Es gab {len(violations)} Verletzungen bei {len(observed_rows)} ausgewerteten Zeitpunkten; "
+                f"die erste Verletzung trat am Zeitpunkt {first_ts} auf."
+            )
     else:
         return {
             "status": "error",
