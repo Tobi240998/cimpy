@@ -508,14 +508,97 @@ def _safe_description(value):
 
 
 
+
+def _resolve_voltage_limit_values_for_bus(bus_obj: Any) -> Dict[str, Any]:
+    """
+    Resolve lower/upper voltage limit values for a bus-like object by reusing the
+    same direct VoltageLimit.value reading logic that already works for standalone
+    base-value requests, but mapping the discovered limits back to
+    lowVoltageLimit/highVoltageLimit.
+    """
+    if bus_obj is None:
+        return {
+            "lowVoltageLimit": None,
+            "highVoltageLimit": None,
+        }
+
+    limit_objects: List[Any] = []
+
+    def _append_limit(limit_obj: Any) -> None:
+        if limit_obj is None:
+            return
+        if getattr(limit_obj.__class__, "__name__", "") != "VoltageLimit":
+            return
+        if limit_obj not in limit_objects:
+            limit_objects.append(limit_obj)
+
+    # 1) Direct limit sets on the bus-like object
+    for limit_set in getattr(bus_obj, "OperationalLimitSet", None) or []:
+        for limit_obj in (getattr(limit_set, "OperationalLimitValue", None) or []):
+            _append_limit(limit_obj)
+        for limit_obj in (getattr(limit_set, "OperationalLimit", None) or []):
+            _append_limit(limit_obj)
+
+    # 2) Limits via attached terminals
+    terminals = []
+    for attr_name in ("Terminals", "Terminal"):
+        attr_value = getattr(bus_obj, attr_name, None)
+        if isinstance(attr_value, list):
+            terminals.extend(attr_value)
+        elif attr_value is not None:
+            terminals.append(attr_value)
+
+    for terminal in terminals:
+        for limit_set in getattr(terminal, "OperationalLimitSet", None) or []:
+            for limit_obj in (getattr(limit_set, "OperationalLimitValue", None) or []):
+                _append_limit(limit_obj)
+            for limit_obj in (getattr(limit_set, "OperationalLimit", None) or []):
+                _append_limit(limit_obj)
+
+    lows: List[float] = []
+    highs: List[float] = []
+
+    for limit_obj in limit_objects:
+        value = _read_base_attribute_value(limit_obj, "value")
+        if value is None:
+            continue
+
+        label_parts = [
+            getattr(limit_obj, "name", None),
+            getattr(limit_obj, "description", None),
+            getattr(getattr(limit_obj, "OperationalLimitSet", None), "name", None),
+        ]
+        label = " ".join(str(x) for x in label_parts if isinstance(x, str) and x.strip()).lower()
+
+        try:
+            numeric_value = float(value)
+        except Exception:
+            continue
+
+        if any(token in label for token in ["low limit", "lower", "minimum", "min ", "unter", "low voltage"]):
+            lows.append(numeric_value)
+            continue
+        if any(token in label for token in ["high limit", "upper", "maximum", "max ", "ober", "high voltage"]):
+            highs.append(numeric_value)
+            continue
+
+    return {
+        "lowVoltageLimit": min(lows) if lows else None,
+        "highVoltageLimit": max(highs) if highs else None,
+    }
+
+
+
 def _read_base_attribute_value(equipment_obj: Any, attr_name: str) -> Any:
     if equipment_obj is None or not attr_name:
         return None
 
     if attr_name in {"lowVoltageLimit", "highVoltageLimit"}:
+        resolved_limits = _resolve_voltage_limit_values_for_bus(equipment_obj)
+        value = resolved_limits.get(attr_name)
+        if value is not None:
+            return value
         return _resolve_voltage_limits_from_node(equipment_obj).get(attr_name)
-
-        return None
 
     if hasattr(equipment_obj, attr_name):
         value = getattr(equipment_obj, attr_name, None)
@@ -1218,6 +1301,95 @@ def _list_equipment_of_type_with_services(
 
 
 
+
+
+def _resolve_voltage_limit_values_via_global_lookup(
+    services: Dict[str, Any],
+    bus_obj: Any,
+) -> Dict[str, Any]:
+    """
+    Fallback for bus voltage-limit comparisons:
+    resolve the concrete VoltageLimit objects globally from the base snapshot and
+    read their direct `.value` attribute, mirroring the successful standalone
+    single-attribute path that resolves to VoltageLimit and reads `value`.
+    """
+    if bus_obj is None:
+        return {
+            "lowVoltageLimit": None,
+            "highVoltageLimit": None,
+        }
+
+    try:
+        cim_root = services["cim_root"]
+        inventory = _scan_snapshot_inventory_raw(cim_root)
+        base_snapshot = load_base_snapshot(
+            root_folder=cim_root,
+            snapshot_inventory=inventory,
+        )
+        all_objects = _collect_all_cim_objects(base_snapshot)
+    except Exception:
+        return {
+            "lowVoltageLimit": None,
+            "highVoltageLimit": None,
+        }
+
+    bus_name = (_safe_name(bus_obj) or "").strip().lower()
+    bus_mrid = (getattr(bus_obj, "mRID", None) or "").strip().lower()
+
+    lows: List[float] = []
+    highs: List[float] = []
+
+    for obj in all_objects:
+        if getattr(obj.__class__, "__name__", "") != "VoltageLimit":
+            continue
+
+        value = _read_base_attribute_value(obj, "value")
+        if value is None:
+            continue
+
+        limit_set = getattr(obj, "OperationalLimitSet", None)
+        terminal = getattr(limit_set, "Terminal", None) if limit_set is not None else None
+        conducting_equipment = getattr(terminal, "ConductingEquipment", None) if terminal is not None else None
+        topological_node = getattr(terminal, "TopologicalNode", None) if terminal is not None else None
+
+        related_names = [
+            getattr(obj, "name", None),
+            getattr(obj, "description", None),
+            getattr(limit_set, "name", None) if limit_set is not None else None,
+            _safe_name(conducting_equipment) if conducting_equipment is not None else None,
+            _safe_name(topological_node) if topological_node is not None else None,
+            getattr(conducting_equipment, "mRID", None) if conducting_equipment is not None else None,
+            getattr(topological_node, "mRID", None) if topological_node is not None else None,
+        ]
+        label = " ".join(str(x) for x in related_names if isinstance(x, str) and x.strip()).lower()
+
+        bus_match = False
+        if bus_name and bus_name in label:
+            bus_match = True
+        if not bus_match and bus_mrid and bus_mrid in label:
+            bus_match = True
+        if not bus_match:
+            continue
+
+        try:
+            numeric_value = float(value)
+        except Exception:
+            continue
+
+        if any(token in label for token in ["low limit", "lower", "minimum", "min ", "unter", "low voltage"]):
+            lows.append(numeric_value)
+            continue
+        if any(token in label for token in ["high limit", "upper", "maximum", "max ", "ober", "high voltage"]):
+            highs.append(numeric_value)
+            continue
+
+    return {
+        "lowVoltageLimit": min(lows) if lows else None,
+        "highVoltageLimit": max(highs) if highs else None,
+    }
+
+
+
 def _read_cim_base_values_with_services(
     services: Dict[str, Any],
     user_input: str,
@@ -1254,16 +1426,36 @@ def _read_cim_base_values_with_services(
     print(f"equipment_obj name: {_safe_name(resolved_object)}")
     print(f"equipment_obj id: {_canonical_cim_id(resolved_object)} {getattr(resolved_object, 'mRID', None)}")
 
+    preselected_values: Dict[str, Any] | None = None
+
     if requested_attributes:
+        preselected_values = {}
+        for attr_name in requested_attributes:
+            preselected_values[attr_name] = _read_base_attribute_value(resolved_object, attr_name)
+
+        if (
+            any(attr_name in {"lowVoltageLimit", "highVoltageLimit"} for attr_name in requested_attributes)
+            and resolved_object is not None
+            and resolved_object.__class__.__name__ in {"BusbarSection", "TopologicalNode"}
+            and any(preselected_values.get(attr_name) is None for attr_name in requested_attributes if attr_name in {"lowVoltageLimit", "highVoltageLimit"})
+        ):
+            global_limit_values = _resolve_voltage_limit_values_via_global_lookup(services, resolved_object)
+            for attr_name in requested_attributes:
+                if attr_name in {"lowVoltageLimit", "highVoltageLimit"} and preselected_values.get(attr_name) is None:
+                    fallback_value = global_limit_values.get(attr_name)
+                    if fallback_value is not None:
+                        preselected_values[attr_name] = fallback_value
+
         available_attributes = [
             attr_name for attr_name in requested_attributes
-            if _read_base_attribute_value(resolved_object, attr_name) is not None
+            if preselected_values.get(attr_name) is not None
         ]
         selection_result = {
             "selected_attributes": available_attributes,
             "resolution_mode": "preselected_attributes",
             "available_attributes": available_attributes,
             "requested_attributes": list(requested_attributes),
+            "preselected_values": preselected_values,
         }
     else:
         selection_result = resolve_requested_base_attributes(
@@ -1286,7 +1478,10 @@ def _read_cim_base_values_with_services(
 
     values: Dict[str, Any] = {}
     for attr_name in selected_attributes:
-        values[attr_name] = _read_base_attribute_value(resolved_object, attr_name)
+        if preselected_values is not None and attr_name in preselected_values:
+            values[attr_name] = preselected_values.get(attr_name)
+        else:
+            values[attr_name] = _read_base_attribute_value(resolved_object, attr_name)
 
     enriched_base_values = _build_base_values_with_units(values, resolved_object)
 
@@ -1310,6 +1505,59 @@ def _read_cim_base_values_with_services(
     }
 
 
+def _resolve_comparison_target_object(resolved_object: Any) -> Dict[str, Any]:
+    if resolved_object is None:
+        return {
+            "status": "error",
+            "error": "missing_resolved_object",
+        }
+
+    class_name = resolved_object.__class__.__name__
+
+    if class_name != "VoltageLimit":
+        return {
+            "status": "ok",
+            "resolved_object": resolved_object,
+            "resolution_mode": "unchanged",
+        }
+
+    try:
+        limit_set = getattr(resolved_object, "OperationalLimitSet", None)
+        if limit_set is not None:
+            terminal = getattr(limit_set, "Terminal", None)
+            if terminal is not None:
+                conducting_equipment = getattr(terminal, "ConductingEquipment", None)
+                if conducting_equipment is not None and conducting_equipment.__class__.__name__ in {"BusbarSection", "TopologicalNode"}:
+                    return {
+                        "status": "ok",
+                        "resolved_object": conducting_equipment,
+                        "resolution_mode": "voltage_limit_to_terminal_conducting_equipment",
+                        "source_limit_object": resolved_object,
+                    }
+
+                topological_node = getattr(terminal, "TopologicalNode", None)
+                if topological_node is not None and topological_node.__class__.__name__ in {"TopologicalNode", "BusbarSection"}:
+                    return {
+                        "status": "ok",
+                        "resolved_object": topological_node,
+                        "resolution_mode": "voltage_limit_to_terminal_topological_node",
+                        "source_limit_object": resolved_object,
+                    }
+
+        return {
+            "status": "ok",
+            "resolved_object": resolved_object,
+            "resolution_mode": "voltage_limit_no_parent_found",
+        }
+    except Exception as exc:
+        return {
+            "status": "error",
+            "error": "comparison_target_resolution_failed",
+            "details": str(exc),
+            "resolved_object": resolved_object,
+        }
+
+
 def _resolve_cim_comparison_with_services(
     services: Dict[str, Any],
     user_input: str,
@@ -1327,9 +1575,12 @@ def _resolve_cim_comparison_with_services(
             "answer": "Es wurde kein aufgelöstes CIM-Equipment für den Vergleich gefunden.",
         }
 
+    target_resolution = _resolve_comparison_target_object(resolved_object)
+    comparison_target_object = target_resolution.get("resolved_object", resolved_object)
+
     resolution = _resolve_comparison_definition(
         user_input=user_input,
-        resolved_object=resolved_object,
+        resolved_object=comparison_target_object,
         parsed_query=parsed_query,
     )
     if resolution.get("status") != "ok":
@@ -1357,7 +1608,11 @@ def _resolve_cim_comparison_with_services(
         "comparison_resolution": resolution,
         "parsed_query": updated_parsed_query,
         "requested_base_attributes": list(resolution.get("base_attributes", []) or []),
-        "comparison_resolution_debug": resolution,
+        "comparison_resolution_debug": {
+            **resolution,
+            "comparison_target_resolution": target_resolution,
+        },
+        "resolved_object": comparison_target_object,
         "answer": f"Vergleichslogik aufgelöst: {resolution.get('comparison_type')}",
     }
 
