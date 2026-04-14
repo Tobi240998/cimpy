@@ -665,6 +665,138 @@ def _build_switch_match_chain():
     llm = get_llm()
     return prompt | llm | parser, parser
 
+def _resolve_objects_from_inventory_llm(
+    *,
+    project_name: str,
+    user_input: str,
+    entity_type: str,
+    candidate_items: List[Dict[str, Any]],
+    allow_all: bool = False,
+    require_high_confidence: bool = True,
+) -> Dict[str, Any]:
+    if not candidate_items:
+        return {
+            "status": "error",
+            "error": "no_candidates",
+            "details": f"Keine Kandidaten für entity_type={entity_type} vorhanden.",
+        }
+
+    candidate_names = [item.get("name") for item in candidate_items if item.get("name")]
+    if not candidate_names:
+        return {
+            "status": "error",
+            "error": "empty_candidate_names",
+            "details": f"Die Kandidaten für entity_type={entity_type} haben keine verwertbaren Namen.",
+        }
+
+    candidate_names_for_prompt = list(candidate_names)
+    if allow_all and "__ALL__" not in candidate_names_for_prompt:
+        candidate_names_for_prompt.append("__ALL__")
+
+    try:
+        chain, parser = _build_object_match_chain()
+        decision = chain.invoke({
+            "user_input": user_input or "",
+            "entity_type": entity_type,
+            "object_candidates": "\n".join(f"- {name}" for name in candidate_names_for_prompt),
+            "format_instructions": parser.get_format_instructions(),
+        })
+
+        if hasattr(decision, "model_dump"):
+            decision_dump = decision.model_dump()
+        elif hasattr(decision, "dict"):
+            decision_dump = decision.dict()
+        elif isinstance(decision, dict):
+            decision_dump = dict(decision)
+        else:
+            decision_dump = {}
+    except Exception as e:
+        return {
+            "status": "error",
+            "error": "llm_object_match_failed",
+            "details": str(e),
+        }
+
+    selected_name = decision_dump.get("selected_object_name")
+    selection_mode = str(decision_dump.get("selection_mode") or "one").strip().lower()
+    should_execute = bool(decision_dump.get("should_execute", False))
+    confidence = str(decision_dump.get("confidence") or "low").strip().lower()
+
+    if allow_all and selected_name == "__ALL__":
+        if not should_execute:
+            return {
+                "status": "error",
+                "error": "object_match_not_safe",
+                "details": "Das LLM hat keinen ausreichend sicheren Treffer für '__ALL__' gefunden.",
+                "candidate_names": candidate_names,
+                "llm_decision": decision_dump,
+            }
+
+        if require_high_confidence and confidence != "high":
+            return {
+                "status": "error",
+                "error": "object_match_not_confident_enough",
+                "details": "Der Treffer für '__ALL__' war nicht hoch genug abgesichert.",
+                "candidate_names": candidate_names,
+                "llm_decision": decision_dump,
+            }
+
+        selected_matches = [item for item in candidate_items if item.get("name") in candidate_names]
+
+        return {
+            "status": "ok",
+            "project": project_name,
+            "asset_query": "__ALL__",
+            "selected_match": selected_matches[0] if selected_matches else None,
+            "selected_matches": selected_matches,
+            "matches": selected_matches,
+            "selected_object_names": [item.get("name") for item in selected_matches if item.get("name")],
+            "selection_mode": "all",
+            "llm_decision": decision_dump,
+        }
+
+    if selected_name not in candidate_names:
+        return {
+            "status": "error",
+            "error": "invalid_object_selection",
+            "details": "Das LLM hat keinen gültigen exakten Namen aus der Kandidatenliste zurückgegeben.",
+            "candidate_names": candidate_names,
+            "llm_decision": decision_dump,
+        }
+
+    if not should_execute:
+        return {
+            "status": "error",
+            "error": "object_match_not_safe",
+            "details": "Das LLM hat keinen ausreichend sicheren Treffer gefunden.",
+            "candidate_names": candidate_names,
+            "llm_decision": decision_dump,
+        }
+
+    if require_high_confidence and confidence != "high":
+        return {
+            "status": "error",
+            "error": "object_match_not_confident_enough",
+            "details": "Der Treffer war nicht hoch genug abgesichert.",
+            "candidate_names": candidate_names,
+            "llm_decision": decision_dump,
+        }
+
+    selected_match = next(item for item in candidate_items if item.get("name") == selected_name)
+
+    return {
+        "status": "ok",
+        "project": project_name,
+        "asset_query": selected_name,
+        "selected_match": selected_match,
+        "selected_matches": [selected_match],
+        "matches": [selected_match],
+        "selected_object_names": [selected_name],
+        "selection_mode": selection_mode if selection_mode in {"one", "all"} else "one",
+        "llm_decision": decision_dump,
+    }
+
+
 def _build_inventory_object_match_chain():
     parser = PydanticOutputParser(pydantic_object=InventoryObjectMatchDecision)
     prompt = ChatPromptTemplate.from_messages([
@@ -796,7 +928,7 @@ def _resolve_switch_from_inventory_llm_with_services(
     items_by_type = inventory.get("items_by_type", {}) if isinstance(inventory, dict) else {}
     switch_candidates = items_by_type.get("switch", []) or []
 
-    result = _resolve_objects_from_inventory_llm(
+    resolver_result = _resolve_objects_from_inventory_llm(
         project_name=project_name,
         user_input=str(instruction.get("entity_name_raw") or ""),
         entity_type="switch",
@@ -805,13 +937,24 @@ def _resolve_switch_from_inventory_llm_with_services(
         require_high_confidence=True,
     )
 
-    if result.get("status") != "ok":
+    if resolver_result.get("status") != "ok":
         return {
             "status": "error",
             "tool": "resolve_switch_from_inventory_llm",
             "project": project_name,
             "instruction": instruction,
-            **{k: v for k, v in result.items() if k not in {"project"}},
+            "error": resolver_result.get("error", "switch_resolution_failed"),
+            "details": resolver_result.get("details", "Die Schalterauflösung ist fehlgeschlagen."),
+            **(
+                {"llm_decision": resolver_result.get("llm_decision")}
+                if resolver_result.get("llm_decision") is not None
+                else {}
+            ),
+            **(
+                {"candidate_names": resolver_result.get("candidate_names")}
+                if resolver_result.get("candidate_names") is not None
+                else {}
+            ),
         }
 
     return {
@@ -819,12 +962,11 @@ def _resolve_switch_from_inventory_llm_with_services(
         "tool": "resolve_switch_from_inventory_llm",
         "project": project_name,
         "instruction": instruction,
-        "asset_query": result.get("asset_query"),
-        "selected_match": result.get("selected_match"),
-        "matches": result.get("matches", []),
-        "llm_decision": result.get("llm_decision", {}),
+        "asset_query": resolver_result.get("asset_query"),
+        "selected_match": resolver_result.get("selected_match"),
+        "matches": resolver_result.get("matches", []),
+        "llm_decision": resolver_result.get("llm_decision", {}),
     }
-
 
 # ------------------------------------------------------------------
 # SWITCH EXECUTION
