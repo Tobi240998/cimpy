@@ -300,14 +300,15 @@ class PowerFactoryDomainAgent:
             "safe_to_execute": True,
             "missing_context": [],
             "required_steps": [
-                "build_data_inventory",
-                "interpret_data_query_instruction",
-                "resolve_pf_object_from_inventory_llm",
-                "list_available_object_attributes",
-                "select_pf_object_attributes_llm",
-                "read_pf_object_attributes",
-                "summarize_pf_object_data_result",
-            ],
+            "build_unified_inventory",
+            "interpret_data_query_instruction",
+            "classify_data_source",
+            "resolve_objects_from_inventory_llm",
+            "list_available_object_attributes",
+            "select_pf_object_attributes_llm",
+            "read_pf_object_attributes",
+            "summarize_pf_object_data_result",
+        ],
             "reasoning": f"Primary failed: {primary_error} | Fallback failed: {fallback_error}",
         }
 
@@ -1279,7 +1280,6 @@ class PowerFactoryDomainAgent:
             state["summary"] = result
         elif step == "build_unified_inventory":
             state["unified_inventory_result"] = result
-            state["data_inventory_result"] = result  # Kompatibilität für bestehende Summary-/Result-Struktur
         elif step == "interpret_data_query_instruction":
             state["data_query_instruction"] = result["instruction"]
         elif step == "classify_data_source":
@@ -1287,11 +1287,6 @@ class PowerFactoryDomainAgent:
             state["data_source_decision"] = result
         elif step == "resolve_objects_from_inventory_llm":
             state["object_resolution"] = result
-            entity_type = result.get("entity_type") if isinstance(result, dict) else None
-            if entity_type == "switch":
-                state["switch_resolution"] = result
-            else:
-                state["data_object_resolution"] = result
         elif step == "list_available_object_attributes":
             state["data_attribute_listing"] = result
         elif step == "select_pf_object_attributes_llm":
@@ -1324,13 +1319,10 @@ class PowerFactoryDomainAgent:
             "entity_resolution": None,
             "topology_result": None,
             "switch_instruction": None,
-            "switch_resolution": None,
             "switch_execution": None,
             "switch_summary": None,
-            "data_inventory_result": None,
             "data_query_instruction": None,
             "data_source_decision": None,
-            "data_object_resolution": None,
             "data_attribute_listing": None,
             "data_attribute_selection": None,
             "data_query_execution": None,
@@ -1393,12 +1385,10 @@ class PowerFactoryDomainAgent:
             entity_resolution=state["entity_resolution"],
             topology_result=state["topology_result"],
             switch_instruction=state["switch_instruction"],
-            switch_resolution=state["switch_resolution"],
             switch_execution=state["switch_execution"],
             switch_summary=state["switch_summary"],
-            data_inventory_result=state["data_inventory_result"],
             data_query_instruction=state["data_query_instruction"],
-            data_object_resolution=state["data_object_resolution"],
+            object_resolution=state["object_resolution"],
             data_attribute_listing=state["data_attribute_listing"],
             data_attribute_selection=state["data_attribute_selection"],
             data_query_execution=state["data_query_execution"],
@@ -1415,14 +1405,14 @@ class PowerFactoryDomainAgent:
         topology_result: Dict[str, Any] | None,
         entity_resolution: Dict[str, Any] | None,
         switch_execution: Dict[str, Any] | None,
-        data_object_resolution: Dict[str, Any] | None,
+        object_resolution: Dict[str, Any] | None,
         data_attribute_listing: Dict[str, Any] | None,
         data_query_execution: Dict[str, Any] | None,
     ) -> Dict[str, Any] | None:
         plan_steps = self._plan_to_steps(plan)
 
         if isinstance(data_attribute_listing, dict):
-            selected_match = data_object_resolution.get("selected_match", {}) if isinstance(data_object_resolution, dict) else {}
+            selected_match = object_resolution.get("selected_match", {}) if isinstance(object_resolution, dict) else {}
             selected_name = selected_match.get("name") or selected_match.get("loc_name") or selected_match.get("full_name") or "Objekt"
             selected_class = selected_match.get("pf_class") or selected_match.get("class_name") or selected_match.get("type") or "unbekanntes Objekt"
 
@@ -1575,12 +1565,10 @@ class PowerFactoryDomainAgent:
         entity_resolution: Dict[str, Any] | None,
         topology_result: Dict[str, Any] | None,
         switch_instruction: Dict[str, Any] | None,
-        switch_resolution: Dict[str, Any] | None,
         switch_execution: Dict[str, Any] | None,
         switch_summary: Dict[str, Any] | None,
-        data_inventory_result: Dict[str, Any] | None,
         data_query_instruction: Dict[str, Any] | None,
-        data_object_resolution: Dict[str, Any] | None,
+        object_resolution: Dict[str, Any] | None,
         data_attribute_listing: Dict[str, Any] | None,
         data_attribute_selection: Dict[str, Any] | None,
         data_query_execution: Dict[str, Any] | None,
@@ -1604,7 +1592,7 @@ class PowerFactoryDomainAgent:
                 topology_result=topology_result,
                 entity_resolution=entity_resolution,
                 switch_execution=switch_execution,
-                data_object_resolution=data_object_resolution,
+                object_resolution=object_resolution,
                 data_attribute_listing=data_attribute_listing,
                 data_query_execution=data_query_execution,
             )
@@ -1645,14 +1633,14 @@ class PowerFactoryDomainAgent:
             },
             "switch": {
                 "instruction": switch_instruction,
-                "resolution": switch_resolution,
+                "resolution": object_resolution,
                 "execution": switch_execution,
                 "summary": switch_summary,
             },
             "data_query": {
-                "inventory": data_inventory_result,
+                "inventory": inventory_result,
                 "instruction": data_query_instruction,
-                "resolution": data_object_resolution,
+                "resolution": object_resolution,
                 "attribute_listing": data_attribute_listing,
                 "attribute_selection": data_attribute_selection,
                 "execution": data_query_execution,
@@ -1666,8 +1654,8 @@ class PowerFactoryDomainAgent:
                 "selected_equipment": {
                     "resolved_load": execution.get("resolved_load") if isinstance(execution, dict) else None,
                     "entity_resolution": entity_resolution,
-                    "switch_resolution": switch_resolution,
-                    "data_object_resolution": data_object_resolution,
+                    "object_resolution": object_resolution,
+                    "object_resolution": object_resolution,
                 },
                 "trace": debug_trace,
             }

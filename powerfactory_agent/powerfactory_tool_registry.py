@@ -14,8 +14,6 @@ from cimpy.powerfactory_agent.powerfactory_mcp_tools import (
     _interpret_entity_instruction_with_services,
     _resolve_entity_from_inventory_with_services,
     _interpret_switch_instruction_with_services,
-    _build_switch_inventory_from_services,
-    _build_switch_inventory_payload,
     _execute_switch_operation_with_services,
     _summarize_switch_result_with_services,
     _interpret_data_query_instruction_with_services,
@@ -287,7 +285,7 @@ class PowerFactoryToolRegistry:
                 },
                 capability_tags=["powerfactory", "execution", "switch", "topology"],
                 mutating=True,
-                requires_state=["switch_instruction", "switch_resolution"],
+                requires_state=["switch_instruction", "object_resolution"],
                 produces_state=["switch_execution"],
                 is_summary=False,
                 handler=self._tool_execute_switch_operation,
@@ -405,7 +403,7 @@ class PowerFactoryToolRegistry:
                 capability_tags=["powerfactory", "inventory", "read_only"],
                 mutating=False,
                 requires_state=[],
-                produces_state=["unified_inventory_result", "data_inventory_result"],
+                produces_state=["unified_inventory_result", "inventory_result"],
                 is_summary=False,
                 handler=self._tool_build_unified_inventory,
             ),
@@ -451,7 +449,7 @@ class PowerFactoryToolRegistry:
                 capability_tags=["powerfactory", "resolution", "llm_match", "read_only"],
                 mutating=False,
                 requires_state=["unified_inventory_result"],
-                produces_state=["object_resolution", "data_object_resolution", "switch_resolution"],
+                produces_state=["object_resolution"],
                 is_summary=False,
                 handler=self._tool_resolve_objects_from_inventory_llm,
             ),
@@ -470,7 +468,7 @@ class PowerFactoryToolRegistry:
                 output_schema_hint={"status": "ok|error", "tool": "list_available_object_attributes", "attribute_options": "list"},
                 capability_tags=["powerfactory", "data_query", "attributes", "read_only"],
                 mutating=False,
-                requires_state=["data_query_instruction", "data_object_resolution"],
+                requires_state=["data_query_instruction", "object_resolution"],
                 produces_state=["data_attribute_listing"],
                 is_summary=False,
                 handler=self._tool_list_available_object_attributes,
@@ -491,7 +489,7 @@ class PowerFactoryToolRegistry:
                 output_schema_hint={"status": "ok|error", "tool": "select_pf_object_attributes_llm", "selected_attribute_handles": "list"},
                 capability_tags=["powerfactory", "data_query", "attributes", "llm_match", "read_only"],
                 mutating=False,
-                requires_state=["data_query_instruction", "data_object_resolution", "data_attribute_listing"],
+                requires_state=["data_query_instruction", "object_resolution", "data_attribute_listing"],
                 produces_state=["data_attribute_selection"],
                 is_summary=False,
                 handler=self._tool_select_pf_object_attributes_llm,
@@ -511,7 +509,7 @@ class PowerFactoryToolRegistry:
                 output_schema_hint={"status": "ok|error", "tool": "read_pf_object_attributes", "data": "dict"},
                 capability_tags=["powerfactory", "data_query", "read_only"],
                 mutating=False,
-                requires_state=["data_query_instruction", "data_object_resolution", "data_attribute_selection"],
+                requires_state=["data_query_instruction", "object_resolution", "data_attribute_selection"],
                 produces_state=["data_query_execution"],
                 is_summary=False,
                 domain_notes=["Do not use this step before attribute selection is available."],
@@ -711,15 +709,17 @@ class PowerFactoryToolRegistry:
         user_input: str,
         **kwargs: Any,
     ) -> Dict[str, Any]:
-        switch_inventory_result = _build_switch_inventory_from_services(services)
-        if switch_inventory_result["status"] != "ok":
-            return switch_inventory_result
+        inventory_result = _build_unified_inventory_from_services(
+            services=services,
+            allowed_types=["switch"],
+        )
+        if inventory_result["status"] != "ok":
+            return inventory_result
 
-        inventory = _build_switch_inventory_payload(switch_inventory_result.get("switches", []))
         return _interpret_switch_instruction_with_services(
             services=services,
             user_input=user_input,
-            inventory=inventory,
+            inventory=inventory_result.get("inventory", {}),
         )
 
 
