@@ -35,8 +35,7 @@ from cimpy.powerfactory_agent.schemas import (
     DataQueryInstruction,
     RequestedAttributeNameDecision,
     AttributeDescriptionShortlistDecision,
-    AttributeDescriptionMatchDecision,
-    SwitchMatchDecision, 
+    AttributeDescriptionMatchDecision, 
     DataQueryTypeDecision, 
     InventoryObjectMatchDecision, 
     AttributeSelectionDecision, 
@@ -172,6 +171,31 @@ def _collect_inventory_items_for_type(app: Any, inventory_type: str) -> List[Dic
         for obj in objects
     ]
 
+
+def _build_unified_inventory_from_services(
+    services: Dict[str, Any],
+    allowed_types: Optional[List[str]] = None,
+) -> Dict[str, Any]:
+    app = services["app"]
+    project_name = services["project_name"]
+
+    candidate_types = allowed_types or ["bus", "load", "line", "transformer", "generator", "switch"]
+
+    items_by_type: Dict[str, List[Dict[str, Any]]] = {}
+    for inventory_type in candidate_types:
+        items = _collect_inventory_items_for_type(app, inventory_type)
+        if items:
+            items_by_type[inventory_type] = items
+
+    inventory = _build_inventory_payload(items_by_type)
+
+    return {
+        "status": "ok",
+        "tool": "build_unified_inventory",
+        "project": project_name,
+        "inventory": inventory,
+        "allowed_types": candidate_types,
+    }
 
 # ------------------------------------------------------------------
 # POWERFACTORY CONTEXT
@@ -582,16 +606,23 @@ def _looks_like_switch_object(obj: Any) -> bool:
 
 # baut Liste möglicher Schalter 
 def _build_switch_inventory_from_services(services: Dict[str, Any]) -> Dict[str, Any]:
-    app = services["app"]
-    project_name = services["project_name"]
+    unified_result = _build_unified_inventory_from_services(
+        services=services,
+        allowed_types=["switch"],
+    )
 
-    switches = _collect_inventory_items_for_type(app, "switch")
+    if unified_result.get("status") != "ok":
+        return unified_result
+
+    inventory = unified_result.get("inventory", {})
+    switches = inventory.get("items_by_type", {}).get("switch", []) if isinstance(inventory, dict) else []
 
     return {
         "status": "ok",
         "tool": "build_switch_inventory",
-        "project": project_name,
+        "project": services["project_name"],
         "switches": switches,
+        "inventory": inventory,
     }
 
 # wandelt die Rohe Switch-Liste in Inventarformat um
@@ -643,27 +674,6 @@ def _interpret_switch_instruction_with_services(
         "instruction": instruction,
     }
 
-# Prompt für Schalterauswahl 
-def _build_switch_match_chain():
-    parser = PydanticOutputParser(pydantic_object=SwitchMatchDecision)
-    prompt = ChatPromptTemplate.from_messages([
-        (
-            "system",
-            "You match a user's requested switch to an existing PowerFactory switch.\n"
-            "You may only select a switch name that appears exactly in the provided candidate list.\n"
-            "Do not invent names.\n"
-            "If there is no safe unambiguous match, return selected_switch_name=null and should_execute=false.\n"
-            "Use high confidence only for a clearly dominant match.\n\n"
-            "{format_instructions}"
-        ),
-        (
-            "user",
-            "User request:\n{user_input}\n\n"
-            "Available switch candidates:\n{switch_candidates}"
-        ),
-    ])
-    llm = get_llm()
-    return prompt | llm | parser, parser
 
 def _resolve_objects_from_inventory_llm(
     *,
@@ -795,6 +805,81 @@ def _resolve_objects_from_inventory_llm(
         "selection_mode": selection_mode if selection_mode in {"one", "all"} else "one",
         "llm_decision": decision_dump,
     }
+def _resolve_objects_from_inventory_llm_with_services(
+    services: Dict[str, Any],
+    instruction: dict,
+    inventory: Dict[str, Any],
+) -> Dict[str, Any]:
+    project_name = services["project_name"]
+    entity_type = instruction.get("entity_type") if isinstance(instruction, dict) else None
+
+    if not entity_type:
+        return {
+            "status": "error",
+            "tool": "resolve_objects_from_inventory_llm",
+            "project": project_name,
+            "instruction": instruction,
+            "error": "missing_entity_type",
+            "details": "In der Instruction fehlt der Elementtyp.",
+        }
+
+    items_by_type = inventory.get("items_by_type", {}) if isinstance(inventory, dict) else {}
+    candidate_items = items_by_type.get(entity_type, []) or []
+
+    allow_all = entity_type != "switch"
+
+    user_input = ""
+    if isinstance(instruction, dict):
+        user_input = str(
+            instruction.get("entity_name_raw")
+            or instruction.get("request_text")
+            or instruction.get("attribute_request_text")
+            or ""
+        )
+
+    resolver_result = _resolve_objects_from_inventory_llm(
+        project_name=project_name,
+        user_input=user_input,
+        entity_type=entity_type,
+        candidate_items=candidate_items,
+        allow_all=allow_all,
+        require_high_confidence=True,
+    )
+
+    if resolver_result.get("status") != "ok":
+        return {
+            "status": "error",
+            "tool": "resolve_objects_from_inventory_llm",
+            "project": project_name,
+            "instruction": instruction,
+            "error": resolver_result.get("error", "object_resolution_failed"),
+            "details": resolver_result.get("details", "Die Objektauflösung ist fehlgeschlagen."),
+            **(
+                {"llm_decision": resolver_result.get("llm_decision")}
+                if resolver_result.get("llm_decision") is not None
+                else {}
+            ),
+            **(
+                {"candidate_names": resolver_result.get("candidate_names")}
+                if resolver_result.get("candidate_names") is not None
+                else {}
+            ),
+        }
+
+    return {
+        "status": "ok",
+        "tool": "resolve_objects_from_inventory_llm",
+        "project": project_name,
+        "instruction": instruction,
+        "asset_query": resolver_result.get("asset_query"),
+        "selected_match": resolver_result.get("selected_match"),
+        "selected_matches": resolver_result.get("selected_matches", []),
+        "selected_object_names": resolver_result.get("selected_object_names", []),
+        "selection_mode": resolver_result.get("selection_mode", "one"),
+        "matches": resolver_result.get("matches", []),
+        "llm_decision": resolver_result.get("llm_decision", {}),
+        "entity_type": entity_type,
+    }
 
 
 def _build_inventory_object_match_chain():
@@ -917,56 +1002,6 @@ def _resolve_objects_from_inventory_llm(
         "llm_decision": decision.model_dump(),
     }
 
-# löst konkreten Schalter LLM-basiert aus Inventarliste auf
-def _resolve_switch_from_inventory_llm_with_services(
-    services: Dict[str, Any],
-    instruction: dict,
-    inventory: Dict[str, Any],
-) -> Dict[str, Any]:
-    project_name = services["project_name"]
-
-    items_by_type = inventory.get("items_by_type", {}) if isinstance(inventory, dict) else {}
-    switch_candidates = items_by_type.get("switch", []) or []
-
-    resolver_result = _resolve_objects_from_inventory_llm(
-        project_name=project_name,
-        user_input=str(instruction.get("entity_name_raw") or ""),
-        entity_type="switch",
-        candidate_items=switch_candidates,
-        allow_all=False,
-        require_high_confidence=True,
-    )
-
-    if resolver_result.get("status") != "ok":
-        return {
-            "status": "error",
-            "tool": "resolve_switch_from_inventory_llm",
-            "project": project_name,
-            "instruction": instruction,
-            "error": resolver_result.get("error", "switch_resolution_failed"),
-            "details": resolver_result.get("details", "Die Schalterauflösung ist fehlgeschlagen."),
-            **(
-                {"llm_decision": resolver_result.get("llm_decision")}
-                if resolver_result.get("llm_decision") is not None
-                else {}
-            ),
-            **(
-                {"candidate_names": resolver_result.get("candidate_names")}
-                if resolver_result.get("candidate_names") is not None
-                else {}
-            ),
-        }
-
-    return {
-        "status": "ok",
-        "tool": "resolve_switch_from_inventory_llm",
-        "project": project_name,
-        "instruction": instruction,
-        "asset_query": resolver_result.get("asset_query"),
-        "selected_match": resolver_result.get("selected_match"),
-        "matches": resolver_result.get("matches", []),
-        "llm_decision": resolver_result.get("llm_decision", {}),
-    }
 
 # ------------------------------------------------------------------
 # SWITCH EXECUTION
@@ -2199,23 +2234,10 @@ def _summarize_powerfactory_result_with_services(
 
 # Baut Objekt-Inventar auf
 def _build_data_inventory_from_services(services: Dict[str, Any]) -> Dict[str, Any]:
-    app = services["app"]
-    project_name = services["project_name"]
-
-    items_by_type: Dict[str, List[Dict[str, Any]]] = {}
-    for inventory_type in ["bus", "load", "line", "transformer", "generator", "switch"]:
-        items = _collect_inventory_items_for_type(app, inventory_type)
-        if items:
-            items_by_type[inventory_type] = items
-
-    inventory = _build_inventory_payload(items_by_type)
-
-    return {
-        "status": "ok",
-        "tool": "build_data_inventory",
-        "project": project_name,
-        "inventory": inventory,
-    }
+    return _build_unified_inventory_from_services(
+        services=services,
+        allowed_types=["bus", "load", "line", "transformer", "generator", "switch"],
+    )
 
 
 # ------------------------------------------------------------------
@@ -3233,94 +3255,6 @@ def _interpret_data_query_instruction_with_services(
         'rationale': rationale,
     }
 
-# Auflösen des konreten Objekts aus der Inventar-Liste; Refactoring: prüfen, ob resolve_switch und resolve_entity integriert werden können 
-def _resolve_pf_object_from_inventory_llm_with_services(
-    services: Dict[str, Any],
-    instruction: dict,
-    inventory: Dict[str, Any],
-) -> Dict[str, Any]:
-    project_name = services["project_name"]
-    entity_type = instruction.get("entity_type") if isinstance(instruction, dict) else None
-
-    if not entity_type:
-        return {
-            "status": "error",
-            "tool": "resolve_pf_object_from_inventory_llm",
-            "project": project_name,
-            "instruction": instruction,
-            "error": "missing_entity_type",
-            "details": "In der Instruction fehlt der Elementtyp.",
-        }
-
-    items_by_type = inventory.get("items_by_type", {}) if isinstance(inventory, dict) else {}
-    object_candidates = items_by_type.get(entity_type, []) or []
-
-    if not object_candidates:
-        return {
-            "status": "error",
-            "tool": "resolve_pf_object_from_inventory_llm",
-            "project": project_name,
-            "instruction": instruction,
-            "error": "no_object_candidates",
-            "details": f"Für den Elementtyp {entity_type} wurden keine Kandidaten gefunden.",
-        }
-
-    user_input = ""
-    if isinstance(instruction, dict):
-        user_input = str(
-            instruction.get("entity_name_raw")
-            or instruction.get("request_text")
-            or instruction.get("attribute_request_text")
-            or ""
-        )
-
-    resolver_result = _resolve_objects_from_inventory_llm(
-        project_name=project_name,
-        user_input=user_input,
-        entity_type=entity_type,
-        candidate_items=object_candidates,
-        allow_all=True,
-        require_high_confidence=True,
-    )
-
-    if resolver_result.get("status") != "ok":
-        return {
-            "status": "error",
-            "tool": "resolve_pf_object_from_inventory_llm",
-            "project": project_name,
-            "instruction": instruction,
-            "error": resolver_result.get("error", "object_resolution_failed"),
-            "details": resolver_result.get("details", "Die Objektauflösung ist fehlgeschlagen."),
-            **(
-                {"llm_decision": resolver_result.get("llm_decision")}
-                if resolver_result.get("llm_decision") is not None
-                else {}
-            ),
-            **(
-                {"candidate_names": resolver_result.get("candidate_names")}
-                if resolver_result.get("candidate_names") is not None
-                else {}
-            ),
-        }
-
-    return {
-        "status": "ok",
-        "tool": "resolve_pf_object_from_inventory_llm",
-        "project": project_name,
-        "instruction": instruction,
-        "asset_query": resolver_result.get("asset_query"),
-        "selected_match": resolver_result.get("selected_match"),
-        "selected_matches": resolver_result.get("selected_matches", []),
-        "selected_object_names": [
-            item.get("name")
-            for item in resolver_result.get("selected_matches", [])
-            if isinstance(item, dict) and item.get("name")
-        ],
-        "selection_mode": resolver_result.get("selection_mode", "one"),
-        "matches": resolver_result.get("matches", []),
-        "llm_decision": resolver_result.get("llm_decision", {}),
-        "entity_type": entity_type,
-    }
 
 
 # ------------------------------------------------------------------
@@ -5259,23 +5193,6 @@ def interpret_data_query_instruction(
     )
 
 
-def resolve_pf_object_from_inventory_llm(
-    instruction: dict,
-    project_name: str = DEFAULT_PROJECT_NAME,
-) -> Dict[str, Any]:
-    services = build_powerfactory_services(project_name=project_name)
-    if services['status'] != 'ok':
-        return services
-
-    inventory_result = _build_data_inventory_from_services(services)
-    if inventory_result['status'] != 'ok':
-        return inventory_result
-
-    return _resolve_pf_object_from_inventory_llm_with_services(
-        services=services,
-        instruction=instruction,
-        inventory=inventory_result.get('inventory', {}),
-    )
 
 
 def list_available_object_attributes(
@@ -5286,11 +5203,14 @@ def list_available_object_attributes(
     if services['status'] != 'ok':
         return services
 
-    inventory_result = _build_data_inventory_from_services(services)
+    inventory_result = _build_unified_inventory_from_services(
+        services=services,
+        allowed_types=["bus", "load", "line", "transformer", "generator", "switch"],
+    )
     if inventory_result['status'] != 'ok':
         return inventory_result
 
-    resolution = _resolve_pf_object_from_inventory_llm_with_services(
+    resolution = _resolve_objects_from_inventory_llm_with_services(
         services=services,
         instruction=instruction,
         inventory=inventory_result.get('inventory', {}),
@@ -5313,11 +5233,14 @@ def select_pf_object_attributes_llm(
     if services['status'] != 'ok':
         return services
 
-    inventory_result = _build_data_inventory_from_services(services)
+    inventory_result = _build_unified_inventory_from_services(
+        services=services,
+        allowed_types=["bus", "load", "line", "transformer", "generator", "switch"],
+    )
     if inventory_result['status'] != 'ok':
         return inventory_result
 
-    resolution = _resolve_pf_object_from_inventory_llm_with_services(
+    resolution = _resolve_objects_from_inventory_llm_with_services(
         services=services,
         instruction=instruction,
         inventory=inventory_result.get('inventory', {}),
@@ -5349,11 +5272,14 @@ def read_pf_object_attributes(
     if services['status'] != 'ok':
         return services
 
-    inventory_result = _build_data_inventory_from_services(services)
+    inventory_result = _build_unified_inventory_from_services(
+        services=services,
+        allowed_types=["bus", "load", "line", "transformer", "generator", "switch"],
+    )
     if inventory_result['status'] != 'ok':
         return inventory_result
 
-    resolution = _resolve_pf_object_from_inventory_llm_with_services(
+    resolution = _resolve_objects_from_inventory_llm_with_services(
         services=services,
         instruction=instruction,
         inventory=inventory_result.get('inventory', {}),
@@ -5445,11 +5371,14 @@ def list_available_result_object_attributes(
     if services['status'] != 'ok':
         return services
 
-    inventory_result = _build_data_inventory_from_services(services)
+    inventory_result = _build_unified_inventory_from_services(
+        services=services,
+        allowed_types=["bus", "load", "line", "transformer", "generator", "switch"],
+    )
     if inventory_result['status'] != 'ok':
         return inventory_result
 
-    resolution = _resolve_pf_object_from_inventory_llm_with_services(
+    resolution = _resolve_objects_from_inventory_llm_with_services(
         services=services,
         instruction=instruction_out,
         inventory=inventory_result.get('inventory', {}),
@@ -5475,11 +5404,14 @@ def read_pf_object_result_attributes(
     if services['status'] != 'ok':
         return services
 
-    inventory_result = _build_data_inventory_from_services(services)
+    inventory_result = _build_unified_inventory_from_services(
+        services=services,
+        allowed_types=["bus", "load", "line", "transformer", "generator", "switch"],
+    )
     if inventory_result['status'] != 'ok':
         return inventory_result
 
-    resolution = _resolve_pf_object_from_inventory_llm_with_services(
+    resolution = _resolve_objects_from_inventory_llm_with_services(
         services=services,
         instruction=instruction_out,
         inventory=inventory_result.get('inventory', {}),

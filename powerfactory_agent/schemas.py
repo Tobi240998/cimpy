@@ -47,18 +47,6 @@ class AttributeDescriptionMatchDecision(BaseModel):
     missing_context: List[str] = Field(default_factory=list)
     should_execute: bool
 
-# Definiert Ergebnisformat für Switchmatch
-class SwitchMatchDecision(BaseModel):
-    selected_switch_name: Optional[str] = Field(
-        default=None,
-        description="Exact switch name from the provided candidate list, or null if no safe match exists."
-    )
-    confidence: str = Field(description="One of: high, medium, low")
-    rationale: str = Field(description="Short explanation for the match decision")
-    alternatives: List[str] = Field(default_factory=list)
-    should_execute: bool = Field(
-        description="True only if the selected switch is a safe unambiguous choice."
-    )
 
 # ------------------------------------------------------------------
 # LLM OUTPUT MODELS FOR DATA QUERY

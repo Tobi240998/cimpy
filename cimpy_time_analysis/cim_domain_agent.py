@@ -381,100 +381,124 @@ Practical guidance:
     # PLANNING
     # ------------------------------------------------------------------
     def classify_request(self, user_input: str) -> Dict[str, Any]:
-        try:
-            try:
-                mode_chain = self.mode_prompt | self.llm | self.mode_parser
+        """
+        Robust classification with retry fallback for JSON parsing failures.
+        """
 
-                mode_decision = mode_chain.invoke({
-                    "user_input": user_input,
-                    "format_instructions": self.mode_parser.get_format_instructions(),
-                })
-
-                if hasattr(mode_decision, "dict"):
-                    mode_result = mode_decision.dict()
-                else:
-                    mode_result = dict(mode_decision)
-
-                result = self._normalize_mode_result(mode_result)
-
-            except Exception as primary_exc:
-                result = self._fallback_request_mode_via_llm(user_input)
-                result["reasoning"] = (
-                    f"{result['reasoning']} | primary_mode_classifier_error: {primary_exc}"
-                ).strip(" |")
-
-            request_mode = str(result.get("request_mode", "") or "").strip()
-
-            if request_mode in {
-                "standard_sv",
-                "standard_base",
-                "standard_listing",
-                "standard_comparison",
-            }:
-                result["required_steps"] = self._standard_required_steps(request_mode)
-                result["safe_to_execute"] = True
-                template_reason = f"standard request mode '{request_mode}' mapped to fixed step template"
-                result["reasoning"] = f"{result['reasoning']} | {template_reason}".strip(" |")
-
-            elif request_mode == "custom_plan":
-                if result["safe_to_execute"]:
-                    custom_chain = self.custom_plan_prompt | self.llm | self.custom_plan_parser
-                    custom_decision = custom_chain.invoke({
-                        "user_input": user_input,
-                        "available_tools_text": self._build_available_tools_text(),
-                        "format_instructions": self.custom_plan_parser.get_format_instructions(),
-                    })
-
-                    if hasattr(custom_decision, "dict"):
-                        custom_result = custom_decision.dict()
-                    else:
-                        custom_result = dict(custom_decision)
-
-                    normalized_steps = self._normalize_custom_steps(
-                        custom_result.get("required_steps", [])
-                    )
-                    result["required_steps"] = normalized_steps
-
-                    custom_reasoning = str(custom_result.get("reasoning", "") or "").strip()
-                    if custom_reasoning:
-                        result["reasoning"] = (
-                            f"{result['reasoning']} | {custom_reasoning}".strip(" |")
-                        )
-
-                    if not normalized_steps:
-                        result["safe_to_execute"] = False
-                        if "planner returned no executable steps for custom_plan" not in result["missing_context"]:
-                            result["missing_context"].append("planner returned no executable steps for custom_plan")
+        def _normalize_result(raw: Any, classification_mode: str) -> Dict[str, Any] | None:
+            if raw is None:
+                return None
+            if hasattr(raw, "model_dump"):
+                result = raw.model_dump()
+            elif hasattr(raw, "dict"):
+                result = raw.dict()
+            elif isinstance(raw, dict):
+                result = dict(raw)
             else:
-                result["safe_to_execute"] = False
-                if request_mode == "clarification_needed" and not result["missing_context"]:
-                    result["missing_context"].append("request classification requires clarification")
+                return None
 
+            if not isinstance(result, dict):
+                return None
+
+            intent = result.get("intent")
+            if intent not in {
+                "load_catalog",
+                "change_load",
+                "topology_query",
+                "change_switch_state",
+                "query_element_data",
+                "list_element_attributes",
+                "unsupported_powerfactory_request",
+            }:
+                return None
+
+            required_steps = result.get("required_steps", []) if isinstance(result.get("required_steps", []), list) else []
             if (
-                not result.get("safe_to_execute", False)
-                and "unsupported_request" not in result["required_steps"]
+                intent == "query_element_data"
+                and "list_available_object_attributes" in required_steps
+                and "read_pf_object_attributes" not in required_steps
             ):
-                result["required_steps"] = ["unsupported_request"]
+                intent = "list_element_attributes"
 
             return {
                 "status": "ok",
-                "classification_mode": "llm",
-                **result,
+                "classification_mode": classification_mode,
+                "intent": intent,
+                "confidence": result.get("confidence", "low"),
+                "target_kind": result.get("target_kind", "unknown"),
+                "safe_to_execute": bool(result.get("safe_to_execute", intent != "unsupported_powerfactory_request")),
+                "missing_context": result.get("missing_context", []) if isinstance(result.get("missing_context", []), list) else [],
+                "required_steps": required_steps,
+                "reasoning": result.get("reasoning", ""),
             }
 
-        except Exception as exc:
-            return {
-                "status": "ok",
-                "classification_mode": "fallback",
-                "intent": "unsupported_cim_request",
-                "confidence": "low",
-                "target_kind": "unknown",
-                "request_mode": "clarification_needed",
-                "safe_to_execute": False,
-                "missing_context": ["planner_error"],
-                "required_steps": ["unsupported_request"],
-                "reasoning": f"planner_error: {exc}",
-            }
+        primary_error = None
+        try:
+            chain = self.build_planner_chain()
+            decision = chain.invoke({
+                "user_input": user_input,
+                "step_contracts": self._render_step_contracts_for_prompt(),
+                "format_instructions": self.planner_parser.get_format_instructions(),
+            })
+            normalized = _normalize_result(decision, "llm")
+            if normalized is not None:
+                return normalized
+            primary_error = "Invalid or empty classification result"
+        except Exception as e:
+            primary_error = str(e)
+
+        fallback_prompt = ChatPromptTemplate.from_messages([
+            (
+                "system",
+                "Classify the following PowerFactory request into exactly one supported intent.\n"
+                "Supported intents:\n"
+                "- load_catalog\n"
+                "- change_load\n"
+                "- topology_query\n"
+                "- change_switch_state\n"
+                "- query_element_data\n"
+                "- list_element_attributes\n"
+                "- unsupported_powerfactory_request\n\n"
+                "Return only structured output.\n\n"
+                "{format_instructions}"
+            ),
+            ("user", "User request:\n{user_input}"),
+        ])
+
+        fallback_error = None
+        try:
+            chain = fallback_prompt | self.llm | self.planner_parser
+            decision = chain.invoke({
+                "user_input": user_input,
+                "format_instructions": self.planner_parser.get_format_instructions(),
+            })
+            normalized = _normalize_result(decision, "fallback_llm_recovery")
+            if normalized is not None:
+                return normalized
+            fallback_error = "Fallback returned invalid classification result"
+        except Exception as e:
+            fallback_error = str(e)
+
+        return {
+            "status": "ok",
+            "classification_mode": "forced_fallback",
+            "intent": "query_element_data",
+            "confidence": "low",
+            "target_kind": "unknown",
+            "safe_to_execute": True,
+            "missing_context": [],
+            "required_steps": [
+                "build_unified_inventory",
+                "interpret_data_query_instruction",
+                "classify_data_source",
+                "resolve_objects_from_inventory_llm",
+                "list_available_object_attributes",
+                "select_pf_object_attributes_llm",
+                "read_pf_object_attributes",
+                "summarize_pf_object_data_result",
+            ],
+            "reasoning": f"Primary failed: {primary_error} | Fallback failed: {fallback_error}",
+        }
 
     def build_plan(self, classification: Dict[str, Any]) -> List[Dict[str, Any]]:
         available_specs = {

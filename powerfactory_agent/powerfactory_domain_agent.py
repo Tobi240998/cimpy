@@ -495,58 +495,216 @@ class PowerFactoryDomainAgent:
 
         if intent == "load_catalog":
             return [
-                {"step": "get_load_catalog", "description": allowed_steps["get_load_catalog"], **({"user_input_override": user_input_override} if user_input_override is not None else {}), **({"source_subrequest": source_subrequest} if source_subrequest is not None else {})},
-                {"step": "summarize_load_catalog", "description": allowed_steps["summarize_load_catalog"], **({"user_input_override": user_input_override} if user_input_override is not None else {}), **({"source_subrequest": source_subrequest} if source_subrequest is not None else {})},
+                {
+                    "step": "get_load_catalog",
+                    "description": allowed_steps["get_load_catalog"],
+                    **({"user_input_override": user_input_override} if user_input_override is not None else {}),
+                    **({"source_subrequest": source_subrequest} if source_subrequest is not None else {}),
+                },
+                {
+                    "step": "summarize_load_catalog",
+                    "description": allowed_steps["summarize_load_catalog"],
+                    **({"user_input_override": user_input_override} if user_input_override is not None else {}),
+                    **({"source_subrequest": source_subrequest} if source_subrequest is not None else {}),
+                },
             ]
 
         if intent == "change_load" and safe_to_execute:
             return [
-                {"step": "interpret_instruction", "description": allowed_steps["interpret_instruction"], **({"user_input_override": user_input_override} if user_input_override is not None else {}), **({"source_subrequest": source_subrequest} if source_subrequest is not None else {})},
-                {"step": "resolve_load", "description": allowed_steps["resolve_load"], **({"user_input_override": user_input_override} if user_input_override is not None else {}), **({"source_subrequest": source_subrequest} if source_subrequest is not None else {})},
-                {"step": "execute_change_load", "description": allowed_steps["execute_change_load"], **({"user_input_override": user_input_override} if user_input_override is not None else {}), **({"source_subrequest": source_subrequest} if source_subrequest is not None else {})},
-                {"step": "summarize_powerfactory_result", "description": allowed_steps["summarize_powerfactory_result"], **({"user_input_override": user_input_override} if user_input_override is not None else {}), **({"source_subrequest": source_subrequest} if source_subrequest is not None else {})},
+                {
+                    "step": "interpret_instruction",
+                    "description": allowed_steps["interpret_instruction"],
+                    **({"user_input_override": user_input_override} if user_input_override is not None else {}),
+                    **({"source_subrequest": source_subrequest} if source_subrequest is not None else {}),
+                },
+                {
+                    "step": "resolve_load",
+                    "description": allowed_steps["resolve_load"],
+                    **({"user_input_override": user_input_override} if user_input_override is not None else {}),
+                    **({"source_subrequest": source_subrequest} if source_subrequest is not None else {}),
+                },
+                {
+                    "step": "execute_change_load",
+                    "description": allowed_steps["execute_change_load"],
+                    **({"user_input_override": user_input_override} if user_input_override is not None else {}),
+                    **({"source_subrequest": source_subrequest} if source_subrequest is not None else {}),
+                },
+                {
+                    "step": "summarize_powerfactory_result",
+                    "description": allowed_steps["summarize_powerfactory_result"],
+                    **({"user_input_override": user_input_override} if user_input_override is not None else {}),
+                    **({"source_subrequest": source_subrequest} if source_subrequest is not None else {}),
+                },
             ]
 
         if intent == "topology_query":
             return [
-                {"step": "build_topology_graph", "description": allowed_steps["build_topology_graph"], **({"user_input_override": user_input_override} if user_input_override is not None else {}), **({"source_subrequest": source_subrequest} if source_subrequest is not None else {})},
-                {"step": "build_topology_inventory", "description": allowed_steps["build_topology_inventory"], **({"user_input_override": user_input_override} if user_input_override is not None else {}), **({"source_subrequest": source_subrequest} if source_subrequest is not None else {})},
-                {"step": "interpret_entity_instruction", "description": allowed_steps["interpret_entity_instruction"], **({"user_input_override": user_input_override} if user_input_override is not None else {}), **({"source_subrequest": source_subrequest} if source_subrequest is not None else {})},
-                {"step": "resolve_entity_from_inventory", "description": allowed_steps["resolve_entity_from_inventory"], **({"user_input_override": user_input_override} if user_input_override is not None else {}), **({"source_subrequest": source_subrequest} if source_subrequest is not None else {})},
-                {"step": "query_topology_neighbors", "description": allowed_steps["query_topology_neighbors"], **({"user_input_override": user_input_override} if user_input_override is not None else {}), **({"source_subrequest": source_subrequest} if source_subrequest is not None else {})},
-                {"step": "summarize_topology_result", "description": allowed_steps["summarize_topology_result"], **({"user_input_override": user_input_override} if user_input_override is not None else {}), **({"source_subrequest": source_subrequest} if source_subrequest is not None else {})},
+                {
+                    "step": "build_topology_graph",
+                    "description": allowed_steps["build_topology_graph"],
+                    **({"user_input_override": user_input_override} if user_input_override is not None else {}),
+                    **({"source_subrequest": source_subrequest} if source_subrequest is not None else {}),
+                },
+                {
+                    "step": "build_topology_inventory",
+                    "description": allowed_steps["build_topology_inventory"],
+                    **({"user_input_override": user_input_override} if user_input_override is not None else {}),
+                    **({"source_subrequest": source_subrequest} if source_subrequest is not None else {}),
+                },
+                {
+                    "step": "interpret_entity_instruction",
+                    "description": allowed_steps["interpret_entity_instruction"],
+                    **({"user_input_override": user_input_override} if user_input_override is not None else {}),
+                    **({"source_subrequest": source_subrequest} if source_subrequest is not None else {}),
+                },
+                {
+                    "step": "resolve_entity_from_inventory",
+                    "description": allowed_steps["resolve_entity_from_inventory"],
+                    **({"user_input_override": user_input_override} if user_input_override is not None else {}),
+                    **({"source_subrequest": source_subrequest} if source_subrequest is not None else {}),
+                },
+                {
+                    "step": "query_topology_neighbors",
+                    "description": allowed_steps["query_topology_neighbors"],
+                    **({"user_input_override": user_input_override} if user_input_override is not None else {}),
+                    **({"source_subrequest": source_subrequest} if source_subrequest is not None else {}),
+                },
+                {
+                    "step": "summarize_topology_result",
+                    "description": allowed_steps["summarize_topology_result"],
+                    **({"user_input_override": user_input_override} if user_input_override is not None else {}),
+                    **({"source_subrequest": source_subrequest} if source_subrequest is not None else {}),
+                },
             ]
 
         if intent == "change_switch_state":
             return [
-                {"step": "interpret_switch_instruction", "description": allowed_steps["interpret_switch_instruction"], **({"user_input_override": user_input_override} if user_input_override is not None else {}), **({"source_subrequest": source_subrequest} if source_subrequest is not None else {})},
-                {"step": "resolve_switch_from_inventory_llm", "description": allowed_steps["resolve_switch_from_inventory_llm"], **({"user_input_override": user_input_override} if user_input_override is not None else {}), **({"source_subrequest": source_subrequest} if source_subrequest is not None else {})},
-                {"step": "execute_switch_operation", "description": allowed_steps["execute_switch_operation"], **({"user_input_override": user_input_override} if user_input_override is not None else {}), **({"source_subrequest": source_subrequest} if source_subrequest is not None else {})},
-                {"step": "summarize_switch_result", "description": allowed_steps["summarize_switch_result"], **({"user_input_override": user_input_override} if user_input_override is not None else {}), **({"source_subrequest": source_subrequest} if source_subrequest is not None else {})},
+                {
+                    "step": "interpret_switch_instruction",
+                    "description": allowed_steps["interpret_switch_instruction"],
+                    **({"user_input_override": user_input_override} if user_input_override is not None else {}),
+                    **({"source_subrequest": source_subrequest} if source_subrequest is not None else {}),
+                },
+                {
+                    "step": "build_unified_inventory",
+                    "description": allowed_steps["build_unified_inventory"],
+                    **({"user_input_override": user_input_override} if user_input_override is not None else {}),
+                    **({"source_subrequest": source_subrequest} if source_subrequest is not None else {}),
+                },
+                {
+                    "step": "resolve_objects_from_inventory_llm",
+                    "description": allowed_steps["resolve_objects_from_inventory_llm"],
+                    **({"user_input_override": user_input_override} if user_input_override is not None else {}),
+                    **({"source_subrequest": source_subrequest} if source_subrequest is not None else {}),
+                },
+                {
+                    "step": "execute_switch_operation",
+                    "description": allowed_steps["execute_switch_operation"],
+                    **({"user_input_override": user_input_override} if user_input_override is not None else {}),
+                    **({"source_subrequest": source_subrequest} if source_subrequest is not None else {}),
+                },
+                {
+                    "step": "summarize_switch_result",
+                    "description": allowed_steps["summarize_switch_result"],
+                    **({"user_input_override": user_input_override} if user_input_override is not None else {}),
+                    **({"source_subrequest": source_subrequest} if source_subrequest is not None else {}),
+                },
             ]
 
         if intent == "list_element_attributes":
             return [
-                {"step": "build_data_inventory", "description": allowed_steps["build_data_inventory"], **({"user_input_override": user_input_override} if user_input_override is not None else {}), **({"source_subrequest": source_subrequest} if source_subrequest is not None else {})},
-                {"step": "interpret_data_query_instruction", "description": allowed_steps["interpret_data_query_instruction"], **({"user_input_override": user_input_override} if user_input_override is not None else {}), **({"source_subrequest": source_subrequest} if source_subrequest is not None else {})},
-                {"step": "classify_data_source", "description": allowed_steps["classify_data_source"], **({"user_input_override": user_input_override} if user_input_override is not None else {}), **({"source_subrequest": source_subrequest} if source_subrequest is not None else {})},
-                {"step": "resolve_pf_object_from_inventory_llm", "description": allowed_steps["resolve_pf_object_from_inventory_llm"], **({"user_input_override": user_input_override} if user_input_override is not None else {}), **({"source_subrequest": source_subrequest} if source_subrequest is not None else {})},
-                {"step": "list_available_object_attributes", "description": allowed_steps["list_available_object_attributes"], **({"user_input_override": user_input_override} if user_input_override is not None else {}), **({"source_subrequest": source_subrequest} if source_subrequest is not None else {})},
+                {
+                    "step": "build_unified_inventory",
+                    "description": allowed_steps["build_unified_inventory"],
+                    **({"user_input_override": user_input_override} if user_input_override is not None else {}),
+                    **({"source_subrequest": source_subrequest} if source_subrequest is not None else {}),
+                },
+                {
+                    "step": "interpret_data_query_instruction",
+                    "description": allowed_steps["interpret_data_query_instruction"],
+                    **({"user_input_override": user_input_override} if user_input_override is not None else {}),
+                    **({"source_subrequest": source_subrequest} if source_subrequest is not None else {}),
+                },
+                {
+                    "step": "classify_data_source",
+                    "description": allowed_steps["classify_data_source"],
+                    **({"user_input_override": user_input_override} if user_input_override is not None else {}),
+                    **({"source_subrequest": source_subrequest} if source_subrequest is not None else {}),
+                },
+                {
+                    "step": "resolve_objects_from_inventory_llm",
+                    "description": allowed_steps["resolve_objects_from_inventory_llm"],
+                    **({"user_input_override": user_input_override} if user_input_override is not None else {}),
+                    **({"source_subrequest": source_subrequest} if source_subrequest is not None else {}),
+                },
+                {
+                    "step": "list_available_object_attributes",
+                    "description": allowed_steps["list_available_object_attributes"],
+                    **({"user_input_override": user_input_override} if user_input_override is not None else {}),
+                    **({"source_subrequest": source_subrequest} if source_subrequest is not None else {}),
+                },
             ]
 
         if intent == "query_element_data":
             return [
-                {"step": "build_data_inventory", "description": allowed_steps["build_data_inventory"], **({"user_input_override": user_input_override} if user_input_override is not None else {}), **({"source_subrequest": source_subrequest} if source_subrequest is not None else {})},
-                {"step": "interpret_data_query_instruction", "description": allowed_steps["interpret_data_query_instruction"], **({"user_input_override": user_input_override} if user_input_override is not None else {}), **({"source_subrequest": source_subrequest} if source_subrequest is not None else {})},
-                {"step": "classify_data_source", "description": allowed_steps["classify_data_source"], **({"user_input_override": user_input_override} if user_input_override is not None else {}), **({"source_subrequest": source_subrequest} if source_subrequest is not None else {})},
-                {"step": "resolve_pf_object_from_inventory_llm", "description": allowed_steps["resolve_pf_object_from_inventory_llm"], **({"user_input_override": user_input_override} if user_input_override is not None else {}), **({"source_subrequest": source_subrequest} if source_subrequest is not None else {})},
-                {"step": "list_available_object_attributes", "description": allowed_steps["list_available_object_attributes"], **({"user_input_override": user_input_override} if user_input_override is not None else {}), **({"source_subrequest": source_subrequest} if source_subrequest is not None else {})},
-                {"step": "select_pf_object_attributes_llm", "description": allowed_steps["select_pf_object_attributes_llm"], **({"user_input_override": user_input_override} if user_input_override is not None else {}), **({"source_subrequest": source_subrequest} if source_subrequest is not None else {})},
-                {"step": "read_pf_object_attributes", "description": allowed_steps["read_pf_object_attributes"], **({"user_input_override": user_input_override} if user_input_override is not None else {}), **({"source_subrequest": source_subrequest} if source_subrequest is not None else {})},
-                {"step": "summarize_pf_object_data_result", "description": allowed_steps["summarize_pf_object_data_result"], **({"user_input_override": user_input_override} if user_input_override is not None else {}), **({"source_subrequest": source_subrequest} if source_subrequest is not None else {})},
+                {
+                    "step": "build_unified_inventory",
+                    "description": allowed_steps["build_unified_inventory"],
+                    **({"user_input_override": user_input_override} if user_input_override is not None else {}),
+                    **({"source_subrequest": source_subrequest} if source_subrequest is not None else {}),
+                },
+                {
+                    "step": "interpret_data_query_instruction",
+                    "description": allowed_steps["interpret_data_query_instruction"],
+                    **({"user_input_override": user_input_override} if user_input_override is not None else {}),
+                    **({"source_subrequest": source_subrequest} if source_subrequest is not None else {}),
+                },
+                {
+                    "step": "classify_data_source",
+                    "description": allowed_steps["classify_data_source"],
+                    **({"user_input_override": user_input_override} if user_input_override is not None else {}),
+                    **({"source_subrequest": source_subrequest} if source_subrequest is not None else {}),
+                },
+                {
+                    "step": "resolve_objects_from_inventory_llm",
+                    "description": allowed_steps["resolve_objects_from_inventory_llm"],
+                    **({"user_input_override": user_input_override} if user_input_override is not None else {}),
+                    **({"source_subrequest": source_subrequest} if source_subrequest is not None else {}),
+                },
+                {
+                    "step": "list_available_object_attributes",
+                    "description": allowed_steps["list_available_object_attributes"],
+                    **({"user_input_override": user_input_override} if user_input_override is not None else {}),
+                    **({"source_subrequest": source_subrequest} if source_subrequest is not None else {}),
+                },
+                {
+                    "step": "select_pf_object_attributes_llm",
+                    "description": allowed_steps["select_pf_object_attributes_llm"],
+                    **({"user_input_override": user_input_override} if user_input_override is not None else {}),
+                    **({"source_subrequest": source_subrequest} if source_subrequest is not None else {}),
+                },
+                {
+                    "step": "read_pf_object_attributes",
+                    "description": allowed_steps["read_pf_object_attributes"],
+                    **({"user_input_override": user_input_override} if user_input_override is not None else {}),
+                    **({"source_subrequest": source_subrequest} if source_subrequest is not None else {}),
+                },
+                {
+                    "step": "summarize_pf_object_data_result",
+                    "description": allowed_steps["summarize_pf_object_data_result"],
+                    **({"user_input_override": user_input_override} if user_input_override is not None else {}),
+                    **({"source_subrequest": source_subrequest} if source_subrequest is not None else {}),
+                },
             ]
 
-        return [{"step": "unsupported_request", "description": allowed_steps["unsupported_request"], **({"user_input_override": user_input_override} if user_input_override is not None else {}), **({"source_subrequest": source_subrequest} if source_subrequest is not None else {})}]
+        return [
+            {
+                "step": "unsupported_request",
+                "description": allowed_steps["unsupported_request"],
+                **({"user_input_override": user_input_override} if user_input_override is not None else {}),
+                **({"source_subrequest": source_subrequest} if source_subrequest is not None else {}),
+            }
+        ]
 
     def _get_classification_required_steps_plan(
         self,
@@ -1041,33 +1199,43 @@ class PowerFactoryDomainAgent:
             tool_kwargs["entity_resolution"] = state["entity_resolution"]
         elif step == "interpret_switch_instruction":
             tool_kwargs["user_input"] = effective_user_input
-        elif step == "resolve_switch_from_inventory_llm":
-            tool_kwargs["instruction"] = state["switch_instruction"]
+        elif step == "build_unified_inventory":
+            if classification.get("intent") == "change_switch_state":
+                tool_kwargs["allowed_types"] = ["switch"]
+            else:
+                tool_kwargs["allowed_types"] = ["bus", "load", "line", "transformer", "generator", "switch"]
+        elif step == "resolve_objects_from_inventory_llm":
+            if classification.get("intent") == "change_switch_state":
+                tool_kwargs["instruction"] = state["switch_instruction"]
+            else:
+                tool_kwargs["instruction"] = state["data_query_instruction"]
+            tool_kwargs["inventory"] = state["unified_inventory_result"]["inventory"] if isinstance(state["unified_inventory_result"], dict) else {}
         elif step == "execute_switch_operation":
             tool_kwargs["instruction"] = state["switch_instruction"]
-            tool_kwargs["resolution"] = state["switch_resolution"]
+            tool_kwargs["resolution"] = state["object_resolution"]
             tool_kwargs["run_loadflow_after"] = True
         elif step == "summarize_switch_result":
             tool_kwargs["result_payload"] = state["switch_execution"]
             tool_kwargs["user_input"] = effective_user_input
         elif step == "interpret_data_query_instruction":
             tool_kwargs["user_input"] = effective_user_input
-            tool_kwargs["inventory"] = state["data_inventory_result"]["inventory"] if isinstance(state["data_inventory_result"], dict) else {}
+            tool_kwargs["inventory"] = state["unified_inventory_result"]["inventory"] if isinstance(state["unified_inventory_result"], dict) else {}
         elif step == "classify_data_source":
             tool_kwargs["instruction"] = state["data_query_instruction"]
-        elif step == "resolve_pf_object_from_inventory_llm":
-            tool_kwargs["instruction"] = state["data_query_instruction"]
-            tool_kwargs["inventory"] = state["data_inventory_result"]["inventory"] if isinstance(state["data_inventory_result"], dict) else {}
         elif step == "list_available_object_attributes":
             tool_kwargs["instruction"] = state["data_query_instruction"]
-            tool_kwargs["resolution"] = state["data_object_resolution"]
+            tool_kwargs["resolution"] = state["object_resolution"]
         elif step == "select_pf_object_attributes_llm":
             tool_kwargs["instruction"] = state["data_query_instruction"]
-            tool_kwargs["resolution"] = state["data_object_resolution"]
+            tool_kwargs["resolution"] = state["object_resolution"]
             tool_kwargs["attribute_listing"] = state["data_attribute_listing"]
         elif step == "read_pf_object_attributes":
-            tool_kwargs["instruction"] = (state["data_attribute_selection"].get("instruction") if isinstance(state["data_attribute_selection"], dict) else None) or state["data_query_instruction"]
-            tool_kwargs["resolution"] = state["data_object_resolution"]
+            tool_kwargs["instruction"] = (
+                state["data_attribute_selection"].get("instruction")
+                if isinstance(state["data_attribute_selection"], dict)
+                else None
+            ) or state["data_query_instruction"]
+            tool_kwargs["resolution"] = state["object_resolution"]
         elif step == "summarize_pf_object_data_result":
             tool_kwargs["result_payload"] = state["data_query_execution"]
             tool_kwargs["user_input"] = effective_user_input
@@ -1104,22 +1272,26 @@ class PowerFactoryDomainAgent:
             state["summary"] = result
         elif step == "interpret_switch_instruction":
             state["switch_instruction"] = result["instruction"]
-        elif step == "resolve_switch_from_inventory_llm":
-            state["switch_resolution"] = result
         elif step == "execute_switch_operation":
             state["switch_execution"] = result
         elif step == "summarize_switch_result":
             state["switch_summary"] = result
             state["summary"] = result
-        elif step == "build_data_inventory":
-            state["data_inventory_result"] = result
+        elif step == "build_unified_inventory":
+            state["unified_inventory_result"] = result
+            state["data_inventory_result"] = result  # Kompatibilität für bestehende Summary-/Result-Struktur
         elif step == "interpret_data_query_instruction":
             state["data_query_instruction"] = result["instruction"]
         elif step == "classify_data_source":
             state["data_query_instruction"] = result["instruction"]
             state["data_source_decision"] = result
-        elif step == "resolve_pf_object_from_inventory_llm":
-            state["data_object_resolution"] = result
+        elif step == "resolve_objects_from_inventory_llm":
+            state["object_resolution"] = result
+            entity_type = result.get("entity_type") if isinstance(result, dict) else None
+            if entity_type == "switch":
+                state["switch_resolution"] = result
+            else:
+                state["data_object_resolution"] = result
         elif step == "list_available_object_attributes":
             state["data_attribute_listing"] = result
         elif step == "select_pf_object_attributes_llm":
@@ -1163,6 +1335,8 @@ class PowerFactoryDomainAgent:
             "data_attribute_selection": None,
             "data_query_execution": None,
             "data_query_summary": None,
+            "unified_inventory_result": None,
+            "object_resolution": None,
         }
 
         for item in plan:

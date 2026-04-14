@@ -16,12 +16,9 @@ from cimpy.powerfactory_agent.powerfactory_mcp_tools import (
     _interpret_switch_instruction_with_services,
     _build_switch_inventory_from_services,
     _build_switch_inventory_payload,
-    _resolve_switch_from_inventory_llm_with_services,
     _execute_switch_operation_with_services,
     _summarize_switch_result_with_services,
-    _build_data_inventory_from_services,
     _interpret_data_query_instruction_with_services,
-    _resolve_pf_object_from_inventory_llm_with_services,
     _list_available_object_attributes_with_services,
     _select_pf_object_attributes_llm_with_services,
     _read_pf_object_attributes_with_services,
@@ -29,6 +26,8 @@ from cimpy.powerfactory_agent.powerfactory_mcp_tools import (
     _summarize_load_catalog_with_services,
     _summarize_topology_result_with_services,
     _build_unsupported_result_with_services,
+    _resolve_objects_from_inventory_llm_with_services, 
+    _build_unified_inventory_from_services
 )
 from cimpy.powerfactory_agent.powerfactory_topology_graph import (
     build_powerfactory_topology_graph_from_services,
@@ -264,28 +263,7 @@ class PowerFactoryToolRegistry:
                 is_summary=False,
                 handler=self._tool_interpret_switch_instruction,
             ),
-            "resolve_switch_from_inventory_llm": PowerFactoryToolSpec(
-                name="resolve_switch_from_inventory_llm",
-                description="Resolve a switch by LLM-based selection from the exact available switch candidate list.",
-                input_schema={
-                    "type": "object",
-                    "properties": {"services": {"type": "object"}, "instruction": {"type": "object"}},
-                    "required": ["services", "instruction"],
-                },
-                output_schema_hint={
-                    "status": "ok|error",
-                    "tool": "resolve_switch_from_inventory_llm",
-                    "asset_query": "string",
-                    "selected_match": "dict",
-                    "llm_decision": "dict",
-                },
-                capability_tags=["powerfactory", "switch", "llm_match", "resolution", "read_only"],
-                mutating=False,
-                requires_state=["switch_instruction"],
-                produces_state=["switch_resolution"],
-                is_summary=False,
-                handler=self._tool_resolve_switch_from_inventory_llm,
-            ),
+            
             "execute_switch_operation": PowerFactoryToolSpec(
                 name="execute_switch_operation",
                 description="Execute an open/close/toggle operation on a resolved switch object in PowerFactory.",
@@ -412,21 +390,24 @@ class PowerFactoryToolRegistry:
                 is_summary=False,
                 handler=self._tool_classify_data_source,
             ),
-            "build_data_inventory": PowerFactoryToolSpec(
-                name="build_data_inventory",
-                description="Build a lightweight PowerFactory inventory for data queries without topology graph.",
+            "build_unified_inventory": PowerFactoryToolSpec(
+                name="build_unified_inventory",
+                description="Build a unified non-topology PowerFactory inventory for supported object types.",
                 input_schema={
                     "type": "object",
-                    "properties": {"services": {"type": "object"}},
+                    "properties": {
+                        "services": {"type": "object"},
+                        "allowed_types": {"type": "array"},
+                    },
                     "required": ["services"],
                 },
-                output_schema_hint={"status": "ok|error", "tool": "build_data_inventory", "inventory": "dict"},
-                capability_tags=["powerfactory", "data_query", "inventory", "read_only"],
+                output_schema_hint={"status": "ok|error", "tool": "build_unified_inventory", "inventory": "dict"},
+                capability_tags=["powerfactory", "inventory", "read_only"],
                 mutating=False,
                 requires_state=[],
-                produces_state=["data_inventory_result"],
+                produces_state=["unified_inventory_result", "data_inventory_result"],
                 is_summary=False,
-                handler=self._tool_build_data_inventory,
+                handler=self._tool_build_unified_inventory,
             ),
             "interpret_data_query_instruction": PowerFactoryToolSpec(
                 name="interpret_data_query_instruction",
@@ -443,14 +424,14 @@ class PowerFactoryToolRegistry:
                 output_schema_hint={"status": "ok|error", "tool": "interpret_data_query_instruction", "instruction": "dict"},
                 capability_tags=["powerfactory", "data_query", "planning", "llm"],
                 mutating=False,
-                requires_state=["data_inventory_result"],
+                requires_state=["unified_inventory_result"],
                 produces_state=["data_query_instruction"],
                 is_summary=False,
                 handler=self._tool_interpret_data_query_instruction,
             ),
-            "resolve_pf_object_from_inventory_llm": PowerFactoryToolSpec(
-                name="resolve_pf_object_from_inventory_llm",
-                description="Resolve a PowerFactory object by LLM-based exact candidate selection from the data inventory.",
+            "resolve_objects_from_inventory_llm": PowerFactoryToolSpec(
+                name="resolve_objects_from_inventory_llm",
+                description="Resolve PowerFactory objects by LLM-based exact candidate selection from a unified non-topology inventory.",
                 input_schema={
                     "type": "object",
                     "properties": {
@@ -460,13 +441,19 @@ class PowerFactoryToolRegistry:
                     },
                     "required": ["services", "instruction", "inventory"],
                 },
-                output_schema_hint={"status": "ok|error", "tool": "resolve_pf_object_from_inventory_llm", "selected_match": "dict"},
-                capability_tags=["powerfactory", "data_query", "resolution", "llm_match", "read_only"],
+                output_schema_hint={
+                    "status": "ok|error",
+                    "tool": "resolve_objects_from_inventory_llm",
+                    "selected_match": "dict",
+                    "selected_matches": "list[dict]",
+                    "selection_mode": "one|all",
+                },
+                capability_tags=["powerfactory", "resolution", "llm_match", "read_only"],
                 mutating=False,
-                requires_state=["data_query_instruction", "data_inventory_result"],
-                produces_state=["data_object_resolution"],
+                requires_state=["unified_inventory_result"],
+                produces_state=["object_resolution", "data_object_resolution", "switch_resolution"],
                 is_summary=False,
-                handler=self._tool_resolve_pf_object_from_inventory_llm,
+                handler=self._tool_resolve_objects_from_inventory_llm,
             ),
             "list_available_object_attributes": PowerFactoryToolSpec(
                 name="list_available_object_attributes",
@@ -573,6 +560,23 @@ class PowerFactoryToolRegistry:
                 "domain_notes": list(spec.domain_notes),
             }
         return contracts
+
+
+    def _tool_build_unified_inventory(self, services: Dict[str, Any], allowed_types: List[str] | None = None) -> Dict[str, Any]:
+        from cimpy.powerfactory_agent.powerfactory_mcp_tools import _build_unified_inventory_from_services
+        return _build_unified_inventory_from_services(services=services, allowed_types=allowed_types)
+    
+    def _tool_resolve_objects_from_inventory_llm(
+        self,
+        services: Dict[str, Any],
+        instruction: Dict[str, Any],
+        inventory: Dict[str, Any],
+    ) -> Dict[str, Any]:
+        return _resolve_objects_from_inventory_llm_with_services(
+            services=services,
+            instruction=instruction,
+            inventory=inventory,
+        )
 
     def list_tool_specs(self) -> List[Dict[str, Any]]:
         items: List[Dict[str, Any]] = []
@@ -718,22 +722,6 @@ class PowerFactoryToolRegistry:
             inventory=inventory,
         )
 
-    def _tool_resolve_switch_from_inventory_llm(
-        self,
-        services: Dict[str, Any],
-        instruction: dict,
-        **kwargs: Any,
-    ) -> Dict[str, Any]:
-        switch_inventory_result = _build_switch_inventory_from_services(services)
-        if switch_inventory_result["status"] != "ok":
-            return switch_inventory_result
-
-        inventory = _build_switch_inventory_payload(switch_inventory_result.get("switches", []))
-        return _resolve_switch_from_inventory_llm_with_services(
-            services=services,
-            instruction=instruction,
-            inventory=inventory,
-        )
 
     def _tool_execute_switch_operation(
         self,
@@ -817,8 +805,6 @@ class PowerFactoryToolRegistry:
             instruction=instruction,
         )
 
-    def _tool_build_data_inventory(self, services: Dict[str, Any], **kwargs: Any) -> Dict[str, Any]:
-        return _build_data_inventory_from_services(services=services)
 
     def _tool_interpret_data_query_instruction(
         self,
@@ -833,18 +819,7 @@ class PowerFactoryToolRegistry:
             inventory=inventory,
         )
 
-    def _tool_resolve_pf_object_from_inventory_llm(
-        self,
-        services: Dict[str, Any],
-        instruction: dict,
-        inventory: Dict[str, Any],
-        **kwargs: Any,
-    ) -> Dict[str, Any]:
-        return _resolve_pf_object_from_inventory_llm_with_services(
-            services=services,
-            instruction=instruction,
-            inventory=inventory,
-        )
+
 
     def _tool_list_available_object_attributes(
         self,
