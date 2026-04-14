@@ -36,35 +36,13 @@ from cimpy.powerfactory_agent.schemas import (
     RequestedAttributeNameDecision,
     AttributeDescriptionShortlistDecision,
     AttributeDescriptionMatchDecision,
+    SwitchMatchDecision, 
+    DataQueryTypeDecision, 
+    InventoryObjectMatchDecision, 
+    AttributeSelectionDecision, 
+    DataSourceDecision, 
+    ResultPredefinedFieldDecision
 )
-
-# ------------------------------------------------------------------
-# LLM OUTPUT MODEL FOR SWITCH MATCHING
-# ------------------------------------------------------------------
-class SwitchMatchDecision(BaseModel):
-    selected_switch_name: Optional[str] = Field(
-        default=None,
-        description="Exact switch name from the provided candidate list, or null if no safe match exists."
-    )
-    confidence: str = Field(description="One of: high, medium, low")
-    rationale: str = Field(description="Short explanation for the match decision")
-    alternatives: List[str] = Field(default_factory=list)
-    should_execute: bool = Field(
-        description="True only if the selected switch is a safe unambiguous choice."
-    )
-
-
-def _kill_powerfactory_if_running() -> None:
-    try:
-        subprocess.run(
-            ["taskkill", "/F", "/IM", "powerfactory.exe"],
-            stdout=subprocess.DEVNULL,
-            stderr=subprocess.DEVNULL,
-            check=False,
-        )
-    except Exception:
-        pass
-
 
 def _to_py_list(value: Any) -> List[Any]:
     if value is None:
@@ -78,6 +56,7 @@ def _to_py_list(value: Any) -> List[Any]:
 # ------------------------------------------------------------------
 # POWERFACTORY CONTEXT
 # ------------------------------------------------------------------
+# Initialisierung von PF -> Öffnen App, Laden Projekt, Laden Studycase etc. 
 def get_powerfactory_context(project_name: str = DEFAULT_PROJECT_NAME) -> Dict[str, Any]:
     pf = _get_pf()
     app = _get_app(pf)
@@ -122,7 +101,7 @@ def get_powerfactory_context(project_name: str = DEFAULT_PROJECT_NAME) -> Dict[s
         "project_name": project_name,
     }
 
-
+# Initialisierung PF-Kontext + alte Agenten (Resultagent etc.) -> Refactoring möglich
 def build_powerfactory_services(project_name: str = DEFAULT_PROJECT_NAME) -> Dict[str, Any]:
     context = get_powerfactory_context(project_name=project_name)
     if context["status"] != "ok":
@@ -148,6 +127,7 @@ def build_powerfactory_services(project_name: str = DEFAULT_PROJECT_NAME) -> Dic
 # ------------------------------------------------------------------
 # LOAD CATALOG / LOAD INTERPRETATION
 # ------------------------------------------------------------------
+# Liefert verfügbaren Lastenkatalog des aktiven Projekts -> Refactoring möglich (aus LLM_interpreterAgent)
 def _get_load_catalog_from_services(services: Dict[str, Any]) -> Dict[str, Any]:
     interpreter = services["interpreter"]
     project_name = services["project_name"]
@@ -170,7 +150,7 @@ def _get_load_catalog_from_services(services: Dict[str, Any]) -> Dict[str, Any]:
         "loads": loads,
     }
 
-
+# Interpretiert Nutzeranfrage in strukturierte Load-Instruction -> Refactoring möglich 
 def _interpret_instruction_with_services(services: Dict[str, Any], user_input: str) -> Dict[str, Any]:
     interpreter = services["interpreter"]
     project_name = services["project_name"]
@@ -197,7 +177,7 @@ def _interpret_instruction_with_services(services: Dict[str, Any], user_input: s
         "instruction": instruction,
     }
 
-
+# Löst Last auf, Refactoring möglich 
 def _resolve_load_with_services(services: Dict[str, Any], instruction: dict) -> Dict[str, Any]:
     interpreter = services["interpreter"]
     project_name = services["project_name"]
@@ -237,19 +217,20 @@ def _resolve_load_with_services(services: Dict[str, Any], instruction: dict) -> 
 # ------------------------------------------------------------------
 # GENERIC TEXT / INVENTORY HELPERS
 # ------------------------------------------------------------------
+# wandelt Text in kleingeschriebenen Text um 
 def _safe_lower(value: Any) -> str:
     if value is None:
         return ""
     return str(value).strip().lower()
 
-
+# zerlegt Text in einfache Token 
 def _tokenize(value: str) -> List[str]:
     text = _safe_lower(value)
     for ch in "\\/()[]{}:;,.!?\"'":
         text = text.replace(ch, " ")
     return [token for token in text.split() if token]
 
-
+# baut Kandidaten für Topologie-Pfad; Refactoring (Heuristik!)
 def _build_entity_name_candidates(user_input: str) -> List[str]:
     text = (user_input or "").strip()
     if not text:
@@ -267,7 +248,7 @@ def _build_entity_name_candidates(user_input: str) -> List[str]:
 
     return candidates
 
-
+# keywordbasierte Typenbestimmung für Toplogieanfragen; Refactoring (Heuristik!); Vergleich mit Data-Query Pfad -> hier besser gelöst 
 def _infer_entity_type_from_text(user_input: str, inventory: Dict[str, Any]) -> Optional[str]:
     text = _safe_lower(user_input)
 
@@ -294,6 +275,7 @@ def _infer_entity_type_from_text(user_input: str, inventory: Dict[str, Any]) -> 
 # ------------------------------------------------------------------
 # TOPOLOGY INVENTORY / TOPOLOGY INTERPRETATION
 # ------------------------------------------------------------------
+# Baut das Inventory aus dem Topologiegraphen 
 def _build_topology_inventory_with_services(
     services: Dict[str, Any],
     topology_graph_result: Dict[str, Any],
@@ -308,7 +290,7 @@ def _build_topology_inventory_with_services(
         "inventory": inventory,
     }
 
-
+# baut die Instruction zur Topologie-Analyse; Refactoring (Heuristik!) - prüfen in Kombi mit resolve_entity_from_inventory_with_services
 def _interpret_entity_instruction_with_services(
     services: Dict[str, Any],
     user_input: str,
@@ -332,7 +314,7 @@ def _interpret_entity_instruction_with_services(
         "instruction": instruction,
     }
 
-
+# Wertet Topologiegraphen aus 
 def _resolve_entity_from_inventory_with_services(
     services: Dict[str, Any],
     instruction: dict,
@@ -478,7 +460,7 @@ def _looks_like_switch_object(obj: Any) -> bool:
 
     return False
 
-
+# baut Liste möglicher Schalter 
 def _build_switch_inventory_from_services(services: Dict[str, Any]) -> Dict[str, Any]:
     app = services["app"]
     project_name = services["project_name"]
@@ -524,7 +506,7 @@ def _build_switch_inventory_from_services(services: Dict[str, Any]) -> Dict[str,
         "switches": switches,
     }
 
-
+# wandelt die Rohe Switch-Liste in Inventarformat um
 def _build_switch_inventory_payload(switches: List[Dict[str, Any]]) -> Dict[str, Any]:
     return {
         "available_types": ["switch"] if switches else [],
@@ -542,7 +524,7 @@ def _build_switch_inventory_payload(switches: List[Dict[str, Any]]) -> Dict[str,
         },
     }
 
-
+# baut Switch-Instruction; Refactoring (Heuristik!)
 def _interpret_switch_instruction_with_services(
     services: Dict[str, Any],
     user_input: str,
@@ -587,7 +569,7 @@ def _interpret_switch_instruction_with_services(
         "instruction": instruction,
     }
 
-
+# Prompt für Schalterauswahl 
 def _build_switch_match_chain():
     parser = PydanticOutputParser(pydantic_object=SwitchMatchDecision)
     prompt = ChatPromptTemplate.from_messages([
@@ -609,7 +591,7 @@ def _build_switch_match_chain():
     llm = get_llm()
     return prompt | llm | parser, parser
 
-
+# löst konkreten Schalter LLM-basiert aus Inventarliste auf
 def _resolve_switch_from_inventory_llm_with_services(
     services: Dict[str, Any],
     instruction: dict,
@@ -700,6 +682,7 @@ def _resolve_switch_from_inventory_llm_with_services(
 # ------------------------------------------------------------------
 # SWITCH EXECUTION
 # ------------------------------------------------------------------
+# lädt den Schalter 
 def _get_object_by_full_name(app: Any, full_name: str) -> Any | None:
     if not full_name:
         return None
@@ -735,7 +718,7 @@ def _get_object_by_full_name(app: Any, full_name: str) -> Any | None:
 
     return None
 
-
+# liest aktuellen Schalterzustand aus 
 def _read_switch_state(obj: Any) -> Dict[str, Any]:
     candidates = ["on_off", "isclosed", "closed", "outserv"]
 
@@ -760,7 +743,7 @@ def _read_switch_state(obj: Any) -> Dict[str, Any]:
         "details": "Kein bekannter Zustandsindikator gefunden.",
     }
 
-
+# mappt verschiedene PF-Zustandsrepräsentationen auf open/closed 
 def _normalize_switch_state(raw_value: Any, source: str) -> Optional[str]:
     if raw_value is None:
         return None
@@ -792,7 +775,7 @@ def _normalize_switch_state(raw_value: Any, source: str) -> Optional[str]:
 
     return None
 
-
+# Setzen der Schalterstellung 
 def _set_attr_or_field(obj: Any, attr_name: str, value: Any) -> bool:
     try:
         obj.SetAttribute(attr_name, value)
@@ -808,7 +791,7 @@ def _set_attr_or_field(obj: Any, attr_name: str, value: Any) -> bool:
 
     return False
 
-
+# Helper, der Schalterstellung ändert 
 def _apply_switch_state_to_object(obj: Any, operation: str) -> Dict[str, Any]:
     op = (operation or "").lower()
 
@@ -864,7 +847,7 @@ def _apply_switch_state_to_object(obj: Any, operation: str) -> Dict[str, Any]:
         "details": "Für dieses Schalterobjekt konnte keine unterstützte Methode oder kein unterstütztes Attribut gefunden werden.",
     }
 
-
+# Ausführung der Switchänderung 
 def _execute_switch_operation_with_services(
     services: Dict[str, Any],
     instruction: dict,
@@ -979,7 +962,7 @@ def _execute_switch_operation_with_services(
         "loadflow": loadflow_info,
     }
 
-
+# Fasst Ergebnis der Schalter-Änderung zusammen 
 def _summarize_switch_result_with_services(
     services: Dict[str, Any],
     result_payload: dict,
@@ -1061,7 +1044,7 @@ METRIC_SPECS: Dict[str, Dict[str, Any]] = {
 
 DEFAULT_RESULT_REQUESTS: List[str] = ["bus_voltage"]
 
-
+# leitet aus Nutzerfrage Ergebnis-Metriken ab; Refactoring (Heuristik!)
 def _infer_result_requests_from_user_input(user_input: str) -> List[str]:
     text = _safe_lower(user_input)
     if not text:
@@ -1079,7 +1062,7 @@ def _infer_result_requests_from_user_input(user_input: str) -> List[str]:
     return list(DEFAULT_RESULT_REQUESTS)
 
 
-
+# mappt Aliasnamen auf interne Metriknamen; kein Ergebnis: Weiterleitung zu infer_result_requests_from_user_input; Refactoring (Heuristik!)
 def _normalize_result_requests(requested_metrics: Any, user_input: str = "") -> List[str]:
     normalized: List[str] = []
 
@@ -1108,7 +1091,7 @@ def _normalize_result_requests(requested_metrics: Any, user_input: str = "") -> 
     return _infer_result_requests_from_user_input(user_input)
 
 
-
+# vereinheitlicht Anweisung 
 def _ensure_instruction_result_requests(instruction: Any, user_input: str = "") -> Dict[str, Any]:
     if isinstance(instruction, BaseModel):
         try:
@@ -1129,14 +1112,14 @@ def _ensure_instruction_result_requests(instruction: Any, user_input: str = "") 
     )
     return instruction
 
-
+# Attributzugriff
 def _safe_get_pf_attribute(obj: Any, attr_name: str) -> Any:
     try:
         return obj.GetAttribute(attr_name)
     except Exception:
         return None
 
-
+# Auslesen der Einheit des Attributs
 def _get_pf_attribute_unit(obj: Any, attr_name: str) -> Optional[str]:
     if obj is None or not attr_name:
         return None
@@ -1184,7 +1167,7 @@ def _get_pf_attribute_unit(obj: Any, attr_name: str) -> Optional[str]:
 
     return None
 
-
+# zieht name, pf_class und full_name in ein einheitliches Identitätsobjekt 
 def _build_pf_object_identity(obj: Any) -> Dict[str, Any]:
     name = None
     pf_class = None
@@ -1211,7 +1194,7 @@ def _build_pf_object_identity(obj: Any) -> Dict[str, Any]:
         "full_name": full_name,
     }
 
-
+# überführt PF-Werte in float 
 def _coerce_numeric_pf_value(value: Any) -> Tuple[bool, float | None]:
     if value is None:
         return False, None
@@ -1236,7 +1219,7 @@ def _coerce_numeric_pf_value(value: Any) -> Tuple[bool, float | None]:
     return False, None
 
 
-
+# versucht eine Attributliste der Reihe nach, sammelt Debug-Infos über Fehlversuche 
 def _read_first_available_attribute_with_debug(
     obj: Any,
     attr_candidates: List[str],
@@ -1276,7 +1259,7 @@ def _read_first_available_attribute_with_debug(
         **identity,
     }
 
-
+# read-Funktionen: spezialisierte metrikspezifische Leser mit Kandidatenlisten für passsende PF-Attribute 
 
 def _read_bus_voltage_pu_with_debug(bus: Any) -> Dict[str, Any]:
     identity = _build_pf_object_identity(bus)
@@ -1345,7 +1328,7 @@ def _read_line_loading_with_debug(line: Any) -> Dict[str, Any]:
     ]
     return _read_first_available_attribute_with_debug(line, tried_attrs, identity)
 
-
+# sammelt Snapshot-Werte 
 def _snapshot_objects_with_debug(
     app: Any,
     object_queries: List[str],
@@ -1406,6 +1389,7 @@ def _snapshot_objects_with_debug(
         },
     }
 
+# Auslese- / Auswerteblock für Spannungen / Grenzwerte / Metriken 
 
 def _snapshot_bus_voltages_with_debug(app: Any) -> Dict[str, Any]:
     result = _snapshot_objects_with_debug(
@@ -1679,6 +1663,8 @@ def _extract_metric_payload_from_result_payload(result_payload: Dict[str, Any]) 
         )
 
     return [], {}, {}, {}, {}
+
+# Ausführen der Laständerung und Sammeln der Metriken, Überschneidung mit Last auflösen etc. prüfen; Refactoring
 def _execute_change_load_with_services(services: Dict[str, Any], instruction: dict) -> Dict[str, Any]:
     app = services["app"]
     studycase = services["studycase"]
@@ -1882,7 +1868,7 @@ def _execute_change_load_with_services(services: Dict[str, Any], instruction: di
         "data": data_payload,
     }
 
-
+# fasst Ergebnisse der Laständerung zusammen; Refactoring
 def _summarize_powerfactory_result_with_services(
     services: Dict[str, Any],
     result_payload: dict,
@@ -1920,231 +1906,8 @@ def _summarize_powerfactory_result_with_services(
         "requested_metrics": requested_metrics,
     }
 
-
 # ------------------------------------------------------------------
-# PUBLIC TOOL FUNCTIONS
-# ------------------------------------------------------------------
-def get_load_catalog(project_name: str = DEFAULT_PROJECT_NAME) -> Dict[str, Any]:
-    services = build_powerfactory_services(project_name=project_name)
-    if services["status"] != "ok":
-        return services
-    return _get_load_catalog_from_services(services)
-
-
-def interpret_instruction(user_input: str, project_name: str = DEFAULT_PROJECT_NAME) -> Dict[str, Any]:
-    services = build_powerfactory_services(project_name=project_name)
-    if services["status"] != "ok":
-        return services
-    return _interpret_instruction_with_services(services, user_input)
-
-
-def resolve_load(instruction: dict, project_name: str = DEFAULT_PROJECT_NAME) -> Dict[str, Any]:
-    services = build_powerfactory_services(project_name=project_name)
-    if services["status"] != "ok":
-        return services
-    return _resolve_load_with_services(services, instruction)
-
-
-def execute_change_load(instruction: dict, project_name: str = DEFAULT_PROJECT_NAME) -> Dict[str, Any]:
-    services = build_powerfactory_services(project_name=project_name)
-    if services["status"] != "ok":
-        return services
-    return _execute_change_load_with_services(services, instruction)
-
-
-def summarize_powerfactory_result(
-    result_payload: dict,
-    user_input: str,
-    project_name: str = DEFAULT_PROJECT_NAME,
-) -> Dict[str, Any]:
-    services = build_powerfactory_services(project_name=project_name)
-    if services["status"] != "ok":
-        return services
-    return _summarize_powerfactory_result_with_services(services, result_payload, user_input)
-
-
-def interpret_entity_instruction(
-    user_input: str,
-    project_name: str = DEFAULT_PROJECT_NAME,
-    contract_cubicles: bool = True,
-) -> Dict[str, Any]:
-    services = build_powerfactory_services(project_name=project_name)
-    if services["status"] != "ok":
-        return services
-
-    graph_result = build_powerfactory_topology_graph_from_services(
-        services=services,
-        contract_cubicles=contract_cubicles,
-    )
-    if graph_result["status"] != "ok":
-        return graph_result
-
-    inventory_result = _build_topology_inventory_with_services(services, graph_result)
-    if inventory_result["status"] != "ok":
-        return inventory_result
-
-    return _interpret_entity_instruction_with_services(
-        services=services,
-        user_input=user_input,
-        inventory=inventory_result.get("inventory", {}),
-    )
-
-
-def interpret_switch_instruction(
-    user_input: str,
-    project_name: str = DEFAULT_PROJECT_NAME,
-) -> Dict[str, Any]:
-    services = build_powerfactory_services(project_name=project_name)
-    if services["status"] != "ok":
-        return services
-
-    switch_inventory_result = _build_switch_inventory_from_services(services)
-    if switch_inventory_result["status"] != "ok":
-        return switch_inventory_result
-
-    inventory = _build_switch_inventory_payload(switch_inventory_result.get("switches", []))
-
-    return _interpret_switch_instruction_with_services(
-        services=services,
-        user_input=user_input,
-        inventory=inventory,
-    )
-
-
-def resolve_entity_from_inventory(
-    instruction: dict,
-    project_name: str = DEFAULT_PROJECT_NAME,
-    contract_cubicles: bool = True,
-    max_matches: int = 10,
-) -> Dict[str, Any]:
-    services = build_powerfactory_services(project_name=project_name)
-    if services["status"] != "ok":
-        return services
-
-    graph_result = build_powerfactory_topology_graph_from_services(
-        services=services,
-        contract_cubicles=contract_cubicles,
-    )
-    if graph_result["status"] != "ok":
-        return graph_result
-
-    inventory_result = _build_topology_inventory_with_services(services, graph_result)
-    if inventory_result["status"] != "ok":
-        return inventory_result
-
-    return _resolve_entity_from_inventory_with_services(
-        services=services,
-        instruction=instruction,
-        inventory=inventory_result.get("inventory", {}),
-        topology_graph=graph_result.get("topology_graph"),
-        max_matches=max_matches,
-    )
-
-
-def resolve_switch_from_inventory_llm(
-    instruction: dict,
-    project_name: str = DEFAULT_PROJECT_NAME,
-) -> Dict[str, Any]:
-    services = build_powerfactory_services(project_name=project_name)
-    if services["status"] != "ok":
-        return services
-
-    switch_inventory_result = _build_switch_inventory_from_services(services)
-    if switch_inventory_result["status"] != "ok":
-        return switch_inventory_result
-
-    inventory = _build_switch_inventory_payload(switch_inventory_result.get("switches", []))
-
-    return _resolve_switch_from_inventory_llm_with_services(
-        services=services,
-        instruction=instruction,
-        inventory=inventory,
-    )
-
-
-def execute_switch_operation(
-    instruction: dict,
-    resolution: dict,
-    project_name: str = DEFAULT_PROJECT_NAME,
-    run_loadflow_after: bool = True,
-) -> Dict[str, Any]:
-    services = build_powerfactory_services(project_name=project_name)
-    if services["status"] != "ok":
-        return services
-
-    return _execute_switch_operation_with_services(
-        services=services,
-        instruction=instruction,
-        resolution=resolution,
-        run_loadflow_after=run_loadflow_after,
-    )
-
-
-def summarize_switch_result(
-    result_payload: dict,
-    user_input: str,
-    project_name: str = DEFAULT_PROJECT_NAME,
-) -> Dict[str, Any]:
-    services = build_powerfactory_services(project_name=project_name)
-    if services["status"] != "ok":
-        return services
-
-    return _summarize_switch_result_with_services(
-        services=services,
-        result_payload=result_payload,
-        user_input=user_input,
-    )
-
-
-# ------------------------------------------------------------------
-# LLM OUTPUT MODELS FOR DATA QUERY
-# ------------------------------------------------------------------
-class DataQueryTypeDecision(BaseModel):
-    selected_entity_type: Optional[str] = Field(default=None)
-    confidence: str = Field(description="One of: high, medium, low")
-    rationale: str = Field(description="Short explanation for the match decision")
-    missing_context: List[str] = Field(default_factory=list)
-    should_execute: bool = Field(description="True only if the selected entity type is sufficiently safe.")
-
-
-class InventoryObjectMatchDecision(BaseModel):
-    selected_object_name: Optional[str] = Field(default=None)
-    selected_object_names: List[str] = Field(default_factory=list)
-    selection_mode: Optional[str] = Field(
-        default=None,
-        description="Use 'one' for a single exact object or 'all' if the request clearly targets all provided candidates."
-    )
-    confidence: str = Field(description="One of: high, medium, low")
-    rationale: str = Field(description="Short explanation for the match decision")
-    alternatives: List[str] = Field(default_factory=list)
-    should_execute: bool = Field(description="True only if the selected object is a safe unambiguous choice.")
-
-
-class AttributeSelectionDecision(BaseModel):
-    selected_attribute_handles: List[str] = Field(default_factory=list)
-    confidence: str = Field(description="One of: high, medium, low")
-    rationale: str = Field(description="Short explanation for the match decision")
-    missing_context: List[str] = Field(default_factory=list)
-    should_execute: bool = Field(description="True only if the selected attributes are a safe grounded match.")
-
-
-
-class DataSourceDecision(BaseModel):
-    selected_data_source: str = Field(description="One of: base, result, ambiguous")
-    confidence: str = Field(description="One of: high, medium, low")
-    rationale: str = Field(description="Short explanation for the decision")
-    should_execute: bool = Field(description="True if the decision is grounded enough to use directly without fallback.")
-
-
-class ResultPredefinedFieldDecision(BaseModel):
-    selected_field_names: List[str] = Field(default_factory=list)
-    confidence: str = Field(description="One of: high, medium, low")
-    rationale: str = Field(description="Short explanation for the selection decision")
-    should_execute: bool = Field(description="True only if the selected predefined result fields are a safe grounded match.")
-
-
-# ------------------------------------------------------------------
-# LIGHTWEIGHT DATA INVENTORY (NO TOPOLOGY GRAPH)
+# LIGHTWEIGHT DATA INVENTORY (NO TOPOLOGY GRAPH) - baut Inventar auf ohne Bezug auf Topologiegraph
 # ------------------------------------------------------------------
 def _safe_get_name(obj: Any) -> Optional[str]:
     try:
@@ -2205,7 +1968,7 @@ def _collect_pf_objects(app: Any, patterns: List[str]) -> List[Any]:
             continue
     return objects
 
-
+# Bildet Objekt-Inventar auf; Refactoring: Zusammenziehen mit build_toplogy_inventory_with_services und _build_switch_inventory_from_services prüfen
 def _build_data_inventory_from_services(services: Dict[str, Any]) -> Dict[str, Any]:
     app = services['app']
     project_name = services['project_name']
@@ -2256,7 +2019,7 @@ def _build_data_inventory_from_services(services: Dict[str, Any]) -> Dict[str, A
 
 
 # ------------------------------------------------------------------
-# FIELD LIBRARY FOR DATA QUERY
+# FIELD LIBRARY FOR DATA QUERY - semantische Feldbibliothek für Data-Query-Pfad; Refactoring: auslagern oder LLM-basierter machen? 
 # ------------------------------------------------------------------
 PF_DATA_FIELD_LIBRARY: Dict[str, Dict[str, Dict[str, Any]]] = {
     'bus': {
@@ -2492,7 +2255,7 @@ def _build_data_field_catalog(entity_type: str) -> List[Dict[str, Any]]:
 # ------------------------------------------------------------------
 
 # ------------------------------------------------------------------
-# RAW ATTRIBUTE CANDIDATE CATALOG FOR ATTRIBUTE LISTING
+# RAW ATTRIBUTE CANDIDATE CATALOG FOR ATTRIBUTE LISTING - liefert bekannte Attributnamen und Heuristik für Einheiten, falls PF nichts liefert
 # ------------------------------------------------------------------
 PF_ATTRIBUTE_UNIT_OVERRIDES: Dict[str, str] = {
     'uknom': 'kV',
@@ -2561,6 +2324,9 @@ def _build_data_query_type_chain():
     llm = get_llm()
     return prompt | llm | parser, parser
 
+# ------------------------------------------------------------------
+# LLM-Bausteine für Data-Query-Pfad - Refactoring: mögliches Auslagern? 
+# ------------------------------------------------------------------
 
 def _build_object_match_chain():
     parser = PydanticOutputParser(pydantic_object=InventoryObjectMatchDecision)
@@ -2634,7 +2400,7 @@ def _build_requested_attribute_extraction_chain():
     ])
     return _build_structured_chain(prompt, RequestedAttributeNameDecision)
 
-
+# extrahiert technische Attributnamen und normalisiert sie 
 def _extract_requested_attribute_names_llm(user_input: str) -> Dict[str, Any]:
     try:
         chain, parser, chain_mode = _build_requested_attribute_extraction_chain()
@@ -3158,7 +2924,7 @@ def _format_attribute_options_for_prompt(attribute_options: List[Dict[str, Any]]
         lines.append(f'- {handle}: {label} ({"; ".join(details)})')
     return '\n'.join(lines)
 
-
+# löst die konkrete Anweisung (Objekt, Attribut etc.) auf 
 def _interpret_data_query_instruction_with_services(
     services: Dict[str, Any],
     user_input: str,
@@ -3257,7 +3023,7 @@ def _interpret_data_query_instruction_with_services(
         'rationale': rationale,
     }
 
-
+# Auflösen des konreten Objekts aus der Inventar-Liste; Refactoring: prüfen, ob resolve_switch und resolve_entity integriert werden können 
 def _resolve_pf_object_from_inventory_llm_with_services(
     services: Dict[str, Any],
     instruction: dict,
@@ -3533,7 +3299,7 @@ def _ensure_loadflow_for_data_query(studycase: Any) -> Dict[str, Any]:
             'error': str(e),
         }
 
-
+# Auslesen der Attribute 
 def _list_available_object_attributes_with_services(
     services: Dict[str, Any],
     instruction: dict,
@@ -4556,7 +4322,7 @@ def _match_requested_attribute_names_exact(
         ),
     }
 
-
+# Auswahl des Attributs aus der Attributliste 
 def _select_pf_object_attributes_llm_with_services(
     services: Dict[str, Any],
     instruction: dict,
@@ -4938,7 +4704,7 @@ def _read_attribute_handle(obj: Any, entity_type: str, handle: str) -> Dict[str,
         'handle': handle,
     }
 
-
+# Liest das ausgewählte Attribut vom konkreten PF-Objekt aus 
 def _read_pf_object_attributes_with_services(
     services: Dict[str, Any],
     instruction: dict,
@@ -5180,7 +4946,7 @@ def _read_pf_object_attributes_with_services(
         },
     }
 
-
+# fasst Ergebnis der Attributabfrage zusammen 
 def _summarize_pf_object_data_result_with_services(
     services: Dict[str, Any],
     result_payload: dict,
@@ -5476,7 +5242,7 @@ def read_pf_object_attributes(
         resolution=resolution,
     )
 
-
+# Entscheidung, ob Attribut eher base oder result erfordert 
 def _classify_pf_object_data_source_with_services(
     services: Dict[str, Any],
     instruction: dict,
