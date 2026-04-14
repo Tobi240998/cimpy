@@ -52,6 +52,126 @@ def _to_py_list(value: Any) -> List[Any]:
     except Exception:
         return []
 
+# ------------------------------------------------------------------
+# SHARED INVENTORY HELPERS (NON-TOPOLOGY)
+# ------------------------------------------------------------------
+PF_INVENTORY_TYPE_PATTERNS: Dict[str, List[str]] = {
+    "bus": ["*.ElmTerm"],
+    "load": ["*.ElmLod*"],
+    "line": ["*.ElmLne", "*.ElmCable"],
+    "transformer": ["*.ElmTr*"],
+    "generator": ["*.ElmSym", "*.ElmAsm", "*.ElmGenstat", "*.ElmPvsys", "*.ElmSgen"],
+    "switch": ["*.Sta*"],
+}
+
+
+def _safe_get_name(obj: Any) -> Optional[str]:
+    try:
+        return getattr(obj, "loc_name", None)
+    except Exception:
+        return None
+
+
+def _safe_get_full_name(obj: Any) -> Optional[str]:
+    try:
+        return obj.GetFullName()
+    except Exception:
+        return _safe_get_name(obj)
+
+
+def _safe_get_class_name(obj: Any) -> Optional[str]:
+    try:
+        return obj.GetClassName()
+    except Exception:
+        return None
+
+
+def _normalize_inventory_entry(obj: Any, inventory_type: str, kind: str = "pf_object") -> Dict[str, Any]:
+    name = _safe_get_name(obj)
+    full_name = _safe_get_full_name(obj)
+    pf_class = _safe_get_class_name(obj)
+    return {
+        "node_id": full_name or name,
+        "name": name,
+        "full_name": full_name,
+        "pf_class": pf_class,
+        "kind": kind,
+        "degree": 0,
+        "inventory_type": inventory_type,
+    }
+
+
+def _dedupe_inventory_entries(items: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    seen = set()
+    unique: List[Dict[str, Any]] = []
+    for item in items:
+        key = item.get("full_name") or item.get("name")
+        if not key or key in seen:
+            continue
+        seen.add(key)
+        unique.append(item)
+    unique.sort(key=lambda item: (str(item.get("name") or ""), str(item.get("full_name") or "")))
+    return unique
+
+
+def _collect_pf_objects_for_patterns(app: Any, patterns: List[str]) -> List[Any]:
+    objects: List[Any] = []
+    for pattern in patterns:
+        try:
+            found = app.GetCalcRelevantObjects(pattern) or []
+            objects.extend(list(found))
+        except Exception:
+            continue
+    return objects
+
+
+def _build_inventory_payload(items_by_type: Dict[str, List[Dict[str, Any]]]) -> Dict[str, Any]:
+    normalized_items_by_type: Dict[str, List[Dict[str, Any]]] = {}
+    counts_by_type: Dict[str, int] = {}
+    samples_by_type: Dict[str, List[Dict[str, Any]]] = {}
+
+    for inventory_type, items in items_by_type.items():
+        unique = _dedupe_inventory_entries(items)
+        if not unique:
+            continue
+        normalized_items_by_type[inventory_type] = unique
+        counts_by_type[inventory_type] = len(unique)
+        samples_by_type[inventory_type] = [
+            {
+                "name": item.get("name"),
+                "pf_class": item.get("pf_class"),
+                "full_name": item.get("full_name"),
+            }
+            for item in unique[:10]
+        ]
+
+    return {
+        "available_types": sorted(normalized_items_by_type.keys()),
+        "counts_by_type": counts_by_type,
+        "items_by_type": normalized_items_by_type,
+        "samples_by_type": samples_by_type,
+    }
+
+
+def _collect_inventory_items_for_type(app: Any, inventory_type: str) -> List[Dict[str, Any]]:
+    patterns = PF_INVENTORY_TYPE_PATTERNS.get(inventory_type, [])
+    if not patterns:
+        return []
+
+    objects = _collect_pf_objects_for_patterns(app, patterns)
+
+    if inventory_type == "switch":
+        return [
+            _normalize_inventory_entry(obj, "switch", kind="sta")
+            for obj in objects
+            if _looks_like_switch_object(obj)
+        ]
+
+    return [
+        _normalize_inventory_entry(obj, inventory_type)
+        for obj in objects
+    ]
+
 
 # ------------------------------------------------------------------
 # POWERFACTORY CONTEXT
@@ -465,39 +585,7 @@ def _build_switch_inventory_from_services(services: Dict[str, Any]) -> Dict[str,
     app = services["app"]
     project_name = services["project_name"]
 
-    switches: List[Dict[str, Any]] = []
-
-    sta_objects = app.GetCalcRelevantObjects("*.Sta*") or []
-    for obj in sta_objects:
-        if not _looks_like_switch_object(obj):
-            continue
-
-        try:
-            full_name = obj.GetFullName()
-        except Exception:
-            full_name = None
-
-        try:
-            pf_class = obj.GetClassName()
-        except Exception:
-            pf_class = None
-
-        try:
-            name = obj.loc_name
-        except Exception:
-            name = None
-
-        switches.append({
-            "node_id": full_name or name,
-            "name": name,
-            "pf_class": pf_class,
-            "full_name": full_name,
-            "kind": "sta",
-            "degree": 0,
-            "inventory_type": "switch",
-        })
-
-    switches.sort(key=lambda item: (str(item.get("name") or ""), str(item.get("full_name") or "")))
+    switches = _collect_inventory_items_for_type(app, "switch")
 
     return {
         "status": "ok",
@@ -508,21 +596,7 @@ def _build_switch_inventory_from_services(services: Dict[str, Any]) -> Dict[str,
 
 # wandelt die Rohe Switch-Liste in Inventarformat um
 def _build_switch_inventory_payload(switches: List[Dict[str, Any]]) -> Dict[str, Any]:
-    return {
-        "available_types": ["switch"] if switches else [],
-        "counts_by_type": {"switch": len(switches)},
-        "items_by_type": {"switch": switches},
-        "samples_by_type": {
-            "switch": [
-                {
-                    "name": item.get("name"),
-                    "pf_class": item.get("pf_class"),
-                    "full_name": item.get("full_name"),
-                }
-                for item in switches[:10]
-            ]
-        },
-    }
+    return _build_inventory_payload({"switch": switches})
 
 # baut Switch-Instruction; Refactoring (Heuristik!)
 def _interpret_switch_instruction_with_services(
@@ -591,6 +665,126 @@ def _build_switch_match_chain():
     llm = get_llm()
     return prompt | llm | parser, parser
 
+def _build_inventory_object_match_chain():
+    parser = PydanticOutputParser(pydantic_object=InventoryObjectMatchDecision)
+    prompt = ChatPromptTemplate.from_messages([
+        (
+            "system",
+            "You resolve a user request to PowerFactory objects from a provided candidate list.\n"
+            "You may only select a name that appears exactly in the candidate list, or the special token __ALL__.\n"
+            "Do not invent names.\n"
+            "Use __ALL__ only if the request clearly refers to all available objects of the provided type.\n"
+            "If you choose one object, set selection_mode=one and selected_object_name to the exact chosen candidate name.\n"
+            "If you choose all objects, set selection_mode=all and selected_object_name=__ALL__.\n"
+            "If there is no safe grounded match, return selected_object_name=null and should_execute=false.\n"
+            "Use high confidence only for a clearly grounded decision.\n\n"
+            "{format_instructions}"
+        ),
+        (
+            "user",
+            "User request:\n{user_input}\n\n"
+            "Entity type: {entity_type}\n\n"
+            "Available object candidates:\n{object_candidates}"
+        ),
+    ])
+    llm = get_llm()
+    return prompt | llm | parser, parser
+
+def _resolve_objects_from_inventory_llm(
+    *,
+    project_name: str,
+    user_input: str,
+    entity_type: str,
+    candidate_items: List[Dict[str, Any]],
+    allow_all: bool = False,
+    require_high_confidence: bool = True,
+) -> Dict[str, Any]:
+    if not candidate_items:
+        return {
+            "status": "error",
+            "error": "no_candidates",
+            "details": f"Keine Kandidaten für entity_type={entity_type} vorhanden.",
+        }
+
+    candidate_names = [item.get("name") for item in candidate_items if item.get("name")]
+    if not candidate_names:
+        return {
+            "status": "error",
+            "error": "empty_candidate_names",
+            "details": f"Die Kandidaten für entity_type={entity_type} haben keine verwertbaren Namen.",
+        }
+
+    try:
+        chain, parser = _build_inventory_object_match_chain()
+        decision = chain.invoke({
+            "user_input": user_input or "",
+            "entity_type": entity_type,
+            "object_candidates": "\n".join(f"- {name}" for name in candidate_names),
+            "format_instructions": parser.get_format_instructions(),
+        })
+    except Exception as e:
+        return {
+            "status": "error",
+            "error": "llm_object_match_failed",
+            "details": str(e),
+        }
+
+    selected_name = decision.selected_object_name
+    selection_mode = str(decision.selection_mode or "one").strip().lower()
+
+    if allow_all and selected_name == "__ALL__" and selection_mode == "all" and decision.should_execute:
+        selected_matches = [item for item in candidate_items if item.get("name") in candidate_names]
+        return {
+            "status": "ok",
+            "project": project_name,
+            "asset_query": "__ALL__",
+            "selected_match": selected_matches[0] if selected_matches else None,
+            "selected_matches": selected_matches,
+            "matches": selected_matches,
+            "selection_mode": "all",
+            "llm_decision": decision.model_dump(),
+        }
+
+    if selected_name not in candidate_names:
+        return {
+            "status": "error",
+            "error": "invalid_object_selection",
+            "details": "Das LLM hat keinen gültigen exakten Namen aus der Kandidatenliste zurückgegeben.",
+            "candidate_names": candidate_names,
+            "llm_decision": decision.model_dump(),
+        }
+
+    if not decision.should_execute:
+        return {
+            "status": "error",
+            "error": "object_match_not_safe",
+            "details": "Das LLM hat keinen ausreichend sicheren Treffer gefunden.",
+            "candidate_names": candidate_names,
+            "llm_decision": decision.model_dump(),
+        }
+
+    if require_high_confidence and str(decision.confidence).lower() != "high":
+        return {
+            "status": "error",
+            "error": "object_match_not_confident_enough",
+            "details": "Der Treffer war nicht hoch genug abgesichert.",
+            "candidate_names": candidate_names,
+            "llm_decision": decision.model_dump(),
+        }
+
+    selected_match = next(item for item in candidate_items if item.get("name") == selected_name)
+
+    return {
+        "status": "ok",
+        "project": project_name,
+        "asset_query": selected_name,
+        "selected_match": selected_match,
+        "selected_matches": [selected_match],
+        "matches": [selected_match],
+        "selection_mode": "one",
+        "llm_decision": decision.model_dump(),
+    }
+
 # löst konkreten Schalter LLM-basiert aus Inventarliste auf
 def _resolve_switch_from_inventory_llm_with_services(
     services: Dict[str, Any],
@@ -602,80 +796,33 @@ def _resolve_switch_from_inventory_llm_with_services(
     items_by_type = inventory.get("items_by_type", {}) if isinstance(inventory, dict) else {}
     switch_candidates = items_by_type.get("switch", []) or []
 
-    if not switch_candidates:
+    result = _resolve_objects_from_inventory_llm(
+        project_name=project_name,
+        user_input=str(instruction.get("entity_name_raw") or ""),
+        entity_type="switch",
+        candidate_items=switch_candidates,
+        allow_all=False,
+        require_high_confidence=True,
+    )
+
+    if result.get("status") != "ok":
         return {
             "status": "error",
             "tool": "resolve_switch_from_inventory_llm",
             "project": project_name,
             "instruction": instruction,
-            "error": "no_switch_candidates",
-            "details": "Im Switch-Inventar wurden keine Schalterkandidaten gefunden.",
+            **{k: v for k, v in result.items() if k not in {"project"}},
         }
-
-    candidate_names = [item.get("name") for item in switch_candidates if item.get("name")]
-    if not candidate_names:
-        return {
-            "status": "error",
-            "tool": "resolve_switch_from_inventory_llm",
-            "project": project_name,
-            "instruction": instruction,
-            "error": "empty_switch_names",
-            "details": "Die vorhandenen Switch-Kandidaten haben keine verwertbaren Namen.",
-        }
-
-    try:
-        chain, parser = _build_switch_match_chain()
-        decision = chain.invoke({
-            "user_input": instruction.get("entity_name_raw") or "",
-            "switch_candidates": "\n".join(f"- {name}" for name in candidate_names),
-            "format_instructions": parser.get_format_instructions(),
-        })
-    except Exception as e:
-        return {
-            "status": "error",
-            "tool": "resolve_switch_from_inventory_llm",
-            "project": project_name,
-            "instruction": instruction,
-            "error": "llm_switch_match_failed",
-            "details": str(e),
-        }
-
-    selected_name = decision.selected_switch_name
-    if selected_name not in candidate_names:
-        return {
-            "status": "error",
-            "tool": "resolve_switch_from_inventory_llm",
-            "project": project_name,
-            "instruction": instruction,
-            "error": "invalid_switch_selection",
-            "details": "Das LLM hat keinen gültigen exakten Switch-Namen aus der Kandidatenliste zurückgegeben.",
-            "llm_decision": decision.model_dump(),
-            "candidate_names": candidate_names,
-        }
-
-    if not decision.should_execute or decision.confidence.lower() != "high":
-        return {
-            "status": "error",
-            "tool": "resolve_switch_from_inventory_llm",
-            "project": project_name,
-            "instruction": instruction,
-            "error": "switch_match_not_safe",
-            "details": "Das LLM hat keinen ausreichend sicheren Switch-Treffer gefunden.",
-            "llm_decision": decision.model_dump(),
-            "candidate_names": candidate_names,
-        }
-
-    selected_match = next(item for item in switch_candidates if item.get("name") == selected_name)
 
     return {
         "status": "ok",
         "tool": "resolve_switch_from_inventory_llm",
         "project": project_name,
         "instruction": instruction,
-        "asset_query": selected_name,
-        "selected_match": selected_match,
-        "matches": [selected_match],
-        "llm_decision": decision.model_dump(),
+        "asset_query": result.get("asset_query"),
+        "selected_match": result.get("selected_match"),
+        "matches": result.get("matches", []),
+        "llm_decision": result.get("llm_decision", {}),
     }
 
 
@@ -1906,115 +2053,26 @@ def _summarize_powerfactory_result_with_services(
         "requested_metrics": requested_metrics,
     }
 
-# ------------------------------------------------------------------
-# LIGHTWEIGHT DATA INVENTORY (NO TOPOLOGY GRAPH) - baut Inventar auf ohne Bezug auf Topologiegraph
-# ------------------------------------------------------------------
-def _safe_get_name(obj: Any) -> Optional[str]:
-    try:
-        return getattr(obj, 'loc_name', None)
-    except Exception:
-        return None
 
 
-def _safe_get_full_name(obj: Any) -> Optional[str]:
-    try:
-        return obj.GetFullName()
-    except Exception:
-        return _safe_get_name(obj)
-
-
-def _safe_get_class_name(obj: Any) -> Optional[str]:
-    try:
-        return obj.GetClassName()
-    except Exception:
-        return None
-
-
-def _normalize_object_entry(obj: Any, inventory_type: str) -> Dict[str, Any]:
-    name = _safe_get_name(obj)
-    full_name = _safe_get_full_name(obj)
-    pf_class = _safe_get_class_name(obj)
-    return {
-        'node_id': full_name or name,
-        'name': name,
-        'full_name': full_name,
-        'pf_class': pf_class,
-        'kind': 'pf_object',
-        'degree': 0,
-        'inventory_type': inventory_type,
-    }
-
-
-def _dedupe_inventory_items(items: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
-    seen = set()
-    unique: List[Dict[str, Any]] = []
-    for item in items:
-        key = item.get('full_name') or item.get('name')
-        if not key or key in seen:
-            continue
-        seen.add(key)
-        unique.append(item)
-    unique.sort(key=lambda item: (str(item.get('name') or ''), str(item.get('full_name') or '')))
-    return unique
-
-
-def _collect_pf_objects(app: Any, patterns: List[str]) -> List[Any]:
-    objects: List[Any] = []
-    for pattern in patterns:
-        try:
-            found = app.GetCalcRelevantObjects(pattern) or []
-            objects.extend(list(found))
-        except Exception:
-            continue
-    return objects
-
-# Bildet Objekt-Inventar auf; Refactoring: Zusammenziehen mit build_toplogy_inventory_with_services und _build_switch_inventory_from_services prüfen
+# Baut Objekt-Inventar auf
 def _build_data_inventory_from_services(services: Dict[str, Any]) -> Dict[str, Any]:
-    app = services['app']
-    project_name = services['project_name']
-
-    raw_items_by_type: Dict[str, List[Dict[str, Any]]] = {
-        'bus': [_normalize_object_entry(obj, 'bus') for obj in _collect_pf_objects(app, ['*.ElmTerm'])],
-        'load': [_normalize_object_entry(obj, 'load') for obj in _collect_pf_objects(app, ['*.ElmLod*'])],
-        'line': [_normalize_object_entry(obj, 'line') for obj in _collect_pf_objects(app, ['*.ElmLne', '*.ElmCable'])],
-        'transformer': [_normalize_object_entry(obj, 'transformer') for obj in _collect_pf_objects(app, ['*.ElmTr*'])],
-        'generator': [_normalize_object_entry(obj, 'generator') for obj in _collect_pf_objects(app, ['*.ElmSym', '*.ElmAsm', '*.ElmGenstat', '*.ElmPvsys', '*.ElmSgen'])],
-    }
-
-    switch_inventory_result = _build_switch_inventory_from_services(services)
-    raw_items_by_type['switch'] = switch_inventory_result.get('switches', []) if switch_inventory_result.get('status') == 'ok' else []
+    app = services["app"]
+    project_name = services["project_name"]
 
     items_by_type: Dict[str, List[Dict[str, Any]]] = {}
-    counts_by_type: Dict[str, int] = {}
-    samples_by_type: Dict[str, List[Dict[str, Any]]] = {}
+    for inventory_type in ["bus", "load", "line", "transformer", "generator", "switch"]:
+        items = _collect_inventory_items_for_type(app, inventory_type)
+        if items:
+            items_by_type[inventory_type] = items
 
-    for inventory_type, items in raw_items_by_type.items():
-        unique = _dedupe_inventory_items(items)
-        if not unique:
-            continue
-        items_by_type[inventory_type] = unique
-        counts_by_type[inventory_type] = len(unique)
-        samples_by_type[inventory_type] = [
-            {
-                'name': item.get('name'),
-                'pf_class': item.get('pf_class'),
-                'full_name': item.get('full_name'),
-            }
-            for item in unique[:10]
-        ]
-
-    inventory = {
-        'available_types': sorted(items_by_type.keys()),
-        'counts_by_type': counts_by_type,
-        'items_by_type': items_by_type,
-        'samples_by_type': samples_by_type,
-    }
+    inventory = _build_inventory_payload(items_by_type)
 
     return {
-        'status': 'ok',
-        'tool': 'build_data_inventory',
-        'project': project_name,
-        'inventory': inventory,
+        "status": "ok",
+        "tool": "build_data_inventory",
+        "project": project_name,
+        "inventory": inventory,
     }
 
 
@@ -2301,7 +2359,9 @@ PF_RAW_ATTRIBUTE_CATALOG: Dict[str, List[str]] = {
         'm:Psum', 'm:Qsum', 'm:P', 'm:Q', 'pgini', 'qgini', 'sgn', 'typ_id', 'type_id', 'outserv'
     ],
 }
-
+# ------------------------------------------------------------------
+# LLM-Bausteine für Data-Query-Pfad - Refactoring: mögliches Auslagern? 
+# ------------------------------------------------------------------
 
 def _build_data_query_type_chain():
     parser = PydanticOutputParser(pydantic_object=DataQueryTypeDecision)
@@ -2324,9 +2384,6 @@ def _build_data_query_type_chain():
     llm = get_llm()
     return prompt | llm | parser, parser
 
-# ------------------------------------------------------------------
-# LLM-Bausteine für Data-Query-Pfad - Refactoring: mögliches Auslagern? 
-# ------------------------------------------------------------------
 
 def _build_object_match_chain():
     parser = PydanticOutputParser(pydantic_object=InventoryObjectMatchDecision)
@@ -2451,6 +2508,9 @@ def _extract_requested_attribute_names_llm(user_input: str) -> Dict[str, Any]:
             'chain_mode': 'failed',
         }
 
+# ------------------------------------------------------------------
+# Debug / Fallback für Data Query Pfad; Refactoring: Prüfen, ob Fallback benötigt (Heuristik!)
+# ------------------------------------------------------------------
 
 def _print_debug_block(title: str, payload: Dict[str, Any]) -> None:
     try:
@@ -2516,6 +2576,9 @@ def _fallback_select_attribute_handles(user_input: str, attribute_options: List[
             result.append(handle)
     return result[:10]
 
+# ------------------------------------------------------------------
+# Data Source-Entscheidungsblock: Entscheidung, ob Basisdaten, Lastflussergebnis oder mehrdeutiger Fall vorliegt
+# ------------------------------------------------------------------
 
 def _build_data_source_decision_chain():
     prompt = ChatPromptTemplate.from_messages([
@@ -2624,6 +2687,9 @@ def _semantic_request_likely_needs_loadflow(user_input: str, source_preference: 
         return True
     return False
 
+# ------------------------------------------------------------------
+# Unterbau für Data-Query-Pfad: Extraktion technische Namen, Einheiten, Datenquelle für Attributnamen, Attribute aus Auswahloptionen aufbauen; Refactoring: teilweise heuristisch
+# ------------------------------------------------------------------
 
 def _normalize_attr_option_label(attr_name: str) -> str:
     return attr_name.replace(':', ' : ')
@@ -2729,7 +2795,9 @@ def _list_readable_raw_attributes(obj: Any, entity_type: str) -> List[Dict[str, 
     options.sort(key=lambda item: str(item.get('attribute_name') or ''))
     return options
 
-
+# ------------------------------------------------------------------
+# Discovery / Fallback-Block für schwierige Attributfälle
+# ------------------------------------------------------------------
 
 
 def _fallback_match_full_attribute_list(
@@ -3029,148 +3097,87 @@ def _resolve_pf_object_from_inventory_llm_with_services(
     instruction: dict,
     inventory: Dict[str, Any],
 ) -> Dict[str, Any]:
-    project_name = services['project_name']
-    entity_type = instruction.get('entity_type') if isinstance(instruction, dict) else None
+    project_name = services["project_name"]
+    entity_type = instruction.get("entity_type") if isinstance(instruction, dict) else None
+
     if not entity_type:
         return {
-            'status': 'error',
-            'tool': 'resolve_pf_object_from_inventory_llm',
-            'project': project_name,
-            'instruction': instruction,
-            'error': 'missing_entity_type',
-            'details': 'In der Instruction fehlt der Elementtyp.',
+            "status": "error",
+            "tool": "resolve_pf_object_from_inventory_llm",
+            "project": project_name,
+            "instruction": instruction,
+            "error": "missing_entity_type",
+            "details": "In der Instruction fehlt der Elementtyp.",
         }
 
-    items_by_type = inventory.get('items_by_type', {}) if isinstance(inventory, dict) else {}
+    items_by_type = inventory.get("items_by_type", {}) if isinstance(inventory, dict) else {}
     object_candidates = items_by_type.get(entity_type, []) or []
+
     if not object_candidates:
         return {
-            'status': 'error',
-            'tool': 'resolve_pf_object_from_inventory_llm',
-            'project': project_name,
-            'instruction': instruction,
-            'error': 'no_object_candidates',
-            'details': f'Für den Elementtyp {entity_type} wurden keine Kandidaten gefunden.',
+            "status": "error",
+            "tool": "resolve_pf_object_from_inventory_llm",
+            "project": project_name,
+            "instruction": instruction,
+            "error": "no_object_candidates",
+            "details": f"Für den Elementtyp {entity_type} wurden keine Kandidaten gefunden.",
         }
 
-    candidate_names = [item.get('name') for item in object_candidates if item.get('name')]
-    if not candidate_names:
+    user_input = ""
+    if isinstance(instruction, dict):
+        user_input = str(
+            instruction.get("entity_name_raw")
+            or instruction.get("request_text")
+            or instruction.get("attribute_request_text")
+            or ""
+        )
+
+    resolver_result = _resolve_objects_from_inventory_llm(
+        project_name=project_name,
+        user_input=user_input,
+        entity_type=entity_type,
+        candidate_items=object_candidates,
+        allow_all=True,
+        require_high_confidence=True,
+    )
+
+    if resolver_result.get("status") != "ok":
         return {
-            'status': 'error',
-            'tool': 'resolve_pf_object_from_inventory_llm',
-            'project': project_name,
-            'instruction': instruction,
-            'error': 'empty_object_names',
-            'details': 'Die Kandidatenliste enthält keine verwertbaren Objektnamen.',
+            "status": "error",
+            "tool": "resolve_pf_object_from_inventory_llm",
+            "project": project_name,
+            "instruction": instruction,
+            "error": resolver_result.get("error", "object_resolution_failed"),
+            "details": resolver_result.get("details", "Die Objektauflösung ist fehlgeschlagen."),
+            **(
+                {"llm_decision": resolver_result.get("llm_decision")}
+                if resolver_result.get("llm_decision") is not None
+                else {}
+            ),
+            **(
+                {"candidate_names": resolver_result.get("candidate_names")}
+                if resolver_result.get("candidate_names") is not None
+                else {}
+            ),
         }
 
-    candidate_names_for_prompt = list(candidate_names)
-    if '__ALL__' not in candidate_names_for_prompt:
-        candidate_names_for_prompt.append('__ALL__')
-
-    try:
-        chain, parser = _build_object_match_chain()
-        decision = chain.invoke({
-            'user_input': instruction.get('entity_name_raw') or '',
-            'entity_type': entity_type,
-            'object_candidates': '\n'.join(f'- {name}' for name in candidate_names_for_prompt),
-            'format_instructions': parser.get_format_instructions(),
-        })
-        decision_dump = decision.model_dump()
-    except Exception as e:
-        return {
-            'status': 'error',
-            'tool': 'resolve_pf_object_from_inventory_llm',
-            'project': project_name,
-            'instruction': instruction,
-            'error': 'llm_object_match_failed',
-            'details': str(e),
-        }
-
-    selected_name = decision.selected_object_name
-    selection_mode = decision.selection_mode or ('all' if selected_name == '__ALL__' else 'one')
-
-    if selected_name == '__ALL__':
-        if not decision.should_execute or decision.confidence.lower() != 'high':
-            return {
-                'status': 'error',
-                'tool': 'resolve_pf_object_from_inventory_llm',
-                'project': project_name,
-                'instruction': instruction,
-                'error': 'object_match_not_safe',
-                'details': 'Das LLM hat keine ausreichend sichere Mehrfachauswahl getroffen.',
-                'llm_decision': decision_dump,
-                'candidate_names': candidate_names,
-            }
-
-        selected_matches = [item for item in object_candidates if item.get('name') in candidate_names]
-        selected_object_names = [item.get('name') for item in selected_matches if item.get('name')]
-        selected_match = selected_matches[0] if selected_matches else None
-        if not selected_match:
-            return {
-                'status': 'error',
-                'tool': 'resolve_pf_object_from_inventory_llm',
-                'project': project_name,
-                'instruction': instruction,
-                'error': 'empty_all_selection',
-                'details': 'Die Mehrfachauswahl hat keine verwertbaren Objekte ergeben.',
-                'llm_decision': decision_dump,
-                'candidate_names': candidate_names,
-            }
-
-        return {
-            'status': 'ok',
-            'tool': 'resolve_pf_object_from_inventory_llm',
-            'project': project_name,
-            'instruction': instruction,
-            'asset_query': '__ALL__',
-            'selected_match': selected_match,
-            'selected_matches': selected_matches,
-            'selected_object_names': selected_object_names,
-            'selection_mode': 'all',
-            'matches': selected_matches,
-            'llm_decision': decision_dump,
-            'entity_type': entity_type,
-        }
-
-    if selected_name not in candidate_names:
-        return {
-            'status': 'error',
-            'tool': 'resolve_pf_object_from_inventory_llm',
-            'project': project_name,
-            'instruction': instruction,
-            'error': 'invalid_object_selection',
-            'details': 'Das LLM hat keinen gültigen exakten Objektnamen aus der Kandidatenliste zurückgegeben.',
-            'llm_decision': decision_dump,
-            'candidate_names': candidate_names,
-        }
-
-    if not decision.should_execute or decision.confidence.lower() != 'high':
-        return {
-            'status': 'error',
-            'tool': 'resolve_pf_object_from_inventory_llm',
-            'project': project_name,
-            'instruction': instruction,
-            'error': 'object_match_not_safe',
-            'details': 'Das LLM hat keinen ausreichend sicheren Objekttreffer gefunden.',
-            'llm_decision': decision_dump,
-            'candidate_names': candidate_names,
-        }
-
-    selected_match = next(item for item in object_candidates if item.get('name') == selected_name)
     return {
-        'status': 'ok',
-        'tool': 'resolve_pf_object_from_inventory_llm',
-        'project': project_name,
-        'instruction': instruction,
-        'asset_query': selected_name,
-        'selected_match': selected_match,
-        'selected_matches': [selected_match],
-        'selected_object_names': [selected_name],
-        'selection_mode': 'one' if selection_mode != 'all' else 'all',
-        'matches': [selected_match],
-        'llm_decision': decision_dump,
-        'entity_type': entity_type,
+        "status": "ok",
+        "tool": "resolve_pf_object_from_inventory_llm",
+        "project": project_name,
+        "instruction": instruction,
+        "asset_query": resolver_result.get("asset_query"),
+        "selected_match": resolver_result.get("selected_match"),
+        "selected_matches": resolver_result.get("selected_matches", []),
+        "selected_object_names": [
+            item.get("name")
+            for item in resolver_result.get("selected_matches", [])
+            if isinstance(item, dict) and item.get("name")
+        ],
+        "selection_mode": resolver_result.get("selection_mode", "one"),
+        "matches": resolver_result.get("matches", []),
+        "llm_decision": resolver_result.get("llm_decision", {}),
+        "entity_type": entity_type,
     }
 
 
