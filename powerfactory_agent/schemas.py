@@ -121,3 +121,21 @@ class TopologyEntityTypeDecision(BaseModel):
         default="",
         description="Short explanation of the classification decision."
     )
+
+class SwitchInstructionDecision(BaseModel):
+    operation: Optional[str] = Field(
+        default=None,
+        description="One of: open, close, toggle, or null if no safe switch operation can be determined."
+    )
+    should_execute: bool = Field(
+        default=False,
+        description="True if the requested switch operation is grounded enough to execute."
+    )
+    confidence: str = Field(
+        default="low",
+        description="One of: high, medium, low."
+    )
+    rationale: str = Field(
+        default="",
+        description="Short explanation of the decision."
+    )

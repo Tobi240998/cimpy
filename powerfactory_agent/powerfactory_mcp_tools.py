@@ -42,7 +42,8 @@ from cimpy.powerfactory_agent.schemas import (
     DataSourceDecision, 
     ResultPredefinedFieldDecision, 
     TopologyEntityNameCandidatesDecision, 
-    TopologyEntityTypeDecision
+    TopologyEntityTypeDecision, 
+    SwitchInstructionDecision
 )
 
 def _to_py_list(value: Any) -> List[Any]:
@@ -685,33 +686,67 @@ def _interpret_switch_instruction_with_services(
     inventory: Dict[str, Any],
 ) -> Dict[str, Any]:
     project_name = services["project_name"]
-    text = _safe_lower(user_input)
+    available_types = inventory.get("available_types", []) if isinstance(inventory, dict) else []
+    if not isinstance(available_types, list):
+        available_types = []
 
-    operation = None
-    if any(token in text for token in ["öffne", "oeffne", "open", "trenne"]):
-        operation = "open"
-    elif any(token in text for token in ["schließe", "schliesse", "schliese", "close", "einschalten", "zuschalten"]):
-        operation = "close"
-    elif any(token in text for token in ["toggle", "umschalten"]):
-        operation = "toggle"
+    entity_name_candidates = _build_entity_name_candidates(user_input)
+
+    payload: Dict[str, Any] = {}
+    error_text: Optional[str] = None
+
+    try:
+        chain, parser = _build_switch_instruction_chain()
+        decision = chain.invoke({
+            "user_input": user_input or "",
+            "available_types": "\n".join(f"- {t}" for t in available_types),
+            "format_instructions": parser.get_format_instructions(),
+        })
+
+        if hasattr(decision, "model_dump"):
+            payload = decision.model_dump()
+        elif hasattr(decision, "dict"):
+            payload = decision.dict()
+        elif isinstance(decision, dict):
+            payload = dict(decision)
+        else:
+            payload = {}
+    except Exception as exc:
+        error_text = str(exc)
+        payload = {}
+
+    operation = payload.get("operation") if isinstance(payload, dict) else None
+    should_execute = bool(payload.get("should_execute", False)) if isinstance(payload, dict) else False
+    confidence = str(payload.get("confidence") or "low").strip().lower() if isinstance(payload, dict) else "low"
+
+    if operation not in {"open", "close", "toggle"}:
+        operation = None
 
     instruction = {
         "query_type": "switch_operation",
         "operation": operation,
         "entity_type": "switch",
         "entity_name_raw": user_input,
-        "entity_name_candidates": _build_entity_name_candidates(user_input),
-        "available_types": inventory.get("available_types", []),
+        "entity_name_candidates": entity_name_candidates,
+        "available_types": available_types,
+        "debug_switch_decision": payload,
     }
 
-    if not operation:
+    print("[DEBUG interpret_switch_instruction] user_input:", repr(user_input))
+    print("[DEBUG interpret_switch_instruction] available_types:", available_types)
+    print("[DEBUG interpret_switch_instruction] switch_decision:", payload)
+    if error_text:
+        print("[DEBUG interpret_switch_instruction] llm_error:", error_text)
+    print("[DEBUG interpret_switch_instruction] entity_name_candidates:", entity_name_candidates)
+
+    if not operation or not should_execute or confidence not in {"high", "medium"}:
         return {
             "status": "error",
             "tool": "interpret_switch_instruction",
             "project": project_name,
             "user_input": user_input,
             "error": "missing_switch_operation",
-            "details": "Es konnte keine Schalteroperation erkannt werden.",
+            "details": "Es konnte keine Schalteroperation sicher erkannt werden.",
             "instruction": instruction,
         }
 
@@ -2585,6 +2620,28 @@ def _build_requested_attribute_extraction_chain():
         ),
     ])
     return _build_structured_chain(prompt, RequestedAttributeNameDecision)
+
+# LLM-Prompt für Schalter-Operation
+def _build_switch_instruction_chain():
+    parser = PydanticOutputParser(pydantic_object=SwitchInstructionDecision)
+    prompt = ChatPromptTemplate.from_messages([
+        (
+            "system",
+            "You interpret a PowerFactory switch operation request.\n"
+            "Your task is to determine the intended switch operation.\n"
+            "You may only choose one of these operations: open, close, toggle.\n"
+            "If the request does not clearly specify a switch operation, return operation=null and should_execute=false.\n"
+            "Use high confidence only if the operation is clearly grounded in the user request.\n\n"
+            "{format_instructions}"
+        ),
+        (
+            "user",
+            "User request:\n{user_input}\n\n"
+            "Available inventory types:\n{available_types}"
+        ),
+    ])
+    llm = get_llm()
+    return prompt | llm | parser, parser
 
 # extrahiert technische Attributnamen und normalisiert sie 
 def _extract_requested_attribute_names_llm(user_input: str) -> Dict[str, Any]:
