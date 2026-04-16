@@ -40,7 +40,9 @@ from cimpy.powerfactory_agent.schemas import (
     InventoryObjectMatchDecision, 
     AttributeSelectionDecision, 
     DataSourceDecision, 
-    ResultPredefinedFieldDecision
+    ResultPredefinedFieldDecision, 
+    TopologyEntityNameCandidatesDecision, 
+    TopologyEntityTypeDecision
 )
 
 def _to_py_list(value: Any) -> List[Any]:
@@ -374,46 +376,109 @@ def _tokenize(value: str) -> List[str]:
         text = text.replace(ch, " ")
     return [token for token in text.split() if token]
 
-# baut Kandidaten für Topologie-Pfad; Refactoring (Heuristik!)
+# baut Kandidaten für Topologie-Pfad
 def _build_entity_name_candidates(user_input: str) -> List[str]:
     text = (user_input or "").strip()
     if not text:
+        print("[DEBUG _build_entity_name_candidates] empty input")
         return []
 
-    candidates: List[str] = []
-    candidates.append(text)
+    payload: Dict[str, Any] = {}
+    error_text: Optional[str] = None
 
-    tokens = _tokenize(text)
-    for window_size in range(len(tokens), 0, -1):
-        for start in range(0, len(tokens) - window_size + 1):
-            candidate = " ".join(tokens[start:start + window_size]).strip()
-            if candidate and candidate not in candidates:
-                candidates.append(candidate)
+    try:
+        chain, parser = _build_entity_name_candidates_chain()
+        decision = chain.invoke({
+            "user_input": text,
+            "format_instructions": parser.get_format_instructions(),
+        })
 
-    return candidates
+        if hasattr(decision, "model_dump"):
+            payload = decision.model_dump()
+        elif hasattr(decision, "dict"):
+            payload = decision.dict()
+        elif isinstance(decision, dict):
+            payload = dict(decision)
+        else:
+            payload = {}
+    except Exception as exc:
+        error_text = str(exc)
+        payload = {}
 
-# keywordbasierte Typenbestimmung für Toplogieanfragen; Refactoring (Heuristik!); Vergleich mit Data-Query Pfad -> hier besser gelöst 
+    raw_candidates = payload.get("candidate_names", []) if isinstance(payload, dict) else []
+    if not isinstance(raw_candidates, list):
+        raw_candidates = []
+
+    cleaned: List[str] = []
+    seen = set()
+
+    for item in raw_candidates:
+        candidate = str(item).strip()
+        if not candidate:
+            continue
+        norm = candidate.casefold()
+        if norm in seen:
+            continue
+        seen.add(norm)
+        cleaned.append(candidate)
+
+    print("[DEBUG _build_entity_name_candidates] user_input:", repr(text))
+    print("[DEBUG _build_entity_name_candidates] llm_payload:", payload)
+    if error_text:
+        print("[DEBUG _build_entity_name_candidates] llm_error:", error_text)
+    print("[DEBUG _build_entity_name_candidates] raw_candidates:", raw_candidates)
+    print("[DEBUG _build_entity_name_candidates] cleaned_candidates:", cleaned[:8])
+
+    return cleaned[:8]
+
+# keywordbasierte Typenbestimmung für Topologieanfragen 
 def _infer_entity_type_from_text(user_input: str, inventory: Dict[str, Any]) -> Optional[str]:
-    text = _safe_lower(user_input)
+    text = (user_input or "").strip()
+    if not text:
+        return None
 
-    if "bus" in text or "knoten" in text or "terminal" in text:
-        return "bus"
-    if "last" in text or "load" in text:
-        return "load"
-    if "schalter" in text or "switch" in text or "breaker" in text or "coupler" in text:
-        return "switch"
-    if "trafo" in text or "transformer" in text:
-        return "transformer"
-    if "leitung" in text or "line" in text or "kabel" in text:
-        return "line"
-    if "generator" in text or "gen" in text:
-        return "generator"
+    available_types = inventory.get("available_types", []) if isinstance(inventory, dict) else []
+    if not isinstance(available_types, list):
+        available_types = []
 
-    counts_by_type = inventory.get("counts_by_type", {}) if isinstance(inventory, dict) else {}
-    if len(counts_by_type) == 1:
-        return next(iter(counts_by_type.keys()))
+    allowed_types = [str(t).strip() for t in available_types if str(t).strip()]
 
-    return None
+    if not allowed_types:
+        return None
+
+    try:
+        chain, parser = _build_topology_entity_type_chain()
+        decision = chain.invoke({
+            "user_input": text,
+            "available_types": "\n".join(f"- {t}" for t in allowed_types),
+            "format_instructions": parser.get_format_instructions(),
+        })
+
+        if hasattr(decision, "model_dump"):
+            payload = decision.model_dump()
+        elif hasattr(decision, "dict"):
+            payload = decision.dict()
+        elif isinstance(decision, dict):
+            payload = dict(decision)
+        else:
+            payload = {}
+    except Exception:
+        payload = {}
+
+    entity_type = payload.get("entity_type") if isinstance(payload, dict) else None
+    should_execute = bool(payload.get("should_execute", False)) if isinstance(payload, dict) else False
+    confidence = str(payload.get("confidence") or "low").strip().lower() if isinstance(payload, dict) else "low"
+
+    if entity_type not in allowed_types:
+        return None
+
+    if not should_execute:
+        return None
+
+    if confidence not in {"high", "medium"}:
+        return None
+
+    return entity_type
 
 
 # ------------------------------------------------------------------
@@ -434,21 +499,27 @@ def _build_topology_inventory_with_services(
         "inventory": inventory,
     }
 
-# baut die Instruction zur Topologie-Analyse; Refactoring (Heuristik!) - prüfen in Kombi mit resolve_entity_from_inventory_with_services
+# baut die Instruction zur Topologie-Analyse
 def _interpret_entity_instruction_with_services(
     services: Dict[str, Any],
     user_input: str,
     inventory: Dict[str, Any],
 ) -> Dict[str, Any]:
     project_name = services["project_name"]
+    entity_name_candidates = _build_entity_name_candidates(user_input)
 
     instruction = {
         "query_type": "neighbors",
         "entity_type": _infer_entity_type_from_text(user_input, inventory),
         "entity_name_raw": user_input,
-        "entity_name_candidates": _build_entity_name_candidates(user_input),
+        "entity_name_candidates": entity_name_candidates,
         "available_types": inventory.get("available_types", []),
+        "debug_entity_name_candidates": entity_name_candidates,
     }
+
+    print("[DEBUG interpret_entity_instruction] user_input:", repr(user_input))
+    print("[DEBUG interpret_entity_instruction] entity_type:", instruction.get("entity_type"))
+    print("[DEBUG interpret_entity_instruction] entity_name_candidates:", entity_name_candidates)
 
     return {
         "status": "ok",
@@ -547,16 +618,17 @@ def _resolve_entity_from_inventory_with_services(
             selected_matches = matches
             break
 
-    if not selected_matches:
-        return {
-            "status": "error",
-            "tool": "resolve_entity_from_inventory",
-            "project": project_name,
-            "instruction": instruction,
-            "error": "no_matching_asset",
-            "details": "Kein passendes Asset aus der Entity-Instruction konnte im Inventar gematcht werden.",
-            "attempted_queries": attempted_queries,
-        }
+        if not selected_matches:
+            return {
+                "status": "error",
+                "tool": "resolve_entity_from_inventory",
+                "project": project_name,
+                "instruction": instruction,
+                "error": "no_matching_asset",
+                "details": "Kein passendes Asset aus der Entity-Instruction konnte im Inventar gematcht werden.",
+                "entity_name_candidates": raw_candidates,
+                "attempted_queries": attempted_queries,
+            }
 
     selected_match = selected_matches[0]
 
@@ -857,33 +929,6 @@ def _resolve_objects_from_inventory_llm_with_services(
         "llm_decision": resolver_result.get("llm_decision", {}),
         "entity_type": entity_type,
     }
-
-
-def _build_inventory_object_match_chain():
-    parser = PydanticOutputParser(pydantic_object=InventoryObjectMatchDecision)
-    prompt = ChatPromptTemplate.from_messages([
-        (
-            "system",
-            "You resolve a user request to PowerFactory objects from a provided candidate list.\n"
-            "You may only select a name that appears exactly in the candidate list, or the special token __ALL__.\n"
-            "Do not invent names.\n"
-            "Use __ALL__ only if the request clearly refers to all available objects of the provided type.\n"
-            "If you choose one object, set selection_mode=one and selected_object_name to the exact chosen candidate name.\n"
-            "If you choose all objects, set selection_mode=all and selected_object_name=__ALL__.\n"
-            "If there is no safe grounded match, return selected_object_name=null and should_execute=false.\n"
-            "Use high confidence only for a clearly grounded decision.\n\n"
-            "{format_instructions}"
-        ),
-        (
-            "user",
-            "User request:\n{user_input}\n\n"
-            "Entity type: {entity_type}\n\n"
-            "Available object candidates:\n{object_candidates}"
-        ),
-    ])
-    llm = get_llm()
-    return prompt | llm | parser, parser
-
 
 
 # ------------------------------------------------------------------
@@ -2473,6 +2518,51 @@ def _build_attribute_selection_chain():
     llm = get_llm()
     return prompt | llm | parser, parser
 
+def _build_entity_name_candidates_chain():
+    parser = PydanticOutputParser(pydantic_object=TopologyEntityNameCandidatesDecision)
+    prompt = ChatPromptTemplate.from_messages([
+        (
+            "system",
+            "You extract likely PowerFactory asset name candidates from a user request.\n"
+            "Return a short ordered list of candidate asset names or name fragments that could match an asset in PowerFactory.\n"
+            "Rules:\n"
+            "- Focus only on the asset name, not the operation or surrounding question text.\n"
+            "- Do not invent technical details.\n"
+            "- Prefer exact-looking names if present.\n"
+            "- If the request contains descriptive extra text, strip it away and keep only likely asset name candidates.\n"
+            "- Return at most 8 candidates.\n"
+            "- Keep candidates unique and ordered from most likely to least likely.\n"
+            "- If no plausible asset name can be extracted safely, return an empty list.\n\n"
+            "{format_instructions}"
+        ),
+        (
+            "user",
+            "User request:\n{user_input}"
+        ),
+    ])
+    llm = get_llm()
+    return prompt | llm | parser, parser
+
+def _build_topology_entity_type_chain():
+    parser = PydanticOutputParser(pydantic_object=TopologyEntityTypeDecision)
+    prompt = ChatPromptTemplate.from_messages([
+        (
+            "system",
+            "You classify a PowerFactory topology request to one supported entity type.\n"
+            "You may only choose from the provided available types.\n"
+            "Do not invent types.\n"
+            "If there is not enough information, return entity_type=null and should_execute=false.\n"
+            "Use high confidence only for a clearly grounded interpretation.\n\n"
+            "{format_instructions}"
+        ),
+        (
+            "user",
+            "User request:\n{user_input}\n\n"
+            "Available entity types:\n{available_types}"
+        ),
+    ])
+    llm = get_llm()
+    return prompt | llm | parser, parser
 
 def _build_requested_attribute_extraction_chain():
     prompt = ChatPromptTemplate.from_messages([

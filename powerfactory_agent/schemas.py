@@ -93,3 +93,31 @@ class ResultPredefinedFieldDecision(BaseModel):
     confidence: str = Field(description="One of: high, medium, low")
     rationale: str = Field(description="Short explanation for the selection decision")
     should_execute: bool = Field(description="True only if the selected predefined result fields are a safe grounded match.")
+
+class TopologyEntityNameCandidatesDecision(BaseModel):
+    candidate_names: List[str] = Field(
+        default_factory=list,
+        description="Ordered list of plausible PowerFactory asset name candidates derived from the user request."
+    )
+    rationale: str = Field(
+        default="",
+        description="Short explanation of how the candidate names were derived."
+    )
+
+class TopologyEntityTypeDecision(BaseModel):
+    entity_type: Optional[str] = Field(
+        default=None,
+        description="One supported topology entity type from the available types, or null if no safe choice is possible."
+    )
+    confidence: str = Field(
+        default="low",
+        description="One of: high, medium, low"
+    )
+    should_execute: bool = Field(
+        default=False,
+        description="True if the entity type classification is grounded enough."
+    )
+    rationale: str = Field(
+        default="",
+        description="Short explanation of the classification decision."
+    )
