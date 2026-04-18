@@ -14,6 +14,7 @@ from cimpy.powerfactory_agent.powerfactory_mcp_tools import (
 )
 from cimpy.powerfactory_agent.powerfactory_tool_registry import PowerFactoryToolRegistry
 
+from copy import deepcopy
 
 class PFPlannerDecision(BaseModel):
     intent: str = Field(
@@ -1012,6 +1013,21 @@ class PowerFactoryDomainAgent:
         classification_steps = self._plan_to_steps(classification_plan) if classification_plan is not None else []
         self._last_planning_debug["classification_plan_steps"] = classification_steps
 
+        # ============================================================
+        # 1) Immer zuerst versuchen, ob eine echte Composite-Zerlegung sinnvoll ist
+        # ============================================================
+        composite_plan = self._build_composite_plan(
+            user_input=user_input,
+            classification=classification,
+        )
+        if composite_plan is not None:
+            self._last_planning_debug["plan_source"] = "composite_llm"
+            self._last_planning_debug["final_plan_steps"] = self._plan_to_steps(composite_plan)
+            return composite_plan
+
+        # ============================================================
+        # 2) Wenn der Standardplan gültig ist, wie bisher weiter
+        # ============================================================
         if standard_steps != ["unsupported_request"]:
             extended_composite_plan = self._build_extended_standard_composite_plan(
                 user_input=user_input,
@@ -1033,27 +1049,25 @@ class PowerFactoryDomainAgent:
             self._last_planning_debug["final_plan_steps"] = standard_steps
             return standard_plan
 
-        composite_plan = self._build_composite_plan(
-            user_input=user_input,
-            classification=classification,
-        )
-        if composite_plan is not None:
-            self._last_planning_debug["plan_source"] = "composite_llm"
-            self._last_planning_debug["final_plan_steps"] = self._plan_to_steps(composite_plan)
-            return composite_plan
-
+        # ============================================================
+        # 3) Fallbacks wie bisher
+        # ============================================================
         if classification_plan is not None:
-            self._last_planning_debug["plan_source"] = "classification_required_steps"
-            self._last_planning_debug["final_plan_steps"] = classification_steps
-            return classification_plan
+            repaired_steps = self._repair_step_sequence(classification_steps)
+            if self._validate_step_sequence(repaired_steps):
+                repaired_plan = self._steps_to_plan(repaired_steps, user_input_override=user_input)
+                self._last_planning_debug["plan_source"] = "classification_repaired"
+                self._last_planning_debug["final_plan_steps"] = repaired_steps
+                return repaired_plan
 
-        fallback_plan = self._build_flexible_fallback_plan(
+        flexible_plan = self._build_flexible_fallback_plan(
             user_input=user_input,
             classification=classification,
         )
+        flexible_steps = self._plan_to_steps(flexible_plan)
         self._last_planning_debug["plan_source"] = "flexible_fallback"
-        self._last_planning_debug["final_plan_steps"] = self._plan_to_steps(fallback_plan)
-        return fallback_plan
+        self._last_planning_debug["final_plan_steps"] = flexible_steps
+        return flexible_plan
 
     def get_available_tools(self) -> List[Dict[str, Any]]:
         return self.registry.list_tool_specs()
@@ -1364,6 +1378,19 @@ class PowerFactoryDomainAgent:
                 return self.build_error_result(error_result=result, debug_trace=debug_trace)
 
             self._store_step_result(step=step, result=result, state=state)
+            
+            if step == "interpret_instruction":
+                instruction = state.get("instruction") or {}
+                result_mode = instruction.get("result_request_mode")
+                result_query_text = str(instruction.get("result_query_text") or "").strip()
+
+                if result_mode == "delegate_result_query" and result_query_text:
+                    delegated_subrequest = {
+                        "user_input": result_query_text,
+                        "depends_on_previous": True,
+                        "source": "delegated_result_query",
+                    }
+                    state["delegated_result_subrequest"] = delegated_subrequest
 
             if self._is_summary_step(step):
                 state["summary_results"].append(result)
@@ -1682,11 +1709,63 @@ class PowerFactoryDomainAgent:
         }
         return result
 
+    def _extract_delegated_result_query_text(self, result: Dict[str, Any]) -> str:
+        instruction_candidates: List[Dict[str, Any]] = []
+
+        if isinstance(result.get("instruction"), dict):
+            instruction_candidates.append(result["instruction"])
+
+        load_block = result.get("load")
+        if isinstance(load_block, dict) and isinstance(load_block.get("instruction"), dict):
+            instruction_candidates.append(load_block["instruction"])
+
+        for instruction in instruction_candidates:
+            mode = str(instruction.get("result_request_mode") or "").strip()
+            query_text = str(instruction.get("result_query_text") or "").strip()
+            if mode == "delegate_result_query" and query_text:
+                return query_text
+
+        return ""
+
+
+    def _run_delegated_result_subrequest(
+        self,
+        services: Dict[str, Any],
+        user_input: str,
+    ) -> Dict[str, Any]:
+        preserved_planning_debug = deepcopy(self._last_planning_debug)
+
+        classification = self.classify_request(user_input)
+        plan = self.build_plan(user_input=user_input, classification=classification)
+
+        subrequest_result = self.execute_plan(
+            services=services,
+            plan=plan,
+            user_input=user_input,
+            classification=classification,
+        )
+
+        delegated_planning_debug = deepcopy(self._last_planning_debug)
+
+        # ursprünglichen Hauptlauf-Debug wiederherstellen
+        self._last_planning_debug = preserved_planning_debug
+
+        return {
+            "user_input": user_input,
+            "classification": classification,
+            "plan": plan,
+            "planning_debug": delegated_planning_debug,
+            "result": subrequest_result,
+        }
+
+
+
+
     def run(self, user_input: str) -> Dict[str, Any]:
         print("\n================ DEBUG START ================")
         print(f"[INPUT] {user_input}")
 
-        #PowerFactory starten, Projekt aktivieren etc.
+        # PowerFactory starten, Projekt aktivieren etc.
         services = build_powerfactory_services(project_name=self.project_name)
         if services["status"] != "ok":
             print("[ERROR] Services konnten nicht gebaut werden")
@@ -1731,6 +1810,72 @@ class PowerFactoryDomainAgent:
             user_input=user_input,
             classification=classification,
         )
+
+        delegated_query_text = ""
+        delegated_subrequest_bundle: Dict[str, Any] | None = None
+
+        if result.get("status") == "ok":
+            delegated_query_text = self._extract_delegated_result_query_text(result)
+
+        if delegated_query_text:
+            print("\n[DELEGATED RESULT SUBREQUEST]")
+            print(delegated_query_text)
+
+            delegated_subrequest_bundle = self._run_delegated_result_subrequest(
+                services=services,
+                user_input=delegated_query_text,
+            )
+
+            delegated_result = delegated_subrequest_bundle.get("result", {})
+            result["delegated_result_subrequest"] = delegated_subrequest_bundle
+
+            if delegated_result.get("status") == "ok":
+                primary_answer = str(result.get("answer") or "").strip()
+                delegated_answer = str(delegated_result.get("answer") or "").strip()
+
+                primary_messages = result.get("messages", [])
+                if not isinstance(primary_messages, list):
+                    primary_messages = [primary_answer] if primary_answer else []
+
+                delegated_messages = delegated_result.get("messages", [])
+                if not isinstance(delegated_messages, list):
+                    delegated_messages = [delegated_answer] if delegated_answer else []
+
+                merged_messages = [m for m in (primary_messages + delegated_messages) if str(m).strip()]
+                result["messages"] = merged_messages
+
+                if primary_answer and delegated_answer:
+                    result["answer"] = f"{primary_answer}\n\n{delegated_answer}"
+                elif delegated_answer:
+                    result["answer"] = delegated_answer
+
+                if self.debug_mode:
+                    result.setdefault("debug", {})
+                    result["debug"]["delegated_result_subrequest"] = {
+                        "user_input": delegated_subrequest_bundle.get("user_input"),
+                        "classification": delegated_subrequest_bundle.get("classification"),
+                        "plan": delegated_subrequest_bundle.get("plan"),
+                        "planning": delegated_subrequest_bundle.get("planning_debug"),
+                        "result": delegated_result,
+                    }
+            else:
+                warning_text = (
+                    "Zusätzliche Ergebnisabfrage konnte nach der Laständerung nicht erfolgreich ausgeführt werden."
+                )
+                warnings = result.get("warnings", [])
+                if not isinstance(warnings, list):
+                    warnings = []
+                warnings.append({
+                    "type": "delegated_result_subrequest_failed",
+                    "message": warning_text,
+                    "subrequest": delegated_query_text,
+                    "details": delegated_result,
+                })
+                result["warnings"] = warnings
+
+                if self.debug_mode:
+                    result.setdefault("debug", {})
+                    result["debug"]["delegated_result_subrequest"] = delegated_subrequest_bundle
 
         print("\n[FINAL RESULT ANSWER]")
         print(result.get("answer"))

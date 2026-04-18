@@ -139,3 +139,46 @@ class SwitchInstructionDecision(BaseModel):
         default="",
         description="Short explanation of the decision."
     )
+
+class ResultRequestDecision(BaseModel):
+    requested_metrics: List[str] = Field(
+        default_factory=list,
+        description="Ordered list of canonical internal metric names requested by the user."
+    )
+    should_execute: bool = Field(
+        default=False,
+        description="True if the metric selection is grounded enough."
+    )
+    confidence: str = Field(
+        default="low",
+        description="One of: high, medium, low."
+    )
+    rationale: str = Field(
+        default="",
+        description="Short explanation of the metric selection."
+    )
+
+class ResultRequestRoutingDecision(BaseModel):
+    mode: str = Field(
+        description="One of: standard_metrics, default_voltage, delegate_result_query"
+    )
+    requested_metrics: List[str] = Field(
+        default_factory=list,
+        description="Canonical metric names when mode=standard_metrics."
+    )
+    result_query_text: str = Field(
+        default="",
+        description="Standalone follow-up query for a result-data query when mode=delegate_result_query."
+    )
+    should_execute: bool = Field(
+        default=False,
+        description="True if the routing decision is grounded enough."
+    )
+    confidence: str = Field(
+        default="low",
+        description="One of: high, medium, low."
+    )
+    rationale: str = Field(
+        default="",
+        description="Short explanation of the routing decision."
+    )

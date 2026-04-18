@@ -43,7 +43,9 @@ from cimpy.powerfactory_agent.schemas import (
     ResultPredefinedFieldDecision, 
     TopologyEntityNameCandidatesDecision, 
     TopologyEntityTypeDecision, 
-    SwitchInstructionDecision
+    SwitchInstructionDecision, 
+    ResultRequestDecision, 
+    ResultRequestRoutingDecision
 )
 
 def _to_py_list(value: Any) -> List[Any]:
@@ -679,7 +681,7 @@ def _looks_like_switch_object(obj: Any) -> bool:
 
 
 
-# baut Switch-Instruction; Refactoring (Heuristik!)
+# baut Switch-Instruction
 def _interpret_switch_instruction_with_services(
     services: Dict[str, Any],
     user_input: str,
@@ -1331,25 +1333,149 @@ METRIC_SPECS: Dict[str, Dict[str, Any]] = {
 
 DEFAULT_RESULT_REQUESTS: List[str] = ["bus_voltage"]
 
-# leitet aus Nutzerfrage Ergebnis-Metriken ab; Refactoring (Heuristik!)
+# leitet aus Nutzerfrage Ergebnis-Metriken ab
 def _infer_result_requests_from_user_input(user_input: str) -> List[str]:
-    text = _safe_lower(user_input)
+    text = (user_input or "").strip()
     if not text:
         return list(DEFAULT_RESULT_REQUESTS)
 
-    inferred: List[str] = []
+    supported_metrics_lines: List[str] = []
     for metric_name, spec in METRIC_SPECS.items():
         aliases = spec.get("aliases", []) or []
-        if any(alias in text for alias in aliases):
-            inferred.append(metric_name)
+        label = spec.get("label", metric_name)
+        unit = spec.get("unit", "")
+        supported_metrics_lines.append(
+            f"- {metric_name}: label={label}; unit={unit}; aliases={aliases}"
+        )
 
-    if inferred:
-        return inferred
+    payload: Dict[str, Any] = {}
+    error_text: Optional[str] = None
+
+    try:
+        chain, parser = _build_result_request_chain()
+        decision = chain.invoke({
+            "user_input": text,
+            "supported_metrics_text": "\n".join(supported_metrics_lines),
+            "format_instructions": parser.get_format_instructions(),
+        })
+
+        if hasattr(decision, "model_dump"):
+            payload = decision.model_dump()
+        elif hasattr(decision, "dict"):
+            payload = decision.dict()
+        elif isinstance(decision, dict):
+            payload = dict(decision)
+        else:
+            payload = {}
+    except Exception as exc:
+        error_text = str(exc)
+        payload = {}
+
+    raw_metrics = payload.get("requested_metrics", []) if isinstance(payload, dict) else []
+    if not isinstance(raw_metrics, list):
+        raw_metrics = []
+
+    should_execute = bool(payload.get("should_execute", False)) if isinstance(payload, dict) else False
+    confidence = str(payload.get("confidence") or "low").strip().lower() if isinstance(payload, dict) else "low"
+
+    cleaned: List[str] = []
+    for item in raw_metrics:
+        metric = str(item).strip()
+        if metric in METRIC_SPECS and metric not in cleaned:
+            cleaned.append(metric)
+
+    print("[DEBUG _infer_result_requests_from_user_input] user_input:", repr(text))
+    print("[DEBUG _infer_result_requests_from_user_input] llm_payload:", payload)
+    if error_text:
+        print("[DEBUG _infer_result_requests_from_user_input] llm_error:", error_text)
+    print("[DEBUG _infer_result_requests_from_user_input] cleaned_metrics:", cleaned)
+
+    if cleaned and should_execute and confidence in {"high", "medium"}:
+        return cleaned
 
     return list(DEFAULT_RESULT_REQUESTS)
 
+# Entscheidung, ob nach Laständerung Ergebnis aus der Standardfunktion gelesen werden kann oder ob ein Subrequest zum vollen Auslesen notwendig ist 
+def _decide_result_request_mode_from_user_input(user_input: str) -> Dict[str, Any]:
+    text = (user_input or "").strip()
+    if not text:
+        return {
+            "mode": "default_voltage",
+            "requested_metrics": [],
+            "result_query_text": "",
+            "should_execute": True,
+            "confidence": "high",
+            "rationale": "Empty user input, falling back to default voltage.",
+        }
 
-# mappt Aliasnamen auf interne Metriknamen; kein Ergebnis: Weiterleitung zu infer_result_requests_from_user_input; Refactoring (Heuristik!)
+    supported_metrics_lines: List[str] = []
+    for metric_name, spec in METRIC_SPECS.items():
+        aliases = spec.get("aliases", []) or []
+        label = spec.get("label", metric_name)
+        unit = spec.get("unit", "")
+        supported_metrics_lines.append(
+            f"- {metric_name}: label={label}; unit={unit}; aliases={aliases}"
+        )
+
+    payload: Dict[str, Any] = {}
+    try:
+        chain, parser = _build_result_request_routing_chain()
+        decision = chain.invoke({
+            "user_input": text,
+            "supported_metrics_text": "\n".join(supported_metrics_lines),
+            "format_instructions": parser.get_format_instructions(),
+        })
+
+        if hasattr(decision, "model_dump"):
+            payload = decision.model_dump()
+        elif hasattr(decision, "dict"):
+            payload = decision.dict()
+        elif isinstance(decision, dict):
+            payload = dict(decision)
+        else:
+            payload = {}
+    except Exception:
+        payload = {}
+
+    mode = str(payload.get("mode") or "").strip()
+    requested_metrics = payload.get("requested_metrics", []) if isinstance(payload.get("requested_metrics", []), list) else []
+    result_query_text = str(payload.get("result_query_text") or "").strip()
+    should_execute = bool(payload.get("should_execute", False))
+    confidence = str(payload.get("confidence") or "low").strip().lower()
+    rationale = str(payload.get("rationale") or "").strip()
+
+    canonical_metrics = [m for m in requested_metrics if m in METRIC_SPECS]
+
+    if mode == "standard_metrics" and canonical_metrics and should_execute and confidence in {"high", "medium"}:
+        return {
+            "mode": "standard_metrics",
+            "requested_metrics": canonical_metrics,
+            "result_query_text": "",
+            "should_execute": True,
+            "confidence": confidence,
+            "rationale": rationale,
+        }
+
+    if mode == "delegate_result_query" and result_query_text and should_execute and confidence in {"high", "medium"}:
+        return {
+            "mode": "delegate_result_query",
+            "requested_metrics": [],
+            "result_query_text": result_query_text,
+            "should_execute": True,
+            "confidence": confidence,
+            "rationale": rationale,
+        }
+
+    return {
+        "mode": "default_voltage",
+        "requested_metrics": list(DEFAULT_RESULT_REQUESTS),
+        "result_query_text": "",
+        "should_execute": True,
+        "confidence": "medium",
+        "rationale": rationale or "No standard metric or delegated result query could be grounded safely.",
+    }
+
+# mappt Aliasnamen auf interne Metriknamen; kein Ergebnis: Weiterleitung zu infer_result_requests_from_user_input
 def _normalize_result_requests(requested_metrics: Any, user_input: str = "") -> List[str]:
     normalized: List[str] = []
 
@@ -1379,25 +1505,29 @@ def _normalize_result_requests(requested_metrics: Any, user_input: str = "") -> 
 
 
 # vereinheitlicht Anweisung 
-def _ensure_instruction_result_requests(instruction: Any, user_input: str = "") -> Dict[str, Any]:
-    if isinstance(instruction, BaseModel):
-        try:
-            instruction = instruction.model_dump()
-        except Exception:
-            try:
-                instruction = instruction.dict()
-            except Exception:
-                instruction = {}
-    elif not isinstance(instruction, dict):
-        instruction = {}
-    else:
-        instruction = dict(instruction)
+def _ensure_instruction_result_requests(instruction: dict, user_input: str = "") -> dict:
+    instruction_out = dict(instruction or {})
 
-    instruction["result_requests"] = _normalize_result_requests(
-        instruction.get("result_requests", []),
+    normalized = _normalize_result_requests(
+        instruction_out.get("result_requests", []),
         user_input=user_input,
     )
-    return instruction
+
+    routing = _decide_result_request_mode_from_user_input(user_input)
+
+    if routing.get("mode") == "standard_metrics":
+        instruction_out["result_requests"] = routing.get("requested_metrics", normalized or list(DEFAULT_RESULT_REQUESTS))
+    elif routing.get("mode") == "delegate_result_query":
+        instruction_out["result_requests"] = normalized or list(DEFAULT_RESULT_REQUESTS)
+    else:
+        instruction_out["result_requests"] = normalized or list(DEFAULT_RESULT_REQUESTS)
+
+    instruction_out["result_request_mode"] = routing.get("mode", "default_voltage")
+    instruction_out["result_query_text"] = routing.get("result_query_text", "")
+    instruction_out["result_request_rationale"] = routing.get("rationale", "")
+    instruction_out["result_request_confidence"] = routing.get("confidence", "low")
+
+    return instruction_out
 
 # Attributzugriff
 def _safe_get_pf_attribute(obj: Any, attr_name: str) -> Any:
@@ -2643,6 +2773,57 @@ def _build_switch_instruction_chain():
     llm = get_llm()
     return prompt | llm | parser, parser
 
+#LLM-Prompt für Auslesen des gesuchten Ergebnisses nach Laständerung
+def _build_result_request_chain():
+    parser = PydanticOutputParser(pydantic_object=ResultRequestDecision)
+    prompt = ChatPromptTemplate.from_messages([
+        (
+            "system",
+            "You identify which PowerFactory result metrics the user is asking for.\n"
+            "You may only choose from the provided supported metrics.\n"
+            "Use the alias information semantically, not as exact string matching only.\n"
+            "Do not invent new metrics.\n"
+            "Return canonical internal metric names only.\n"
+            "If no supported metric is clearly requested, return an empty list and should_execute=false.\n\n"
+            "{format_instructions}"
+        ),
+        (
+            "user",
+            "User request:\n{user_input}\n\n"
+            "Supported metrics and aliases:\n{supported_metrics_text}"
+        ),
+    ])
+    llm = get_llm()
+    return prompt | llm | parser, parser
+
+# LLM-Prompt zur Entscheidung, ob nach Laständerung das Ergebnis "standardmäßig" ausgelesen werden kann oder ob ein Subrequest notwendig ist für Data Query
+def _build_result_request_routing_chain():
+    parser = PydanticOutputParser(pydantic_object=ResultRequestRoutingDecision)
+    prompt = ChatPromptTemplate.from_messages([
+        (
+            "system",
+            "You decide how a PowerFactory load-change request should handle requested result values.\n"
+            "Choose exactly one mode:\n"
+            "- standard_metrics: the requested result can be handled by the supported standard metrics\n"
+            "- default_voltage: no concrete result question is present, so default to bus voltage\n"
+            "- delegate_result_query: a concrete result question is present, but it should be handled by a separate result data query\n\n"
+            "Rules:\n"
+            "- Use standard_metrics only if the user request clearly maps to supported metrics.\n"
+            "- Use default_voltage only if no concrete result quantity is explicitly requested.\n"
+            "- Use delegate_result_query if a concrete result quantity is requested but does not fit the standard metrics cleanly.\n"
+            "- When using standard_metrics, return canonical metric names only.\n"
+            "- When using delegate_result_query, return a standalone follow-up query in result_query_text.\n\n"
+            "{format_instructions}"
+        ),
+        (
+            "user",
+            "User request:\n{user_input}\n\n"
+            "Supported standard metrics and aliases:\n{supported_metrics_text}"
+        ),
+    ])
+    llm = get_llm()
+    return prompt | llm | parser, parser
+
 # extrahiert technische Attributnamen und normalisiert sie 
 def _extract_requested_attribute_names_llm(user_input: str) -> Dict[str, Any]:
     try:
@@ -2695,7 +2876,7 @@ def _extract_requested_attribute_names_llm(user_input: str) -> Dict[str, Any]:
         }
 
 # ------------------------------------------------------------------
-# Debug / Fallback für Data Query Pfad; Refactoring: Prüfen, ob Fallback benötigt (Heuristik!)
+# Debug für Data Query Pfad
 # ------------------------------------------------------------------
 
 def _print_debug_block(title: str, payload: Dict[str, Any]) -> None:
@@ -2710,57 +2891,6 @@ def _print_debug_block(title: str, payload: Dict[str, Any]) -> None:
             pass
 
 
-def _fallback_select_entity_type(user_input: str, available_types: List[str]) -> Optional[str]:
-    text = _safe_lower(user_input)
-    mapping = {
-        'bus': ['bus', 'knoten', 'terminal'],
-        'load': ['last', 'load'],
-        'switch': ['schalter', 'switch', 'breaker', 'coupler'],
-        'transformer': ['trafo', 'transformer'],
-        'line': ['leitung', 'line', 'kabel', 'cable'],
-        'generator': ['generator', 'gen'],
-    }
-    for entity_type, tokens in mapping.items():
-        if entity_type not in available_types:
-            continue
-        if any(token in text for token in tokens):
-            return entity_type
-    if len(available_types) == 1:
-        return available_types[0]
-    return None
-
-
-def _fallback_select_attribute_handles(user_input: str, attribute_options: List[Dict[str, Any]]) -> List[str]:
-    text = _safe_lower(user_input)
-    selected: List[str] = []
-    for item in attribute_options:
-        handle = item.get('handle')
-        tokens = [
-            item.get('label', ''),
-            item.get('field_name', ''),
-            item.get('attribute_name', ''),
-            *(item.get('aliases', []) or []),
-            *(item.get('candidate_attrs', []) or []),
-        ]
-        joined = ' | '.join(_safe_lower(str(token)) for token in tokens if token)
-        if not joined:
-            continue
-        if any(tok and tok in text for tok in _tokenize(joined)):
-            if handle:
-                selected.append(handle)
-    if not selected:
-        for item in attribute_options:
-            if item.get('handle') == 'field::state':
-                if any(token in text for token in ['zustand', 'offen', 'geschlossen', 'status', 'state']):
-                    selected.append('field::state')
-                    break
-    seen = set()
-    result: List[str] = []
-    for handle in selected:
-        if handle not in seen:
-            seen.add(handle)
-            result.append(handle)
-    return result[:10]
 
 # ------------------------------------------------------------------
 # Data Source-Entscheidungsblock: Entscheidung, ob Basisdaten, Lastflussergebnis oder mehrdeutiger Fall vorliegt
@@ -3199,7 +3329,7 @@ def _interpret_data_query_instruction_with_services(
     llm_decision_dump: Dict[str, Any] = {}
     selected_entity_type = None
     confidence = 'low'
-    rationale = 'Fallback-Auswahl verwendet.'
+    rationale = ''
     missing_context: List[str] = []
     should_execute = False
 
@@ -3210,21 +3340,48 @@ def _interpret_data_query_instruction_with_services(
             'available_types': '\n'.join(f'- {item}' for item in available_types),
             'format_instructions': parser.get_format_instructions(),
         })
-        llm_decision_dump = decision.model_dump()
-        selected_entity_type = decision.selected_entity_type if decision.selected_entity_type in available_types else None
-        confidence = decision.confidence
-        rationale = decision.rationale
-        missing_context = decision.missing_context or []
-        should_execute = bool(decision.should_execute)
+
+        if hasattr(decision, 'model_dump'):
+            llm_decision_dump = decision.model_dump()
+        elif hasattr(decision, 'dict'):
+            llm_decision_dump = decision.dict()
+        elif isinstance(decision, dict):
+            llm_decision_dump = dict(decision)
+        else:
+            llm_decision_dump = {}
+
+        raw_selected_entity_type = None
+        if hasattr(decision, 'selected_entity_type'):
+            raw_selected_entity_type = decision.selected_entity_type
+        elif isinstance(llm_decision_dump, dict):
+            raw_selected_entity_type = llm_decision_dump.get('selected_entity_type')
+
+        if raw_selected_entity_type in available_types:
+            selected_entity_type = raw_selected_entity_type
+
+        if hasattr(decision, 'confidence'):
+            confidence = decision.confidence
+        else:
+            confidence = str(llm_decision_dump.get('confidence') or 'low')
+
+        if hasattr(decision, 'rationale'):
+            rationale = decision.rationale
+        else:
+            rationale = str(llm_decision_dump.get('rationale') or '')
+
+        if hasattr(decision, 'missing_context'):
+            missing_context = decision.missing_context or []
+        else:
+            raw_missing_context = llm_decision_dump.get('missing_context', [])
+            missing_context = raw_missing_context if isinstance(raw_missing_context, list) else []
+
+        if hasattr(decision, 'should_execute'):
+            should_execute = bool(decision.should_execute)
+        else:
+            should_execute = bool(llm_decision_dump.get('should_execute', False))
+
     except Exception as e:
         llm_decision_dump = {'error': str(e)}
-
-    if selected_entity_type is None:
-        selected_entity_type = _fallback_select_entity_type(user_input, available_types)
-        if selected_entity_type:
-            confidence = 'medium'
-            should_execute = True
-            rationale = 'Entity-Typ wurde per regelbasiertem Fallback erkannt.'
 
     if not selected_entity_type:
         missing_context.append('entity_type')
@@ -3276,7 +3433,6 @@ def _interpret_data_query_instruction_with_services(
         'confidence': confidence,
         'rationale': rationale,
     }
-
 
 
 # ------------------------------------------------------------------
@@ -3551,6 +3707,7 @@ def _get_predefined_result_field_names(entity_type: Optional[str]) -> List[str]:
     mapping = {
         'bus': ['voltage_ln', 'voltage_ll', 'p', 'q'],
         'line': ['loading'],
+        'transformer' : ['loading'],
     }
     return list(mapping.get(entity_type or '', []))
 
@@ -3749,6 +3906,88 @@ def _match_requested_result_handles_exact(
         'rationale': 'Exakter Treffer auf Resultat-Attributname/-Label.' if matched_options else 'Kein exakter Treffer auf Resultat-Attributname/-Label.',
     }
 
+#LLM-Match gegen alle vorhandenen Attribute im Data Query Pfad 
+def _select_result_attribute_handles_from_all_options_llm(
+    request_text: str,
+    entity_type: Optional[str],
+    object_name: Optional[str],
+    attribute_options: List[Dict[str, Any]],
+) -> Dict[str, Any]:
+    if not attribute_options:
+        return {
+            'status': 'error',
+            'selected_attribute_handles': [],
+            'matched_candidates': [],
+            'should_execute': False,
+            'confidence': 'low',
+            'rationale': 'Keine Resultat-Attributoptionen verfügbar.',
+            'llm_decision': {},
+            'chain_mode': 'not_applicable',
+        }
+
+    try:
+        chain, parser = _build_attribute_selection_chain()
+
+        invoke_payload = {
+            'user_input': request_text or '',
+            'entity_type': entity_type or '',
+            'object_name': object_name or '',
+            'attribute_options': _format_attribute_options_for_prompt(attribute_options),
+        }
+        if parser is not None:
+            invoke_payload['format_instructions'] = parser.get_format_instructions()
+
+        decision = chain.invoke(invoke_payload)
+
+        if hasattr(decision, 'model_dump'):
+            decision_dict = decision.model_dump()
+        elif hasattr(decision, 'dict'):
+            decision_dict = decision.dict()
+        elif isinstance(decision, dict):
+            decision_dict = dict(decision)
+        else:
+            decision_dict = {}
+
+        selected_handles_raw = decision_dict.get('selected_attribute_handles', []) or []
+        if not isinstance(selected_handles_raw, list):
+            selected_handles_raw = []
+
+        valid_by_handle = {
+            item.get('handle'): item
+            for item in attribute_options or []
+            if item.get('handle')
+        }
+
+        selected_attribute_handles: List[str] = []
+        matched_candidates: List[Dict[str, Any]] = []
+        seen = set()
+
+        for handle in selected_handles_raw:
+            if handle in valid_by_handle and handle not in seen:
+                seen.add(handle)
+                selected_attribute_handles.append(handle)
+                matched_candidates.append(valid_by_handle[handle])
+
+        return {
+            'status': 'ok',
+            'selected_attribute_handles': selected_attribute_handles,
+            'matched_candidates': matched_candidates,
+            'should_execute': bool(decision_dict.get('should_execute', False)) and bool(selected_attribute_handles),
+            'confidence': decision_dict.get('confidence', 'low'),
+            'rationale': decision_dict.get('rationale', ''),
+            'llm_decision': decision_dict,
+        }
+
+    except Exception as e:
+        return {
+            'status': 'error',
+            'selected_attribute_handles': [],
+            'matched_candidates': [],
+            'should_execute': False,
+            'confidence': 'low',
+            'rationale': f'LLM-Fallback für Resultatattribute fehlgeschlagen: {e}',
+            'llm_decision': {'error': str(e)},
+        }
 
 def _select_pf_object_result_attributes_llm_with_services(
     services: Dict[str, Any],
@@ -3761,12 +4000,25 @@ def _select_pf_object_result_attributes_llm_with_services(
     request_text = (instruction.get('attribute_request_text') or instruction.get('entity_name_raw') or '') if isinstance(instruction, dict) else ''
     requested_attribute_names = instruction.get('requested_attribute_names', []) if isinstance(instruction, dict) else []
     object_payload = (attribute_listing.get('object', {}) or {}) if isinstance(attribute_listing, dict) else {}
+    object_name = object_payload.get('name')
     entity_type = (instruction or {}).get('entity_type')
 
     predefined_options = _get_predefined_result_attribute_options(entity_type, attribute_options)
     predefined_llm_result = _select_predefined_result_field_handles_llm(
         entity_type=entity_type,
         request_text=request_text,
+        attribute_options=attribute_options,
+    )
+
+    exact_match_result = _match_requested_attribute_names_exact(
+        requested_attribute_names=requested_attribute_names,
+        attribute_options=attribute_options,
+    )
+
+    full_option_llm_result = _select_result_attribute_handles_from_all_options_llm(
+        request_text=request_text,
+        entity_type=entity_type,
+        object_name=object_name,
         attribute_options=attribute_options,
     )
 
@@ -3777,35 +4029,71 @@ def _select_pf_object_result_attributes_llm_with_services(
     confidence = 'low'
     selection_notes: List[str] = []
 
+    # ============================================================
+    # 1) PREDEFINED RESULT FIELDS
+    # ============================================================
     if predefined_llm_result.get('status') == 'ok' and predefined_llm_result.get('should_execute'):
         selected_handles = list(predefined_llm_result.get('selected_attribute_handles', []))
         selected_attributes = list(predefined_llm_result.get('matched_candidates', []))
         selection_mode = 'predefined_result_fields_llm'
         rationale = predefined_llm_result.get('rationale') or ''
         confidence = predefined_llm_result.get('confidence', 'low')
+
+    # ============================================================
+    # 2) GENERISCHE BUS-SPANNUNG IM RESULT-PFAD
+    # ============================================================
     elif entity_type == 'bus' and _is_generic_bus_voltage_request(request_text):
-        fallback_attr = next((item for item in predefined_options if item.get('field_name') == 'voltage_ll' and item.get('handle')), None)
+        fallback_attr = next(
+            (item for item in predefined_options if item.get('field_name') == 'voltage_ll' and item.get('handle')),
+            None
+        )
         if fallback_attr is not None:
             selected_handles = [fallback_attr.get('handle')]
             selected_attributes = [fallback_attr]
             selection_mode = 'result_voltage_default_ll'
             confidence = 'medium'
             rationale = 'Allgemeine Spannungsanfrage im Result-Pfad ohne Leiter-Leiter/Leiter-Erde-Angabe; standardmäßig wurde Leiter-Leiter gewählt.'
-            selection_notes.append('Da nicht angegeben wurde, ob Leiter-Leiter oder Leiter-Erde gemeint ist, wurde standardmäßig Leiter-Leiter verwendet.')
+            selection_notes.append('generic_bus_voltage_default')
+
+    # ============================================================
+    # 3) EXAKTER MATCH AUF TECHNISCHEN NAMEN / LABEL
+    # ============================================================
+    elif exact_match_result.get('status') == 'ok' and exact_match_result.get('should_execute'):
+        selected_handles = list(exact_match_result.get('selected_attribute_handles', []))
+        selected_attributes = list(exact_match_result.get('matched_candidates', []))
+        selection_mode = 'exact_result_attribute_name_match'
+        rationale = exact_match_result.get('rationale') or ''
+        confidence = exact_match_result.get('confidence', 'low')
+
+    # ============================================================
+    # 4) SEMANTISCHES LLM-MATCH GEGEN ALLE RESULT-ATTRIBUTE
+    # ============================================================
+    elif full_option_llm_result.get('status') == 'ok' and full_option_llm_result.get('should_execute'):
+        selected_handles = list(full_option_llm_result.get('selected_attribute_handles', []))
+        selected_attributes = list(full_option_llm_result.get('matched_candidates', []))
+        selection_mode = 'result_attribute_options_llm'
+        rationale = full_option_llm_result.get('rationale') or ''
+        confidence = full_option_llm_result.get('confidence', 'low')
+        selection_notes.append('semantic_result_attribute_fallback')
+
+    instruction_out = dict(instruction or {})
+    instruction_out['selected_attribute_handles'] = selected_handles
 
     selection_debug = {
         'project': project_name,
         'entity_type': entity_type,
-        'object_name': object_payload.get('name'),
+        'object_name': object_name,
         'request_text': request_text,
         'requested_attribute_names': requested_attribute_names,
-        'requested_attribute_name_extraction': (instruction or {}).get('requested_attribute_name_extraction'),
-        'data_source_decision': (instruction or {}).get('data_source_decision'),
-        'attribute_search_mode': 'result',
+        'requested_attribute_name_extraction': instruction.get('requested_attribute_name_extraction'),
         'available_result_attribute_count': len(attribute_options),
         'predefined_result_attribute_count': len(predefined_options),
-        'predefined_result_attribute_handles_preview': [item.get('handle') for item in predefined_options],
+        'predefined_result_attribute_handles_preview': [
+            item.get('handle') for item in predefined_options[:10] if item.get('handle')
+        ],
         'predefined_llm_result': predefined_llm_result,
+        'exact_match_result': exact_match_result,
+        'full_option_llm_result': full_option_llm_result,
         'selection_mode': selection_mode,
         'selection_notes': selection_notes,
         'final_selected_handles': selected_handles,
@@ -3813,56 +4101,39 @@ def _select_pf_object_result_attributes_llm_with_services(
         'final_should_execute': bool(selected_handles),
         'final_confidence': confidence,
     }
+
     _print_debug_block('Result Attribute Selection', selection_debug)
 
-    if not selected_handles:
-        candidate_attributes = _build_attribute_candidate_suggestions(
-            attribute_options=predefined_options or attribute_options,
-            handles=[item.get('handle') for item in (predefined_options or attribute_options)[:10] if item.get('handle')],
-            max_items=10,
-        )
+    if selected_handles:
+        instruction_out['attribute_selection_debug'] = selection_debug
         return {
-            'status': 'error',
-            'tool': 'select_pf_object_result_attributes_llm',
+            'status': 'ok',
+            'tool': 'select_pf_object_attributes_llm',
             'project': project_name,
-            'instruction': instruction,
+            'instruction': instruction_out,
             'resolution': resolution,
             'attribute_listing': attribute_listing,
-            'error': 'result_attribute_selection_not_safe',
-            'details': 'Die Resultat-Attributauswahl konnte nicht sicher genug aufgelöst werden.',
-            'candidate_attribute_handles': [item.get('handle') for item in (predefined_options or attribute_options)[:10] if item.get('handle')],
-            'candidate_attributes': candidate_attributes,
+            'selected_attribute_handles': selected_handles,
+            'selected_attributes': selected_attributes,
+            'llm_decision': {
+                'path': selection_mode,
+                'predefined_llm_result': predefined_llm_result,
+                'exact_match_result': exact_match_result,
+                'full_option_llm_result': full_option_llm_result,
+            },
             'selection_debug': selection_debug,
         }
 
-    instruction_out = dict(instruction)
-    instruction_out['selected_attribute_handles'] = selected_handles
-    instruction_out['attribute_selection_debug'] = selection_debug
-    instruction_out['data_source_preference'] = 'result'
-    if selection_notes:
-        existing_notes = list(instruction_out.get('result_selection_notes', []) or [])
-        for note in selection_notes:
-            if note not in existing_notes:
-                existing_notes.append(note)
-        instruction_out['result_selection_notes'] = existing_notes
-
     return {
-        'status': 'ok',
-        'tool': 'select_pf_object_result_attributes_llm',
+        'status': 'error',
+        'tool': 'select_pf_object_attributes_llm',
         'project': project_name,
         'instruction': instruction_out,
         'resolution': resolution,
         'attribute_listing': attribute_listing,
-        'selected_attribute_handles': selected_handles,
-        'selected_attributes': selected_attributes,
+        'error': 'result_attribute_selection_not_safe',
+        'details': 'Die Resultat-Attributauswahl konnte nicht sicher genug aufgelöst werden.',
         'selection_debug': selection_debug,
-        'llm_decision': {
-            'path': selection_mode,
-            'confidence': confidence,
-            'rationale': rationale,
-            'should_execute': bool(selected_handles),
-            'selection_notes': selection_notes,
-        },
     }
 
 
