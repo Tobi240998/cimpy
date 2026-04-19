@@ -43,7 +43,7 @@ def _filter_snapshot_cache_by_time(snapshot_cache: dict, start_iso: str | None, 
             out[snap] = data
     return out
 
-
+# Refactoring: Heuristik
 def _detect_topology_intent(user_input: str, analysis_plan: dict | None = None) -> dict:
     if analysis_plan:
         topology_scope = analysis_plan.get("topology_scope", "none")
@@ -124,7 +124,7 @@ def _resolve_equipment_from_selection(parsed: dict, network_index: dict):
     equipment_obj = network_index["equipment_name_index"][equipment_type][equipment_key]
     return equipment_obj, equipment_type, equipment_key
 
-
+# Refactoring: nochmal prüfen, ob Einheiten wirklich vorher festgesetzt werden müssen 
 def _default_metric_for_equipment_type(equipment_type: str | None):
     if equipment_type == "PowerTransformer":
         return "S"

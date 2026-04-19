@@ -33,6 +33,7 @@ from cimpy.cimpy_time_analysis.cim_queries import (
     summarize_voltage,
 )
 
+from cimpy.cimpy_time_analysis.cim_object_utils import collect_all_cim_objects
 
 _EXCLUDED_EQUIPMENT_CLASS_NAMES = {
     "Terminal",
@@ -91,6 +92,13 @@ class FinalAnswerDecision(BaseModel):
     answer: str = Field(default="")
 
 
+class VoltageLimitSelectionDecision(BaseModel):
+    low_candidate_id: Optional[str] = Field(default=None)
+    high_candidate_id: Optional[str] = Field(default=None)
+    should_execute: bool = Field(default=False)
+    rationale: str = Field(default="")
+
+# setzt cim_route auf Default CIM_ROOT, falls nichts übergeben wurde 
 def _normalize_cim_root(cim_root: Optional[str] = None) -> str:
     return cim_root or CIM_ROOT
 
@@ -199,7 +207,7 @@ _BASE_ATTRIBUTE_UNITS: Dict[str, Optional[str]] = {
     "phaseAngleClock": None,
 }
 
-
+# ordnet Base-Attributen Einheiten zu
 def _base_attribute_unit(attr_name: str, equipment_obj: Any = None) -> Optional[str]:
     if not attr_name:
         return None
@@ -225,7 +233,7 @@ def _base_attribute_unit(attr_name: str, equipment_obj: Any = None) -> Optional[
 
     return None
 
-
+# formatiert Base-Werte für die Antwortausgabe mit Einheit
 def _format_base_value_for_answer(attr_name: str, value: Any, equipment_obj: Any = None) -> str:
     unit = _base_attribute_unit(attr_name, equipment_obj)
 
@@ -260,7 +268,7 @@ def _format_base_value_for_answer(attr_name: str, value: Any, equipment_obj: Any
 
     return repr(value)
 
-
+# ergänzt rohe Base-Werte um value & unit 
 def _build_base_values_with_units(values: Dict[str, Any], equipment_obj: Any = None) -> Dict[str, Any]:
     enriched: Dict[str, Any] = {}
 
@@ -274,7 +282,7 @@ def _build_base_values_with_units(values: Dict[str, Any], equipment_obj: Any = N
     return enriched
 
 
-
+# macht aus Base-Werten einen skalaren Vergleichswert, auch wenn Listen/Dicts geliefert werden
 def _extract_scalar_base_value(value: Any, *, prefer_max: bool = True) -> Optional[float]:
     if value is None:
         return None
@@ -297,7 +305,7 @@ def _extract_scalar_base_value(value: Any, *, prefer_max: bool = True) -> Option
         return max(candidates) if prefer_max else min(candidates)
     return None
 
-
+# zieht numerische Messreihe aus query_result_data["rows"]
 def _extract_observed_series(query_result_data: Dict[str, Any] | None) -> List[float]:
     query_result_data = query_result_data or {}
     rows = query_result_data.get("rows", []) or []
@@ -323,7 +331,7 @@ def _extract_observed_series(query_result_data: Dict[str, Any] | None) -> List[f
             continue
     return values
 
-
+# extrahiert timestamp+value-Paare aus Query-Result für zeitbezogene Vergleiche 
 def _extract_observed_rows(query_result_data: Dict[str, Any] | None) -> List[Dict[str, Any]]:
     query_result_data = query_result_data or {}
     rows = query_result_data.get("rows", []) or []
@@ -368,20 +376,7 @@ def _extract_observed_rows(query_result_data: Dict[str, Any] | None) -> List[Dic
 
     return values
 
-
-def _looks_like_comparison_request(user_input: str) -> bool:
-    text = (user_input or "").strip().lower()
-    if not text:
-        return False
-    markers = [
-        "überlast", "overload", "auslastung", "loading",
-        "grenze", "grenzwert", "limit", "überschreit",
-        "im verhältnis", "verglich", "compare", "against",
-        "zulässig", "zulässige",
-    ]
-    return any(marker in text for marker in markers)
-
-
+# baut die strukturierte LLM-Chain für Comparison-Type-Auswahl
 def _build_comparison_resolution_chain():
     parser = PydanticOutputParser(pydantic_object=ComparisonResolutionDecision)
     prompt = ChatPromptTemplate.from_messages([
@@ -405,7 +400,7 @@ def _build_comparison_resolution_chain():
     llm = get_llm()
     return prompt | llm | parser, parser
 
-
+# Refactoring: Heuristik durch Keyword-Fallback
 def _resolve_comparison_definition(user_input: str, resolved_object: Any, parsed_query: Dict[str, Any] | None = None) -> Dict[str, Any]:
     parsed_query = parsed_query or {}
     equipment_class = resolved_object.__class__.__name__ if resolved_object is not None else None
@@ -493,26 +488,10 @@ def build_cim_services(cim_root: Optional[str] = None) -> Dict[str, Any]:
 # ------------------------------------------------------------------
 # GENERIC CIM OBJECT / EQUIPMENT HELPERS
 # ------------------------------------------------------------------
-def _collect_all_cim_objects(container):
-    objects = []
-
-    if isinstance(container, dict):
-        for value in container.values():
-            objects.extend(_collect_all_cim_objects(value))
-
-    elif isinstance(container, list):
-        for value in container:
-            objects.extend(_collect_all_cim_objects(value))
-
-    else:
-        cls = container.__class__
-        if cls.__module__.startswith("cimpy"):
-            objects.append(container)
-
-    return objects
 
 
 
+# normiert mRID/UUID auf interne canonical_id
 def _canonical_cim_id(value):
     if value is None:
         return None
@@ -531,7 +510,7 @@ def _canonical_cim_id(value):
     return s.lower() if s else None
 
 
-
+# robuster Name-Zugriff
 def _safe_name(value):
     if value is None:
         return None
@@ -541,7 +520,7 @@ def _safe_name(value):
     return None
 
 
-
+# robuster Description-Zugriff über mehrere mögliche Attribut
 def _safe_description(value):
     if value is None:
         return None
@@ -551,15 +530,46 @@ def _safe_description(value):
             return text.strip()
     return None
 
+# LLM-Prompt für Identifikation der Spannungsgrenzen 
+def _build_voltage_limit_selection_chain():
+    parser = PydanticOutputParser(pydantic_object=VoltageLimitSelectionDecision)
+    prompt = ChatPromptTemplate.from_messages([
+        (
+            "system",
+            "You match VoltageLimit candidates for a CIM bus-like object.\n"
+            "\n"
+            "Your task:\n"
+            "- Identify which candidate represents the LOWER voltage limit.\n"
+            "- Identify which candidate represents the UPPER voltage limit.\n"
+            "\n"
+            "Rules:\n"
+            "- You may only select candidate IDs that appear exactly in the provided list.\n"
+            "- Do NOT invent candidate IDs.\n"
+            "- You may select at most one candidate for each role.\n"
+            "- The lower limit must be strictly less than the upper limit.\n"
+            "- If the mapping is not safe or ambiguous, return null values and should_execute=false.\n"
+            "\n"
+            "{format_instructions}"
+        ),
+        (
+            "user",
+            "Bus context:\n{bus_context}\n\n"
+            "VoltageLimit candidates:\n{candidate_text}"
+        ),
+    ])
+    llm = get_llm()
+    return prompt | llm | parser, parser
 
-
-
+# Auflösen der Spannungsgrenzen für Busse 
 def _resolve_voltage_limit_values_for_bus(bus_obj: Any) -> Dict[str, Any]:
     """
-    Resolve lower/upper voltage limit values for a bus-like object by reusing the
-    same direct VoltageLimit.value reading logic that already works for standalone
-    base-value requests, but mapping the discovered limits back to
-    lowVoltageLimit/highVoltageLimit.
+    Resolve lower/upper voltage limit values for a bus-like object.
+
+    Strategy:
+    1) deterministically collect candidate VoltageLimit objects from the bus and attached terminals
+    2) deterministically extract numeric candidate values and textual metadata
+    3) use an LLM to classify which candidate is the lower and which is the upper voltage limit
+    4) validate the returned candidate IDs before exposing values
     """
     if bus_obj is None:
         return {
@@ -585,7 +595,7 @@ def _resolve_voltage_limit_values_for_bus(bus_obj: Any) -> Dict[str, Any]:
             _append_limit(limit_obj)
 
     # 2) Limits via attached terminals
-    terminals = []
+    terminals: List[Any] = []
     for attr_name in ("Terminals", "Terminal"):
         attr_value = getattr(bus_obj, attr_name, None)
         if isinstance(attr_value, list):
@@ -600,40 +610,107 @@ def _resolve_voltage_limit_values_for_bus(bus_obj: Any) -> Dict[str, Any]:
             for limit_obj in (getattr(limit_set, "OperationalLimit", None) or []):
                 _append_limit(limit_obj)
 
-    lows: List[float] = []
-    highs: List[float] = []
+    candidates: List[Dict[str, Any]] = []
+    candidate_value_lookup: Dict[str, float] = {}
 
-    for limit_obj in limit_objects:
+    for idx, limit_obj in enumerate(limit_objects, start=1):
         value = _read_base_attribute_value(limit_obj, "value")
         if value is None:
             continue
-
-        label_parts = [
-            getattr(limit_obj, "name", None),
-            getattr(limit_obj, "description", None),
-            getattr(getattr(limit_obj, "OperationalLimitSet", None), "name", None),
-        ]
-        label = " ".join(str(x) for x in label_parts if isinstance(x, str) and x.strip()).lower()
 
         try:
             numeric_value = float(value)
         except Exception:
             continue
 
-        if any(token in label for token in ["low limit", "lower", "minimum", "min ", "unter", "low voltage"]):
-            lows.append(numeric_value)
-            continue
-        if any(token in label for token in ["high limit", "upper", "maximum", "max ", "ober", "high voltage"]):
-            highs.append(numeric_value)
-            continue
+        candidate_id = f"cand_{idx}"
+        candidate_row = {
+            "candidate_id": candidate_id,
+            "value": numeric_value,
+            "name": getattr(limit_obj, "name", None),
+            "description": getattr(limit_obj, "description", None),
+            "limit_set_name": getattr(getattr(limit_obj, "OperationalLimitSet", None), "name", None),
+        }
+        candidates.append(candidate_row)
+        candidate_value_lookup[candidate_id] = numeric_value
 
-    return {
-        "lowVoltageLimit": min(lows) if lows else None,
-        "highVoltageLimit": max(highs) if highs else None,
-    }
+    if not candidates:
+        return {
+            "lowVoltageLimit": None,
+            "highVoltageLimit": None,
+        }
+
+    # One candidate is not enough to infer both bounds safely.
+    if len(candidates) == 1:
+        return {
+            "lowVoltageLimit": None,
+            "highVoltageLimit": None,
+        }
+
+    candidate_text = "\n".join(
+        f"- candidate_id={row['candidate_id']} | value={row['value']} | "
+        f"name={row.get('name')} | description={row.get('description')} | "
+        f"limit_set_name={row.get('limit_set_name')}"
+        for row in candidates
+    )
+
+    bus_context = (
+        f"class={bus_obj.__class__.__name__}, "
+        f"name={getattr(bus_obj, 'name', None)}, "
+        f"mRID={getattr(bus_obj, 'mRID', None)}"
+    )
+
+    try:
+        chain, parser = _build_voltage_limit_selection_chain()
+        decision = chain.invoke({
+            "bus_context": bus_context,
+            "candidate_text": candidate_text,
+            "format_instructions": parser.get_format_instructions(),
+        })
+
+        if not getattr(decision, "should_execute", False):
+            return {
+                "lowVoltageLimit": None,
+                "highVoltageLimit": None,
+            }
+
+        low_id = getattr(decision, "low_candidate_id", None)
+        high_id = getattr(decision, "high_candidate_id", None)
+
+        if low_id is not None and low_id not in candidate_value_lookup:
+            low_id = None
+        if high_id is not None and high_id not in candidate_value_lookup:
+            high_id = None
+
+        low_value = candidate_value_lookup.get(low_id) if low_id else None
+        high_value = candidate_value_lookup.get(high_id) if high_id else None
+
+        # Guard against inconsistent LLM outputs.
+        if low_id and high_id and low_id == high_id:
+            return {
+                "lowVoltageLimit": None,
+                "highVoltageLimit": None,
+            }
+
+        if low_value is not None and high_value is not None and low_value > high_value:
+            return {
+                "lowVoltageLimit": None,
+                "highVoltageLimit": None,
+            }
+
+        return {
+            "lowVoltageLimit": low_value,
+            "highVoltageLimit": high_value,
+        }
+
+    except Exception:
+        return {
+            "lowVoltageLimit": None,
+            "highVoltageLimit": None,
+        }
 
 
-
+# zentrale technische Attributauflösung von Equipment/Base-Objekten, inkl. Spezialfälle PowerTransformer, SynchronousMachine, Voltage-Limits
 def _read_base_attribute_value(equipment_obj: Any, attr_name: str) -> Any:
     if equipment_obj is None or not attr_name:
         return None
@@ -670,7 +747,7 @@ def _read_base_attribute_value(equipment_obj: Any, attr_name: str) -> Any:
     return None
 
 
-
+# filtert aus allen CIM-Objekten die "echten" Equipment-Kandidaten heraus 
 def _is_equipment_candidate(obj: Any) -> bool:
     if obj is None:
         return False
@@ -692,9 +769,9 @@ def _is_equipment_candidate(obj: Any) -> bool:
     return True
 
 
-
+# baut deterministisch Equipment-Katalog aus Basissnapshot 
 def _build_equipment_catalog(container) -> Dict[str, Any]:
-    all_objects = _collect_all_cim_objects(container)
+    all_objects = collect_all_cim_objects(container)
 
     equipment_by_type: Dict[str, List[Any]] = {}
     equipment_by_mrid: Dict[str, Any] = {}
@@ -752,7 +829,7 @@ def _build_equipment_catalog(container) -> Dict[str, Any]:
     }
 
 
-
+# merged Katalog in network_index
 def _merge_equipment_catalog_into_network_index(network_index: Dict[str, Any], catalog: Dict[str, Any]) -> Dict[str, Any]:
     merged = dict(network_index or {})
     merged.update({
@@ -770,6 +847,7 @@ def _merge_equipment_catalog_into_network_index(network_index: Dict[str, Any], c
 # ------------------------------------------------------------------
 # LLM-BASED EQUIPMENT RESOLUTION
 # ------------------------------------------------------------------
+# LLM-Auswahl eines CIM-Equipment-Typs aus Kandidatenliste
 def _build_equipment_type_match_chain():
     parser = PydanticOutputParser(pydantic_object=EquipmentTypeDecision)
     prompt = ChatPromptTemplate.from_messages([
@@ -792,7 +870,7 @@ def _build_equipment_type_match_chain():
     return prompt | llm | parser, parser
 
 
-
+# LLM-Auswahl des konkreten Equipments aus der Kandidatenliste 
 def _build_equipment_instance_match_chain():
     parser = PydanticOutputParser(pydantic_object=EquipmentInstanceDecision)
     prompt = ChatPromptTemplate.from_messages([
@@ -816,7 +894,7 @@ def _build_equipment_instance_match_chain():
     return prompt | llm | parser, parser
 
 
-
+# extrahiert relevanten Teil zur Auswahl des Equipments 
 def _build_query_normalization_chain():
     parser = PydanticOutputParser(pydantic_object=ParsedQueryNormalizationDecision)
     prompt = ChatPromptTemplate.from_messages([
@@ -836,14 +914,14 @@ def _build_query_normalization_chain():
     return prompt | llm | parser, parser
 
 
-
+# normalisiert LLM-Hints auf lowercase / string
 def _normalize_hint_text(value: Any) -> str:
     if value is None:
         return ""
     return str(value).strip().lower()
 
 
-
+# LLM-basierte Equipmentauswahl 
 def _select_equipment_type_with_llm(user_input: str, equipment_types: List[str], equipment_type_counts: Dict[str, int]) -> Dict[str, Any]:
     if not equipment_types:
         return {
@@ -909,7 +987,7 @@ def _select_equipment_type_with_llm(user_input: str, equipment_types: List[str],
     }
 
 
-
+# LLM-basierte Auswahl des konkreten Equipments 
 def _select_equipment_instance_with_llm(user_input: str, selected_type: str, equipment_candidates: List[Any]) -> Dict[str, Any]:
     candidate_rows: List[Dict[str, Any]] = []
     candidate_ids: List[str] = []
@@ -1002,7 +1080,7 @@ def _select_equipment_instance_with_llm(user_input: str, selected_type: str, equ
     }
 
 
-
+# ruft die Query-Normalization-LLM-Chain auf
 def _normalize_user_query_hints(user_input: str) -> Dict[str, Any]:
     try:
         chain, parser = _build_query_normalization_chain()
@@ -1024,7 +1102,7 @@ def _normalize_user_query_hints(user_input: str) -> Dict[str, Any]:
         }
 
 
-
+# steuert Equipment-Auflösung -> erst Typ, dann konkretes Equipment 
 def _resolve_equipment_via_catalog(user_input: str, network_index: Dict[str, Any] | None) -> Dict[str, Any]:
     network_index = network_index or {}
     equipment_types = network_index.get("equipment_types", []) or []
@@ -1094,8 +1172,9 @@ def _resolve_equipment_via_catalog(user_input: str, network_index: Dict[str, Any
 
 
 # ------------------------------------------------------------------
-# INTERNAL HELPERS (moved from registry, logic unchanged)
+# INTERNAL HELPERS 
 # ------------------------------------------------------------------
+# leitet aus parsed_query["state_detected"] die tatsächlich zu ladenden State-Typen ab
 def _extract_required_state_types(parsed_query: Dict[str, Any] | None) -> List[str]:
     parsed_query = parsed_query or {}
     state_detected = parsed_query.get("state_detected", []) or []
@@ -1118,7 +1197,7 @@ def _extract_required_state_types(parsed_query: Dict[str, Any] | None) -> List[s
     return out
 
 
-
+# boolescher Shortcut, ob überhaupt State-Snapshots geladen werden sollen
 def _should_load_states(parsed_query: Dict[str, Any] | None) -> bool:
     return len(_extract_required_state_types(parsed_query)) > 0
 
@@ -1126,6 +1205,7 @@ def _should_load_states(parsed_query: Dict[str, Any] | None) -> bool:
 # ------------------------------------------------------------------
 # LOW-LEVEL TOOL IMPLEMENTATIONS
 # ------------------------------------------------------------------
+# lädt/scannt Snapshot-Inventar, Base-Snapshot, Netzwerkindex, Equipment-Katalog
 def _scan_snapshot_inventory_with_services(
     services: Dict[str, Any],
 ) -> Dict[str, Any]:
@@ -1168,7 +1248,7 @@ def _scan_snapshot_inventory_with_services(
     }
 
 
-
+# Query parsen, Equipment-Typ / Equipment-Instanz auflösen; Refactoring: Heuristik vorhanden in llm_object_mapping, worauf die Funktion aufsetzt 
 def _resolve_cim_object_with_services(
     services: Dict[str, Any],
     user_input: str,
@@ -1233,7 +1313,7 @@ def _resolve_cim_object_with_services(
         "equipment_resolution_debug": equipment_resolution_debug,
     }
 
-
+# ermittelt einen Equipment-Typ und listet alle passenden Objekte aus dem deterministischen Katalog
 def _list_equipment_of_type_with_services(
     services: Dict[str, Any],
     user_input: str,
@@ -1343,11 +1423,7 @@ def _list_equipment_of_type_with_services(
     }
 
 
-
-
-
-
-
+# Fallback für Bus Voltage-Limit Vergleich; Refactoring: Heuristik und ineffizient, dass nochmal alles geladen wird 
 def _resolve_voltage_limit_values_via_global_lookup(
     services: Dict[str, Any],
     bus_obj: Any,
@@ -1371,7 +1447,7 @@ def _resolve_voltage_limit_values_via_global_lookup(
             root_folder=cim_root,
             snapshot_inventory=inventory,
         )
-        all_objects = _collect_all_cim_objects(base_snapshot)
+        all_objects = collect_all_cim_objects(base_snapshot)
     except Exception:
         return {
             "lowVoltageLimit": None,
@@ -1434,7 +1510,7 @@ def _resolve_voltage_limit_values_via_global_lookup(
     }
 
 
-
+# liest statische Base-/Nameplate-Attribute eines aufgelösten Objekts; Refactoring: Heuristik bei resolve_voltage_limit_values_for_bus
 def _read_cim_base_values_with_services(
     services: Dict[str, Any],
     user_input: str,
@@ -1549,7 +1625,7 @@ def _read_cim_base_values_with_services(
         "base_attribute_debug": selection_result,
     }
 
-
+# mappt VoltageLimit-Objekt zurück auf Bus/TopologicalNode für Vergleichslogik
 def _resolve_comparison_target_object(resolved_object: Any) -> Dict[str, Any]:
     if resolved_object is None:
         return {
@@ -1602,7 +1678,7 @@ def _resolve_comparison_target_object(resolved_object: Any) -> Dict[str, Any]:
             "resolved_object": resolved_object,
         }
 
-
+# bildet eine User-Anfrage auf einen unterstützten Vergleichstyp ab, z. B. Trafo-Auslastung oder Spannungsgrenzenvergleich; Refactoring: Heuristik bei Fallback 
 def _resolve_cim_comparison_with_services(
     services: Dict[str, Any],
     user_input: str,
@@ -1661,7 +1737,7 @@ def _resolve_cim_comparison_with_services(
         "answer": f"Vergleichslogik aufgelöst: {resolution.get('comparison_type')}",
     }
 
-
+# vergleicht Query-Ergebnis und Base-Werte, berechnet Abweichung / Grenzverletzung / Range-Check
 def _compare_cim_values_with_services(
     services: Dict[str, Any],
     resolved_object: Any,
@@ -1889,7 +1965,7 @@ def _compare_cim_values_with_services(
         "answer": answer,
     }
 
-
+# lädt relevante Snapshots für Zeitfenster und erzeugt den Cache
 def _load_snapshot_cache_with_services(
     services: Dict[str, Any],
     parsed_query: Dict[str, Any] | None,
@@ -1934,7 +2010,7 @@ def _load_snapshot_cache_with_services(
     }
 
 
-
+# führt die eigentliche Domänenabfrage aus; Refactoring: Heuristik über llm_cim_orchestrator.handle_user_query(). _query_cim_with_services verwendet dafür handle_user_query
 def _query_cim_with_services(
     services: Dict[str, Any],
     user_input: str,
@@ -2010,7 +2086,7 @@ def _query_cim_with_services(
 
 
 
-
+# formuliert die finale Antwort an den User 
 def _build_final_answer_chain():
     parser = PydanticOutputParser(pydantic_object=FinalAnswerDecision)
     prompt = ChatPromptTemplate.from_messages([
@@ -2043,7 +2119,7 @@ def _build_final_answer_chain():
     llm = get_llm()
     return prompt | llm | parser, parser
 
-
+# nimmt den Roh-Output und lässt ihn LLM-seitig an die User-Frage angleichen
 def _generate_user_aligned_answer(
     user_input: str,
     result_payload: Dict[str, Any],
@@ -2078,6 +2154,7 @@ def _generate_user_aligned_answer(
     except Exception:
         return raw_answer
 
+# baut den finalen Output und Debug-Block
 def _summarize_cim_result_with_services(
     services: Dict[str, Any],
     result_payload: Dict[str, Any],
@@ -2121,296 +2198,7 @@ def _summarize_cim_result_with_services(
         "debug": debug,
     }
 
-
-# ------------------------------------------------------------------
-# PUBLIC MCP-STYLE TOOLS (atomic)
-# ------------------------------------------------------------------
-def scan_snapshot_inventory(cim_root: Optional[str] = None) -> Dict[str, Any]:
-    services = build_cim_services(cim_root=cim_root)
-    if services.get("status") != "ok":
-        return services
-    return _scan_snapshot_inventory_with_services(services)
-
-
-
-def resolve_cim_object(
-    user_input: str,
-    cim_root: Optional[str] = None,
-) -> Dict[str, Any]:
-    services = build_cim_services(cim_root=cim_root)
-    if services.get("status") != "ok":
-        return services
-
-    scan_result = _scan_snapshot_inventory_with_services(services)
-    if scan_result.get("status") != "ok":
-        return scan_result
-
-    return _resolve_cim_object_with_services(
-        services=services,
-        user_input=user_input,
-        network_index=scan_result.get("network_index"),
-    )
-
-
-
-def list_equipment_of_type(
-    user_input: str,
-    cim_root: Optional[str] = None,
-) -> Dict[str, Any]:
-    services = build_cim_services(cim_root=cim_root)
-    if services.get("status") != "ok":
-        return services
-
-    scan_result = _scan_snapshot_inventory_with_services(services)
-    if scan_result.get("status") != "ok":
-        return scan_result
-
-    return _list_equipment_of_type_with_services(
-        services=services,
-        user_input=user_input,
-        network_index=scan_result.get("network_index"),
-    )
-
-
-
-
-def read_cim_base_values(
-    user_input: str,
-    cim_root: Optional[str] = None,
-) -> Dict[str, Any]:
-    services = build_cim_services(cim_root=cim_root)
-    if services.get("status") != "ok":
-        return services
-
-    scan_result = _scan_snapshot_inventory_with_services(services)
-    if scan_result.get("status") != "ok":
-        return scan_result
-
-    resolve_result = _resolve_cim_object_with_services(
-        services=services,
-        user_input=user_input,
-        network_index=scan_result.get("network_index"),
-    )
-    if resolve_result.get("status") != "ok":
-        return resolve_result
-
-    return _read_cim_base_values_with_services(
-        services=services,
-        user_input=user_input,
-        resolved_object=resolve_result.get("resolved_object"),
-    )
-
-
-def load_snapshot_cache(
-    user_input: str,
-    cim_root: Optional[str] = None,
-) -> Dict[str, Any]:
-    services = build_cim_services(cim_root=cim_root)
-    if services.get("status") != "ok":
-        return services
-
-    scan_result = _scan_snapshot_inventory_with_services(services)
-    if scan_result.get("status") != "ok":
-        return scan_result
-
-    resolve_result = _resolve_cim_object_with_services(
-        services=services,
-        user_input=user_input,
-        network_index=scan_result.get("network_index"),
-    )
-    if resolve_result.get("status") != "ok":
-        return resolve_result
-
-    return _load_snapshot_cache_with_services(
-        services=services,
-        parsed_query=resolve_result.get("parsed_query"),
-        snapshot_inventory=scan_result.get("snapshot_inventory"),
-    )
-
-
-
-def query_cim(
-    user_input: str,
-    cim_root: Optional[str] = None,
-) -> Dict[str, Any]:
-    services = build_cim_services(cim_root=cim_root)
-    if services.get("status") != "ok":
-        return services
-
-    scan_result = _scan_snapshot_inventory_with_services(services)
-    if scan_result.get("status") != "ok":
-        return scan_result
-
-    resolve_result = _resolve_cim_object_with_services(
-        services=services,
-        user_input=user_input,
-        network_index=scan_result.get("network_index"),
-    )
-    if resolve_result.get("status") != "ok":
-        return resolve_result
-
-    cache_result = _load_snapshot_cache_with_services(
-        services=services,
-        parsed_query=resolve_result.get("parsed_query"),
-        snapshot_inventory=scan_result.get("snapshot_inventory"),
-    )
-    if cache_result.get("status") != "ok":
-        return cache_result
-
-    return _query_cim_with_services(
-        services=services,
-        user_input=user_input,
-        snapshot_cache=cache_result.get("snapshot_cache"),
-        network_index=scan_result.get("network_index"),
-        parsed_query=resolve_result.get("parsed_query"),
-        classification=None,
-    )
-
-
-
-def summarize_cim_result(
-    result_payload: Dict[str, Any],
-    user_input: str,
-    cim_root: Optional[str] = None,
-) -> Dict[str, Any]:
-    services = build_cim_services(cim_root=cim_root)
-    if services.get("status") != "ok":
-        return services
-
-    return _summarize_cim_result_with_services(
-        services=services,
-        result_payload=result_payload or {},
-        user_input=user_input,
-    )
-
-
-# ------------------------------------------------------------------
-# DOMAIN AGENT / REGISTRY HELPERS
-# ------------------------------------------------------------------
-def run_cim_agent(user_input: str, cim_root: Optional[str] = None) -> Dict[str, Any]:
-    """
-    Run the CIM domain agent on a natural-language request.
-    Local import avoids a circular dependency with the registry.
-    """
-    from cimpy.cimpy_time_analysis.cim_domain_agent import CIMDomainAgent
-
-    agent = CIMDomainAgent(cim_root=_normalize_cim_root(cim_root))
-    return agent.run(user_input)
-
-
-
-def list_cim_tools(cim_root: Optional[str] = None) -> Dict[str, Any]:
-    """
-    List the currently available CIM domain tools and their metadata.
-    Local import avoids a circular dependency with the registry.
-    """
-    from cimpy.cimpy_time_analysis.cim_tool_registry import CIMToolRegistry
-
-    registry = CIMToolRegistry(cim_root=_normalize_cim_root(cim_root))
-    return {
-        "status": "ok",
-        "tool": "list_cim_tools",
-        "cim_root": _normalize_cim_root(cim_root),
-        "available_tools": registry.list_tool_specs(),
-    }
-
-
-# ------------------------------------------------------------------
-# BACKWARD-COMPATIBLE ALIASES
-# ------------------------------------------------------------------
-def scan_cim_snapshot_inventory(cim_root: Optional[str] = None) -> Dict[str, Any]:
-    return scan_snapshot_inventory(cim_root=cim_root)
-
-
-
-def load_cim_snapshot_cache(
-    user_input: str,
-    cim_root: Optional[str] = None,
-) -> Dict[str, Any]:
-    return load_snapshot_cache(user_input=user_input, cim_root=cim_root)
-
-
-
-def execute_cim_query(
-    user_input: str,
-    cim_root: Optional[str] = None,
-) -> Dict[str, Any]:
-    services = build_cim_services(cim_root=cim_root)
-    if services.get("status") != "ok":
-        return services
-
-    scan_result = _scan_snapshot_inventory_with_services(services)
-    if scan_result.get("status") != "ok":
-        return scan_result
-
-    resolve_result = _resolve_cim_object_with_services(
-        services=services,
-        user_input=user_input,
-        network_index=scan_result.get("network_index"),
-    )
-    if resolve_result.get("status") != "ok":
-        return resolve_result
-
-    cache_result = _load_snapshot_cache_with_services(
-        services=services,
-        parsed_query=resolve_result.get("parsed_query"),
-        snapshot_inventory=scan_result.get("snapshot_inventory"),
-    )
-    if cache_result.get("status") != "ok":
-        return cache_result
-
-    query_result = _query_cim_with_services(
-        services=services,
-        user_input=user_input,
-        snapshot_cache=cache_result.get("snapshot_cache"),
-        network_index=scan_result.get("network_index"),
-        parsed_query=resolve_result.get("parsed_query"),
-        classification=None,
-    )
-    if query_result.get("status") != "ok":
-        return query_result
-
-    summary_result = _summarize_cim_result_with_services(
-        services=services,
-        result_payload={
-            **scan_result,
-            **resolve_result,
-            **cache_result,
-            **query_result,
-        },
-        user_input=user_input,
-    )
-    if summary_result.get("status") != "ok":
-        return summary_result
-
-    return {
-        "status": "ok",
-        "tool": "execute_cim_query",
-        "cim_root": _normalize_cim_root(cim_root),
-        "answer": summary_result.get("answer", ""),
-        "debug": {
-            "scan_snapshot_inventory": scan_result,
-            "resolve_cim_object": resolve_result,
-            "load_snapshot_cache": cache_result,
-            "query_cim": query_result,
-            "summarize_cim_result": summary_result,
-        },
-    }
-
-
-
-def summarize_cim_execution(
-    result_payload: Dict[str, Any],
-    user_input: str,
-    cim_root: Optional[str] = None,
-) -> Dict[str, Any]:
-    return summarize_cim_result(
-        result_payload=result_payload,
-        user_input=user_input,
-        cim_root=cim_root,
-    )
-
-
+# liest Low/High-Limits direkt von Node/Terminal-Pfaden
 def _resolve_voltage_limits_from_node(node_obj: Any) -> Dict[str, Any]:
     lows = []
     highs = []

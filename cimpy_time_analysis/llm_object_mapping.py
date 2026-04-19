@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import json
 import re
-from difflib import get_close_matches
 from typing import List, Optional, Literal, Set, Dict, Any, Callable, Tuple
 
 from pydantic import BaseModel, Field, ValidationError
@@ -30,42 +29,6 @@ def get_llm():
 # =============================================================================
 # 2) Matching Utilities
 # =============================================================================
-
-def normalize_text(text: str) -> str:
-    if not text:
-        return ""
-    t = text.lower()
-    t = t.replace("transformator", "trafo")
-    t = t.replace("trf", "trafo")
-    t = t.replace("/", "-")
-    t = re.sub(r"\s+", "", t)
-    return t
-
-
-def extract_two_numbers(text: str):
-    if not text:
-        return None
-    m = re.search(r"(\d+)\D+(\d+)", text)
-    if not m:
-        return None
-    return m.group(1), m.group(2)
-
-
-def extract_one_number(text: str):
-    if not text:
-        return None
-    m = re.search(r"(\d+)", text)
-    if not m:
-        return None
-    return m.group(1)
-
-
-def _number_boundary_match(num: str, norm_name: str) -> bool:
-    if not num or not norm_name:
-        return False
-    pattern = rf"(^|[^0-9]){re.escape(num)}([^0-9]|$)"
-    return re.search(pattern, norm_name) is not None
-
 
 def equipment_identifier(eq: Any) -> Optional[str]:
     for attr in ("mRID", "mrid", "rdfId", "rdfid", "id", "uuid", "UID", "uid"):
@@ -185,6 +148,11 @@ class CandidateChoice(BaseModel):
 
 class BaseAttributeSelectionDecision(BaseModel):
     selected_attributes: List[str] = Field(default_factory=list)
+    confidence: str = Field(description="One of: high, medium, low")
+    rationale: str = Field(default="")
+
+class CandidateShortlistDecision(BaseModel):
+    selected_candidate_keys: List[str] = Field(default_factory=list)
     confidence: str = Field(description="One of: high, medium, low")
     rationale: str = Field(default="")
 
@@ -558,6 +526,27 @@ Regeln:
 - Wenn nichts sicher passt, gib eine leere Liste zurück.
 """.strip()
 
+CANDIDATE_SHORTLIST_SYSTEM = """
+Du wählst aus einer Liste möglicher Equipment-Kandidaten die fachlich relevantesten Kandidaten für eine User-Anfrage aus.
+
+Gib AUSSCHLIESSLICH JSON zurück, ohne Markdown, ohne Zusatztext.
+
+Schema:
+{
+  "selected_candidate_keys": ["<genau einer der candidate_keys>", ...],
+  "confidence": "high" | "medium" | "low",
+  "rationale": "<kurze Begründung>"
+}
+
+Regeln:
+- Wähle nur candidate_keys aus der gegebenen Liste.
+- Erfinde niemals candidate_keys.
+- Wähle die Kandidaten, die am wahrscheinlichsten zur Anfrage passen.
+- Wenn die Anfrage sehr spezifisch ist, gib nur wenige Kandidaten zurück.
+- Wenn die Anfrage unscharf ist, darfst du mehrere plausible Kandidaten zurückgeben.
+- Wenn keine Kandidaten fachlich plausibel wirken, gib eine leere Liste zurück.
+""".strip()
+
 
 def normalize_attr_text(s: str) -> str:
     return re.sub(r"[\s_\-]", "", (s or "").lower())
@@ -869,6 +858,37 @@ def extract_json(text: str) -> Dict[str, Any]:
 # =============================================================================
 # 6) Candidate shortlist aus network_index
 # =============================================================================
+def _llm_shortlist_candidates(
+    llm,
+    *,
+    user_input: str,
+    equipment_type: str,
+    candidate_keys: List[str],
+    limit: int,
+) -> CandidateShortlistDecision:
+    parser = PydanticOutputParser(pydantic_object=CandidateShortlistDecision)
+    prompt = ChatPromptTemplate.from_messages([
+        ("system", CANDIDATE_SHORTLIST_SYSTEM.replace("{", "{{").replace("}", "}}") + "\n\n{format_instructions}"),
+        (
+            "user",
+            "User request:\n{user_input}\n\n"
+            "Equipment-Typ:\n{equipment_type}\n\n"
+            "candidate_keys:\n{candidate_keys}\n\n"
+            "Maximale Anzahl auszuwählender Kandidaten: {limit}"
+        ),
+    ])
+
+    chain = prompt | llm | parser
+    decision = chain.invoke({
+        "user_input": user_input,
+        "equipment_type": equipment_type,
+        "candidate_keys": "\n".join(f"- {k}" for k in candidate_keys),
+        "limit": limit,
+        "format_instructions": parser.get_format_instructions(),
+    })
+    return decision
+
+
 
 def shortlist_candidates(
     user_input: str,
@@ -877,48 +897,50 @@ def shortlist_candidates(
     limit: int = 30,
     cutoff: float = 0.65,
 ) -> List[str]:
+    """
+    Build a candidate shortlist for a concrete equipment type.
+
+    New strategy:
+    - primary path: LLM selects the most plausible subset from all available candidate keys
+    - deterministic fallback: return a stable truncated list if LLM selection fails
+
+    Note:
+    - `cutoff` is kept in the signature for backward compatibility but is no longer used.
+    """
     equipment_name_index = (network_index or {}).get("equipment_name_index", {})
     name_index: Dict[str, Any] = equipment_name_index.get(equipment_type, {}) or {}
     keys = list(name_index.keys())
     if not keys:
         return []
 
-    user_norm = normalize_text(user_input)
-    scored: List[Tuple[int, str]] = []
+    # Stable deterministic ordering for reproducibility
+    keys = sorted(keys, key=lambda k: (len(k), k), reverse=True)
 
-    for k in keys:
-        if k and k in user_norm:
-            scored.append((1000 + len(k), k))
+    llm = get_llm()
 
-    nums = extract_two_numbers(user_input)
-    if nums:
-        n1, n2 = nums
-        for k in keys:
-            if n1 in k and n2 in k:
-                scored.append((900 + len(k), k))
+    try:
+        decision = _llm_shortlist_candidates(
+            llm,
+            user_input=user_input,
+            equipment_type=equipment_type,
+            candidate_keys=keys,
+            limit=limit,
+        )
 
-    n = extract_one_number(user_input)
-    if n:
-        for k in keys:
-            if _number_boundary_match(n, k):
-                scored.append((800 + len(k), k))
+        selected = [
+            key for key in (decision.selected_candidate_keys or [])
+            if key in name_index
+        ]
+        selected = _dedup_keep_order(selected)
 
-    fuzzy = get_close_matches(user_norm, keys, n=min(10, len(keys)), cutoff=cutoff)
-    for k in fuzzy:
-        scored.append((700 + len(k), k))
+        if selected:
+            return selected[:limit]
 
-    if not scored:
-        return sorted(keys, key=len, reverse=True)[: min(limit, len(keys))]
+    except Exception:
+        pass
 
-    seen: Set[str] = set()
-    out: List[str] = []
-    for _, k in sorted(scored, key=lambda x: x[0], reverse=True):
-        if k not in seen:
-            out.append(k)
-            seen.add(k)
-        if len(out) >= limit:
-            break
-    return out
+    # Deterministic fallback only as safety net.
+    return keys[: min(limit, len(keys))]
 
 
 def llm_choose_equipment_key(
