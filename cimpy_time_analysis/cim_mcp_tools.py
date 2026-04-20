@@ -91,6 +91,10 @@ class ComparisonResolutionDecision(BaseModel):
 class FinalAnswerDecision(BaseModel):
     answer: str = Field(default="")
 
+class BaseAttributeIntentDecision(BaseModel):
+    requested_attributes: List[str] = Field(default_factory=list)
+    should_use_preselected_attributes: bool = Field(default=False)
+    rationale: str = Field(default="")
 
 class VoltageLimitSelectionDecision(BaseModel):
     low_candidate_id: Optional[str] = Field(default=None)
@@ -1248,7 +1252,7 @@ def _scan_snapshot_inventory_with_services(
     }
 
 
-# Query parsen, Equipment-Typ / Equipment-Instanz auflösen; Refactoring: Heuristik vorhanden in llm_object_mapping, worauf die Funktion aufsetzt 
+# Query parsen, Equipment-Typ / Equipment-Instanz auflösen
 def _resolve_cim_object_with_services(
     services: Dict[str, Any],
     user_input: str,
@@ -1509,8 +1513,515 @@ def _resolve_voltage_limit_values_via_global_lookup(
         "highVoltageLimit": max(highs) if highs else None,
     }
 
+def _build_base_attribute_intent_chain():
+    parser = PydanticOutputParser(pydantic_object=BaseAttributeIntentDecision)
+    prompt = ChatPromptTemplate.from_messages([
+        (
+            "system",
+            "You classify which CIM base attributes are explicitly requested by the user.\n"
+            "Return only structured output.\n"
+            "You may only choose attribute names from the provided allowed attribute list.\n"
+            "Do not invent attribute names.\n"
+            "If the user clearly asks for voltage limits / Spannungsgrenzen / zulässige Spannungsgrenzen,\n"
+            "prefer lowVoltageLimit and highVoltageLimit when they are available in the allowed list.\n"
+            "Set should_use_preselected_attributes=true only if the requested attributes are clear enough\n"
+            "to skip generic semantic attribute matching.\n\n"
+            "{format_instructions}"
+        ),
+        (
+            "user",
+            "User request:\n{user_input}\n\n"
+            "Equipment class: {equipment_class}\n"
+            "Allowed attribute names:\n{allowed_attributes}"
+        ),
+    ])
+    llm = get_llm()
+    return prompt | llm | parser, parser
 
-# liest statische Base-/Nameplate-Attribute eines aufgelösten Objekts; Refactoring: Heuristik bei resolve_voltage_limit_values_for_bus
+
+def _resolve_preselected_base_attributes_with_llm(
+    user_input: str,
+    resolved_object: Any,
+) -> Dict[str, Any]:
+    if resolved_object is None:
+        return {
+            "status": "error",
+            "error": "missing_resolved_object",
+            "requested_attributes": [],
+            "should_use_preselected_attributes": False,
+        }
+
+    allowed_attributes = [
+        "lowVoltageLimit",
+        "highVoltageLimit",
+    ]
+
+    try:
+        chain, parser = _build_base_attribute_intent_chain()
+        decision = chain.invoke({
+            "user_input": user_input,
+            "equipment_class": resolved_object.__class__.__name__,
+            "allowed_attributes": "\n".join(f"- {attr}" for attr in allowed_attributes),
+            "format_instructions": parser.get_format_instructions(),
+        })
+
+        requested_attributes = [
+            attr for attr in (decision.requested_attributes or [])
+            if attr in allowed_attributes
+        ]
+
+        return {
+            "status": "ok",
+            "requested_attributes": requested_attributes,
+            "should_use_preselected_attributes": bool(decision.should_use_preselected_attributes),
+            "llm_decision": decision.model_dump() if hasattr(decision, "model_dump") else decision.dict(),
+        }
+    except Exception as exc:
+        return {
+            "status": "error",
+            "error": "base_attribute_intent_resolution_failed",
+            "details": str(exc),
+            "requested_attributes": [],
+            "should_use_preselected_attributes": False,
+        }
+
+def _resolve_base_attribute_with_expanded_search(
+    services: Dict[str, Any],
+    resolved_object: Any,
+    attr_name: str,
+) -> Dict[str, Any]:
+    """
+    Resolve a selected base attribute in multiple stages:
+
+    1) direct / canonical reader
+    2) expanded structural lookup for known complex attribute families
+    3) structured not_found result
+    """
+    searched_scopes: List[str] = []
+
+    # 1) Canonical direct reader
+    searched_scopes.append("direct_or_canonical_reader")
+    try:
+        value = _read_base_attribute_value(resolved_object, attr_name)
+    except Exception as exc:
+        return {
+            "status": "error",
+            "attribute": attr_name,
+            "error": "base_attribute_read_failed",
+            "details": str(exc),
+            "searched_scopes": searched_scopes,
+        }
+
+    if value is not None:
+        return {
+            "status": "ok",
+            "attribute": attr_name,
+            "value": value,
+            "searched_scopes": searched_scopes,
+            "resolution_path": "direct_or_canonical_reader",
+        }
+
+    # 2) Expanded structural lookup for known complex attributes
+    if attr_name in {"lowVoltageLimit", "highVoltageLimit"}:
+        searched_scopes.append("expanded_voltage_limit_lookup")
+
+        try:
+            expanded = _resolve_voltage_limit_values_via_global_lookup(services, resolved_object)
+            expanded_value = expanded.get(attr_name)
+            if expanded_value is not None:
+                return {
+                    "status": "ok",
+                    "attribute": attr_name,
+                    "value": expanded_value,
+                    "searched_scopes": searched_scopes,
+                    "resolution_path": "expanded_voltage_limit_lookup",
+                }
+        except Exception as exc:
+            return {
+                "status": "error",
+                "attribute": attr_name,
+                "error": "expanded_voltage_limit_lookup_failed",
+                "details": str(exc),
+                "searched_scopes": searched_scopes,
+            }
+
+    # 3) No result
+    return {
+        "status": "not_found",
+        "attribute": attr_name,
+        "value": None,
+        "searched_scopes": searched_scopes,
+        "resolution_path": "not_found",
+    }
+
+def _is_simple_readable_value(value: Any) -> bool:
+    return isinstance(value, (str, int, float, bool))
+
+
+def _extract_simple_values_from_object(obj: Any) -> Dict[str, Any]:
+    """
+    Extract simple readable scalar values from an object.
+    Only returns primitive fields, not nested objects/lists.
+    """
+    result: Dict[str, Any] = {}
+
+    if obj is None:
+        return result
+
+    # Prefer a few semantically useful names first if present
+    preferred_names = [
+        "value",
+        "nominalVoltage",
+        "ratedU",
+        "ratedS",
+        "name",
+        "mRID",
+        "description",
+        "shortName",
+        "energyIdentCodeEic",
+        "ipMax",
+        "aggregate",
+    ]
+
+    for attr_name in preferred_names:
+        if not hasattr(obj, attr_name):
+            continue
+        try:
+            attr_value = getattr(obj, attr_name, None)
+        except Exception:
+            continue
+        if attr_value is None:
+            continue
+        if _is_simple_readable_value(attr_value):
+            result[attr_name] = attr_value
+
+    obj_dict = getattr(obj, "__dict__", None)
+    if isinstance(obj_dict, dict):
+        for attr_name in obj_dict.keys():
+            attr_name = str(attr_name)
+            if not attr_name or attr_name.startswith("_"):
+                continue
+            if attr_name in result:
+                continue
+            try:
+                attr_value = getattr(obj, attr_name, None)
+            except Exception:
+                continue
+            if attr_value is None:
+                continue
+            if _is_simple_readable_value(attr_value):
+                result[attr_name] = attr_value
+
+    return result
+
+
+def _iter_navigation_candidates_from_object(obj: Any) -> List[tuple[str, Any]]:
+    """
+    Return navigable child references from an object.
+    Includes direct object refs and list refs, but not simple scalar values.
+    """
+    children: List[tuple[str, Any]] = []
+
+    if obj is None:
+        return children
+
+    obj_dict = getattr(obj, "__dict__", None)
+    if not isinstance(obj_dict, dict):
+        return children
+
+    for attr_name in obj_dict.keys():
+        attr_name = str(attr_name)
+        if not attr_name or attr_name.startswith("_"):
+            continue
+
+        try:
+            attr_value = getattr(obj, attr_name, None)
+        except Exception:
+            continue
+
+        if attr_value is None:
+            continue
+        if _is_simple_readable_value(attr_value):
+            continue
+        if callable(attr_value):
+            continue
+
+        if isinstance(attr_value, list):
+            if attr_value:
+                children.append((attr_name, attr_value))
+            continue
+
+        children.append((attr_name, attr_value))
+
+    return children
+
+
+def _resolve_candidate_value_deep(
+    candidate_value: Any,
+    *,
+    max_depth: int = 3,
+    max_list_items: int = 10,
+) -> Dict[str, Any]:
+    """
+    Generic graph/value traversal for a candidate result.
+
+    Strategy:
+    - simple scalar -> return directly
+    - object -> inspect simple readable fields, then recurse into child refs
+    - list -> inspect items recursively
+    """
+    visited: set[int] = set()
+
+    def _walk(value: Any, depth: int, path: List[str]) -> Dict[str, Any]:
+        if value is None:
+            return {
+                "status": "not_found",
+                "value": None,
+                "resolution_path": " -> ".join(path) if path else "none",
+            }
+
+        if _is_simple_readable_value(value):
+            return {
+                "status": "ok",
+                "value": value,
+                "resolution_path": " -> ".join(path) if path else "direct_scalar",
+            }
+
+        if depth >= max_depth:
+            return {
+                "status": "not_found",
+                "value": None,
+                "resolution_path": " -> ".join(path + ["max_depth_reached"]),
+            }
+
+        obj_id = id(value)
+        if obj_id in visited:
+            return {
+                "status": "not_found",
+                "value": None,
+                "resolution_path": " -> ".join(path + ["cycle_detected"]),
+            }
+        visited.add(obj_id)
+
+        if isinstance(value, list):
+            for idx, item in enumerate(value[:max_list_items]):
+                result = _walk(item, depth + 1, path + [f"[{idx}]"])
+                if result.get("status") == "ok":
+                    return result
+            return {
+                "status": "not_found",
+                "value": None,
+                "resolution_path": " -> ".join(path + ["list_exhausted"]),
+            }
+
+        # Object: first try simple readable fields
+        simple_fields = _extract_simple_values_from_object(value)
+        preferred_field_order = [
+            "value",
+            "nominalVoltage",
+            "ratedU",
+            "ratedS",
+            "name",
+            "mRID",
+            "description",
+            "shortName",
+            "energyIdentCodeEic",
+            "ipMax",
+            "aggregate",
+        ]
+
+        for field_name in preferred_field_order:
+            if field_name in simple_fields:
+                return {
+                    "status": "ok",
+                    "value": simple_fields[field_name],
+                    "resolved_field": field_name,
+                    "resolution_path": " -> ".join(path + [field_name]),
+                }
+
+        for field_name, field_value in simple_fields.items():
+            return {
+                "status": "ok",
+                "value": field_value,
+                "resolved_field": field_name,
+                "resolution_path": " -> ".join(path + [field_name]),
+            }
+
+        # Then recurse into navigable references
+        for child_name, child_value in _iter_navigation_candidates_from_object(value):
+            result = _walk(child_value, depth + 1, path + [child_name])
+            if result.get("status") == "ok":
+                return result
+
+        return {
+            "status": "not_found",
+            "value": None,
+            "resolution_path": " -> ".join(path + ["no_readable_value_found"]),
+        }
+
+    return _walk(candidate_value, 0, [])
+
+
+def _resolve_base_candidate_agentically(
+    services: Dict[str, Any],
+    resolved_object: Any,
+    candidate_name: str,
+) -> Dict[str, Any]:
+    searched_scopes: List[str] = []
+
+    # --------------------------------------------------------------
+    # 1) Direct / canonical reader path
+    # --------------------------------------------------------------
+    searched_scopes.append("direct_or_canonical_reader")
+    try:
+        direct_value = _read_base_attribute_value(resolved_object, candidate_name)
+        if direct_value is not None:
+            deep_result = _resolve_candidate_value_deep(direct_value)
+
+            if deep_result.get("status") == "ok":
+                return {
+                    "status": "ok",
+                    "candidate": candidate_name,
+                    "resolved_attribute": candidate_name,
+                    "value": deep_result.get("value"),
+                    "searched_scopes": searched_scopes,
+                    "resolution_path": f"direct_or_canonical_reader -> {deep_result.get('resolution_path')}",
+                    "resolved_field": deep_result.get("resolved_field"),
+                }
+    except Exception as exc:
+        return {
+            "status": "error",
+            "candidate": candidate_name,
+            "error": "direct_or_canonical_reader_failed",
+            "details": str(exc),
+            "searched_scopes": searched_scopes,
+        }
+
+    # --------------------------------------------------------------
+    # 2) Direct raw object attribute path
+    # --------------------------------------------------------------
+    searched_scopes.append("direct_object_attribute")
+    try:
+        if hasattr(resolved_object, candidate_name):
+            raw_value = getattr(resolved_object, candidate_name, None)
+            if raw_value is not None:
+                deep_result = _resolve_candidate_value_deep(raw_value)
+
+                if deep_result.get("status") == "ok":
+                    return {
+                        "status": "ok",
+                        "candidate": candidate_name,
+                        "resolved_attribute": candidate_name,
+                        "value": deep_result.get("value"),
+                        "searched_scopes": searched_scopes,
+                        "resolution_path": f"direct_object_attribute -> {deep_result.get('resolution_path')}",
+                        "resolved_field": deep_result.get("resolved_field"),
+                    }
+    except Exception as exc:
+        return {
+            "status": "error",
+            "candidate": candidate_name,
+            "error": "direct_object_attribute_failed",
+            "details": str(exc),
+            "searched_scopes": searched_scopes,
+        }
+
+    # --------------------------------------------------------------
+    # 3) Expanded structural lookup from neighboring graph/object refs
+    # --------------------------------------------------------------
+    searched_scopes.append("expanded_structural_lookup")
+    try:
+        for child_name, child_value in _iter_navigation_candidates_from_object(resolved_object):
+            deep_result = _resolve_candidate_value_deep(child_value)
+
+            if deep_result.get("status") == "ok":
+                return {
+                    "status": "ok",
+                    "candidate": candidate_name,
+                    "resolved_attribute": candidate_name,
+                    "value": deep_result.get("value"),
+                    "searched_scopes": searched_scopes,
+                    "resolution_path": f"expanded_structural_lookup -> {child_name} -> {deep_result.get('resolution_path')}",
+                    "resolved_field": deep_result.get("resolved_field"),
+                }
+    except Exception as exc:
+        return {
+            "status": "error",
+            "candidate": candidate_name,
+            "error": "expanded_structural_lookup_failed",
+            "details": str(exc),
+            "searched_scopes": searched_scopes,
+        }
+
+    # --------------------------------------------------------------
+    # 4) Optional known heavy fallback for voltage-limit family
+    #    Keep this because it already exists and is useful, but only
+    #    after the generic search stages above.
+    # --------------------------------------------------------------
+    if candidate_name in {"OperationalLimitSet", "lowVoltageLimit", "highVoltageLimit"}:
+        searched_scopes.append("expanded_voltage_limit_lookup")
+        try:
+            expanded = _resolve_voltage_limit_values_via_global_lookup(services, resolved_object)
+            low = expanded.get("lowVoltageLimit")
+            high = expanded.get("highVoltageLimit")
+
+            if candidate_name == "lowVoltageLimit" and low is not None:
+                return {
+                    "status": "ok",
+                    "candidate": candidate_name,
+                    "resolved_attribute": "lowVoltageLimit",
+                    "value": low,
+                    "searched_scopes": searched_scopes,
+                    "resolution_path": "expanded_voltage_limit_lookup -> lowVoltageLimit",
+                }
+
+            if candidate_name == "highVoltageLimit" and high is not None:
+                return {
+                    "status": "ok",
+                    "candidate": candidate_name,
+                    "resolved_attribute": "highVoltageLimit",
+                    "value": high,
+                    "searched_scopes": searched_scopes,
+                    "resolution_path": "expanded_voltage_limit_lookup -> highVoltageLimit",
+                }
+
+            if candidate_name == "OperationalLimitSet":
+                result_values = {}
+                if low is not None:
+                    result_values["lowVoltageLimit"] = low
+                if high is not None:
+                    result_values["highVoltageLimit"] = high
+
+                if result_values:
+                    return {
+                        "status": "ok",
+                        "candidate": candidate_name,
+                        "resolved_attribute": "voltage_limits_from_operational_limit_set",
+                        "value": result_values,
+                        "searched_scopes": searched_scopes,
+                        "resolution_path": "expanded_voltage_limit_lookup -> voltage_limits_from_operational_limit_set",
+                    }
+        except Exception as exc:
+            return {
+                "status": "error",
+                "candidate": candidate_name,
+                "error": "expanded_voltage_limit_lookup_failed",
+                "details": str(exc),
+                "searched_scopes": searched_scopes,
+            }
+
+    # --------------------------------------------------------------
+    # 5) Structured not_found
+    # --------------------------------------------------------------
+    return {
+        "status": "not_found",
+        "candidate": candidate_name,
+        "value": None,
+        "searched_scopes": searched_scopes,
+        "resolution_path": "not_found",
+    }
+
+# liest statische Base-/Nameplate-Attribute eines aufgelösten Objekts
 def _read_cim_base_values_with_services(
     services: Dict[str, Any],
     user_input: str,
@@ -1540,6 +2051,7 @@ def _read_cim_base_values_with_services(
                 "resolution_mode": "missing_resolved_object",
                 "available_attributes": [],
                 "selected_attributes": [],
+                "selected_candidates": [],
             },
         }
 
@@ -1548,36 +2060,77 @@ def _read_cim_base_values_with_services(
     print(f"equipment_obj id: {_canonical_cim_id(resolved_object)} {getattr(resolved_object, 'mRID', None)}")
 
     preselected_values: Dict[str, Any] | None = None
+    selection_result: Dict[str, Any] = {}
+    semantic_preselection = None
 
-    if requested_attributes:
-        preselected_values = {}
-        for attr_name in requested_attributes:
-            preselected_values[attr_name] = _read_base_attribute_value(resolved_object, attr_name)
+    # ------------------------------------------------------------------
+    # 1) Preselected path:
+    #    - explicit requested_attributes from caller
+    #    - or LLM-based semantic preselection for known complex intents
+    # ------------------------------------------------------------------
+    effective_requested_attributes = list(requested_attributes or [])
+
+    if not effective_requested_attributes:
+        semantic_preselection = _resolve_preselected_base_attributes_with_llm(
+            user_input=user_input,
+            resolved_object=resolved_object,
+        )
 
         if (
-            any(attr_name in {"lowVoltageLimit", "highVoltageLimit"} for attr_name in requested_attributes)
-            and resolved_object is not None
-            and resolved_object.__class__.__name__ in {"BusbarSection", "TopologicalNode"}
-            and any(preselected_values.get(attr_name) is None for attr_name in requested_attributes if attr_name in {"lowVoltageLimit", "highVoltageLimit"})
+            semantic_preselection.get("status") == "ok"
+            and semantic_preselection.get("should_use_preselected_attributes")
+            and semantic_preselection.get("requested_attributes")
         ):
-            global_limit_values = _resolve_voltage_limit_values_via_global_lookup(services, resolved_object)
-            for attr_name in requested_attributes:
-                if attr_name in {"lowVoltageLimit", "highVoltageLimit"} and preselected_values.get(attr_name) is None:
-                    fallback_value = global_limit_values.get(attr_name)
-                    if fallback_value is not None:
-                        preselected_values[attr_name] = fallback_value
+            effective_requested_attributes = list(
+                semantic_preselection.get("requested_attributes") or []
+            )
+
+    if effective_requested_attributes:
+        preselected_values = {}
+        preselected_resolution_debug: Dict[str, Any] = {}
+
+        for attr_name in effective_requested_attributes:
+            resolution = _resolve_base_candidate_agentically(
+                services=services,
+                resolved_object=resolved_object,
+                candidate_name=attr_name,
+            )
+            preselected_resolution_debug[attr_name] = resolution
+
+            if resolution.get("status") == "ok":
+                resolved_attr = resolution.get("resolved_attribute") or attr_name
+                resolved_value = resolution.get("value")
+
+                # If a structural candidate resolves to multiple final attributes,
+                # merge them into preselected_values.
+                if isinstance(resolved_value, dict):
+                    for sub_attr, sub_value in resolved_value.items():
+                        if sub_value is not None:
+                            preselected_values[sub_attr] = sub_value
+                else:
+                    preselected_values[resolved_attr] = resolved_value
 
         available_attributes = [
-            attr_name for attr_name in requested_attributes
-            if preselected_values.get(attr_name) is not None
+            attr_name for attr_name, attr_value in preselected_values.items()
+            if attr_value is not None
         ]
+
         selection_result = {
             "selected_attributes": available_attributes,
+            "selected_candidates": list(effective_requested_attributes),
             "resolution_mode": "preselected_attributes",
             "available_attributes": available_attributes,
-            "requested_attributes": list(requested_attributes),
+            "requested_attributes": list(effective_requested_attributes),
             "preselected_values": preselected_values,
+            "preselected_resolution_debug": preselected_resolution_debug,
         }
+
+        if semantic_preselection is not None:
+            selection_result["semantic_preselection"] = semantic_preselection
+
+    # ------------------------------------------------------------------
+    # 2) Generic candidate matching path
+    # ------------------------------------------------------------------
     else:
         selection_result = resolve_requested_base_attributes(
             user_input=user_input,
@@ -1586,8 +2139,15 @@ def _read_cim_base_values_with_services(
 
     print(f"base_attribute_debug: {selection_result}")
 
-    selected_attributes = selection_result.get("selected_attributes", []) or []
-    if not selected_attributes:
+    selected_attributes = list(selection_result.get("selected_attributes", []) or [])
+    selected_candidates = list(selection_result.get("selected_candidates", []) or [])
+
+    # Legacy compatibility:
+    # if the resolver still returns selected_attributes only, reuse them as candidates.
+    if not selected_candidates and selected_attributes:
+        selected_candidates = list(selected_attributes)
+
+    if not selected_candidates and not selected_attributes:
         return {
             "status": "error",
             "tool": "read_cim_base_values",
@@ -1597,32 +2157,99 @@ def _read_cim_base_values_with_services(
             "base_attribute_debug": selection_result,
         }
 
+    # ------------------------------------------------------------------
+    # 3) Agentic candidate resolution loop
+    #    - try each candidate
+    #    - direct / canonical read
+    #    - expanded search
+    #    - merge final resolved attributes
+    # ------------------------------------------------------------------
     values: Dict[str, Any] = {}
-    for attr_name in selected_attributes:
-        if preselected_values is not None and attr_name in preselected_values:
-            values[attr_name] = preselected_values.get(attr_name)
+    attribute_resolution_debug: Dict[str, Any] = {}
+
+    # First keep already resolved preselected values if available.
+    if preselected_values:
+        for attr_name, attr_value in preselected_values.items():
+            if attr_value is not None:
+                values[attr_name] = attr_value
+                attribute_resolution_debug[attr_name] = {
+                    "status": "ok",
+                    "attribute": attr_name,
+                    "value": attr_value,
+                    "searched_scopes": ["preselected_attributes"],
+                    "resolution_path": "preselected_attributes",
+                }
+
+    # Then resolve all generic candidates.
+    for candidate_name in selected_candidates:
+        # avoid re-resolving already covered direct attributes
+        if candidate_name in values:
+            continue
+
+        resolution = _resolve_base_candidate_agentically(
+            services=services,
+            resolved_object=resolved_object,
+            candidate_name=candidate_name,
+        )
+        attribute_resolution_debug[candidate_name] = resolution
+
+        if resolution.get("status") != "ok":
+            continue
+
+        resolved_attr = resolution.get("resolved_attribute") or candidate_name
+        resolved_value = resolution.get("value")
+
+        # Structural candidate can resolve to multiple final values.
+        if isinstance(resolved_value, dict):
+            for sub_attr, sub_value in resolved_value.items():
+                if sub_value is not None:
+                    values[sub_attr] = sub_value
         else:
-            values[attr_name] = _read_base_attribute_value(resolved_object, attr_name)
+            if resolved_value is not None:
+                values[resolved_attr] = resolved_value
+
+    # Final selected attributes = all actually resolved readable values
+    selected_attributes = [
+        attr_name for attr_name, attr_value in values.items()
+        if attr_value is not None
+    ]
+
+    if not selected_attributes:
+        return {
+            "status": "error",
+            "tool": "read_cim_base_values",
+            "cim_root": services["cim_root"],
+            "error": "no_resolved_base_values_found",
+            "answer": "Für die angefragten Basisattribute konnten keine lesbaren Werte gefunden werden.",
+            "base_attribute_debug": selection_result,
+            "attribute_resolution_debug": attribute_resolution_debug,
+        }
 
     enriched_base_values = _build_base_values_with_units(values, resolved_object)
 
+    print(f"selected_candidates: {selected_candidates}")
     print(f"selected_attributes: {selected_attributes}")
     print(f"base_values: {values}")
     print(f"base_values_with_units: {enriched_base_values}")
 
     equipment_name = _safe_name(resolved_object) or getattr(resolved_object, "mRID", None) or "<unbekannt>"
-    parts = [f"{attr}={_format_base_value_for_answer(attr, values.get(attr), resolved_object)}" for attr in selected_attributes]
+    parts = [
+        f"{attr}={_format_base_value_for_answer(attr, values.get(attr), resolved_object)}"
+        for attr in selected_attributes
+    ]
     answer = f"Basiswerte für {equipment_name}: " + ", ".join(parts)
 
     return {
         "status": "ok",
         "tool": "read_cim_base_values",
         "cim_root": services["cim_root"],
+        "selected_candidates": selected_candidates,
         "selected_attributes": selected_attributes,
         "base_values": values,
         "base_values_with_units": enriched_base_values,
         "answer": answer,
         "base_attribute_debug": selection_result,
+        "attribute_resolution_debug": attribute_resolution_debug,
     }
 
 # mappt VoltageLimit-Objekt zurück auf Bus/TopologicalNode für Vergleichslogik

@@ -113,6 +113,8 @@ BASE_ATTRIBUTE_SPECS: Dict[str, Dict[str, Any]] = {
     "grounded": {"aliases": ["grounded", "geerdet"]},
     "operatingMode": {"aliases": ["operatingmode", "operating mode", "betriebsmodus", "betriebspunktmodus"]},
     "type": {"aliases": ["type", "typ", "equipment type", "gerätetyp"]},
+    "lowVoltageLimit": {"aliases": ["lowVoltageLimit"]},
+    "highVoltageLimit": {"aliases": ["highVoltageLimit"]},
 }
 
 
@@ -149,6 +151,10 @@ class CandidateChoice(BaseModel):
 class BaseAttributeSelectionDecision(BaseModel):
     selected_attributes: List[str] = Field(default_factory=list)
     confidence: str = Field(description="One of: high, medium, low")
+    rationale: str = Field(default="")
+
+class AttributeRetryDecision(BaseModel):
+    should_retry_with_fallback: bool = Field(default=False)
     rationale: str = Field(default="")
 
 class CandidateShortlistDecision(BaseModel):
@@ -326,6 +332,41 @@ Regeln:
 - Wenn es wirklich nicht ableitbar ist, gib null zurück.
 """.strip()
 
+UTILIZATION_METRIC_SYSTEM = """
+Du entscheidest für eine Anfrage mit Auslastungs-/Loading-/Utilization-Semantik,
+welche elektrische Metrik für den Vergleich fachlich gemeint ist.
+
+Gib AUSSCHLIESSLICH JSON zurück, ohne Markdown, ohne Zusatztext.
+
+Schema:
+{
+  "metric": "P" | "Q" | "S" | null
+}
+
+Regeln:
+- Wähle nur P, Q, S oder null.
+- Für Transformator-Auslastung / transformer loading / utilization ist normalerweise S gemeint.
+- Für allgemeine Wirkleistungsgrenzen kann P gemeint sein.
+- Für Blindleistungsgrenzen kann Q gemeint sein.
+- Wenn es nicht sicher entscheidbar ist, gib S zurück.
+""".strip()
+
+STATE_INFERENCE_SYSTEM = """
+Du entscheidest, welche CIM-StateVariable für eine User-Anfrage fachlich gemeint ist.
+
+Gib AUSSCHLIESSLICH JSON zurück, ohne Markdown, ohne Zusatztext.
+
+Schema:
+{
+  "state_type": "SvVoltage" | "SvPowerFlow" | null
+}
+
+Regeln:
+- Wähle nur SvVoltage, SvPowerFlow oder null.
+- Für Spannungs-/Voltage-Anfragen ist meist SvVoltage gemeint.
+- Für Leistungs-/Power-/PowerFlow-Anfragen ist meist SvPowerFlow gemeint.
+- Wenn der State nicht sicher aus der Anfrage ableitbar ist, gib null zurück.
+""".strip()
 
 def infer_metric_from_context(llm, context: str) -> Metric:
     user_prompt = f"""
@@ -352,6 +393,64 @@ Kontext:
         return "P"
     return None
 
+def infer_utilization_metric_from_context(
+    llm,
+    context: str,
+    *,
+    equipment_types: List[str],
+) -> Metric:
+    user_prompt = f"""
+Kontext:
+{context}
+
+Aufgelöste Equipment-Typen:
+{chr(10).join(f"- {t}" for t in equipment_types)}
+""".strip()
+
+    try:
+        resp = llm.invoke([("system", UTILIZATION_METRIC_SYSTEM), ("user", user_prompt)])
+        text = getattr(resp, "content", str(resp))
+        data = extract_json(text)
+        metric = data.get("metric")
+        if metric in {"P", "Q", "S"}:
+            return metric
+    except Exception:
+        pass
+
+    return None
+
+def infer_state_from_context(
+    llm,
+    context: str,
+    *,
+    allowed_state_types: List[str],
+) -> Optional[str]:
+    allowed = [s for s in allowed_state_types if s in {"SvVoltage", "SvPowerFlow"}]
+    if not allowed:
+        return None
+
+    if len(allowed) == 1:
+        return allowed[0]
+
+    user_prompt = f"""
+Kontext:
+{context}
+
+Erlaubte State-Typen:
+{chr(10).join(f"- {s}" for s in allowed)}
+""".strip()
+
+    try:
+        resp = llm.invoke([("system", STATE_INFERENCE_SYSTEM), ("user", user_prompt)])
+        text = getattr(resp, "content", str(resp))
+        data = extract_json(text)
+        state_type = data.get("state_type")
+        if state_type in allowed:
+            return state_type
+    except Exception:
+        pass
+
+    return None
 
 
 POWERFLOW_TYPE_INFERENCE_SYSTEM = """
@@ -385,6 +484,10 @@ def infer_powerflow_equipment_type_from_context(
     if not allowed:
         return None
 
+    # Deterministic trivial case only.
+    if len(allowed) == 1:
+        return allowed[0]
+
     user_prompt = f"""
 Kontext:
 {context}
@@ -402,25 +505,6 @@ Erlaubte netzseitige PowerFlow-Zieltypen:
             return equipment_type
     except Exception:
         pass
-
-    context_l = (context or "").lower()
-    if any(w in context_l for w in ["generator", "erzeuger", "synchronousmachine", "synchronous machine"]):
-        if "SynchronousMachine" in allowed:
-            return "SynchronousMachine"
-    if any(w in context_l for w in ["asynchronousmachine", "asynchronous machine", "induction machine"]):
-        if "AsynchronousMachine" in allowed:
-            return "AsynchronousMachine"
-    if any(w in context_l for w in ["last", "verbraucher", "load"]):
-        if "ConformLoad" in allowed:
-            return "ConformLoad"
-        if "EnergyConsumer" in allowed:
-            return "EnergyConsumer"
-    if any(w in context_l for w in ["trafo", "transformator", "transformer"]):
-        if "PowerTransformer" in allowed:
-            return "PowerTransformer"
-    if any(w in context_l for w in ["leitung", "line", "kabel"]):
-        if "ACLineSegment" in allowed:
-            return "ACLineSegment"
 
     return None
 
@@ -458,6 +542,10 @@ def infer_voltage_equipment_type_from_context(
     if not allowed:
         return None
 
+    # Deterministic trivial case only.
+    if len(allowed) == 1:
+        return allowed[0]
+
     user_prompt = f"""
 Kontext:
 {context}
@@ -475,28 +563,6 @@ Erlaubte netzseitige Spannungs-Zieltypen:
             return equipment_type
     except Exception:
         pass
-
-    context_l = (context or "").lower()
-    if any(w in context_l for w in ["busbarsection", "busbar section", "busbar", "sammelschiene", "bus "]):
-        if "BusbarSection" in allowed:
-            return "BusbarSection"
-    if any(w in context_l for w in ["generator", "erzeuger", "synchronousmachine", "synchronous machine"]):
-        if "SynchronousMachine" in allowed:
-            return "SynchronousMachine"
-    if any(w in context_l for w in ["asynchronousmachine", "asynchronous machine", "induction machine"]):
-        if "AsynchronousMachine" in allowed:
-            return "AsynchronousMachine"
-    if any(w in context_l for w in ["last", "verbraucher", "load"]):
-        if "ConformLoad" in allowed:
-            return "ConformLoad"
-        if "EnergyConsumer" in allowed:
-            return "EnergyConsumer"
-    if any(w in context_l for w in ["trafo", "transformator", "transformer"]):
-        if "PowerTransformer" in allowed:
-            return "PowerTransformer"
-    if any(w in context_l for w in ["leitung", "line", "kabel"]):
-        if "ACLineSegment" in allowed:
-            return "ACLineSegment"
 
     return None
 
@@ -525,6 +591,29 @@ Regeln:
 - Wähle nur Attribute, die fachlich wirklich zur Anfrage passen.
 - Wenn nichts sicher passt, gib eine leere Liste zurück.
 """.strip()
+
+
+ATTRIBUTE_RETRY_SYSTEM = """
+Du entscheidest, ob nach einer ersten Attributauswahl für eine CIM-Basiswertanfrage
+ein zweiter Matching-Versuch mit einer erweiterten Attributliste nötig ist.
+
+Gib AUSSCHLIESSLICH JSON zurück, ohne Markdown, ohne Zusatztext.
+
+Schema:
+{
+  "should_retry_with_fallback": true | false,
+  "rationale": "<kurze Begründung>"
+}
+
+Regeln:
+- Antworte true nur dann, wenn die erste Auswahl offensichtlich zu generisch,
+  unvollständig oder fachlich nicht passend zur User-Anfrage wirkt.
+- Wenn die erste Auswahl fachlich plausibel ist, antworte false.
+- Berücksichtige die User-Anfrage, die Equipment-Klasse, die primär verfügbaren Attribute,
+  die primär ausgewählten Attribute und die erweiterte Fallback-Attributliste.
+""".strip()
+
+
 
 CANDIDATE_SHORTLIST_SYSTEM = """
 Du wählst aus einer Liste möglicher Equipment-Kandidaten die fachlich relevantesten Kandidaten für eine User-Anfrage aus.
@@ -558,48 +647,43 @@ def _iter_base_attribute_values(equipment_obj: Any, attr_name: str) -> List[Any]
     if equipment_obj is None or not attr_name:
         return values
 
-    if attr_name in {"lowVoltageLimit", "highVoltageLimit"}:
-        try:
-            from cimpy.cimpy_time_analysis.cim_mcp_tools import _resolve_voltage_limits_from_node
-            resolved = _resolve_voltage_limits_from_node(equipment_obj)
-            value = resolved.get(attr_name)
-            if value is not None:
-                values.append(value)
-        except Exception:
-            pass
-        return values
-
+    # 1) Fast path: direct attribute on the object itself
     if hasattr(equipment_obj, attr_name):
-        value = getattr(equipment_obj, attr_name, None)
+        try:
+            value = getattr(equipment_obj, attr_name, None)
+        except Exception:
+            value = None
         if value is not None:
             values.append(value)
+            return values
 
-    class_name = equipment_obj.__class__.__name__
-
-    if class_name == "PowerTransformer":
-        ends = getattr(equipment_obj, "PowerTransformerEnd", None) or []
-        for end in ends:
-            if hasattr(end, attr_name):
-                value = getattr(end, attr_name, None)
-                if value is not None:
-                    values.append(value)
-
-    if class_name == "SynchronousMachine":
-        generating_unit = getattr(equipment_obj, "GeneratingUnit", None)
-        if generating_unit is not None and hasattr(generating_unit, attr_name):
-            value = getattr(generating_unit, attr_name, None)
-            if value is not None:
-                values.append(value)
+    # 2) Canonical reader path:
+    #    Use the same reader as the execution layer so that discovery and
+    #    execution agree on whether an attribute is actually available.
+    try:
+        from cimpy.cimpy_time_analysis.cim_mcp_tools import _read_base_attribute_value
+        resolved_value = _read_base_attribute_value(equipment_obj, attr_name)
+        if resolved_value is not None:
+            values.append(resolved_value)
+            return values
+    except Exception:
+        pass
 
     return values
 
 
 def _get_available_base_attributes(equipment_obj: Any) -> List[str]:
     available: List[str] = []
+
     for attr_name in BASE_ATTRIBUTE_SPECS.keys():
         if _iter_base_attribute_values(equipment_obj, attr_name):
             available.append(attr_name)
-    return available
+
+    for attr_name in TECHNICAL_FALLBACK_ATTRIBUTES:
+        if attr_name not in available and _iter_base_attribute_values(equipment_obj, attr_name):
+            available.append(attr_name)
+
+    return _dedup_keep_order(available)
 
 
 def _is_simple_base_value(value: Any) -> bool:
@@ -640,6 +724,16 @@ def _iter_direct_readable_attribute_names(equipment_obj: Any) -> List[str]:
 
 
 def _get_all_readable_base_attributes(equipment_obj: Any) -> List[str]:
+    """
+    Return only semantically meaningful readable base attributes.
+
+    Important:
+    - keep attributes from BASE_ATTRIBUTE_SPECS
+    - keep explicit technical fallback attributes such as low/high voltage limits
+    - do NOT expose generic structural/container attributes (e.g. Terminals,
+      OperationalLimitSet, Measurements, DiagramObjects) as user-selectable
+      base attributes
+    """
     candidates: List[str] = []
 
     for attr_name in BASE_ATTRIBUTE_SPECS.keys():
@@ -650,11 +744,41 @@ def _get_all_readable_base_attributes(equipment_obj: Any) -> List[str]:
         if attr_name not in candidates and _iter_base_attribute_values(equipment_obj, attr_name):
             candidates.append(attr_name)
 
-    for attr_name in _iter_direct_readable_attribute_names(equipment_obj):
-        if attr_name not in candidates and _iter_base_attribute_values(equipment_obj, attr_name):
-            candidates.append(attr_name)
-
     return _dedup_keep_order(candidates)
+
+def _llm_should_retry_attribute_match_with_fallback(
+    llm,
+    *,
+    user_input: str,
+    primary_selected: List[str],
+    equipment_obj: Any,
+    primary_available_attributes: List[str],
+    fallback_available_attributes: List[str],
+) -> bool:
+    parser = PydanticOutputParser(pydantic_object=AttributeRetryDecision)
+    prompt = ChatPromptTemplate.from_messages([
+        ("system", ATTRIBUTE_RETRY_SYSTEM.replace("{", "{{").replace("}", "}}") + "\n\n{format_instructions}"),
+        (
+            "user",
+            "User request:\n{user_input}\n\n"
+            "Equipment class: {equipment_class}\n"
+            "Primary available attributes:\n{primary_available_attributes}\n\n"
+            "Primary selected attributes:\n{primary_selected}\n\n"
+            "Fallback available attributes:\n{fallback_available_attributes}"
+        ),
+    ])
+
+    chain = prompt | llm | parser
+    decision = chain.invoke({
+        "user_input": user_input,
+        "equipment_class": equipment_obj.__class__.__name__ if equipment_obj is not None else None,
+        "primary_available_attributes": "\n".join(f"- {a}" for a in primary_available_attributes),
+        "primary_selected": "\n".join(f"- {a}" for a in primary_selected) if primary_selected else "(none)",
+        "fallback_available_attributes": "\n".join(f"- {a}" for a in fallback_available_attributes),
+        "format_instructions": parser.get_format_instructions(),
+    })
+    return bool(decision.should_retry_with_fallback)
+
 
 
 def _should_retry_attribute_match_with_fallback(
@@ -662,29 +786,30 @@ def _should_retry_attribute_match_with_fallback(
     primary_selected: List[str],
     equipment_obj: Any,
     fallback_available_attributes: List[str],
+    primary_available_attributes: Optional[List[str]] = None,
 ) -> bool:
+    primary_available_attributes = primary_available_attributes or []
+
     if not fallback_available_attributes:
         return False
 
     if not primary_selected:
         return True
 
-    selected_set = set(primary_selected)
-    fallback_set = set(fallback_available_attributes)
+    try:
+        llm = get_llm()
+        return _llm_should_retry_attribute_match_with_fallback(
+            llm,
+            user_input=user_input,
+            primary_selected=primary_selected,
+            equipment_obj=equipment_obj,
+            primary_available_attributes=primary_available_attributes,
+            fallback_available_attributes=fallback_available_attributes,
+        )
+    except Exception:
+        return False
 
-    if equipment_obj is not None and equipment_obj.__class__.__name__ == "VoltageLimit":
-        if "value" in fallback_set and selected_set.issubset(GENERIC_METADATA_ATTRIBUTES):
-            return True
 
-    text = (user_input or "").lower()
-    limit_markers = ["grenze", "grenzwert", "limit", "minimum", "maximum", "minim", "maxim"]
-    if any(marker in text for marker in limit_markers):
-        if selected_set.issubset(GENERIC_METADATA_ATTRIBUTES):
-            additional_candidates = fallback_set - selected_set
-            if additional_candidates:
-                return True
-
-    return False
 
 
 def _llm_match_base_attributes(
@@ -726,89 +851,45 @@ def resolve_requested_base_attributes(
     user_input: str,
     equipment_obj: Any,
 ) -> Dict[str, Any]:
-    primary_available_attributes = _get_available_base_attributes(equipment_obj)
-    fallback_available_attributes = _get_all_readable_base_attributes(equipment_obj)
     llm = get_llm()
+    candidate_attributes = _get_all_candidate_attribute_names(equipment_obj)
 
-    primary_error = None
-    primary_selected: List[str] = []
-    primary_decision_payload = None
+    if not candidate_attributes:
+        return {
+            "selected_attributes": [],
+            "selected_candidates": [],
+            "resolution_mode": "no_candidate_attributes",
+            "available_attributes": [],
+        }
 
-    if primary_available_attributes:
-        try:
-            decision = _llm_match_base_attributes(
-                llm=llm,
-                user_input=user_input,
-                available_attributes=primary_available_attributes,
-                equipment_obj=equipment_obj,
-            )
-            primary_decision_payload = decision.model_dump() if hasattr(decision, "model_dump") else decision.dict()
-            primary_selected = [
-                attr for attr in decision.selected_attributes
-                if attr in primary_available_attributes
-            ]
-            primary_selected = _dedup_keep_order(primary_selected)
+    try:
+        decision = _llm_match_base_attribute_candidates(
+            llm=llm,
+            user_input=user_input,
+            candidate_attributes=candidate_attributes,
+            equipment_obj=equipment_obj,
+        )
+        selected_candidates = [
+            attr for attr in (decision.selected_candidates or [])
+            if attr in candidate_attributes
+        ]
+        selected_candidates = _dedup_keep_order(selected_candidates)
 
-            should_retry_with_fallback = _should_retry_attribute_match_with_fallback(
-                user_input=user_input,
-                primary_selected=primary_selected,
-                equipment_obj=equipment_obj,
-                fallback_available_attributes=fallback_available_attributes,
-            )
-
-            if primary_selected and not should_retry_with_fallback:
-                return {
-                    "selected_attributes": primary_selected,
-                    "resolution_mode": "semantic_llm_match_primary",
-                    "available_attributes": primary_available_attributes,
-                    "llm_decision": primary_decision_payload,
-                }
-        except Exception as exc:
-            primary_error = str(exc)
-
-    if fallback_available_attributes:
-        try:
-            decision = _llm_match_base_attributes(
-                llm=llm,
-                user_input=user_input,
-                available_attributes=fallback_available_attributes,
-                equipment_obj=equipment_obj,
-            )
-            selected = [
-                attr for attr in decision.selected_attributes
-                if attr in fallback_available_attributes
-            ]
-            return {
-                "selected_attributes": _dedup_keep_order(selected),
-                "resolution_mode": "semantic_llm_match_fallback_all_readable",
-                "available_attributes": fallback_available_attributes,
-                "primary_available_attributes": primary_available_attributes,
-                "primary_selected_attributes": primary_selected,
-                "primary_error": primary_error,
-                "primary_llm_decision": primary_decision_payload,
-                "llm_decision": decision.model_dump() if hasattr(decision, "model_dump") else decision.dict(),
-            }
-        except Exception as exc:
-            return {
-                "selected_attributes": primary_selected,
-                "resolution_mode": "semantic_llm_match_fallback_failed",
-                "available_attributes": fallback_available_attributes,
-                "primary_available_attributes": primary_available_attributes,
-                "primary_selected_attributes": primary_selected,
-                "primary_error": primary_error,
-                "primary_llm_decision": primary_decision_payload,
-                "error": str(exc),
-            }
-
-    return {
-        "selected_attributes": primary_selected,
-        "resolution_mode": "no_available_attributes",
-        "available_attributes": [],
-        "primary_available_attributes": primary_available_attributes,
-        "primary_selected_attributes": primary_selected,
-        "primary_error": primary_error,
-        "primary_llm_decision": primary_decision_payload,
-    }
+        return {
+            "selected_attributes": [],  # legacy field
+            "selected_candidates": selected_candidates,
+            "resolution_mode": "semantic_llm_candidate_match",
+            "available_attributes": candidate_attributes,
+            "llm_decision": decision.model_dump() if hasattr(decision, "model_dump") else decision.dict(),
+        }
+    except Exception as exc:
+        return {
+            "selected_attributes": [],
+            "selected_candidates": [],
+            "resolution_mode": "semantic_llm_candidate_match_failed",
+            "available_attributes": candidate_attributes,
+            "error": str(exc),
+        }
 
 
 def make_clarify_prompt(context: str, missing: str) -> List[tuple]:
@@ -900,9 +981,9 @@ def shortlist_candidates(
     """
     Build a candidate shortlist for a concrete equipment type.
 
-    New strategy:
+    Strategy:
     - primary path: LLM selects the most plausible subset from all available candidate keys
-    - deterministic fallback: return a stable truncated list if LLM selection fails
+    - if the LLM cannot safely return candidates, return an empty shortlist
 
     Note:
     - `cutoff` is kept in the signature for backward compatibility but is no longer used.
@@ -913,8 +994,8 @@ def shortlist_candidates(
     if not keys:
         return []
 
-    # Stable deterministic ordering for reproducibility
-    keys = sorted(keys, key=lambda k: (len(k), k), reverse=True)
+    # Stable ordering only for reproducibility of the prompt input.
+    keys = sorted(keys)
 
     llm = get_llm()
 
@@ -936,11 +1017,10 @@ def shortlist_candidates(
         if selected:
             return selected[:limit]
 
-    except Exception:
-        pass
+        return []
 
-    # Deterministic fallback only as safety net.
-    return keys[: min(limit, len(keys))]
+    except Exception:
+        return []
 
 
 def llm_choose_equipment_key(
@@ -1231,13 +1311,26 @@ def interpret_user_query(
             context_lines += [f"Assistant: {q}", f"User: {a}"]
             continue
 
-        if parsed.equipment_detected and not parsed.state_detected and default_state_if_equipment_only in effective_allowed_state_types:
-            parsed.state_detected = [default_state_if_equipment_only]
-            parsed = normalize_query(
-                parsed,
-                allowed_equipment_types=effective_allowed_equipment_types,
-                allowed_state_types=effective_allowed_state_types,
+        if parsed.equipment_detected and not parsed.state_detected and effective_allowed_state_types:
+            inferred_state = infer_state_from_context(
+                llm,
+                context,
+                allowed_state_types=sorted(effective_allowed_state_types),
             )
+            if inferred_state in effective_allowed_state_types:
+                parsed.state_detected = [inferred_state]
+                parsed = normalize_query(
+                    parsed,
+                    allowed_equipment_types=effective_allowed_equipment_types,
+                    allowed_state_types=effective_allowed_state_types,
+                )
+            elif default_state_if_equipment_only in effective_allowed_state_types:
+                parsed.state_detected = [default_state_if_equipment_only]
+                parsed = normalize_query(
+                    parsed,
+                    allowed_equipment_types=effective_allowed_equipment_types,
+                    allowed_state_types=effective_allowed_state_types,
+                )
 
         context_l = context.lower()
         explicit_metric = any(
@@ -1246,8 +1339,14 @@ def interpret_user_query(
 
         if ("PowerTransformer" in parsed.equipment_detected) and (
             "auslastung" in context_l or "utilization" in context_l or "loading" in context_l
-        ) and not explicit_metric:
-            parsed.metric = "S"
+        ) and not explicit_metric and parsed.metric is None:
+            inferred_utilization_metric = infer_utilization_metric_from_context(
+                llm,
+                context,
+                equipment_types=list(parsed.equipment_detected),
+            )
+            if inferred_utilization_metric in {"P", "Q", "S"}:
+                parsed.metric = inferred_utilization_metric
 
         if parsed.metric is None and "SvPowerFlow" in parsed.state_detected:
             inferred_metric = infer_metric_from_context(llm, context)
@@ -1369,3 +1468,82 @@ def interpret_user_query(
         "time_label": None,
     }
 
+def _get_all_candidate_attribute_names(equipment_obj: Any) -> List[str]:
+    candidates: List[str] = []
+
+    if equipment_obj is None:
+        return candidates
+
+    # 1) bekannte fachliche Attribute zuerst
+    for attr_name in BASE_ATTRIBUTE_SPECS.keys():
+        if attr_name not in candidates:
+            candidates.append(attr_name)
+
+    for attr_name in TECHNICAL_FALLBACK_ATTRIBUTES:
+        if attr_name not in candidates:
+            candidates.append(attr_name)
+
+    # 2) direkte Objektattribute ergänzen
+    obj_dict = getattr(equipment_obj, "__dict__", None)
+    if isinstance(obj_dict, dict):
+        for attr_name in obj_dict.keys():
+            attr_name = str(attr_name)
+            if not attr_name or attr_name.startswith("_"):
+                continue
+            if attr_name not in candidates:
+                candidates.append(attr_name)
+
+    return candidates
+
+class BaseAttributeCandidateDecision(BaseModel):
+    selected_candidates: List[str] = Field(default_factory=list)
+    confidence: str = Field(description="One of: high, medium, low")
+    rationale: str = Field(default="")
+
+BASE_ATTRIBUTE_CANDIDATE_SELECTION_SYSTEM = """
+Du entscheidest, welche Attribut- oder Strukturkandidaten für eine CIM-Basiswertanfrage
+am wahrscheinlichsten relevant sind.
+
+Gib AUSSCHLIESSLICH JSON zurück, ohne Markdown, ohne Zusatztext.
+
+Schema:
+{
+  "selected_candidates": ["<genau einer der erlaubten Kandidaten>", ...],
+  "confidence": "high" | "medium" | "low",
+  "rationale": "<kurze Begründung>"
+}
+
+Regeln:
+- Wähle nur Kandidaten aus der gegebenen Liste.
+- Erfinde niemals Kandidaten.
+- Wähle die fachlich relevantesten Kandidaten für die Anfrage.
+- Kandidaten können finale Attribute oder Strukturattribute sein.
+- Wenn ein Strukturattribut fachlich ein sinnvoller Einstiegspunkt ist, darfst du es auswählen.
+- Wenn nichts plausibel ist, gib eine leere Liste zurück.
+""".strip()
+
+def _llm_match_base_attribute_candidates(
+    llm,
+    user_input: str,
+    candidate_attributes: List[str],
+    equipment_obj: Any,
+) -> BaseAttributeCandidateDecision:
+    parser = PydanticOutputParser(pydantic_object=BaseAttributeCandidateDecision)
+    prompt = ChatPromptTemplate.from_messages([
+        ("system", BASE_ATTRIBUTE_CANDIDATE_SELECTION_SYSTEM.replace("{", "{{").replace("}", "}}") + "\n\n{format_instructions}"),
+        (
+            "user",
+            "User request:\n{user_input}\n\n"
+            "Equipment class: {equipment_class}\n"
+            "Available candidates:\n{candidate_attributes}\n"
+        ),
+    ])
+
+    chain = prompt | llm | parser
+    decision = chain.invoke({
+        "user_input": user_input,
+        "equipment_class": equipment_obj.__class__.__name__ if equipment_obj is not None else None,
+        "candidate_attributes": "\n".join(f"- {a}" for a in candidate_attributes),
+        "format_instructions": parser.get_format_instructions(),
+    })
+    return decision
