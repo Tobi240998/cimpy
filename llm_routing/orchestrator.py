@@ -18,8 +18,12 @@ class Orchestrator:
             self._pending = {
                 "intended_tool": action.intended_tool,
                 "missing_fields": action.missing_fields,
-                "partial": action.partial,
-            }
+                "partial": {
+                    **(action.partial or {}),
+                    "user_input": (action.partial or {}).get("user_input", user_input),
+                },
+                "question": action.question,
+}
             return {
                 "route": "ASK_USER",
                 "question": action.question,
@@ -29,10 +33,18 @@ class Orchestrator:
 
         # falls LLM CallToolAction zurückgibt -> Ausgabe der gesammelten Infos für diesen Fall und Aufruf der Tools
         if isinstance(action, CallToolAction):
-            self._pending = None # Historie wird gelöscht, da jetzt ausgeführt wird
+            pending = self._pending
 
             args = dict(action.args or {})
-            args.setdefault("user_input", user_input)
+
+            original_user_input = None
+            if pending:
+                partial = pending.get("partial") or {}
+                original_user_input = partial.get("user_input")
+
+            args.setdefault("user_input", original_user_input or user_input)
+
+            self._pending = None
 
             if action.tool == "historical":
                 result = historical_tool.invoke(args)

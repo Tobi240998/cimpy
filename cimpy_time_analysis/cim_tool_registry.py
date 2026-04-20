@@ -374,6 +374,7 @@ class CIMToolRegistry:
             services=services,
             user_input=context["user_input"],
             network_index=context.get("network_index"),
+            classification=context.get("classification"),
         )
 
     def _tool_list_equipment_of_type(self, context: Dict[str, Any]) -> Dict[str, Any]:

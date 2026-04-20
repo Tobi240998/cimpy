@@ -1257,10 +1257,16 @@ def _resolve_cim_object_with_services(
     services: Dict[str, Any],
     user_input: str,
     network_index: Dict[str, Any] | None,
+    classification: Dict[str, Any] | None = None,
 ) -> Dict[str, Any]:
+    classification = classification or {}
+    request_mode = str(classification.get("request_mode") or "").strip()
+
+    require_time_window = request_mode in {"standard_sv", "standard_comparison"}
     parsed_query = interpret_user_query(
         user_input=user_input,
         network_index=network_index,
+        require_time_window=require_time_window,
     )
     if not isinstance(parsed_query, dict):
         parsed_query = {}

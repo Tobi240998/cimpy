@@ -1,7 +1,7 @@
 import json
 from typing import Any, Dict, Optional
 
-from langchain_core.messages import SystemMessage, HumanMessage
+from langchain_core.messages import SystemMessage, HumanMessage, AIMessage
 from cimpy.llm_routing.langchain_llm import get_llm
 from cimpy.llm_routing.schemas import RouterAction, CallToolAction, AskUserAction
 
@@ -16,37 +16,56 @@ class LLM_routeAgent:
             "Erlaubte Outputs:\n"
             "1) Tool Call:\n"
             '{ "action": "call_tool", "tool": "historical|powerfactory", "args": { ... } }\n\n'
-            "2) Rückfrage (wenn Pflichtinfos fehlen):\n"
-            '{ "action": "ask_user", "question": "...", "missing_fields": ["..."], "partial": { ... }, "intended_tool": "historical|powerfactory" }\n\n'
+            "2) Rückfrage (wenn Pflichtinfos fehlen oder die Quelle unklar ist):\n"
+            '{ "action": "ask_user", "question": "...", "missing_fields": ["..."], "partial": { ... }, "intended_tool": "historical|powerfactory|null" }\n\n'
             "Routing-Regeln:\n"
-            "- Vergangenheit, Verlauf, Durchschnitt, Maximum, Datum, 'war', 'über den Tag' -> historical.\n"
-            "- Änderungen, Schalten, Last ändern, 'rechne Lastfluss', 'setze', 'ändere', 'erhöhe', 'reduziere', 'senke', 'steigere' -> powerfactory.\n\n"
+            "- historical ist für historische CIM-Daten zuständig.\n"
+            "- powerfactory ist für PowerFactory-Projektanfragen zuständig, inklusive lesender Abfragen und Änderungen.\n"
+            "- Wenn die Anfrage explizit zeitbezogen/historisch ist (z.B. Datum, gestern, Verlauf, über den Tag, Maximum im Zeitraum), route zu historical.\n"
+            "- Wenn die Anfrage explizit auf das PowerFactory-Projekt, eine Simulation, einen Lastfluss oder eine Projektänderung verweist, route zu powerfactory.\n"
+            "- Fragen nach Zustandswerten, Parametern oder technischen Attributen sind ohne klaren Quellenbezug mehrdeutig.\n"
+            "- Wenn eine solche Anfrage weder einen expliziten Zeitbezug noch einen expliziten Hinweis auf historical/CIM oder powerfactory/Projekt enthält, MUSST du ask_user zurückgeben.\n"
+            "- In diesem Fall darfst du NICHT direkt historical oder powerfactory wählen.\n"
+            "- Die Rückfrage muss klären, ob sich die Frage auf die historischen CIM-Daten oder auf das aktuelle PowerFactory-Projekt bezieht.\n"
+            "- Wenn keine ausdrückliche Zeitsemantik vorliegt, ist time_range NICHT automatisch Pflicht.\n"
+            "- Frage time_range nur dann ab, wenn eine historical-Anfrage ausdrücklich zeitbezogen ist, aber der Zeitraum fehlt.\n\n"
+            "Wenn eine laufende Klärung vorliegt, berücksichtige die ursprüngliche Nutzerfrage, "
+            "die zuletzt gestellte Rückfrage und die aktuelle Nutzerantwort gemeinsam.\n"
+            "Die aktuelle Nutzerantwort kann kurz sein (z.B. 'historische CIM-Daten' oder 'PowerFactory-Projekt').\n"
+            "Wenn die Rückfrage damit beantwortet ist, gib einen call_tool zurück und stelle nicht dieselbe Rückfrage erneut.\n\n"
             "Args-Minimum:\n"
             "- args muss mindestens {\"user_input\": <Nutzertext>} enthalten.\n\n"
-            "Wenn für historical der Zeitraum unklar ist (z.B. 'über den Tag' ohne Angabe wie 'heute/gestern/Datum'), "
-            "stelle eine Rückfrage und setze missing_fields=['time_range'].\n"
-            "time_range darf ein einfacher String sein (z.B. 'gestern', '2026-03-02')."
+            "Beispiele:\n"
+            '- "Was war die Spannung von Bus 5 am 2026-01-09?" -> call_tool historical\n'
+            '- "Rechne einen Lastfluss für Projekt X." -> call_tool powerfactory\n'
+            '- "Wie hoch ist die Spannung von Bus 5?" -> ask_user, missing_fields=["data_source"]\n'
+            '- "Was ist r von Line 02-03?" -> ask_user, missing_fields=["data_source"]\n'
+            '- "Wie war die Auslastung über den Tag?" -> ask_user, intended_tool="historical", missing_fields=["time_range"]\n'
         )
 
     def route(self, user_input: str, pending: Optional[Dict[str, Any]] = None) -> RouterAction:
-        context = ""
-        if pending:
-            context = (
-                "\n\nKONTEXT (laufende Klärung, berücksichtigen!):\n"
-                + json.dumps(pending, ensure_ascii=False)
-            )
+        messages = [SystemMessage(content=self.system_prompt)]
 
-        messages = [
-            SystemMessage(content=self.system_prompt),
-            HumanMessage(content=user_input + context), # optional Berücksichtigung von Context, falls Rückfragen entstehen
-        ]
+        if pending:
+            partial = pending.get("partial", {}) or {}
+            original_user_input = partial.get("user_input") or pending.get("user_input") or ""
+            previous_question = pending.get("question") or ""
+
+            if original_user_input:
+                messages.append(HumanMessage(content=original_user_input))
+
+            if previous_question:
+                messages.append(AIMessage(content=previous_question))
+
+            messages.append(HumanMessage(content=user_input))
+        else:
+            messages.append(HumanMessage(content=user_input))
 
         try:
             response = self.llm.invoke(messages)
             content = response.content.strip()
             data = json.loads(content)
         except Exception:
-            # harter Fallback (LLM down / Müll)
             return CallToolAction(action="call_tool", tool="historical", args={"user_input": user_input})
 
         try:
