@@ -160,7 +160,6 @@ class CIMDomainAgent:
         "Was sind die direkten Nachbarn von Bus 3?"
         "Was sind die direkten Nachbarn von Last 3?"
         "Mit welchen Objekten ist Bus 1 direkt verbunden?"
-        "Was sind die direkten Nachbarn von Trafo 19-20 in den CIM-Daten?"
         are topology_query, not standard_listing.
 
         Time guidance:
@@ -193,7 +192,6 @@ class CIMDomainAgent:
         - "Was war die Spannung von Bus 3 am 2026-01-09?" => intent=historical_analysis, request_mode=standard_sv, target_kind=metric, safe_to_execute=true
         - "Was sind die direkten Nachbarn von Bus 3?" => intent=topology_query, request_mode=custom_plan, target_kind=topology, safe_to_execute=true
         - "Was sind die direkten Nachbarn von Last 3?" => intent=topology_query, request_mode=custom_plan, target_kind=topology, safe_to_execute=true
-        - "Was sind die direkten Nachbarn von Trafo 19-20 in den CIM-Daten?" => intent=topology_query, request_mode=custom_plan, target_kind=topology, safe_to_execute=true
         - "Was sind die direkten Nachbarn von Bus 3? Nutze historical CIM, nicht Powerfactory" => intent=topology_query, request_mode=custom_plan, target_kind=topology, safe_to_execute=true
 
         {format_instructions}
@@ -730,40 +728,8 @@ Practical guidance:
         classification = self.classify_request(user_input)
         plan = self.build_plan(classification)
 
-        debug_header = {
-            "user_input": user_input,
-            "classification_summary": {
-                "intent": classification.get("intent"),
-                "request_mode": classification.get("request_mode"),
-                "safe_to_execute": classification.get("safe_to_execute"),
-                "target_kind": classification.get("target_kind"),
-                "confidence": classification.get("confidence"),
-                "classification_mode": classification.get("classification_mode"),
-                "missing_context": classification.get("missing_context", []),
-                "reasoning": classification.get("reasoning"),
-            },
-            "planned_steps": [step.get("step") for step in plan],
-        }
-
-        print("\n[CIM DEBUG] classification:")
-        print(debug_header["classification_summary"])
-        print("[CIM DEBUG] planned_steps:")
-        print(debug_header["planned_steps"])
-
-        result = self.execute_plan(
+        return self.execute_plan(
             user_input=user_input,
             classification=classification,
             plan=plan,
         )
-
-        existing_debug = result.get("debug", {}) if isinstance(result, dict) else {}
-        if not isinstance(existing_debug, dict):
-            existing_debug = {}
-
-        existing_debug["run_debug"] = debug_header
-        result["debug"] = existing_debug
-
-        print("[CIM DEBUG] final_status:", result.get("status"))
-        print("[CIM DEBUG] final_answer:", result.get("answer"))
-
-        return result
