@@ -35,6 +35,16 @@ from cimpy.cimpy_time_analysis.cim_queries import (
 
 from cimpy.cimpy_time_analysis.cim_object_utils import collect_all_cim_objects
 
+from cimpy.cimpy_time_analysis.schemas import (
+    EquipmentTypeDecision,
+    EquipmentInstanceDecision,
+    ParsedQueryNormalizationDecision,
+    ComparisonResolutionDecision,
+    FinalAnswerDecision,
+    BaseAttributeIntentDecision,
+    VoltageLimitSelectionDecision,
+)
+
 _EXCLUDED_EQUIPMENT_CLASS_NAMES = {
     "Terminal",
     "ConnectivityNode",
@@ -50,57 +60,6 @@ _EXCLUDED_EQUIPMENT_CLASS_NAMES = {
     "PositionPoint",
 }
 
-
-class EquipmentTypeDecision(BaseModel):
-    selected_type: Optional[str] = Field(
-        default=None,
-        description="Exact class name from the provided equipment type list, or null if no safe match exists.",
-    )
-    confidence: str = Field(description="One of: high, medium, low")
-    rationale: str = Field(description="Short explanation for the selection")
-    should_execute: bool = Field(
-        description="True only if the selected type is a safe unambiguous choice."
-    )
-    alternatives: List[str] = Field(default_factory=list)
-
-
-class EquipmentInstanceDecision(BaseModel):
-    selected_equipment_id: Optional[str] = Field(
-        default=None,
-        description="Exact canonical_id from the provided candidate list, or null if no safe match exists.",
-    )
-    confidence: str = Field(description="One of: high, medium, low")
-    rationale: str = Field(description="Short explanation for the selection")
-    should_execute: bool = Field(
-        description="True only if the selected equipment candidate is a safe unambiguous choice."
-    )
-    alternatives: List[str] = Field(default_factory=list)
-
-
-class ParsedQueryNormalizationDecision(BaseModel):
-    equipment_type_hint: Optional[str] = Field(default=None)
-    equipment_name_hint: Optional[str] = Field(default=None)
-
-
-class ComparisonResolutionDecision(BaseModel):
-    comparison_type: Optional[str] = Field(default=None)
-    should_execute: bool = Field(default=False)
-    rationale: str = Field(default="")
-
-
-class FinalAnswerDecision(BaseModel):
-    answer: str = Field(default="")
-
-class BaseAttributeIntentDecision(BaseModel):
-    requested_attributes: List[str] = Field(default_factory=list)
-    should_use_preselected_attributes: bool = Field(default=False)
-    rationale: str = Field(default="")
-
-class VoltageLimitSelectionDecision(BaseModel):
-    low_candidate_id: Optional[str] = Field(default=None)
-    high_candidate_id: Optional[str] = Field(default=None)
-    should_execute: bool = Field(default=False)
-    rationale: str = Field(default="")
 
 # setzt cim_route auf Default CIM_ROOT, falls nichts übergeben wurde 
 def _normalize_cim_root(cim_root: Optional[str] = None) -> str:
@@ -171,6 +130,8 @@ _COMPARISON_DEFINITIONS: Dict[str, Dict[str, Any]] = {
 _BASE_ATTRIBUTE_UNITS: Dict[str, Optional[str]] = {
     # Voltage
     "ratedU": "kV",
+    "lowVoltageLimit": "kV",
+    "highVoltageLimit": "kV",
 
     # Apparent Power
     "ratedS": "MVA",
@@ -2087,12 +2048,6 @@ def _read_cim_base_values_with_services(
 ) -> Dict[str, Any]:
     parsed_query = parsed_query or {}
 
-    if analysis_plan is not None:
-        print(f"analysis_plan: {analysis_plan}")
-    print(f"equipment_detected: {parsed_query.get('equipment_detected', [])}")
-    print(f"state_detected: {parsed_query.get('state_detected', [])}")
-    print(f"metric: {parsed_query.get('metric')}")
-    print(f"time_label: {parsed_query.get('time_label')}")
 
     if resolved_object is None:
         print("equipment_obj: None")
@@ -2110,9 +2065,6 @@ def _read_cim_base_values_with_services(
             },
         }
 
-    print(f"equipment_obj type: {type(resolved_object)}")
-    print(f"equipment_obj name: {_safe_name(resolved_object)}")
-    print(f"equipment_obj id: {_canonical_cim_id(resolved_object)} {getattr(resolved_object, 'mRID', None)}")
 
     preselected_values: Dict[str, Any] | None = None
     selection_result: Dict[str, Any] = {}

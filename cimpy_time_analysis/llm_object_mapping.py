@@ -11,6 +11,15 @@ from langchain_ollama import ChatOllama
 
 from datetime import datetime, timedelta, timezone
 
+from cimpy.cimpy_time_analysis.schemas import (
+    EquipmentSelection,
+    QueryParse,
+    CandidateChoice,
+    BaseAttributeSelectionDecision,
+    AttributeRetryDecision,
+    CandidateShortlistDecision,
+    BaseAttributeCandidateDecision, 
+)
 
 # =============================================================================
 # 1) LLM
@@ -126,41 +135,6 @@ TECHNICAL_FALLBACK_ATTRIBUTES = [
 GENERIC_METADATA_ATTRIBUTES = {"name", "mRID", "description", "type"}
 
 
-class EquipmentSelection(BaseModel):
-    equipment_type: str
-    equipment_key: str
-    equipment_name: Optional[str] = None
-    equipment_id: Optional[str] = None
-
-
-class QueryParse(BaseModel):
-    equipment_detected: List[str] = Field(default_factory=list)
-    state_detected: List[str] = Field(default_factory=list)
-    metric: Metric = None
-    equipment_selection: List[EquipmentSelection] = Field(default_factory=list)
-    time_start: Optional[str] = None
-    time_end: Optional[str] = None
-    time_label: Optional[str] = None
-
-
-class CandidateChoice(BaseModel):
-    equipment_key: Optional[str] = None
-    need_clarification: bool = False
-    clarification_question: Optional[str] = None
-
-class BaseAttributeSelectionDecision(BaseModel):
-    selected_attributes: List[str] = Field(default_factory=list)
-    confidence: str = Field(description="One of: high, medium, low")
-    rationale: str = Field(default="")
-
-class AttributeRetryDecision(BaseModel):
-    should_retry_with_fallback: bool = Field(default=False)
-    rationale: str = Field(default="")
-
-class CandidateShortlistDecision(BaseModel):
-    selected_candidate_keys: List[str] = Field(default_factory=list)
-    confidence: str = Field(description="One of: high, medium, low")
-    rationale: str = Field(default="")
 
 
 def _dedup_keep_order(items: List[str]) -> List[str]:
@@ -1009,9 +983,6 @@ def shortlist_candidates(
     # Stable ordering only for reproducibility of the prompt input.
     keys = sorted(keys)
 
-    print("[SHORTLIST DEBUG] equipment_type:", equipment_type)
-    print("[SHORTLIST DEBUG] total_keys_count:", len(keys))
-    print("[SHORTLIST DEBUG] total_keys:", keys)
 
     llm = get_llm()
 
@@ -1433,12 +1404,7 @@ def interpret_user_query(
                 limit=30,
                 cutoff=0.65,
             )
-            print("[RESOLVE DEBUG] eq_type:", eq_type)
-            print("[RESOLVE DEBUG] context:", context)
-            print("[RESOLVE DEBUG] shortlist_candidates:", candidates)
-            print("[PARSE DEBUG] parsed.equipment_detected:", parsed.equipment_detected)
-            print("[PARSE DEBUG] parsed.state_detected:", parsed.state_detected)
-            print("[PARSE DEBUG] parsed.metric:", parsed.metric)
+
 
 
             if not candidates:
@@ -1455,9 +1421,7 @@ def interpret_user_query(
                 candidate_keys=candidates,
             )
 
-            print("[RESOLVE DEBUG] choice.equipment_key:", choice.equipment_key)
-            print("[RESOLVE DEBUG] choice.need_clarification:", choice.need_clarification)
-            print("[RESOLVE DEBUG] choice.clarification_question:", choice.clarification_question)
+
 
             if choice.equipment_key is None:
                 q = choice.clarification_question or f"Welches konkrete {eq_type}-Equipment meinst du (Name oder Nummer)?"
@@ -1532,10 +1496,6 @@ def _get_all_candidate_attribute_names(equipment_obj: Any) -> List[str]:
 
     return candidates
 
-class BaseAttributeCandidateDecision(BaseModel):
-    selected_candidates: List[str] = Field(default_factory=list)
-    confidence: str = Field(description="One of: high, medium, low")
-    rationale: str = Field(default="")
 
 BASE_ATTRIBUTE_CANDIDATE_SELECTION_SYSTEM = """
 Du entscheidest, welche Attribut- oder Strukturkandidaten für eine CIM-Basiswertanfrage

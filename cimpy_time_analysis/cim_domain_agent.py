@@ -9,6 +9,12 @@ from langchain_core.prompts import ChatPromptTemplate
 from cimpy.cimpy_time_analysis.cim_tool_registry import CIMToolRegistry
 from cimpy.cimpy_time_analysis.langchain_llm import get_llm
 
+from cimpy.cimpy_time_analysis.schemas import (
+    CIMRequestModeDecision,
+    CIMRequestModeOnlyDecision,
+    CIMCustomPlanDecision,
+)
+
 
 _ALLOWED_REQUEST_MODES = {
     "standard_sv",
@@ -30,26 +36,6 @@ _ALLOWED_CONFIDENCE = {"high", "medium", "low"}
 _ALLOWED_TARGET_KINDS = {"asset", "metric", "topology", "unknown"}
 
 
-class CIMRequestModeDecision(BaseModel):
-    intent: str = Field(description="Allowed values are provided in the prompt.")
-    confidence: str = Field(description="Allowed values are provided in the prompt.")
-    target_kind: str = Field(description="Allowed values are provided in the prompt.")
-    request_mode: str = Field(description="Allowed values are provided in the prompt.")
-    safe_to_execute: bool = Field(
-        description="True if the workflow can be executed with the currently supported capabilities"
-    )
-    missing_context: List[str] = Field(default_factory=list)
-    reasoning: str = Field(description="Short explanation of the decision")
-
-
-class CIMRequestModeOnlyDecision(BaseModel):
-    request_mode: str = Field(description="Allowed values are provided in the prompt.")
-    reasoning: str = Field(description="Short explanation of the decision")
-
-
-class CIMCustomPlanDecision(BaseModel):
-    required_steps: List[str] = Field(default_factory=list)
-    reasoning: str = Field(description="Short explanation of the planning decision")
 
 
 class CIMDomainAgent:
@@ -730,7 +716,45 @@ Practical guidance:
         classification = self.classify_request(user_input)
         plan = self.build_plan(classification)
 
-        debug_header = {
+        result = self.execute_plan(
+            user_input=user_input,
+            classification=classification,
+            plan=plan,
+        )
+
+        debug = result.get("debug", {}) if isinstance(result, dict) else {}
+        if not isinstance(debug, dict):
+            debug = {}
+
+        trace = debug.get("trace", []) or []
+
+        selected_type = None
+        selected_equipment_id = None
+        selected_equipment_name = None
+        parsed_query_summary = None
+
+        for item in trace:
+            step = item.get("step")
+            step_result = item.get("result", {}) or {}
+
+            if step == "resolve_cim_object":
+                selected_type = step_result.get("selected_type")
+                selected_equipment_id = step_result.get("selected_equipment_id")
+
+                resolved_object = step_result.get("resolved_object")
+                if resolved_object is not None:
+                    selected_equipment_name = getattr(resolved_object, "name", None)
+
+                parsed_query = step_result.get("parsed_query", {}) or {}
+                parsed_query_summary = {
+                    "equipment_detected": parsed_query.get("equipment_detected", []),
+                    "state_detected": parsed_query.get("state_detected", []),
+                    "metric": parsed_query.get("metric"),
+                    "time_label": parsed_query.get("time_label"),
+                    "equipment_selection": parsed_query.get("equipment_selection", []),
+                }
+
+        run_summary = {
             "user_input": user_input,
             "classification_summary": {
                 "intent": classification.get("intent"),
@@ -740,29 +764,27 @@ Practical guidance:
                 "confidence": classification.get("confidence"),
                 "classification_mode": classification.get("classification_mode"),
                 "missing_context": classification.get("missing_context", []),
-                "reasoning": classification.get("reasoning"),
             },
-            "planned_steps": [step.get("step") for step in plan],
+            "planned_steps": [item.get("step") for item in plan],
+            "selected_type": selected_type,
+            "selected_equipment_id": selected_equipment_id,
+            "selected_equipment_name": selected_equipment_name,
+            "parsed_query_summary": parsed_query_summary,
+            "final_status": result.get("status"),
+            "final_answer": result.get("answer"),
         }
 
+        debug["run_summary"] = run_summary
+        result["debug"] = debug
+
         print("\n[CIM DEBUG] classification:")
-        print(debug_header["classification_summary"])
+        print(run_summary["classification_summary"])
         print("[CIM DEBUG] planned_steps:")
-        print(debug_header["planned_steps"])
-
-        result = self.execute_plan(
-            user_input=user_input,
-            classification=classification,
-            plan=plan,
-        )
-
-        existing_debug = result.get("debug", {}) if isinstance(result, dict) else {}
-        if not isinstance(existing_debug, dict):
-            existing_debug = {}
-
-        existing_debug["run_debug"] = debug_header
-        result["debug"] = existing_debug
-
+        print(run_summary["planned_steps"])
+        print("[CIM DEBUG] selected_type:", selected_type)
+        print("[CIM DEBUG] selected_equipment_name:", selected_equipment_name)
+        print("[CIM DEBUG] selected_equipment_id:", selected_equipment_id)
+        print("[CIM DEBUG] parsed_query_summary:", parsed_query_summary)
         print("[CIM DEBUG] final_status:", result.get("status"))
         print("[CIM DEBUG] final_answer:", result.get("answer"))
 
