@@ -616,7 +616,14 @@ Regeln:
 
 
 CANDIDATE_SHORTLIST_SYSTEM = """
-Du wählst aus einer Liste möglicher Equipment-Kandidaten die fachlich relevantesten Kandidaten für eine User-Anfrage aus.
+Du wählst aus einer Liste möglicher Equipment-Kandidaten die kleinste sinnvolle Kandidatenliste,
+um das vom User gemeinte REFERENZ-Equipment aufzulösen.
+
+Wichtig:
+- Es geht NICHT darum, welche Objekte inhaltlich zur späteren Antwort gehören könnten.
+- Es geht NUR darum, welches konkrete Equipment der User meint.
+- Bei einer Anfrage wie "Was sind die Nachbarn von Line 02-03?" ist das Referenz-Equipment "Line 02-03".
+  Die Nachbarn selbst dürfen NICHT anstelle des Referenz-Equipments gewählt werden.
 
 Gib AUSSCHLIESSLICH JSON zurück, ohne Markdown, ohne Zusatztext.
 
@@ -630,10 +637,15 @@ Schema:
 Regeln:
 - Wähle nur candidate_keys aus der gegebenen Liste.
 - Erfinde niemals candidate_keys.
-- Wähle die Kandidaten, die am wahrscheinlichsten zur Anfrage passen.
-- Wenn die Anfrage sehr spezifisch ist, gib nur wenige Kandidaten zurück.
-- Wenn die Anfrage unscharf ist, darfst du mehrere plausible Kandidaten zurückgeben.
-- Wenn keine Kandidaten fachlich plausibel wirken, gib eine leere Liste zurück.
+- Wenn der User eine konkrete Bezeichnung oder Nummer nennt
+  (z.B. "Line 02-03", "Load 3", "Trafo 19-20", "Bus 5"),
+  MUSS der Kandidat mit genau diesem Namens- oder Nummernmuster ausgewählt werden, sofern er in der Liste existiert.
+- Bei einer Topologiefrage über Nachbarn, Verbindungen, Komponente oder Pfade ist immer das genannte Referenz-Equipment zu wählen,
+  nicht benachbarte oder verbundene Objekte.
+- Bevorzuge exakte Übereinstimmungen von Zahl und Struktur gegenüber nur teilweise ähnlichen Kandidaten.
+- Unterschiede in Groß-/Kleinschreibung, Leerzeichen, Bindestrichen und führenden Nullen sollen tolerant behandelt werden.
+- Wenn die Anfrage sehr spezifisch ist, gib normalerweise genau einen Kandidaten zurück.
+- Wenn keine Kandidaten plausibel passen, gib eine leere Liste zurück.
 """.strip()
 
 
@@ -997,6 +1009,10 @@ def shortlist_candidates(
     # Stable ordering only for reproducibility of the prompt input.
     keys = sorted(keys)
 
+    print("[SHORTLIST DEBUG] equipment_type:", equipment_type)
+    print("[SHORTLIST DEBUG] total_keys_count:", len(keys))
+    print("[SHORTLIST DEBUG] total_keys:", keys)
+
     llm = get_llm()
 
     try:
@@ -1262,6 +1278,7 @@ def interpret_user_query(
     require_time_window: bool = True,
     allowed_equipment_types: Optional[List[str]] = None,
     allowed_state_types: Optional[List[str]] = None,
+    is_topology_query: bool = False,
 ) -> Dict[str, Any]:
     if ask_user is None:
         ask_user = default_ask_user
@@ -1353,7 +1370,12 @@ def interpret_user_query(
             if inferred_metric in {"P", "Q", "S"}:
                 parsed.metric = inferred_metric
 
-        if parsed.equipment_detected and "SvPowerFlow" in parsed.state_detected:
+
+        if (
+            not is_topology_query
+            and parsed.equipment_detected
+            and "SvPowerFlow" in parsed.state_detected
+        ):
             inferred_pf_equipment_type = infer_powerflow_equipment_type_from_context(
                 llm,
                 context,
@@ -1367,7 +1389,11 @@ def interpret_user_query(
                     allowed_state_types=effective_allowed_state_types,
                 )
 
-        if parsed.equipment_detected and "SvVoltage" in parsed.state_detected:
+        if (
+            not is_topology_query
+            and parsed.equipment_detected
+            and "SvVoltage" in parsed.state_detected
+        ):
             inferred_voltage_equipment_type = infer_voltage_equipment_type_from_context(
                 llm,
                 context,
@@ -1407,6 +1433,13 @@ def interpret_user_query(
                 limit=30,
                 cutoff=0.65,
             )
+            print("[RESOLVE DEBUG] eq_type:", eq_type)
+            print("[RESOLVE DEBUG] context:", context)
+            print("[RESOLVE DEBUG] shortlist_candidates:", candidates)
+            print("[PARSE DEBUG] parsed.equipment_detected:", parsed.equipment_detected)
+            print("[PARSE DEBUG] parsed.state_detected:", parsed.state_detected)
+            print("[PARSE DEBUG] parsed.metric:", parsed.metric)
+
 
             if not candidates:
                 q = f"Welches konkrete {eq_type}-Equipment meinst du (Name oder Nummer)?"
@@ -1421,6 +1454,10 @@ def interpret_user_query(
                 equipment_type=eq_type,
                 candidate_keys=candidates,
             )
+
+            print("[RESOLVE DEBUG] choice.equipment_key:", choice.equipment_key)
+            print("[RESOLVE DEBUG] choice.need_clarification:", choice.need_clarification)
+            print("[RESOLVE DEBUG] choice.clarification_question:", choice.clarification_question)
 
             if choice.equipment_key is None:
                 q = choice.clarification_question or f"Welches konkrete {eq_type}-Equipment meinst du (Name oder Nummer)?"

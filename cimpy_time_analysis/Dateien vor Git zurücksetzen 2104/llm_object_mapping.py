@@ -997,6 +997,11 @@ def shortlist_candidates(
     # Stable ordering only for reproducibility of the prompt input.
     keys = sorted(keys)
 
+    print("[SHORTLIST DEBUG] equipment_type:", equipment_type)
+    print("[SHORTLIST DEBUG] user_input:", user_input)
+    print("[SHORTLIST DEBUG] total_keys_count:", len(keys))
+    print("[SHORTLIST DEBUG] total_keys:", keys)
+
     llm = get_llm()
 
     try:
@@ -1007,7 +1012,9 @@ def shortlist_candidates(
             candidate_keys=keys,
             limit=limit,
         )
-
+        print("[SHORTLIST DEBUG] llm_selected_candidate_keys:", decision.selected_candidate_keys)
+        print("[SHORTLIST DEBUG] llm_confidence:", decision.confidence)
+        print("[SHORTLIST DEBUG] llm_rationale:", decision.rationale)
         selected = [
             key for key in (decision.selected_candidate_keys or [])
             if key in name_index

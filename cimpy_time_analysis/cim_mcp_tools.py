@@ -1123,6 +1123,7 @@ def _resolve_equipment_via_catalog(user_input: str, network_index: Dict[str, Any
 
     query_hint_result = _normalize_user_query_hints(user_input)
     equipment_type_hint = _normalize_hint_text(query_hint_result.get("equipment_type_hint"))
+    equipment_name_hint = _normalize_hint_text(query_hint_result.get("equipment_name_hint"))
 
     typed_candidates = equipment_types
     if equipment_type_hint:
@@ -1139,10 +1140,47 @@ def _resolve_equipment_via_catalog(user_input: str, network_index: Dict[str, Any
         return type_result
 
     selected_type = type_result["selected_type"]
+
+    all_instance_candidates = list(equipment_by_type.get(selected_type, []) or [])
+    filtered_instance_candidates = all_instance_candidates
+    name_hint_filter_mode = "not_used"
+
+    if equipment_name_hint:
+        exact_or_substring_matches = []
+        token_overlap_matches = []
+
+        hint_tokens = [tok for tok in equipment_name_hint.split() if tok]
+
+        for obj in all_instance_candidates:
+            candidate_name = _safe_name(obj)
+            candidate_desc = _safe_description(obj)
+
+            candidate_name_norm = _normalize_hint_text(candidate_name)
+            candidate_desc_norm = _normalize_hint_text(candidate_desc)
+
+            haystacks = [s for s in [candidate_name_norm, candidate_desc_norm] if s]
+
+            if not haystacks:
+                continue
+
+            if any(equipment_name_hint == h or equipment_name_hint in h for h in haystacks):
+                exact_or_substring_matches.append(obj)
+                continue
+
+            if hint_tokens and any(all(tok in h for tok in hint_tokens) for h in haystacks):
+                token_overlap_matches.append(obj)
+
+        if exact_or_substring_matches:
+            filtered_instance_candidates = exact_or_substring_matches
+            name_hint_filter_mode = "exact_or_substring"
+        elif token_overlap_matches:
+            filtered_instance_candidates = token_overlap_matches
+            name_hint_filter_mode = "token_overlap"
+
     instance_result = _select_equipment_instance_with_llm(
         user_input=user_input,
         selected_type=selected_type,
-        equipment_candidates=equipment_by_type.get(selected_type, []),
+        equipment_candidates=filtered_instance_candidates,
     )
     if instance_result.get("status") != "ok":
         return {
@@ -1167,11 +1205,14 @@ def _resolve_equipment_via_catalog(user_input: str, network_index: Dict[str, Any
         "status": "ok",
         "selected_type": selected_type,
         "selected_equipment_id": selected_equipment_id,
-        "selected_match": instance_result.get("selected_match"),
         "resolved_object": resolved_object,
         "type_llm_decision": type_result.get("llm_decision"),
         "instance_llm_decision": instance_result.get("llm_decision"),
+        "resolution_mode": "catalog_type_then_instance_llm",
         "query_hint_result": query_hint_result,
+        "name_hint_filter_mode": name_hint_filter_mode,
+        "num_instance_candidates_before_filter": len(all_instance_candidates),
+        "num_instance_candidates_after_filter": len(filtered_instance_candidates),
     }
 
 
@@ -1267,7 +1308,15 @@ def _resolve_cim_object_with_services(
         user_input=user_input,
         network_index=network_index,
         require_time_window=require_time_window,
+        is_topology_query=(classification.get("intent") == "topology_query"),
     )
+
+    if not isinstance(parsed_query, dict):
+        parsed_query = {}
+
+    parsed_query["intent"] = classification.get("intent")
+    parsed_query["request_mode"] = classification.get("request_mode")
+    parsed_query["is_topology_query"] = classification.get("intent") == "topology_query"
     if not isinstance(parsed_query, dict):
         parsed_query = {}
 
