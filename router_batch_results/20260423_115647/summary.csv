@@ -1,0 +1,10 @@
+run_id,user_input,route,answer,status,error,details,duration_seconds,json_path
+1,Reduziere Last A um 2 MW,POWERFACTORY,"Die Lastreduzierung um 2 MW wurde nicht in den Spannungsresultaten reflektiert.  
+**Kritische Verletzung:**  
+- Bus 5: Spannung 0,8929 p.u. (unter Grenze von 0,9500 p.u.).  
+**Alle anderen Busse** (1–4, 6–9) verbleiben innerhalb der Spannungsgrenzen (0,95–1,05 p.u.), mit geringfügigen Änderungen (max. +0,0023 p.u.).",ok,,,69.63,router_batch_results\20260423_115647\001_router_result.json
+2,Erhöhe Last A um 2 MW. Wie verändert sich die Auslastung der Leitung 4-5?,POWERFACTORY,"Die Auslastung der Leitung 4-5 wird in den Ergebnissen nicht angegeben. Die Berechnung bezieht sich ausschließlich auf Spannungsänderungen an den Bussen (z. B. Bus 5: Unterspannung bei 0,8906 p.u.). Es liegen keine Daten zur Leitungsauslastung vor.",ok,,,47.835,router_batch_results\20260423_115647\002_router_result.json
+3,Öffne Schalter 1.,POWERFACTORY,Die Schalteroperation 'open' wurde für 'Switch 1' (StaSwitch) ausgeführt. Zustand vorher: open. Zustand nachher: open. Anschließend wurde ein Lastfluss gerechnet.,ok,,,29.243,router_batch_results\20260423_115647\003_router_result.json
+4,Welche Nachbarn hat Last A? Nutze Powerfactory.,POWERFACTORY,"Direkte Nachbarn von 'Bus 4' (ElmTerm, Typ bus) im PowerFactory-Topologiegraphen: Line 4-5 (ElmLne), Line 4-6 (ElmLne), T1 (ElmTr2)",ok,,,447.127,router_batch_results\20260423_115647\004_router_result.json
+5,Welche Lasten gibt es in Powerfactory?,ASK_USER,Bezieht sich Ihre Frage auf die Lasten im aktuellen PowerFactory-Projekt oder auf allgemeine Lasttypen im PowerFactory-Software-System?,,,,11.706,router_batch_results\20260423_115647\005_router_result.json
+6,Wie hoch ist die Spannung von Bus 5? Nutze Powerfactory,POWERFACTORY,Lastflussergebnisse für 'Bus 5' (ElmTerm): Leiter-Leiter-Spannung: 204.83342866087648 kV (Lastflussergebnis) Für die angefragten Ergebnisgrößen wurde zuvor ein Lastfluss gerechnet.,ok,,,649.371,router_batch_results\20260423_115647\006_router_result.json

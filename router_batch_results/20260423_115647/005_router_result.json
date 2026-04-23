@@ -1,0 +1,14 @@
+{
+  "run_id": 5,
+  "timestamp": "2026-04-23T12:06:53.411120",
+  "user_input": "Welche Lasten gibt es in Powerfactory?",
+  "duration_seconds": 11.706,
+  "router_output": {
+    "route": "ASK_USER",
+    "question": "Bezieht sich Ihre Frage auf die Lasten im aktuellen PowerFactory-Projekt oder auf allgemeine Lasttypen im PowerFactory-Software-System?",
+    "missing_fields": [
+      "data_source"
+    ],
+    "partial": {}
+  }
+}

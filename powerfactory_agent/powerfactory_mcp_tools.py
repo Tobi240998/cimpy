@@ -1513,16 +1513,31 @@ def _ensure_instruction_result_requests(instruction: dict, user_input: str = "")
         user_input=user_input,
     )
 
+    inferred_from_user = _infer_result_requests_from_user_input(user_input)
     routing = _decide_result_request_mode_from_user_input(user_input)
 
-    if routing.get("mode") == "standard_metrics":
-        instruction_out["result_requests"] = routing.get("requested_metrics", normalized or list(DEFAULT_RESULT_REQUESTS))
+    print("[DEBUG _ensure_instruction_result_requests] user_input:", repr(user_input))
+    print("[DEBUG _ensure_instruction_result_requests] incoming instruction.result_requests:", instruction_out.get("result_requests"))
+    print("[DEBUG _ensure_instruction_result_requests] normalized:", normalized)
+    print("[DEBUG _ensure_instruction_result_requests] inferred_from_user:", inferred_from_user)
+    print("[DEBUG _ensure_instruction_result_requests] routing:", routing)
+
+    # Starke Priorität für klar erkannte unterstützte Standardmetriken aus dem User-Text
+    if inferred_from_user and inferred_from_user != list(DEFAULT_RESULT_REQUESTS):
+        instruction_out["result_requests"] = inferred_from_user
+        instruction_out["result_request_mode"] = "standard_metrics"
+    elif routing.get("mode") == "standard_metrics":
+        instruction_out["result_requests"] = (
+            routing.get("requested_metrics") or normalized or list(DEFAULT_RESULT_REQUESTS)
+        )
+        instruction_out["result_request_mode"] = "standard_metrics"
     elif routing.get("mode") == "delegate_result_query":
         instruction_out["result_requests"] = normalized or list(DEFAULT_RESULT_REQUESTS)
+        instruction_out["result_request_mode"] = "delegate_result_query"
     else:
-        instruction_out["result_requests"] = list(DEFAULT_RESULT_REQUESTS)
+        instruction_out["result_requests"] = normalized or list(DEFAULT_RESULT_REQUESTS)
+        instruction_out["result_request_mode"] = routing.get("mode", "default_voltage")
 
-    instruction_out["result_request_mode"] = routing.get("mode", "default_voltage")
     instruction_out["result_query_text"] = routing.get("result_query_text", "")
     instruction_out["result_request_rationale"] = routing.get("rationale", "")
     instruction_out["result_request_confidence"] = routing.get("confidence", "low")
@@ -2177,9 +2192,13 @@ def _execute_change_load_with_services(services: Dict[str, Any], instruction: di
     # ============================================================
     # DEBUG: Bus-Spannungen und Spannungsgrenzen aus PowerFactory
     # ============================================================
+    # ============================================================
+    # DEBUG: Bus-Spannungen und Spannungsgrenzen aus PowerFactory
+    # ============================================================
     try:
         print("\n[DEBUG] Bus-Spannungen und Spannungsgrenzen:")
 
+        bus_voltage_before = values_before.get("bus_voltage", {}) if isinstance(values_before, dict) else {}
         bus_voltage_after = values_after.get("bus_voltage", {}) if isinstance(values_after, dict) else {}
         pf_buses = app.GetCalcRelevantObjects("*.ElmTerm") or []
 
@@ -2192,8 +2211,17 @@ def _execute_change_load_with_services(services: Dict[str, Any], instruction: di
             if bus_name and bus_name not in bus_objects_by_name:
                 bus_objects_by_name[bus_name] = bus_obj
 
-        for bus_name in sorted(bus_voltage_after.keys()):
-            u_value = bus_voltage_after.get(bus_name)
+        def _fmt_u(val: Any) -> str:
+            try:
+                return f"{float(val):.4f} p.u."
+            except Exception:
+                return str(val)
+
+        all_bus_names = set(bus_voltage_before.keys()) | set(bus_voltage_after.keys())
+
+        for bus_name in sorted(all_bus_names):
+            u_before = bus_voltage_before.get(bus_name)
+            u_after = bus_voltage_after.get(bus_name)
             bus_obj = bus_objects_by_name.get(bus_name)
 
             umin = None
@@ -2232,19 +2260,32 @@ def _execute_change_load_with_services(services: Dict[str, Any], instruction: di
                         umax_attr = candidate
                         break
 
+            u_before_text = _fmt_u(u_before)
+            u_after_text = _fmt_u(u_after)
+
+            delta_text = "-"
             try:
-                u_text = f"{float(u_value):.4f} p.u."
+                if u_before is not None and u_after is not None:
+                    delta_text = f"{float(u_after) - float(u_before):+.4f} p.u."
             except Exception:
-                u_text = str(u_value)
+                pass
 
             print(
                 f"  {bus_name}: "
-                f"U_after={u_text} | "
+                f"U_before={u_before_text} | "
+                f"U_after={u_after_text} | "
+                f"ΔU={delta_text} | "
                 f"umin={umin} ({umin_attr}) | "
                 f"umax={umax} ({umax_attr})"
             )
 
+            if u_before is None:
+                print(f"    [WARN] No U_before for {bus_name}")
+
         print("[DEBUG END]\n")
+
+    except Exception as e:
+        print(f"[DEBUG ERROR] Fehler beim Auslesen der Bus-Spannungen/Grenzwerte: {e}")
 
     except Exception as e:
         print(f"[DEBUG ERROR] Spannungsgrenzen-Debug fehlgeschlagen: {e}")
@@ -2800,27 +2841,33 @@ def _build_result_request_chain():
 def _build_result_request_routing_chain():
     parser = PydanticOutputParser(pydantic_object=ResultRequestRoutingDecision)
     prompt = ChatPromptTemplate.from_messages([
-        (
-            "system",
-            "You decide how a PowerFactory load-change request should handle requested result values.\n"
-            "Choose exactly one mode:\n"
-            "- standard_metrics: the requested result can be handled by the supported standard metrics\n"
-            "- default_voltage: no concrete result question is present, so default to bus voltage\n"
-            "- delegate_result_query: a concrete result question is present, but it should be handled by a separate result data query\n\n"
-            "Rules:\n"
-            "- Use standard_metrics only if the user request clearly maps to supported metrics.\n"
-            "- Use default_voltage only if no concrete result quantity is explicitly requested.\n"
-            "- Use delegate_result_query if a concrete result quantity is requested but does not fit the standard metrics cleanly.\n"
-            "- When using standard_metrics, return canonical metric names only.\n"
-            "- When using delegate_result_query, return a standalone follow-up query in result_query_text.\n\n"
-            "{format_instructions}"
-        ),
-        (
-            "user",
-            "User request:\n{user_input}\n\n"
-            "Supported standard metrics and aliases:\n{supported_metrics_text}"
-        ),
-    ])
+    (
+        "system",
+        "You decide how a PowerFactory load-change request should handle requested result values.\n"
+        "Choose exactly one mode:\n"
+        "- standard_metrics: the requested result can be handled by the supported standard metrics\n"
+        "- default_voltage: no concrete result question is present, so default to bus voltage\n"
+        "- delegate_result_query: a concrete result question is present, but it should be handled by a separate result data query\n\n"
+        "Rules:\n"
+        "- Use standard_metrics if the user request refers to a known physical quantity that matches supported metrics, even if phrasing is indirect, informal, or partially ambiguous.\n"
+        "- Use default_voltage only if no concrete result quantity is explicitly requested.\n"
+        "- Use delegate_result_query if a concrete result quantity is requested but does not fit the standard metrics cleanly.\n"
+        "- When using standard_metrics, return canonical metric names only.\n"
+        "- When using delegate_result_query, return a standalone follow-up query in result_query_text.\n\n"
+        "Examples:\n"
+        "- 'Wie verändert sich die Auslastung der Leitung 4-5?' -> mode=standard_metrics, requested_metrics=[\"line_loading\"]\n"
+        "- 'Wie hoch ist die Auslastung?' -> mode=standard_metrics, requested_metrics=[\"line_loading\"]\n"
+        "- 'Zeige die Spannungen danach' -> mode=standard_metrics, requested_metrics=[\"bus_voltage\"]\n"
+        "- 'Wie ändern sich die Blindleistungen?' -> mode=standard_metrics, requested_metrics=[\"bus_q\"]\n"
+        "- 'Wie verändern sich die Wirkleistungen?' -> mode=standard_metrics, requested_metrics=[\"bus_p\"]\n\n"
+        "{format_instructions}"
+    ),
+    (
+        "user",
+        "User request:\n{user_input}\n\n"
+        "Supported standard metrics and aliases:\n{supported_metrics_text}"
+    ),
+])
     llm = get_llm()
     return prompt | llm | parser, parser
 

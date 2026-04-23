@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import csv
 import json
+import time
 import traceback
 from dataclasses import dataclass, asdict
 from datetime import datetime
@@ -13,7 +14,10 @@ from cimpy.llm_routing.orchestrator import Orchestrator
 
 USER_INPUTS: List[str] = [
     "Reduziere Last A um 2 MW",
+    "Erhöhe Last A um 2 MW. Wie verändert sich die Auslastung der Leitung 4-5?",
+    "Öffne Schalter 1.",
     "Welche Nachbarn hat Last A? Nutze Powerfactory.",
+    "Welche Lasten gibt es in Powerfactory?",
     "Wie hoch ist die Spannung von Bus 5? Nutze Powerfactory",
 ]
 
@@ -29,6 +33,7 @@ class SummaryRow:
     status: str
     error: str
     details: str
+    duration_seconds: float
     json_path: str
 
 
@@ -58,6 +63,7 @@ def save_csv(path: Path, rows: List[SummaryRow]) -> None:
                 "status",
                 "error",
                 "details",
+                "duration_seconds",
                 "json_path",
             ],
         )
@@ -109,24 +115,29 @@ def main() -> None:
     metadata = {
         "started_at": datetime.now().isoformat(),
         "entrypoint": "cimpy.llm_routing.orchestrator.Orchestrator.handle",
-        "equivalent_cli": r'python -m cimpy.llm_routing.run_router',
+        "equivalent_cli": r"python -m cimpy.llm_routing.run_router",
         "user_inputs": USER_INPUTS,
     }
     save_json(OUTPUT_DIR / "run_metadata.json", metadata)
+
+    total_start = time.perf_counter()
 
     for idx, user_input in enumerate(USER_INPUTS, start=1):
         print(f"\n=== RUN {idx}/{len(USER_INPUTS)} ===")
         print("INPUT:", user_input)
 
         output_path = OUTPUT_DIR / f"{idx:03d}_router_result.json"
+        run_start = time.perf_counter()
 
         try:
             out = orch.handle(user_input)
+            duration_seconds = round(time.perf_counter() - run_start, 3)
 
             payload = {
                 "run_id": idx,
                 "timestamp": datetime.now().isoformat(),
                 "user_input": user_input,
+                "duration_seconds": duration_seconds,
                 "router_output": out,
             }
             save_json(output_path, payload)
@@ -146,18 +157,23 @@ def main() -> None:
                     status=status,
                     error=error,
                     details=details,
+                    duration_seconds=duration_seconds,
                     json_path=str(output_path),
                 )
             )
 
             print("ROUTE:", route)
+            print("DAUER (s):", duration_seconds)
             print("ANSWER:", answer)
 
         except Exception as e:
+            duration_seconds = round(time.perf_counter() - run_start, 3)
+
             payload = {
                 "run_id": idx,
                 "timestamp": datetime.now().isoformat(),
                 "user_input": user_input,
+                "duration_seconds": duration_seconds,
                 "router_output": {
                     "route": "ERROR",
                     "result": {
@@ -180,14 +196,18 @@ def main() -> None:
                     status="error",
                     error=type(e).__name__,
                     details=str(e),
+                    duration_seconds=duration_seconds,
                     json_path=str(output_path),
                 )
             )
 
             print("ROUTE: ERROR")
+            print("DAUER (s):", duration_seconds)
             print("ERROR:", type(e).__name__, str(e))
 
     save_csv(OUTPUT_DIR / "summary.csv", rows)
+
+    total_duration_seconds = round(time.perf_counter() - total_start, 3)
 
     finished_metadata = {
         **metadata,
@@ -195,10 +215,15 @@ def main() -> None:
         "output_dir": str(OUTPUT_DIR),
         "num_runs": len(rows),
         "num_errors": sum(1 for row in rows if row.route == "ERROR" or row.status == "error"),
+        "total_duration_seconds": total_duration_seconds,
+        "average_duration_seconds": round(
+            sum(row.duration_seconds for row in rows) / len(rows), 3
+        ) if rows else 0.0,
     }
     save_json(OUTPUT_DIR / "run_metadata.json", finished_metadata)
 
     print("\nFertig.")
+    print("Gesamtdauer (s):", total_duration_seconds)
     print("Ergebnisse in:", OUTPUT_DIR.resolve())
 
 
