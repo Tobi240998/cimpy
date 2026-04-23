@@ -182,3 +182,12 @@ class ResultRequestRoutingDecision(BaseModel):
         default="",
         description="Short explanation of the routing decision."
     )
+
+class InventoryCatalogTypeDecision(BaseModel):
+    selected_type: Optional[str] = Field(
+        default=None,
+        description="One of: load, transformer, line, bus, switch, generator, or null if no safe choice is possible."
+    )
+    confidence: str = Field(default="low", description="One of: high, medium, low")
+    should_execute: bool = Field(default=False)
+    rationale: str = Field(default="")

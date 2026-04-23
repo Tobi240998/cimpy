@@ -67,6 +67,20 @@ class PowerFactoryDomainAgent:
                 "- query_element_data\n"
                 "- list_element_attributes\n"
                 "- unsupported_powerfactory_request\n\n"
+                "Intent guidance:\n"
+                "- load_catalog: requests asking which PowerFactory objects of a supported type exist in the active project, "
+                "for example loads, transformers, lines, buses, switches, or generators.\n"
+                "- change_load: requests to increase, reduce, or set a load value.\n"
+                "- topology_query: requests about neighbors, connectivity, topology, or attached assets.\n"
+                "- change_switch_state: requests to open, close, or toggle a switch.\n"
+                "- query_element_data: requests about technical values, parameters, or result values of a PowerFactory object.\n"
+                "- list_element_attributes: requests asking which attributes or fields are available for an object.\n"
+                "- unsupported_powerfactory_request: requests outside the currently supported workflows.\n\n"
+                "Examples:\n"
+                "- 'Welche Lasten gibt es in Powerfactory?' -> intent=load_catalog\n"
+                "- 'Welche Trafos gibt es in Powerfactory?' -> intent=load_catalog\n"
+                "- 'Welche Leitungen gibt es in Powerfactory?' -> intent=load_catalog\n"
+                "- 'Welche Busse gibt es in Powerfactory?' -> intent=load_catalog\n\n"
                 "Important:\n"
                 "- For the standard supported intents, predefined standard plans already exist in the system.\n"
                 "- You do NOT need to invent, optimize, or reconstruct a tool plan for these standard cases.\n"
@@ -74,6 +88,10 @@ class PowerFactoryDomainAgent:
                 "- Only use required_steps if they are obvious and directly correspond to a standard supported workflow.\n"
                 "- Do not overthink step construction.\n"
                 "- Do not invent tools or step names.\n"
+                "- load_catalog: requests asking which objects of a supported type exist in the active PowerFactory project, for example loads, transformers, lines, buses, switches, or generators.\n"
+                "- Example: 'Welche Lasten gibt es in Powerfactory?' -> intent=load_catalog \n"
+                "- Example: 'Welche Trafos gibt es in Powerfactory?' -> intent=load_catalog \n"
+                "- Example: 'Welche Leitungen gibt es in Powerfactory?' -> intent=load_catalog \n"
                 "- If the request clearly matches a standard supported case, return the matching intent and keep required_steps minimal.\n\n"
                 "Standard intent mapping guidance:\n"
                 "- change_load: requests to increase/reduce/set a load value.\n"
@@ -1208,6 +1226,8 @@ class PowerFactoryDomainAgent:
             tool_kwargs["user_input"] = effective_user_input
         elif step == "summarize_load_catalog":
             tool_kwargs["catalog_result"] = state["catalog_result"]
+        elif step == "get_load_catalog":
+            tool_kwargs["user_input"] = effective_user_input
         elif step == "build_topology_graph":
             tool_kwargs["contract_cubicles"] = True
         elif step == "build_topology_inventory":
@@ -1907,7 +1927,7 @@ class PowerFactoryDomainAgent:
         return result
 
     def get_load_catalog(self) -> Dict[str, Any]:
-        services = build_powerfactory_services(project_name=self.project_name)
+        services = build_powerfactory_services(project_name=self.project_name, user_input = user_input)
         if services["status"] != "ok":
             return services
-        return _get_load_catalog_from_services(services)
+        return _get_load_catalog_from_services(services, user_input=user_input)

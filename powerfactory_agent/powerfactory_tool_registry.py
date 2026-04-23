@@ -53,10 +53,22 @@ class PowerFactoryToolRegistry:
         self._registry: Dict[str, PowerFactoryToolSpec] = {
             "get_load_catalog": PowerFactoryToolSpec(
                 name="get_load_catalog",
-                description="Read the available load catalog from the active PowerFactory project.",
-                input_schema={"type": "object", "properties": {"services": {"type": "object"}}, "required": ["services"]},
-                output_schema_hint={"status": "ok|error", "tool": "get_load_catalog", "loads": "list[load-metadata]"},
-                capability_tags=["powerfactory", "read", "catalog", "load"],
+                description="Read the available catalog of PowerFactory objects of the requested type from the active project.",
+                input_schema={
+                    "type": "object",
+                    "properties": {
+                        "services": {"type": "object"},
+                        "user_input": {"type": "string"},
+                    },
+                    "required": ["services"],
+                },
+                output_schema_hint={
+                    "status": "ok|error",
+                    "tool": "get_load_catalog",
+                    "requested_type": "load|transformer|line|bus|switch|generator",
+                    "loads": "list[object-metadata]",
+                },
+                capability_tags=["powerfactory", "read", "catalog", "inventory"],
                 mutating=False,
                 requires_state=[],
                 produces_state=["catalog_result"],
@@ -607,8 +619,8 @@ class PowerFactoryToolRegistry:
 
         return spec.handler(**kwargs)
 
-    def _tool_get_load_catalog(self, services: Dict[str, Any], **kwargs: Any) -> Dict[str, Any]:
-        return _get_load_catalog_from_services(services)
+    def _tool_get_load_catalog(self, services: Dict[str, Any], user_input: str, **kwargs: Any) -> Dict[str, Any]:
+        return _get_load_catalog_from_services(services, user_input=user_input)
 
     def _tool_interpret_instruction(self, services: Dict[str, Any], user_input: str, **kwargs: Any) -> Dict[str, Any]:
         return _interpret_instruction_with_services(services=services, user_input=user_input)

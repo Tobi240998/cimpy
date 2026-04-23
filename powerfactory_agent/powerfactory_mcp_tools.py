@@ -45,7 +45,8 @@ from cimpy.powerfactory_agent.schemas import (
     TopologyEntityTypeDecision, 
     SwitchInstructionDecision, 
     ResultRequestDecision, 
-    ResultRequestRoutingDecision
+    ResultRequestRoutingDecision, 
+    InventoryCatalogTypeDecision
 )
 
 def _to_py_list(value: Any) -> List[Any]:
@@ -274,29 +275,113 @@ def build_powerfactory_services(project_name: str = DEFAULT_PROJECT_NAME) -> Dic
 
 
 # ------------------------------------------------------------------
-# LOAD CATALOG / LOAD INTERPRETATION
+# CATALOGs / LOAD INTERPRETATION
 # ------------------------------------------------------------------
+def _build_catalog_type_chain():
+    parser = PydanticOutputParser(pydantic_object=InventoryCatalogTypeDecision)
+    prompt = ChatPromptTemplate.from_messages([
+        (
+            "system",
+            "You classify which PowerFactory object catalog type the user is asking to list.\n"
+            "You may only choose one of these types:\n"
+            "- load\n"
+            "- transformer\n"
+            "- line\n"
+            "- bus\n"
+            "- switch\n"
+            "- generator\n\n"
+            "Rules:\n"
+            "- Choose the object type explicitly requested by the user.\n"
+            "- If the user asks for transformers or 'Trafos', choose transformer.\n"
+            "- If the user asks for lines or 'Leitungen', choose line.\n"
+            "- If the user asks for buses or 'Busse', choose bus.\n"
+            "- If the user asks for switches or 'Schalter', choose switch.\n"
+            "- If the user asks for generators or 'Generatoren', choose generator.\n"
+            "- If the user asks for loads or 'Lasten', choose load.\n"
+            "- If the request is not clearly a catalog/listing request for one supported type, return selected_type=null and should_execute=false.\n\n"
+            "Examples:\n"
+            "- 'Welche Lasten gibt es in Powerfactory?' -> load\n"
+            "- 'Welche Trafos gibt es in Powerfactory?' -> transformer\n"
+            "- 'Welche Leitungen gibt es in Powerfactory?' -> line\n"
+            "- 'Welche Busse gibt es in Powerfactory?' -> bus\n"
+            "- 'Welche Schalter gibt es in Powerfactory?' -> switch\n\n"
+            "{format_instructions}"
+        ),
+        (
+            "user",
+            "User request:\n{user_input}"
+        ),
+    ])
+    llm = get_llm()
+    return prompt | llm | parser, parser
+
+def _infer_catalog_type_from_user_input(user_input: str) -> str:
+    try:
+        chain, parser = _build_catalog_type_chain()
+        decision = chain.invoke({
+            "user_input": user_input or "",
+            "format_instructions": parser.get_format_instructions(),
+        })
+
+        if hasattr(decision, "model_dump"):
+            payload = decision.model_dump()
+        elif hasattr(decision, "dict"):
+            payload = decision.dict()
+        elif isinstance(decision, dict):
+            payload = dict(decision)
+        else:
+            payload = {}
+    except Exception:
+        payload = {}
+
+    selected_type = payload.get("selected_type") if isinstance(payload, dict) else None
+    should_execute = bool(payload.get("should_execute", False)) if isinstance(payload, dict) else False
+    confidence = str(payload.get("confidence") or "low").strip().lower() if isinstance(payload, dict) else "low"
+
+    if selected_type in {"load", "transformer", "line", "bus", "switch", "generator"} and should_execute and confidence in {"high", "medium"}:
+        return selected_type
+
+    return "load"
+
 # Liefert verfügbaren Lastenkatalog des aktiven Projekts -> Refactoring möglich (aus LLM_interpreterAgent)
-def _get_load_catalog_from_services(services: Dict[str, Any]) -> Dict[str, Any]:
-    interpreter = services["interpreter"]
+def _get_load_catalog_from_services(
+    services: Dict[str, Any],
+    user_input: str = "",
+) -> Dict[str, Any]:
     project_name = services["project_name"]
+    requested_type = _infer_catalog_type_from_user_input(user_input)
 
-    if hasattr(interpreter, "get_load_catalog_metadata"):
-        loads = interpreter.get_load_catalog_metadata()
-    else:
-        loads = []
-        for entry in interpreter.catalog:
-            loads.append({
-                "loc_name": entry["loc_name"],
-                "full_name": entry["full_name"],
-                "tokens": sorted(entry["tokens"]),
-            })
+    inventory_result = _build_unified_inventory_from_services(
+        services=services,
+        allowed_types=[requested_type],
+    )
 
+    if inventory_result.get("status") != "ok":
+        return inventory_result
+
+    inventory = inventory_result.get("inventory", {}) if isinstance(inventory_result, dict) else {}
+    items_by_type = inventory.get("items_by_type", {}) if isinstance(inventory, dict) else {}
+    items = items_by_type.get(requested_type, []) if isinstance(items_by_type, dict) else []
+
+    entries = []
+    for item in items:
+        if not isinstance(item, dict):
+            continue
+        entries.append({
+            "loc_name": item.get("name"),
+            "full_name": item.get("full_name"),
+            "pf_class": item.get("pf_class"),
+            "inventory_type": item.get("inventory_type"),
+        })
+    print("[DEBUG _get_load_catalog_from_services] user_input:", repr(user_input))
+    print("[DEBUG _get_load_catalog_from_services] requested_type:", requested_type)
     return {
         "status": "ok",
         "tool": "get_load_catalog",
         "project": project_name,
-        "loads": loads,
+        "requested_type": requested_type,
+        "loads": entries,  # Feldname beibehalten, damit der restliche Pfad minimal geändert werden muss
+        "count": len(entries),
     }
 
 # Interpretiert Nutzeranfrage in strukturierte Load-Instruction -> Refactoring möglich 
@@ -5579,23 +5664,40 @@ def _summarize_load_catalog_with_services(
     services: Dict[str, Any],
     catalog_result: Dict[str, Any],
 ) -> Dict[str, Any]:
-    loads = catalog_result.get('loads', []) if isinstance(catalog_result, dict) else []
-    names = [entry.get('loc_name') for entry in loads if isinstance(entry, dict) and entry.get('loc_name')]
+    entries = catalog_result.get("loads", []) if isinstance(catalog_result, dict) else []
+    requested_type = catalog_result.get("requested_type", "load") if isinstance(catalog_result, dict) else "load"
+
+    names = [
+        entry.get("loc_name")
+        for entry in entries
+        if isinstance(entry, dict) and entry.get("loc_name")
+    ]
     preview = names[:10]
 
+    type_labels = {
+        "load": "Lasten",
+        "transformer": "Trafos",
+        "line": "Leitungen",
+        "bus": "Busse",
+        "switch": "Schalter",
+        "generator": "Generatoren",
+    }
+    type_label = type_labels.get(requested_type, requested_type)
+
     if not names:
-        answer = 'Im aktiven PowerFactory-Projekt wurden keine Lasten gefunden.'
+        answer = f"Im aktiven PowerFactory-Projekt wurden keine {type_label} gefunden."
     elif len(names) <= 10:
-        answer = 'Verfügbare Lasten im aktiven PowerFactory-Projekt: ' + ', '.join(names)
+        answer = f"Verfügbare {type_label} im aktiven PowerFactory-Projekt: " + ", ".join(names)
     else:
-        answer = f"Im aktiven PowerFactory-Projekt wurden {len(names)} Lasten gefunden. Beispiele: " + ', '.join(preview)
+        answer = f"Im aktiven PowerFactory-Projekt wurden {len(names)} {type_label} gefunden. Beispiele: " + ", ".join(preview)
 
     return {
-        'status': 'ok',
-        'tool': 'summarize_load_catalog',
-        'answer': answer,
-        'count': len(names),
-        'loads': loads,
+        "status": "ok",
+        "tool": "summarize_load_catalog",
+        "answer": answer,
+        "count": len(names),
+        "requested_type": requested_type,
+        "loads": entries,
     }
 
 
