@@ -1,0 +1,1835 @@
+{
+  "run_id": 2,
+  "timestamp": "2026-04-23T15:04:58.555992",
+  "user_input": "Erhöhe Last B um 2 MW. Wie verändert sich die Auslastung der Leitung 4-5?",
+  "duration_seconds": 52.895,
+  "router_output": {
+    "route": "POWERFACTORY",
+    "result": {
+      "status": "ok",
+      "tool": "powerfactory",
+      "agent": "PowerFactoryDomainAgent",
+      "project": "Nine-bus System(2)",
+      "studycase": "01- Load Flow",
+      "user_input": "Erhöhe Last B um 2 MW. Wie verändert sich die Auslastung der Leitung 4-5?",
+      "classification": {
+        "status": "ok",
+        "classification_mode": "llm",
+        "intent": "change_load",
+        "confidence": "high",
+        "target_kind": "load",
+        "safe_to_execute": true,
+        "missing_context": [
+          "exact load name or ID"
+        ],
+        "required_steps": [
+          "interpret_instruction",
+          "resolve_load",
+          "execute_change_load"
+        ],
+        "reasoning": "User explicitly requests to increase a load value (Last B by 2 MW), matching the standard 'change_load' intent. The second part about line utilization requires a subsequent query but is not part of the current intent."
+      },
+      "plan": [
+        {
+          "step": "interpret_instruction",
+          "description": "Interpret a natural-language user request into a structured load-change instruction."
+        },
+        {
+          "step": "resolve_load",
+          "description": "Resolve the target load object inside the active PowerFactory project."
+        },
+        {
+          "step": "execute_change_load",
+          "description": "Apply a load change in PowerFactory and run load flow before/after."
+        },
+        {
+          "step": "summarize_powerfactory_result",
+          "description": "Summarize result data from a PowerFactory load workflow for the end user."
+        }
+      ],
+      "available_tools": [
+        {
+          "name": "build_topology_graph",
+          "description": "Build a topology graph from the active PowerFactory project.",
+          "input_schema": {
+            "type": "object",
+            "properties": {
+              "services": {
+                "type": "object"
+              },
+              "contract_cubicles": {
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "services"
+            ]
+          },
+          "output_schema_hint": {
+            "status": "ok|error",
+            "tool": "build_topology_graph",
+            "graph_mode": "contracted|wiring",
+            "graph_summary": "dict",
+            "inventory": "dict",
+            "build_debug": "dict"
+          },
+          "capability_tags": [
+            "powerfactory",
+            "topology",
+            "graph",
+            "read_only"
+          ],
+          "mutating": false,
+          "requires_state": [],
+          "produces_state": [
+            "graph_result"
+          ],
+          "is_summary": false,
+          "domain_notes": []
+        },
+        {
+          "name": "build_topology_inventory",
+          "description": "Build a typed inventory from the current PowerFactory topology graph.",
+          "input_schema": {
+            "type": "object",
+            "properties": {
+              "services": {
+                "type": "object"
+              },
+              "topology_graph_result": {
+                "type": "object"
+              }
+            },
+            "required": [
+              "services",
+              "topology_graph_result"
+            ]
+          },
+          "output_schema_hint": {
+            "status": "ok|error",
+            "tool": "build_topology_inventory",
+            "inventory": "dict"
+          },
+          "capability_tags": [
+            "powerfactory",
+            "topology",
+            "inventory",
+            "read_only"
+          ],
+          "mutating": false,
+          "requires_state": [
+            "graph_result"
+          ],
+          "produces_state": [
+            "inventory_result"
+          ],
+          "is_summary": false,
+          "domain_notes": []
+        },
+        {
+          "name": "build_unified_inventory",
+          "description": "Build a unified non-topology PowerFactory inventory for supported object types.",
+          "input_schema": {
+            "type": "object",
+            "properties": {
+              "services": {
+                "type": "object"
+              },
+              "allowed_types": {
+                "type": "array"
+              }
+            },
+            "required": [
+              "services"
+            ]
+          },
+          "output_schema_hint": {
+            "status": "ok|error",
+            "tool": "build_unified_inventory",
+            "inventory": "dict"
+          },
+          "capability_tags": [
+            "powerfactory",
+            "inventory",
+            "read_only"
+          ],
+          "mutating": false,
+          "requires_state": [],
+          "produces_state": [
+            "unified_inventory_result",
+            "inventory_result"
+          ],
+          "is_summary": false,
+          "domain_notes": []
+        },
+        {
+          "name": "classify_data_source",
+          "description": "Classify whether the data query should use base data or load-flow result data.",
+          "input_schema": {
+            "type": "object",
+            "properties": {
+              "services": {
+                "type": "object"
+              },
+              "instruction": {
+                "type": "object"
+              }
+            },
+            "required": [
+              "services",
+              "instruction"
+            ]
+          },
+          "output_schema_hint": {
+            "status": "ok|error",
+            "tool": "classify_data_source",
+            "instruction": "dict",
+            "effective_data_source": "base|result"
+          },
+          "capability_tags": [
+            "powerfactory",
+            "data_query",
+            "classification",
+            "llm"
+          ],
+          "mutating": false,
+          "requires_state": [
+            "data_query_instruction"
+          ],
+          "produces_state": [
+            "data_query_instruction",
+            "data_source_decision"
+          ],
+          "is_summary": false,
+          "domain_notes": []
+        },
+        {
+          "name": "execute_change_load",
+          "description": "Apply a load change in PowerFactory and run load flow before/after.",
+          "input_schema": {
+            "type": "object",
+            "properties": {
+              "services": {
+                "type": "object"
+              },
+              "instruction": {
+                "type": "object"
+              }
+            },
+            "required": [
+              "services",
+              "instruction"
+            ]
+          },
+          "output_schema_hint": {
+            "status": "ok|error",
+            "tool": "execute_change_load",
+            "data": {
+              "u_before": "dict[str, float]",
+              "u_after": "dict[str, float]",
+              "delta_u": "dict[str, float]"
+            }
+          },
+          "capability_tags": [
+            "powerfactory",
+            "execution",
+            "loadflow",
+            "load"
+          ],
+          "mutating": true,
+          "requires_state": [
+            "instruction"
+          ],
+          "produces_state": [
+            "execution"
+          ],
+          "is_summary": false,
+          "domain_notes": []
+        },
+        {
+          "name": "execute_switch_operation",
+          "description": "Execute an open/close/toggle operation on a resolved switch object in PowerFactory.",
+          "input_schema": {
+            "type": "object",
+            "properties": {
+              "services": {
+                "type": "object"
+              },
+              "instruction": {
+                "type": "object"
+              },
+              "resolution": {
+                "type": "object"
+              },
+              "run_loadflow_after": {
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "services",
+              "instruction",
+              "resolution"
+            ]
+          },
+          "output_schema_hint": {
+            "status": "ok|error",
+            "tool": "execute_switch_operation",
+            "switch": "dict",
+            "state_before": "string|None",
+            "state_after": "string|None",
+            "loadflow": "dict"
+          },
+          "capability_tags": [
+            "powerfactory",
+            "execution",
+            "switch",
+            "topology"
+          ],
+          "mutating": true,
+          "requires_state": [
+            "switch_instruction",
+            "object_resolution"
+          ],
+          "produces_state": [
+            "switch_execution"
+          ],
+          "is_summary": false,
+          "domain_notes": []
+        },
+        {
+          "name": "get_load_catalog",
+          "description": "Read the available load catalog from the active PowerFactory project.",
+          "input_schema": {
+            "type": "object",
+            "properties": {
+              "services": {
+                "type": "object"
+              }
+            },
+            "required": [
+              "services"
+            ]
+          },
+          "output_schema_hint": {
+            "status": "ok|error",
+            "tool": "get_load_catalog",
+            "loads": "list[load-metadata]"
+          },
+          "capability_tags": [
+            "powerfactory",
+            "read",
+            "catalog",
+            "load"
+          ],
+          "mutating": false,
+          "requires_state": [],
+          "produces_state": [
+            "catalog_result"
+          ],
+          "is_summary": false,
+          "domain_notes": []
+        },
+        {
+          "name": "interpret_data_query_instruction",
+          "description": "Interpret a natural-language data query into a structured PowerFactory data-query instruction.",
+          "input_schema": {
+            "type": "object",
+            "properties": {
+              "services": {
+                "type": "object"
+              },
+              "user_input": {
+                "type": "string"
+              },
+              "inventory": {
+                "type": "object"
+              }
+            },
+            "required": [
+              "services",
+              "user_input",
+              "inventory"
+            ]
+          },
+          "output_schema_hint": {
+            "status": "ok|error",
+            "tool": "interpret_data_query_instruction",
+            "instruction": "dict"
+          },
+          "capability_tags": [
+            "powerfactory",
+            "data_query",
+            "planning",
+            "llm"
+          ],
+          "mutating": false,
+          "requires_state": [
+            "unified_inventory_result"
+          ],
+          "produces_state": [
+            "data_query_instruction"
+          ],
+          "is_summary": false,
+          "domain_notes": []
+        },
+        {
+          "name": "interpret_entity_instruction",
+          "description": "Interpret a natural-language topology request into a structured generic PowerFactory entity instruction.",
+          "input_schema": {
+            "type": "object",
+            "properties": {
+              "services": {
+                "type": "object"
+              },
+              "user_input": {
+                "type": "string"
+              },
+              "inventory": {
+                "type": "object"
+              }
+            },
+            "required": [
+              "services",
+              "user_input",
+              "inventory"
+            ]
+          },
+          "output_schema_hint": {
+            "status": "ok|error",
+            "tool": "interpret_entity_instruction",
+            "instruction": "dict"
+          },
+          "capability_tags": [
+            "powerfactory",
+            "planning",
+            "nlp",
+            "topology",
+            "entity"
+          ],
+          "mutating": false,
+          "requires_state": [
+            "inventory_result"
+          ],
+          "produces_state": [
+            "entity_instruction"
+          ],
+          "is_summary": false,
+          "domain_notes": []
+        },
+        {
+          "name": "interpret_instruction",
+          "description": "Interpret a natural-language user request into a structured load-change instruction.",
+          "input_schema": {
+            "type": "object",
+            "properties": {
+              "services": {
+                "type": "object"
+              },
+              "user_input": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "services",
+              "user_input"
+            ]
+          },
+          "output_schema_hint": {
+            "status": "ok|error",
+            "tool": "interpret_instruction",
+            "instruction": "dict"
+          },
+          "capability_tags": [
+            "powerfactory",
+            "planning",
+            "nlp",
+            "load"
+          ],
+          "mutating": false,
+          "requires_state": [],
+          "produces_state": [
+            "instruction"
+          ],
+          "is_summary": false,
+          "domain_notes": []
+        },
+        {
+          "name": "interpret_switch_instruction",
+          "description": "Interpret a natural-language switch request into a structured switch operation instruction.",
+          "input_schema": {
+            "type": "object",
+            "properties": {
+              "services": {
+                "type": "object"
+              },
+              "user_input": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "services",
+              "user_input"
+            ]
+          },
+          "output_schema_hint": {
+            "status": "ok|error",
+            "tool": "interpret_switch_instruction",
+            "instruction": "dict"
+          },
+          "capability_tags": [
+            "powerfactory",
+            "planning",
+            "nlp",
+            "switch"
+          ],
+          "mutating": false,
+          "requires_state": [],
+          "produces_state": [
+            "switch_instruction"
+          ],
+          "is_summary": false,
+          "domain_notes": []
+        },
+        {
+          "name": "list_available_object_attributes",
+          "description": "List semantic and raw attribute options for the selected PowerFactory object.",
+          "input_schema": {
+            "type": "object",
+            "properties": {
+              "services": {
+                "type": "object"
+              },
+              "instruction": {
+                "type": "object"
+              },
+              "resolution": {
+                "type": "object"
+              }
+            },
+            "required": [
+              "services",
+              "instruction",
+              "resolution"
+            ]
+          },
+          "output_schema_hint": {
+            "status": "ok|error",
+            "tool": "list_available_object_attributes",
+            "attribute_options": "list"
+          },
+          "capability_tags": [
+            "powerfactory",
+            "data_query",
+            "attributes",
+            "read_only"
+          ],
+          "mutating": false,
+          "requires_state": [
+            "data_query_instruction",
+            "object_resolution"
+          ],
+          "produces_state": [
+            "data_attribute_listing"
+          ],
+          "is_summary": false,
+          "domain_notes": []
+        },
+        {
+          "name": "query_topology_neighbors",
+          "description": "Query the direct neighbors of an asset in the PowerFactory topology graph.",
+          "input_schema": {
+            "type": "object",
+            "properties": {
+              "services": {
+                "type": "object"
+              },
+              "topology_graph": {
+                "type": "object"
+              },
+              "asset_query": {
+                "type": "string"
+              },
+              "selected_node_id": {
+                "type": "string"
+              },
+              "matches": {
+                "type": "array"
+              },
+              "max_matches": {
+                "type": "integer"
+              }
+            },
+            "required": [
+              "services",
+              "topology_graph"
+            ]
+          },
+          "output_schema_hint": {
+            "status": "ok|error",
+            "tool": "query_topology_neighbors",
+            "selected_node": "dict",
+            "neighbors": "list[dict]"
+          },
+          "capability_tags": [
+            "powerfactory",
+            "topology",
+            "neighbors",
+            "read_only"
+          ],
+          "mutating": false,
+          "requires_state": [
+            "graph_result",
+            "entity_resolution"
+          ],
+          "produces_state": [
+            "topology_result"
+          ],
+          "is_summary": false,
+          "domain_notes": []
+        },
+        {
+          "name": "read_pf_object_attributes",
+          "description": "Read selected attributes from a resolved PowerFactory object with dynamic loadflow fallback.",
+          "input_schema": {
+            "type": "object",
+            "properties": {
+              "services": {
+                "type": "object"
+              },
+              "instruction": {
+                "type": "object"
+              },
+              "resolution": {
+                "type": "object"
+              }
+            },
+            "required": [
+              "services",
+              "instruction",
+              "resolution"
+            ]
+          },
+          "output_schema_hint": {
+            "status": "ok|error",
+            "tool": "read_pf_object_attributes",
+            "data": "dict"
+          },
+          "capability_tags": [
+            "powerfactory",
+            "data_query",
+            "read_only"
+          ],
+          "mutating": false,
+          "requires_state": [
+            "data_query_instruction",
+            "object_resolution",
+            "data_attribute_selection"
+          ],
+          "produces_state": [
+            "data_query_execution"
+          ],
+          "is_summary": false,
+          "domain_notes": [
+            "Do not use this step before attribute selection is available."
+          ]
+        },
+        {
+          "name": "resolve_entity_from_inventory",
+          "description": "Resolve the requested generic asset from a typed topology inventory.",
+          "input_schema": {
+            "type": "object",
+            "properties": {
+              "services": {
+                "type": "object"
+              },
+              "instruction": {
+                "type": "object"
+              },
+              "inventory": {
+                "type": "object"
+              },
+              "topology_graph": {
+                "type": "object"
+              },
+              "max_matches": {
+                "type": "integer"
+              }
+            },
+            "required": [
+              "services",
+              "instruction",
+              "inventory",
+              "topology_graph"
+            ]
+          },
+          "output_schema_hint": {
+            "status": "ok|error",
+            "tool": "resolve_entity_from_inventory",
+            "asset_query": "string",
+            "selected_match": "dict",
+            "matches": "list[dict]"
+          },
+          "capability_tags": [
+            "powerfactory",
+            "topology",
+            "entity",
+            "inventory",
+            "resolution",
+            "read_only"
+          ],
+          "mutating": false,
+          "requires_state": [
+            "entity_instruction",
+            "inventory_result",
+            "graph_result"
+          ],
+          "produces_state": [
+            "entity_resolution"
+          ],
+          "is_summary": false,
+          "domain_notes": []
+        },
+        {
+          "name": "resolve_load",
+          "description": "Resolve the target load object inside the active PowerFactory project.",
+          "input_schema": {
+            "type": "object",
+            "properties": {
+              "services": {
+                "type": "object"
+              },
+              "instruction": {
+                "type": "object"
+              }
+            },
+            "required": [
+              "services",
+              "instruction"
+            ]
+          },
+          "output_schema_hint": {
+            "status": "ok|error",
+            "tool": "resolve_load",
+            "resolution": "dict"
+          },
+          "capability_tags": [
+            "powerfactory",
+            "resolution",
+            "load"
+          ],
+          "mutating": false,
+          "requires_state": [
+            "instruction"
+          ],
+          "produces_state": [
+            "resolution"
+          ],
+          "is_summary": false,
+          "domain_notes": []
+        },
+        {
+          "name": "resolve_objects_from_inventory_llm",
+          "description": "Resolve PowerFactory objects by LLM-based exact candidate selection from a unified non-topology inventory.",
+          "input_schema": {
+            "type": "object",
+            "properties": {
+              "services": {
+                "type": "object"
+              },
+              "instruction": {
+                "type": "object"
+              },
+              "inventory": {
+                "type": "object"
+              }
+            },
+            "required": [
+              "services",
+              "instruction",
+              "inventory"
+            ]
+          },
+          "output_schema_hint": {
+            "status": "ok|error",
+            "tool": "resolve_objects_from_inventory_llm",
+            "selected_match": "dict",
+            "selected_matches": "list[dict]",
+            "selection_mode": "one|all"
+          },
+          "capability_tags": [
+            "powerfactory",
+            "resolution",
+            "llm_match",
+            "read_only"
+          ],
+          "mutating": false,
+          "requires_state": [
+            "unified_inventory_result"
+          ],
+          "produces_state": [
+            "object_resolution"
+          ],
+          "is_summary": false,
+          "domain_notes": []
+        },
+        {
+          "name": "select_pf_object_attributes_llm",
+          "description": "Select the best matching attribute handles from the available option list.",
+          "input_schema": {
+            "type": "object",
+            "properties": {
+              "services": {
+                "type": "object"
+              },
+              "instruction": {
+                "type": "object"
+              },
+              "resolution": {
+                "type": "object"
+              },
+              "attribute_listing": {
+                "type": "object"
+              }
+            },
+            "required": [
+              "services",
+              "instruction",
+              "resolution",
+              "attribute_listing"
+            ]
+          },
+          "output_schema_hint": {
+            "status": "ok|error",
+            "tool": "select_pf_object_attributes_llm",
+            "selected_attribute_handles": "list"
+          },
+          "capability_tags": [
+            "powerfactory",
+            "data_query",
+            "attributes",
+            "llm_match",
+            "read_only"
+          ],
+          "mutating": false,
+          "requires_state": [
+            "data_query_instruction",
+            "object_resolution",
+            "data_attribute_listing"
+          ],
+          "produces_state": [
+            "data_attribute_selection"
+          ],
+          "is_summary": false,
+          "domain_notes": []
+        },
+        {
+          "name": "summarize_load_catalog",
+          "description": "Build a concise user-facing catalog answer.",
+          "input_schema": {
+            "type": "object",
+            "properties": {
+              "services": {
+                "type": "object"
+              },
+              "catalog_result": {
+                "type": "object"
+              }
+            },
+            "required": [
+              "services",
+              "catalog_result"
+            ]
+          },
+          "output_schema_hint": {
+            "status": "ok|error",
+            "tool": "summarize_load_catalog",
+            "answer": "string"
+          },
+          "capability_tags": [
+            "powerfactory",
+            "summary",
+            "catalog"
+          ],
+          "mutating": false,
+          "requires_state": [
+            "catalog_result"
+          ],
+          "produces_state": [
+            "summary"
+          ],
+          "is_summary": true,
+          "domain_notes": []
+        },
+        {
+          "name": "summarize_pf_object_data_result",
+          "description": "Summarize queried PowerFactory object data for the end user.",
+          "input_schema": {
+            "type": "object",
+            "properties": {
+              "services": {
+                "type": "object"
+              },
+              "result_payload": {
+                "type": "object"
+              },
+              "user_input": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "services",
+              "result_payload",
+              "user_input"
+            ]
+          },
+          "output_schema_hint": {
+            "status": "ok|error",
+            "tool": "summarize_pf_object_data_result",
+            "answer": "string"
+          },
+          "capability_tags": [
+            "powerfactory",
+            "data_query",
+            "summary"
+          ],
+          "mutating": false,
+          "requires_state": [
+            "data_query_execution"
+          ],
+          "produces_state": [
+            "data_query_summary",
+            "summary"
+          ],
+          "is_summary": true,
+          "domain_notes": []
+        },
+        {
+          "name": "summarize_powerfactory_result",
+          "description": "Summarize result data from a PowerFactory load workflow for the end user.",
+          "input_schema": {
+            "type": "object",
+            "properties": {
+              "services": {
+                "type": "object"
+              },
+              "result_payload": {
+                "type": "object"
+              },
+              "user_input": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "services",
+              "result_payload",
+              "user_input"
+            ]
+          },
+          "output_schema_hint": {
+            "status": "ok|error",
+            "tool": "summarize_powerfactory_result",
+            "answer": "string"
+          },
+          "capability_tags": [
+            "powerfactory",
+            "summary",
+            "result"
+          ],
+          "mutating": false,
+          "requires_state": [
+            "execution"
+          ],
+          "produces_state": [
+            "summary"
+          ],
+          "is_summary": true,
+          "domain_notes": []
+        },
+        {
+          "name": "summarize_switch_result",
+          "description": "Summarize the result of a switch state change for the end user.",
+          "input_schema": {
+            "type": "object",
+            "properties": {
+              "services": {
+                "type": "object"
+              },
+              "result_payload": {
+                "type": "object"
+              },
+              "user_input": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "services",
+              "result_payload",
+              "user_input"
+            ]
+          },
+          "output_schema_hint": {
+            "status": "ok|error",
+            "tool": "summarize_switch_result",
+            "answer": "string"
+          },
+          "capability_tags": [
+            "powerfactory",
+            "summary",
+            "switch"
+          ],
+          "mutating": false,
+          "requires_state": [
+            "switch_execution"
+          ],
+          "produces_state": [
+            "switch_summary",
+            "summary"
+          ],
+          "is_summary": true,
+          "domain_notes": []
+        },
+        {
+          "name": "summarize_topology_result",
+          "description": "Build a concise user-facing topology answer.",
+          "input_schema": {
+            "type": "object",
+            "properties": {
+              "services": {
+                "type": "object"
+              },
+              "topology_result": {
+                "type": "object"
+              },
+              "graph_result": {
+                "type": "object"
+              },
+              "inventory_result": {
+                "type": "object"
+              },
+              "entity_instruction": {
+                "type": "object"
+              },
+              "entity_resolution": {
+                "type": "object"
+              }
+            },
+            "required": [
+              "services",
+              "topology_result"
+            ]
+          },
+          "output_schema_hint": {
+            "status": "ok|error",
+            "tool": "summarize_topology_result",
+            "answer": "string"
+          },
+          "capability_tags": [
+            "powerfactory",
+            "summary",
+            "topology"
+          ],
+          "mutating": false,
+          "requires_state": [
+            "topology_result"
+          ],
+          "produces_state": [
+            "summary"
+          ],
+          "is_summary": true,
+          "domain_notes": []
+        },
+        {
+          "name": "unsupported_request",
+          "description": "Return a controlled message for unsupported PowerFactory intent.",
+          "input_schema": {
+            "type": "object",
+            "properties": {
+              "services": {
+                "type": "object"
+              },
+              "user_input": {
+                "type": "string"
+              },
+              "classification": {
+                "type": "object"
+              }
+            },
+            "required": [
+              "services",
+              "user_input",
+              "classification"
+            ]
+          },
+          "output_schema_hint": {
+            "status": "error",
+            "tool": "powerfactory",
+            "answer": "string"
+          },
+          "capability_tags": [
+            "powerfactory",
+            "control"
+          ],
+          "mutating": false,
+          "requires_state": [],
+          "produces_state": [],
+          "is_summary": false,
+          "domain_notes": []
+        }
+      ],
+      "instruction": {
+        "action": "change_load",
+        "load_name": "Load B",
+        "delta_p_mw": 2.0,
+        "result_requests": [
+          "line_loading"
+        ],
+        "result_request_mode": "standard_metrics",
+        "result_query_text": "",
+        "result_request_rationale": "The request explicitly asks about 'Auslastung der Leitung 4-5', which directly matches the standard metric 'line_loading' with aliases including 'auslastung'.",
+        "result_request_confidence": "high"
+      },
+      "resolved_load": "Load B",
+      "data": {
+        "requested_metrics": [
+          "line_loading"
+        ],
+        "metric_metadata": {
+          "line_loading": {
+            "label": "Leitungsauslastung",
+            "unit": "%"
+          }
+        },
+        "before": {
+          "line_loading": {
+            "Line 4-5": 74.97462740059413,
+            "Line 4-6": 15.624084292752663,
+            "Line 5-7": 6.9088533586269305,
+            "Line 6-9": 37.26529174792102,
+            "Line 7-8": 40.45042156379304,
+            "Line 8-9": 18.338200198870652
+          }
+        },
+        "after": {
+          "line_loading": {
+            "Line 4-5": 74.97333940220543,
+            "Line 4-6": 15.17110118483156,
+            "Line 5-7": 6.9089700319432374,
+            "Line 6-9": 37.271715183794086,
+            "Line 7-8": 40.451462483182006,
+            "Line 8-9": 18.336814565443436
+          }
+        },
+        "delta": {
+          "line_loading": {
+            "Line 4-5": -0.0012879983887046365,
+            "Line 4-6": -0.45298310792110286,
+            "Line 5-7": 0.00011667331630693667,
+            "Line 6-9": 0.0064234358730672625,
+            "Line 7-8": 0.001040919388962891,
+            "Line 8-9": -0.001385633427215538
+          }
+        },
+        "voltage_limits": {
+          "Bus 1": {
+            "umin": 0.949999988079071,
+            "umax": 1.0499999523162842
+          },
+          "Bus 2": {
+            "umin": 0.949999988079071,
+            "umax": 1.0499999523162842
+          },
+          "Bus 3": {
+            "umin": 0.949999988079071,
+            "umax": 1.0499999523162842
+          },
+          "Bus 4": {
+            "umin": 0.949999988079071,
+            "umax": 1.0499999523162842
+          },
+          "Bus 5": {
+            "umin": 0.949999988079071,
+            "umax": 1.0499999523162842
+          },
+          "Bus 6": {
+            "umin": 0.949999988079071,
+            "umax": 1.0499999523162842
+          },
+          "Bus 7": {
+            "umin": 0.949999988079071,
+            "umax": 1.0499999523162842
+          },
+          "Bus 8": {
+            "umin": 0.949999988079071,
+            "umax": 1.0499999523162842
+          },
+          "Bus 9": {
+            "umin": 0.949999988079071,
+            "umax": 1.0499999523162842
+          }
+        }
+      },
+      "catalog": [],
+      "messages": [
+        "Für Leitungsauslastung wurden 6 Vorher-Werte, 6 Nachher-Werte und 6 Differenzen ermittelt.",
+        "Größte Änderungen für Leitungsauslastung: Line 4-6: -0.4530 %, Line 6-9: +0.0064 %, Line 8-9: -0.0014 %, Line 4-5: -0.0013 %, Line 7-8: +0.0010 %"
+      ],
+      "answer": "Die Auslastung der Leitung 4-5 verringert sich um 0,0013 %.",
+      "summary": {
+        "status": "ok",
+        "tool": "summarize_powerfactory_result",
+        "project": "Nine-bus System(2)",
+        "messages": [
+          "Für Leitungsauslastung wurden 6 Vorher-Werte, 6 Nachher-Werte und 6 Differenzen ermittelt.",
+          "Größte Änderungen für Leitungsauslastung: Line 4-6: -0.4530 %, Line 6-9: +0.0064 %, Line 8-9: -0.0014 %, Line 4-5: -0.0013 %, Line 7-8: +0.0010 %"
+        ],
+        "answer": "Die Auslastung der Leitung 4-5 verringert sich um 0,0013 %.",
+        "requested_metrics": [
+          "line_loading"
+        ]
+      },
+      "summary_parts": [
+        {
+          "status": "ok",
+          "tool": "summarize_powerfactory_result",
+          "project": "Nine-bus System(2)",
+          "messages": [
+            "Für Leitungsauslastung wurden 6 Vorher-Werte, 6 Nachher-Werte und 6 Differenzen ermittelt.",
+            "Größte Änderungen für Leitungsauslastung: Line 4-6: -0.4530 %, Line 6-9: +0.0064 %, Line 8-9: -0.0014 %, Line 4-5: -0.0013 %, Line 7-8: +0.0010 %"
+          ],
+          "answer": "Die Auslastung der Leitung 4-5 verringert sich um 0,0013 %.",
+          "requested_metrics": [
+            "line_loading"
+          ]
+        }
+      ],
+      "topology": {
+        "graph_mode": null,
+        "graph_summary": {},
+        "build_debug": {},
+        "inventory": {},
+        "instruction": null,
+        "resolution": null,
+        "selected_node": null,
+        "neighbor_count": 0,
+        "neighbors": [],
+        "matches": []
+      },
+      "switch": {
+        "instruction": null,
+        "resolution": null,
+        "execution": null,
+        "summary": null
+      },
+      "data_query": {
+        "inventory": null,
+        "instruction": null,
+        "resolution": null,
+        "attribute_listing": null,
+        "attribute_selection": null,
+        "execution": null,
+        "summary": null
+      },
+      "debug": {
+        "planning": {
+          "debug_mode": true,
+          "project_name": "Nine-bus System(2)",
+          "initial_classification": {
+            "status": "ok",
+            "classification_mode": "llm",
+            "intent": "change_load",
+            "confidence": "high",
+            "target_kind": "load",
+            "safe_to_execute": true,
+            "missing_context": [
+              "exact load name or ID"
+            ],
+            "required_steps": [
+              "interpret_instruction",
+              "resolve_load",
+              "execute_change_load"
+            ],
+            "reasoning": "User explicitly requests to increase a load value (Last B by 2 MW), matching the standard 'change_load' intent. The second part about line utilization requires a subsequent query but is not part of the current intent."
+          },
+          "decomposition": {
+            "status": "ok",
+            "is_composite": false,
+            "subrequests": [],
+            "reasoning": "The request combines a load-change operation ('Erhöhe Last B um 2 MW') with a supported result metric query ('Wie verändert sich die Auslastung der Leitung 4-5?'). According to the rules, line loading is a valid result metric for a load-change workflow, so the request should not be split. The second part is a requested result view of the same underlying workflow, not a separate task."
+          },
+          "subrequests": [],
+          "plan_source": "standard",
+          "final_plan_steps": [
+            "interpret_instruction",
+            "resolve_load",
+            "execute_change_load",
+            "summarize_powerfactory_result"
+          ],
+          "standard_plan_steps": [
+            "interpret_instruction",
+            "resolve_load",
+            "execute_change_load",
+            "summarize_powerfactory_result"
+          ],
+          "classification_plan_steps": [
+            "interpret_instruction",
+            "resolve_load",
+            "execute_change_load"
+          ]
+        },
+        "selected_equipment": {
+          "resolved_load": "Load B",
+          "entity_resolution": null,
+          "object_resolution": null
+        },
+        "trace": [
+          {
+            "step": "interpret_instruction",
+            "effective_user_input": "Erhöhe Last B um 2 MW. Wie verändert sich die Auslastung der Leitung 4-5?",
+            "source_subrequest": null,
+            "tool_spec": {
+              "name": "interpret_instruction",
+              "description": "Interpret a natural-language user request into a structured load-change instruction.",
+              "capability_tags": [
+                "powerfactory",
+                "planning",
+                "nlp",
+                "load"
+              ],
+              "mutating": false
+            },
+            "tool_kwargs": {
+              "services": {
+                "status": "ok",
+                "project_name": "Nine-bus System(2)"
+              },
+              "user_input": "Erhöhe Last B um 2 MW. Wie verändert sich die Auslastung der Leitung 4-5?"
+            },
+            "result": {
+              "status": "ok",
+              "tool": "interpret_instruction",
+              "user_input": "Erhöhe Last B um 2 MW. Wie verändert sich die Auslastung der Leitung 4-5?",
+              "project": "Nine-bus System(2)",
+              "instruction": {
+                "action": "change_load",
+                "load_name": "Load B",
+                "delta_p_mw": 2.0,
+                "result_requests": [
+                  "line_loading"
+                ],
+                "result_request_mode": "standard_metrics",
+                "result_query_text": "",
+                "result_request_rationale": "The request explicitly asks about 'Auslastung der Leitung 4-5', which directly matches the standard metric 'line_loading' with aliases including 'auslastung'.",
+                "result_request_confidence": "high"
+              }
+            }
+          },
+          {
+            "step": "resolve_load",
+            "effective_user_input": "Erhöhe Last B um 2 MW. Wie verändert sich die Auslastung der Leitung 4-5?",
+            "source_subrequest": null,
+            "tool_spec": {
+              "name": "resolve_load",
+              "description": "Resolve the target load object inside the active PowerFactory project.",
+              "capability_tags": [
+                "powerfactory",
+                "resolution",
+                "load"
+              ],
+              "mutating": false
+            },
+            "tool_kwargs": {
+              "services": {
+                "status": "ok",
+                "project_name": "Nine-bus System(2)"
+              },
+              "instruction": {
+                "action": "change_load",
+                "load_name": "Load B",
+                "delta_p_mw": 2.0,
+                "result_requests": [
+                  "line_loading"
+                ],
+                "result_request_mode": "standard_metrics",
+                "result_query_text": "",
+                "result_request_rationale": "The request explicitly asks about 'Auslastung der Leitung 4-5', which directly matches the standard metric 'line_loading' with aliases including 'auslastung'.",
+                "result_request_confidence": "high"
+              }
+            },
+            "result": {
+              "status": "ok",
+              "tool": "resolve_load",
+              "project": "Nine-bus System(2)",
+              "instruction": {
+                "action": "change_load",
+                "load_name": "Load B",
+                "delta_p_mw": 2.0,
+                "result_requests": [
+                  "line_loading"
+                ],
+                "result_request_mode": "standard_metrics",
+                "result_query_text": "",
+                "result_request_rationale": "The request explicitly asks about 'Auslastung der Leitung 4-5', which directly matches the standard metric 'line_loading' with aliases including 'auslastung'.",
+                "result_request_confidence": "high"
+              },
+              "resolution": {
+                "status": "ok",
+                "requested_load_name": "Load B",
+                "matches": [
+                  {
+                    "loc_name": "Load B",
+                    "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Load B.ElmLod",
+                    "tokens": [
+                      "last b",
+                      "lastb",
+                      "load b",
+                      "loadb"
+                    ],
+                    "pf_object": "<l3>\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Load B.ElmLod</l3>"
+                  }
+                ],
+                "selected": {
+                  "loc_name": "Load B",
+                  "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Load B.ElmLod",
+                  "tokens": [
+                    "last b",
+                    "lastb",
+                    "load b",
+                    "loadb"
+                  ],
+                  "pf_object": "<l3>\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Load B.ElmLod</l3>"
+                }
+              }
+            }
+          },
+          {
+            "step": "execute_change_load",
+            "effective_user_input": "Erhöhe Last B um 2 MW. Wie verändert sich die Auslastung der Leitung 4-5?",
+            "source_subrequest": null,
+            "tool_spec": {
+              "name": "execute_change_load",
+              "description": "Apply a load change in PowerFactory and run load flow before/after.",
+              "capability_tags": [
+                "powerfactory",
+                "execution",
+                "loadflow",
+                "load"
+              ],
+              "mutating": true
+            },
+            "tool_kwargs": {
+              "services": {
+                "status": "ok",
+                "project_name": "Nine-bus System(2)"
+              },
+              "instruction": {
+                "action": "change_load",
+                "load_name": "Load B",
+                "delta_p_mw": 2.0,
+                "result_requests": [
+                  "line_loading"
+                ],
+                "result_request_mode": "standard_metrics",
+                "result_query_text": "",
+                "result_request_rationale": "The request explicitly asks about 'Auslastung der Leitung 4-5', which directly matches the standard metric 'line_loading' with aliases including 'auslastung'.",
+                "result_request_confidence": "high"
+              }
+            },
+            "result": {
+              "status": "ok",
+              "tool": "execute_change_load",
+              "project": "Nine-bus System(2)",
+              "studycase": "01- Load Flow",
+              "instruction": {
+                "action": "change_load",
+                "load_name": "Load B",
+                "delta_p_mw": 2.0,
+                "result_requests": [
+                  "line_loading"
+                ],
+                "result_request_mode": "default_voltage",
+                "result_query_text": "",
+                "result_request_rationale": "Empty user input, falling back to default voltage.",
+                "result_request_confidence": "high"
+              },
+              "resolved_load": "Load B",
+              "execution": {
+                "status": "ok",
+                "tool": "powerfactory",
+                "instruction": {
+                  "action": "change_load",
+                  "load_name": "Load B",
+                  "delta_p_mw": 2.0,
+                  "result_requests": [
+                    "line_loading"
+                  ],
+                  "result_request_mode": "default_voltage",
+                  "result_query_text": "",
+                  "result_request_rationale": "Empty user input, falling back to default voltage.",
+                  "result_request_confidence": "high"
+                },
+                "execution": {
+                  "action": "change_load",
+                  "load_name": "Load B",
+                  "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Load B.ElmLod",
+                  "delta_p_mw": 2.0,
+                  "p_old_mw": 91.0,
+                  "p_new_mw": 93.0,
+                  "state_before": {
+                    "loc_name": "Load B",
+                    "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Load B.ElmLod",
+                    "plini_mw": 91.0
+                  },
+                  "state_after": {
+                    "loc_name": "Load B",
+                    "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Load B.ElmLod",
+                    "plini_mw": 93.0
+                  }
+                }
+              },
+              "loadflow_debug": {
+                "before_execute_result": 0,
+                "after_execute_result": 0,
+                "metric_snapshot_debug": {
+                  "before": {
+                    "line_loading": {
+                      "num_lines_total": 6,
+                      "num_lines_with_value": 6,
+                      "num_lines_missing_value": 0,
+                      "missing_lines": [],
+                      "attribute_usage": {
+                        "c:loading": 6
+                      },
+                      "object_queries": [
+                        "*.ElmLne",
+                        "*.ElmCabl"
+                      ]
+                    }
+                  },
+                  "after": {
+                    "line_loading": {
+                      "num_lines_total": 6,
+                      "num_lines_with_value": 6,
+                      "num_lines_missing_value": 0,
+                      "missing_lines": [],
+                      "attribute_usage": {
+                        "c:loading": 6
+                      },
+                      "object_queries": [
+                        "*.ElmLne",
+                        "*.ElmCabl"
+                      ]
+                    }
+                  }
+                },
+                "voltage_limits_debug": {
+                  "num_buses_total": 9,
+                  "num_buses_with_limits": 9,
+                  "num_buses_missing_limits": 0,
+                  "missing_buses": [],
+                  "object_queries": [
+                    "*.ElmTerm"
+                  ]
+                },
+                "before_snapshot_debug": {},
+                "after_snapshot_debug": {}
+              },
+              "data": {
+                "requested_metrics": [
+                  "line_loading"
+                ],
+                "metric_metadata": {
+                  "line_loading": {
+                    "label": "Leitungsauslastung",
+                    "unit": "%"
+                  }
+                },
+                "before": {
+                  "line_loading": {
+                    "Line 4-5": 74.97462740059413,
+                    "Line 4-6": 15.624084292752663,
+                    "Line 5-7": 6.9088533586269305,
+                    "Line 6-9": 37.26529174792102,
+                    "Line 7-8": 40.45042156379304,
+                    "Line 8-9": 18.338200198870652
+                  }
+                },
+                "after": {
+                  "line_loading": {
+                    "Line 4-5": 74.97333940220543,
+                    "Line 4-6": 15.17110118483156,
+                    "Line 5-7": 6.9089700319432374,
+                    "Line 6-9": 37.271715183794086,
+                    "Line 7-8": 40.451462483182006,
+                    "Line 8-9": 18.336814565443436
+                  }
+                },
+                "delta": {
+                  "line_loading": {
+                    "Line 4-5": -0.0012879983887046365,
+                    "Line 4-6": -0.45298310792110286,
+                    "Line 5-7": 0.00011667331630693667,
+                    "Line 6-9": 0.0064234358730672625,
+                    "Line 7-8": 0.001040919388962891,
+                    "Line 8-9": -0.001385633427215538
+                  }
+                },
+                "voltage_limits": {
+                  "Bus 1": {
+                    "umin": 0.949999988079071,
+                    "umax": 1.0499999523162842
+                  },
+                  "Bus 2": {
+                    "umin": 0.949999988079071,
+                    "umax": 1.0499999523162842
+                  },
+                  "Bus 3": {
+                    "umin": 0.949999988079071,
+                    "umax": 1.0499999523162842
+                  },
+                  "Bus 4": {
+                    "umin": 0.949999988079071,
+                    "umax": 1.0499999523162842
+                  },
+                  "Bus 5": {
+                    "umin": 0.949999988079071,
+                    "umax": 1.0499999523162842
+                  },
+                  "Bus 6": {
+                    "umin": 0.949999988079071,
+                    "umax": 1.0499999523162842
+                  },
+                  "Bus 7": {
+                    "umin": 0.949999988079071,
+                    "umax": 1.0499999523162842
+                  },
+                  "Bus 8": {
+                    "umin": 0.949999988079071,
+                    "umax": 1.0499999523162842
+                  },
+                  "Bus 9": {
+                    "umin": 0.949999988079071,
+                    "umax": 1.0499999523162842
+                  }
+                }
+              }
+            }
+          },
+          {
+            "step": "summarize_powerfactory_result",
+            "effective_user_input": "Erhöhe Last B um 2 MW. Wie verändert sich die Auslastung der Leitung 4-5?",
+            "source_subrequest": null,
+            "tool_spec": {
+              "name": "summarize_powerfactory_result",
+              "description": "Summarize result data from a PowerFactory load workflow for the end user.",
+              "capability_tags": [
+                "powerfactory",
+                "summary",
+                "result"
+              ],
+              "mutating": false
+            },
+            "tool_kwargs": {
+              "services": {
+                "status": "ok",
+                "project_name": "Nine-bus System(2)"
+              },
+              "result_payload": {
+                "status": "ok",
+                "tool": "execute_change_load",
+                "project": "<omitted>",
+                "studycase": "01- Load Flow",
+                "instruction": {
+                  "action": "change_load",
+                  "load_name": "Load B",
+                  "delta_p_mw": 2.0,
+                  "result_requests": [
+                    "line_loading"
+                  ],
+                  "result_request_mode": "default_voltage",
+                  "result_query_text": "",
+                  "result_request_rationale": "Empty user input, falling back to default voltage.",
+                  "result_request_confidence": "high"
+                },
+                "resolved_load": "Load B",
+                "execution": {
+                  "status": "ok",
+                  "tool": "powerfactory",
+                  "instruction": {
+                    "action": "change_load",
+                    "load_name": "Load B",
+                    "delta_p_mw": 2.0,
+                    "result_requests": [
+                      "line_loading"
+                    ],
+                    "result_request_mode": "default_voltage",
+                    "result_query_text": "",
+                    "result_request_rationale": "Empty user input, falling back to default voltage.",
+                    "result_request_confidence": "high"
+                  },
+                  "execution": {
+                    "action": "change_load",
+                    "load_name": "Load B",
+                    "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Load B.ElmLod",
+                    "delta_p_mw": 2.0,
+                    "p_old_mw": 91.0,
+                    "p_new_mw": 93.0,
+                    "state_before": {
+                      "loc_name": "Load B",
+                      "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Load B.ElmLod",
+                      "plini_mw": 91.0
+                    },
+                    "state_after": {
+                      "loc_name": "Load B",
+                      "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Load B.ElmLod",
+                      "plini_mw": 93.0
+                    }
+                  }
+                },
+                "loadflow_debug": {
+                  "before_execute_result": 0,
+                  "after_execute_result": 0,
+                  "metric_snapshot_debug": {
+                    "before": {
+                      "line_loading": {
+                        "num_lines_total": 6,
+                        "num_lines_with_value": 6,
+                        "num_lines_missing_value": 0,
+                        "missing_lines": [],
+                        "attribute_usage": {
+                          "c:loading": 6
+                        },
+                        "object_queries": [
+                          "*.ElmLne",
+                          "*.ElmCabl"
+                        ]
+                      }
+                    },
+                    "after": {
+                      "line_loading": {
+                        "num_lines_total": 6,
+                        "num_lines_with_value": 6,
+                        "num_lines_missing_value": 0,
+                        "missing_lines": [],
+                        "attribute_usage": {
+                          "c:loading": 6
+                        },
+                        "object_queries": [
+                          "*.ElmLne",
+                          "*.ElmCabl"
+                        ]
+                      }
+                    }
+                  },
+                  "voltage_limits_debug": {
+                    "num_buses_total": 9,
+                    "num_buses_with_limits": 9,
+                    "num_buses_missing_limits": 0,
+                    "missing_buses": [],
+                    "object_queries": [
+                      "*.ElmTerm"
+                    ]
+                  },
+                  "before_snapshot_debug": {},
+                  "after_snapshot_debug": {}
+                },
+                "data": {
+                  "requested_metrics": [
+                    "line_loading"
+                  ],
+                  "metric_metadata": {
+                    "line_loading": {
+                      "label": "Leitungsauslastung",
+                      "unit": "%"
+                    }
+                  },
+                  "before": {
+                    "line_loading": {
+                      "Line 4-5": 74.97462740059413,
+                      "Line 4-6": 15.624084292752663,
+                      "Line 5-7": 6.9088533586269305,
+                      "Line 6-9": 37.26529174792102,
+                      "Line 7-8": 40.45042156379304,
+                      "Line 8-9": 18.338200198870652
+                    }
+                  },
+                  "after": {
+                    "line_loading": {
+                      "Line 4-5": 74.97333940220543,
+                      "Line 4-6": 15.17110118483156,
+                      "Line 5-7": 6.9089700319432374,
+                      "Line 6-9": 37.271715183794086,
+                      "Line 7-8": 40.451462483182006,
+                      "Line 8-9": 18.336814565443436
+                    }
+                  },
+                  "delta": {
+                    "line_loading": {
+                      "Line 4-5": -0.0012879983887046365,
+                      "Line 4-6": -0.45298310792110286,
+                      "Line 5-7": 0.00011667331630693667,
+                      "Line 6-9": 0.0064234358730672625,
+                      "Line 7-8": 0.001040919388962891,
+                      "Line 8-9": -0.001385633427215538
+                    }
+                  },
+                  "voltage_limits": {
+                    "Bus 1": {
+                      "umin": 0.949999988079071,
+                      "umax": 1.0499999523162842
+                    },
+                    "Bus 2": {
+                      "umin": 0.949999988079071,
+                      "umax": 1.0499999523162842
+                    },
+                    "Bus 3": {
+                      "umin": 0.949999988079071,
+                      "umax": 1.0499999523162842
+                    },
+                    "Bus 4": {
+                      "umin": 0.949999988079071,
+                      "umax": 1.0499999523162842
+                    },
+                    "Bus 5": {
+                      "umin": 0.949999988079071,
+                      "umax": 1.0499999523162842
+                    },
+                    "Bus 6": {
+                      "umin": 0.949999988079071,
+                      "umax": 1.0499999523162842
+                    },
+                    "Bus 7": {
+                      "umin": 0.949999988079071,
+                      "umax": 1.0499999523162842
+                    },
+                    "Bus 8": {
+                      "umin": 0.949999988079071,
+                      "umax": 1.0499999523162842
+                    },
+                    "Bus 9": {
+                      "umin": 0.949999988079071,
+                      "umax": 1.0499999523162842
+                    }
+                  }
+                }
+              },
+              "user_input": "Erhöhe Last B um 2 MW. Wie verändert sich die Auslastung der Leitung 4-5?"
+            },
+            "result": {
+              "status": "ok",
+              "tool": "summarize_powerfactory_result",
+              "project": "Nine-bus System(2)",
+              "messages": [
+                "Für Leitungsauslastung wurden 6 Vorher-Werte, 6 Nachher-Werte und 6 Differenzen ermittelt.",
+                "Größte Änderungen für Leitungsauslastung: Line 4-6: -0.4530 %, Line 6-9: +0.0064 %, Line 8-9: -0.0014 %, Line 4-5: -0.0013 %, Line 7-8: +0.0010 %"
+              ],
+              "answer": "Die Auslastung der Leitung 4-5 verringert sich um 0,0013 %.",
+              "requested_metrics": [
+                "line_loading"
+              ]
+            }
+          }
+        ]
+      }
+    }
+  }
+}

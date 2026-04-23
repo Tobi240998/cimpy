@@ -1,0 +1,2477 @@
+{
+  "run_id": 3,
+  "timestamp": "2026-04-23T15:05:33.863875",
+  "user_input": "Schließe Schalter 2.",
+  "duration_seconds": 35.303,
+  "router_output": {
+    "route": "POWERFACTORY",
+    "result": {
+      "status": "ok",
+      "tool": "powerfactory",
+      "agent": "PowerFactoryDomainAgent",
+      "project": "Nine-bus System(2)",
+      "studycase": "01- Load Flow",
+      "user_input": "Schließe Schalter 2.",
+      "classification": {
+        "status": "ok",
+        "classification_mode": "llm",
+        "intent": "change_switch_state",
+        "confidence": "high",
+        "target_kind": "switch",
+        "safe_to_execute": true,
+        "missing_context": [
+          "exact switch name or ID"
+        ],
+        "required_steps": [
+          "interpret_switch_instruction",
+          "execute_switch_operation"
+        ],
+        "reasoning": "User requests to close switch 2, matching change_switch_state intent. Exact switch ID required for resolution."
+      },
+      "plan": [
+        {
+          "step": "interpret_switch_instruction",
+          "description": "Interpret a natural-language switch request into a structured switch operation instruction."
+        },
+        {
+          "step": "build_unified_inventory",
+          "description": "Build a unified non-topology PowerFactory inventory for supported object types."
+        },
+        {
+          "step": "resolve_objects_from_inventory_llm",
+          "description": "Resolve PowerFactory objects by LLM-based exact candidate selection from a unified non-topology inventory."
+        },
+        {
+          "step": "execute_switch_operation",
+          "description": "Execute an open/close/toggle operation on a resolved switch object in PowerFactory."
+        },
+        {
+          "step": "summarize_switch_result",
+          "description": "Summarize the result of a switch state change for the end user."
+        }
+      ],
+      "available_tools": [
+        {
+          "name": "build_topology_graph",
+          "description": "Build a topology graph from the active PowerFactory project.",
+          "input_schema": {
+            "type": "object",
+            "properties": {
+              "services": {
+                "type": "object"
+              },
+              "contract_cubicles": {
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "services"
+            ]
+          },
+          "output_schema_hint": {
+            "status": "ok|error",
+            "tool": "build_topology_graph",
+            "graph_mode": "contracted|wiring",
+            "graph_summary": "dict",
+            "inventory": "dict",
+            "build_debug": "dict"
+          },
+          "capability_tags": [
+            "powerfactory",
+            "topology",
+            "graph",
+            "read_only"
+          ],
+          "mutating": false,
+          "requires_state": [],
+          "produces_state": [
+            "graph_result"
+          ],
+          "is_summary": false,
+          "domain_notes": []
+        },
+        {
+          "name": "build_topology_inventory",
+          "description": "Build a typed inventory from the current PowerFactory topology graph.",
+          "input_schema": {
+            "type": "object",
+            "properties": {
+              "services": {
+                "type": "object"
+              },
+              "topology_graph_result": {
+                "type": "object"
+              }
+            },
+            "required": [
+              "services",
+              "topology_graph_result"
+            ]
+          },
+          "output_schema_hint": {
+            "status": "ok|error",
+            "tool": "build_topology_inventory",
+            "inventory": "dict"
+          },
+          "capability_tags": [
+            "powerfactory",
+            "topology",
+            "inventory",
+            "read_only"
+          ],
+          "mutating": false,
+          "requires_state": [
+            "graph_result"
+          ],
+          "produces_state": [
+            "inventory_result"
+          ],
+          "is_summary": false,
+          "domain_notes": []
+        },
+        {
+          "name": "build_unified_inventory",
+          "description": "Build a unified non-topology PowerFactory inventory for supported object types.",
+          "input_schema": {
+            "type": "object",
+            "properties": {
+              "services": {
+                "type": "object"
+              },
+              "allowed_types": {
+                "type": "array"
+              }
+            },
+            "required": [
+              "services"
+            ]
+          },
+          "output_schema_hint": {
+            "status": "ok|error",
+            "tool": "build_unified_inventory",
+            "inventory": "dict"
+          },
+          "capability_tags": [
+            "powerfactory",
+            "inventory",
+            "read_only"
+          ],
+          "mutating": false,
+          "requires_state": [],
+          "produces_state": [
+            "unified_inventory_result",
+            "inventory_result"
+          ],
+          "is_summary": false,
+          "domain_notes": []
+        },
+        {
+          "name": "classify_data_source",
+          "description": "Classify whether the data query should use base data or load-flow result data.",
+          "input_schema": {
+            "type": "object",
+            "properties": {
+              "services": {
+                "type": "object"
+              },
+              "instruction": {
+                "type": "object"
+              }
+            },
+            "required": [
+              "services",
+              "instruction"
+            ]
+          },
+          "output_schema_hint": {
+            "status": "ok|error",
+            "tool": "classify_data_source",
+            "instruction": "dict",
+            "effective_data_source": "base|result"
+          },
+          "capability_tags": [
+            "powerfactory",
+            "data_query",
+            "classification",
+            "llm"
+          ],
+          "mutating": false,
+          "requires_state": [
+            "data_query_instruction"
+          ],
+          "produces_state": [
+            "data_query_instruction",
+            "data_source_decision"
+          ],
+          "is_summary": false,
+          "domain_notes": []
+        },
+        {
+          "name": "execute_change_load",
+          "description": "Apply a load change in PowerFactory and run load flow before/after.",
+          "input_schema": {
+            "type": "object",
+            "properties": {
+              "services": {
+                "type": "object"
+              },
+              "instruction": {
+                "type": "object"
+              }
+            },
+            "required": [
+              "services",
+              "instruction"
+            ]
+          },
+          "output_schema_hint": {
+            "status": "ok|error",
+            "tool": "execute_change_load",
+            "data": {
+              "u_before": "dict[str, float]",
+              "u_after": "dict[str, float]",
+              "delta_u": "dict[str, float]"
+            }
+          },
+          "capability_tags": [
+            "powerfactory",
+            "execution",
+            "loadflow",
+            "load"
+          ],
+          "mutating": true,
+          "requires_state": [
+            "instruction"
+          ],
+          "produces_state": [
+            "execution"
+          ],
+          "is_summary": false,
+          "domain_notes": []
+        },
+        {
+          "name": "execute_switch_operation",
+          "description": "Execute an open/close/toggle operation on a resolved switch object in PowerFactory.",
+          "input_schema": {
+            "type": "object",
+            "properties": {
+              "services": {
+                "type": "object"
+              },
+              "instruction": {
+                "type": "object"
+              },
+              "resolution": {
+                "type": "object"
+              },
+              "run_loadflow_after": {
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "services",
+              "instruction",
+              "resolution"
+            ]
+          },
+          "output_schema_hint": {
+            "status": "ok|error",
+            "tool": "execute_switch_operation",
+            "switch": "dict",
+            "state_before": "string|None",
+            "state_after": "string|None",
+            "loadflow": "dict"
+          },
+          "capability_tags": [
+            "powerfactory",
+            "execution",
+            "switch",
+            "topology"
+          ],
+          "mutating": true,
+          "requires_state": [
+            "switch_instruction",
+            "object_resolution"
+          ],
+          "produces_state": [
+            "switch_execution"
+          ],
+          "is_summary": false,
+          "domain_notes": []
+        },
+        {
+          "name": "get_load_catalog",
+          "description": "Read the available load catalog from the active PowerFactory project.",
+          "input_schema": {
+            "type": "object",
+            "properties": {
+              "services": {
+                "type": "object"
+              }
+            },
+            "required": [
+              "services"
+            ]
+          },
+          "output_schema_hint": {
+            "status": "ok|error",
+            "tool": "get_load_catalog",
+            "loads": "list[load-metadata]"
+          },
+          "capability_tags": [
+            "powerfactory",
+            "read",
+            "catalog",
+            "load"
+          ],
+          "mutating": false,
+          "requires_state": [],
+          "produces_state": [
+            "catalog_result"
+          ],
+          "is_summary": false,
+          "domain_notes": []
+        },
+        {
+          "name": "interpret_data_query_instruction",
+          "description": "Interpret a natural-language data query into a structured PowerFactory data-query instruction.",
+          "input_schema": {
+            "type": "object",
+            "properties": {
+              "services": {
+                "type": "object"
+              },
+              "user_input": {
+                "type": "string"
+              },
+              "inventory": {
+                "type": "object"
+              }
+            },
+            "required": [
+              "services",
+              "user_input",
+              "inventory"
+            ]
+          },
+          "output_schema_hint": {
+            "status": "ok|error",
+            "tool": "interpret_data_query_instruction",
+            "instruction": "dict"
+          },
+          "capability_tags": [
+            "powerfactory",
+            "data_query",
+            "planning",
+            "llm"
+          ],
+          "mutating": false,
+          "requires_state": [
+            "unified_inventory_result"
+          ],
+          "produces_state": [
+            "data_query_instruction"
+          ],
+          "is_summary": false,
+          "domain_notes": []
+        },
+        {
+          "name": "interpret_entity_instruction",
+          "description": "Interpret a natural-language topology request into a structured generic PowerFactory entity instruction.",
+          "input_schema": {
+            "type": "object",
+            "properties": {
+              "services": {
+                "type": "object"
+              },
+              "user_input": {
+                "type": "string"
+              },
+              "inventory": {
+                "type": "object"
+              }
+            },
+            "required": [
+              "services",
+              "user_input",
+              "inventory"
+            ]
+          },
+          "output_schema_hint": {
+            "status": "ok|error",
+            "tool": "interpret_entity_instruction",
+            "instruction": "dict"
+          },
+          "capability_tags": [
+            "powerfactory",
+            "planning",
+            "nlp",
+            "topology",
+            "entity"
+          ],
+          "mutating": false,
+          "requires_state": [
+            "inventory_result"
+          ],
+          "produces_state": [
+            "entity_instruction"
+          ],
+          "is_summary": false,
+          "domain_notes": []
+        },
+        {
+          "name": "interpret_instruction",
+          "description": "Interpret a natural-language user request into a structured load-change instruction.",
+          "input_schema": {
+            "type": "object",
+            "properties": {
+              "services": {
+                "type": "object"
+              },
+              "user_input": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "services",
+              "user_input"
+            ]
+          },
+          "output_schema_hint": {
+            "status": "ok|error",
+            "tool": "interpret_instruction",
+            "instruction": "dict"
+          },
+          "capability_tags": [
+            "powerfactory",
+            "planning",
+            "nlp",
+            "load"
+          ],
+          "mutating": false,
+          "requires_state": [],
+          "produces_state": [
+            "instruction"
+          ],
+          "is_summary": false,
+          "domain_notes": []
+        },
+        {
+          "name": "interpret_switch_instruction",
+          "description": "Interpret a natural-language switch request into a structured switch operation instruction.",
+          "input_schema": {
+            "type": "object",
+            "properties": {
+              "services": {
+                "type": "object"
+              },
+              "user_input": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "services",
+              "user_input"
+            ]
+          },
+          "output_schema_hint": {
+            "status": "ok|error",
+            "tool": "interpret_switch_instruction",
+            "instruction": "dict"
+          },
+          "capability_tags": [
+            "powerfactory",
+            "planning",
+            "nlp",
+            "switch"
+          ],
+          "mutating": false,
+          "requires_state": [],
+          "produces_state": [
+            "switch_instruction"
+          ],
+          "is_summary": false,
+          "domain_notes": []
+        },
+        {
+          "name": "list_available_object_attributes",
+          "description": "List semantic and raw attribute options for the selected PowerFactory object.",
+          "input_schema": {
+            "type": "object",
+            "properties": {
+              "services": {
+                "type": "object"
+              },
+              "instruction": {
+                "type": "object"
+              },
+              "resolution": {
+                "type": "object"
+              }
+            },
+            "required": [
+              "services",
+              "instruction",
+              "resolution"
+            ]
+          },
+          "output_schema_hint": {
+            "status": "ok|error",
+            "tool": "list_available_object_attributes",
+            "attribute_options": "list"
+          },
+          "capability_tags": [
+            "powerfactory",
+            "data_query",
+            "attributes",
+            "read_only"
+          ],
+          "mutating": false,
+          "requires_state": [
+            "data_query_instruction",
+            "object_resolution"
+          ],
+          "produces_state": [
+            "data_attribute_listing"
+          ],
+          "is_summary": false,
+          "domain_notes": []
+        },
+        {
+          "name": "query_topology_neighbors",
+          "description": "Query the direct neighbors of an asset in the PowerFactory topology graph.",
+          "input_schema": {
+            "type": "object",
+            "properties": {
+              "services": {
+                "type": "object"
+              },
+              "topology_graph": {
+                "type": "object"
+              },
+              "asset_query": {
+                "type": "string"
+              },
+              "selected_node_id": {
+                "type": "string"
+              },
+              "matches": {
+                "type": "array"
+              },
+              "max_matches": {
+                "type": "integer"
+              }
+            },
+            "required": [
+              "services",
+              "topology_graph"
+            ]
+          },
+          "output_schema_hint": {
+            "status": "ok|error",
+            "tool": "query_topology_neighbors",
+            "selected_node": "dict",
+            "neighbors": "list[dict]"
+          },
+          "capability_tags": [
+            "powerfactory",
+            "topology",
+            "neighbors",
+            "read_only"
+          ],
+          "mutating": false,
+          "requires_state": [
+            "graph_result",
+            "entity_resolution"
+          ],
+          "produces_state": [
+            "topology_result"
+          ],
+          "is_summary": false,
+          "domain_notes": []
+        },
+        {
+          "name": "read_pf_object_attributes",
+          "description": "Read selected attributes from a resolved PowerFactory object with dynamic loadflow fallback.",
+          "input_schema": {
+            "type": "object",
+            "properties": {
+              "services": {
+                "type": "object"
+              },
+              "instruction": {
+                "type": "object"
+              },
+              "resolution": {
+                "type": "object"
+              }
+            },
+            "required": [
+              "services",
+              "instruction",
+              "resolution"
+            ]
+          },
+          "output_schema_hint": {
+            "status": "ok|error",
+            "tool": "read_pf_object_attributes",
+            "data": "dict"
+          },
+          "capability_tags": [
+            "powerfactory",
+            "data_query",
+            "read_only"
+          ],
+          "mutating": false,
+          "requires_state": [
+            "data_query_instruction",
+            "object_resolution",
+            "data_attribute_selection"
+          ],
+          "produces_state": [
+            "data_query_execution"
+          ],
+          "is_summary": false,
+          "domain_notes": [
+            "Do not use this step before attribute selection is available."
+          ]
+        },
+        {
+          "name": "resolve_entity_from_inventory",
+          "description": "Resolve the requested generic asset from a typed topology inventory.",
+          "input_schema": {
+            "type": "object",
+            "properties": {
+              "services": {
+                "type": "object"
+              },
+              "instruction": {
+                "type": "object"
+              },
+              "inventory": {
+                "type": "object"
+              },
+              "topology_graph": {
+                "type": "object"
+              },
+              "max_matches": {
+                "type": "integer"
+              }
+            },
+            "required": [
+              "services",
+              "instruction",
+              "inventory",
+              "topology_graph"
+            ]
+          },
+          "output_schema_hint": {
+            "status": "ok|error",
+            "tool": "resolve_entity_from_inventory",
+            "asset_query": "string",
+            "selected_match": "dict",
+            "matches": "list[dict]"
+          },
+          "capability_tags": [
+            "powerfactory",
+            "topology",
+            "entity",
+            "inventory",
+            "resolution",
+            "read_only"
+          ],
+          "mutating": false,
+          "requires_state": [
+            "entity_instruction",
+            "inventory_result",
+            "graph_result"
+          ],
+          "produces_state": [
+            "entity_resolution"
+          ],
+          "is_summary": false,
+          "domain_notes": []
+        },
+        {
+          "name": "resolve_load",
+          "description": "Resolve the target load object inside the active PowerFactory project.",
+          "input_schema": {
+            "type": "object",
+            "properties": {
+              "services": {
+                "type": "object"
+              },
+              "instruction": {
+                "type": "object"
+              }
+            },
+            "required": [
+              "services",
+              "instruction"
+            ]
+          },
+          "output_schema_hint": {
+            "status": "ok|error",
+            "tool": "resolve_load",
+            "resolution": "dict"
+          },
+          "capability_tags": [
+            "powerfactory",
+            "resolution",
+            "load"
+          ],
+          "mutating": false,
+          "requires_state": [
+            "instruction"
+          ],
+          "produces_state": [
+            "resolution"
+          ],
+          "is_summary": false,
+          "domain_notes": []
+        },
+        {
+          "name": "resolve_objects_from_inventory_llm",
+          "description": "Resolve PowerFactory objects by LLM-based exact candidate selection from a unified non-topology inventory.",
+          "input_schema": {
+            "type": "object",
+            "properties": {
+              "services": {
+                "type": "object"
+              },
+              "instruction": {
+                "type": "object"
+              },
+              "inventory": {
+                "type": "object"
+              }
+            },
+            "required": [
+              "services",
+              "instruction",
+              "inventory"
+            ]
+          },
+          "output_schema_hint": {
+            "status": "ok|error",
+            "tool": "resolve_objects_from_inventory_llm",
+            "selected_match": "dict",
+            "selected_matches": "list[dict]",
+            "selection_mode": "one|all"
+          },
+          "capability_tags": [
+            "powerfactory",
+            "resolution",
+            "llm_match",
+            "read_only"
+          ],
+          "mutating": false,
+          "requires_state": [
+            "unified_inventory_result"
+          ],
+          "produces_state": [
+            "object_resolution"
+          ],
+          "is_summary": false,
+          "domain_notes": []
+        },
+        {
+          "name": "select_pf_object_attributes_llm",
+          "description": "Select the best matching attribute handles from the available option list.",
+          "input_schema": {
+            "type": "object",
+            "properties": {
+              "services": {
+                "type": "object"
+              },
+              "instruction": {
+                "type": "object"
+              },
+              "resolution": {
+                "type": "object"
+              },
+              "attribute_listing": {
+                "type": "object"
+              }
+            },
+            "required": [
+              "services",
+              "instruction",
+              "resolution",
+              "attribute_listing"
+            ]
+          },
+          "output_schema_hint": {
+            "status": "ok|error",
+            "tool": "select_pf_object_attributes_llm",
+            "selected_attribute_handles": "list"
+          },
+          "capability_tags": [
+            "powerfactory",
+            "data_query",
+            "attributes",
+            "llm_match",
+            "read_only"
+          ],
+          "mutating": false,
+          "requires_state": [
+            "data_query_instruction",
+            "object_resolution",
+            "data_attribute_listing"
+          ],
+          "produces_state": [
+            "data_attribute_selection"
+          ],
+          "is_summary": false,
+          "domain_notes": []
+        },
+        {
+          "name": "summarize_load_catalog",
+          "description": "Build a concise user-facing catalog answer.",
+          "input_schema": {
+            "type": "object",
+            "properties": {
+              "services": {
+                "type": "object"
+              },
+              "catalog_result": {
+                "type": "object"
+              }
+            },
+            "required": [
+              "services",
+              "catalog_result"
+            ]
+          },
+          "output_schema_hint": {
+            "status": "ok|error",
+            "tool": "summarize_load_catalog",
+            "answer": "string"
+          },
+          "capability_tags": [
+            "powerfactory",
+            "summary",
+            "catalog"
+          ],
+          "mutating": false,
+          "requires_state": [
+            "catalog_result"
+          ],
+          "produces_state": [
+            "summary"
+          ],
+          "is_summary": true,
+          "domain_notes": []
+        },
+        {
+          "name": "summarize_pf_object_data_result",
+          "description": "Summarize queried PowerFactory object data for the end user.",
+          "input_schema": {
+            "type": "object",
+            "properties": {
+              "services": {
+                "type": "object"
+              },
+              "result_payload": {
+                "type": "object"
+              },
+              "user_input": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "services",
+              "result_payload",
+              "user_input"
+            ]
+          },
+          "output_schema_hint": {
+            "status": "ok|error",
+            "tool": "summarize_pf_object_data_result",
+            "answer": "string"
+          },
+          "capability_tags": [
+            "powerfactory",
+            "data_query",
+            "summary"
+          ],
+          "mutating": false,
+          "requires_state": [
+            "data_query_execution"
+          ],
+          "produces_state": [
+            "data_query_summary",
+            "summary"
+          ],
+          "is_summary": true,
+          "domain_notes": []
+        },
+        {
+          "name": "summarize_powerfactory_result",
+          "description": "Summarize result data from a PowerFactory load workflow for the end user.",
+          "input_schema": {
+            "type": "object",
+            "properties": {
+              "services": {
+                "type": "object"
+              },
+              "result_payload": {
+                "type": "object"
+              },
+              "user_input": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "services",
+              "result_payload",
+              "user_input"
+            ]
+          },
+          "output_schema_hint": {
+            "status": "ok|error",
+            "tool": "summarize_powerfactory_result",
+            "answer": "string"
+          },
+          "capability_tags": [
+            "powerfactory",
+            "summary",
+            "result"
+          ],
+          "mutating": false,
+          "requires_state": [
+            "execution"
+          ],
+          "produces_state": [
+            "summary"
+          ],
+          "is_summary": true,
+          "domain_notes": []
+        },
+        {
+          "name": "summarize_switch_result",
+          "description": "Summarize the result of a switch state change for the end user.",
+          "input_schema": {
+            "type": "object",
+            "properties": {
+              "services": {
+                "type": "object"
+              },
+              "result_payload": {
+                "type": "object"
+              },
+              "user_input": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "services",
+              "result_payload",
+              "user_input"
+            ]
+          },
+          "output_schema_hint": {
+            "status": "ok|error",
+            "tool": "summarize_switch_result",
+            "answer": "string"
+          },
+          "capability_tags": [
+            "powerfactory",
+            "summary",
+            "switch"
+          ],
+          "mutating": false,
+          "requires_state": [
+            "switch_execution"
+          ],
+          "produces_state": [
+            "switch_summary",
+            "summary"
+          ],
+          "is_summary": true,
+          "domain_notes": []
+        },
+        {
+          "name": "summarize_topology_result",
+          "description": "Build a concise user-facing topology answer.",
+          "input_schema": {
+            "type": "object",
+            "properties": {
+              "services": {
+                "type": "object"
+              },
+              "topology_result": {
+                "type": "object"
+              },
+              "graph_result": {
+                "type": "object"
+              },
+              "inventory_result": {
+                "type": "object"
+              },
+              "entity_instruction": {
+                "type": "object"
+              },
+              "entity_resolution": {
+                "type": "object"
+              }
+            },
+            "required": [
+              "services",
+              "topology_result"
+            ]
+          },
+          "output_schema_hint": {
+            "status": "ok|error",
+            "tool": "summarize_topology_result",
+            "answer": "string"
+          },
+          "capability_tags": [
+            "powerfactory",
+            "summary",
+            "topology"
+          ],
+          "mutating": false,
+          "requires_state": [
+            "topology_result"
+          ],
+          "produces_state": [
+            "summary"
+          ],
+          "is_summary": true,
+          "domain_notes": []
+        },
+        {
+          "name": "unsupported_request",
+          "description": "Return a controlled message for unsupported PowerFactory intent.",
+          "input_schema": {
+            "type": "object",
+            "properties": {
+              "services": {
+                "type": "object"
+              },
+              "user_input": {
+                "type": "string"
+              },
+              "classification": {
+                "type": "object"
+              }
+            },
+            "required": [
+              "services",
+              "user_input",
+              "classification"
+            ]
+          },
+          "output_schema_hint": {
+            "status": "error",
+            "tool": "powerfactory",
+            "answer": "string"
+          },
+          "capability_tags": [
+            "powerfactory",
+            "control"
+          ],
+          "mutating": false,
+          "requires_state": [],
+          "produces_state": [],
+          "is_summary": false,
+          "domain_notes": []
+        }
+      ],
+      "instruction": null,
+      "resolved_load": null,
+      "data": {},
+      "catalog": [],
+      "messages": [],
+      "answer": "Die Schalteroperation 'close' wurde für 'Switch 2' (StaSwitch) ausgeführt. Zustand vorher: closed. Zustand nachher: closed. Anschließend wurde ein Lastfluss gerechnet.",
+      "summary": {
+        "status": "ok",
+        "tool": "summarize_switch_result",
+        "project": "Nine-bus System(2)",
+        "answer": "Die Schalteroperation 'close' wurde für 'Switch 2' (StaSwitch) ausgeführt. Zustand vorher: closed. Zustand nachher: closed. Anschließend wurde ein Lastfluss gerechnet.",
+        "messages": []
+      },
+      "summary_parts": [
+        {
+          "status": "ok",
+          "tool": "summarize_switch_result",
+          "project": "Nine-bus System(2)",
+          "answer": "Die Schalteroperation 'close' wurde für 'Switch 2' (StaSwitch) ausgeführt. Zustand vorher: closed. Zustand nachher: closed. Anschließend wurde ein Lastfluss gerechnet.",
+          "messages": []
+        }
+      ],
+      "topology": {
+        "graph_mode": null,
+        "graph_summary": {},
+        "build_debug": {},
+        "inventory": {},
+        "instruction": null,
+        "resolution": null,
+        "selected_node": null,
+        "neighbor_count": 0,
+        "neighbors": [],
+        "matches": []
+      },
+      "switch": {
+        "instruction": {
+          "query_type": "switch_operation",
+          "operation": "close",
+          "entity_type": "switch",
+          "entity_name_raw": "Schließe Schalter 2.",
+          "entity_name_candidates": [
+            "Schalter 2",
+            "2"
+          ],
+          "available_types": [
+            "switch"
+          ],
+          "debug_switch_decision": {
+            "operation": "close",
+            "should_execute": true,
+            "confidence": "high",
+            "rationale": "User request 'Schließe Schalter 2.' directly translates to 'Close switch 2.' in English, which is a clear instruction to perform a 'close' operation on the specified switch."
+          }
+        },
+        "resolution": {
+          "status": "ok",
+          "tool": "resolve_objects_from_inventory_llm",
+          "project": "Nine-bus System(2)",
+          "instruction": {
+            "query_type": "switch_operation",
+            "operation": "close",
+            "entity_type": "switch",
+            "entity_name_raw": "Schließe Schalter 2.",
+            "entity_name_candidates": [
+              "Schalter 2",
+              "2"
+            ],
+            "available_types": [
+              "switch"
+            ],
+            "debug_switch_decision": {
+              "operation": "close",
+              "should_execute": true,
+              "confidence": "high",
+              "rationale": "User request 'Schließe Schalter 2.' directly translates to 'Close switch 2.' in English, which is a clear instruction to perform a 'close' operation on the specified switch."
+            }
+          },
+          "asset_query": "Switch 2",
+          "selected_match": {
+            "node_id": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 5.ElmTerm\\Cub_3.StaCubic\\Switch 2.StaSwitch",
+            "name": "Switch 2",
+            "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 5.ElmTerm\\Cub_3.StaCubic\\Switch 2.StaSwitch",
+            "pf_class": "StaSwitch",
+            "kind": "sta",
+            "degree": 0,
+            "inventory_type": "switch"
+          },
+          "selected_matches": [
+            {
+              "node_id": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 5.ElmTerm\\Cub_3.StaCubic\\Switch 2.StaSwitch",
+              "name": "Switch 2",
+              "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 5.ElmTerm\\Cub_3.StaCubic\\Switch 2.StaSwitch",
+              "pf_class": "StaSwitch",
+              "kind": "sta",
+              "degree": 0,
+              "inventory_type": "switch"
+            }
+          ],
+          "selected_object_names": [
+            "Switch 2"
+          ],
+          "selection_mode": "one",
+          "matches": [
+            {
+              "node_id": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 5.ElmTerm\\Cub_3.StaCubic\\Switch 2.StaSwitch",
+              "name": "Switch 2",
+              "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 5.ElmTerm\\Cub_3.StaCubic\\Switch 2.StaSwitch",
+              "pf_class": "StaSwitch",
+              "kind": "sta",
+              "degree": 0,
+              "inventory_type": "switch"
+            }
+          ],
+          "llm_decision": {
+            "selected_object_name": "Switch 2",
+            "selected_object_names": [],
+            "selection_mode": "one",
+            "confidence": "high",
+            "rationale": "The request explicitly specifies 'Schalter 2' (Switch 2), which matches the candidate 'Switch 2' exactly in the provided list.",
+            "alternatives": [
+              "Switch 1"
+            ],
+            "should_execute": true
+          },
+          "entity_type": "switch"
+        },
+        "execution": {
+          "status": "ok",
+          "tool": "execute_switch_operation",
+          "project": "Nine-bus System(2)",
+          "studycase": "01- Load Flow",
+          "instruction": {
+            "query_type": "switch_operation",
+            "operation": "close",
+            "entity_type": "switch",
+            "entity_name_raw": "Schließe Schalter 2.",
+            "entity_name_candidates": [
+              "Schalter 2",
+              "2"
+            ],
+            "available_types": [
+              "switch"
+            ],
+            "debug_switch_decision": {
+              "operation": "close",
+              "should_execute": true,
+              "confidence": "high",
+              "rationale": "User request 'Schließe Schalter 2.' directly translates to 'Close switch 2.' in English, which is a clear instruction to perform a 'close' operation on the specified switch."
+            }
+          },
+          "resolution": {
+            "status": "ok",
+            "tool": "resolve_objects_from_inventory_llm",
+            "project": "Nine-bus System(2)",
+            "instruction": {
+              "query_type": "switch_operation",
+              "operation": "close",
+              "entity_type": "switch",
+              "entity_name_raw": "Schließe Schalter 2.",
+              "entity_name_candidates": [
+                "Schalter 2",
+                "2"
+              ],
+              "available_types": [
+                "switch"
+              ],
+              "debug_switch_decision": {
+                "operation": "close",
+                "should_execute": true,
+                "confidence": "high",
+                "rationale": "User request 'Schließe Schalter 2.' directly translates to 'Close switch 2.' in English, which is a clear instruction to perform a 'close' operation on the specified switch."
+              }
+            },
+            "asset_query": "Switch 2",
+            "selected_match": {
+              "node_id": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 5.ElmTerm\\Cub_3.StaCubic\\Switch 2.StaSwitch",
+              "name": "Switch 2",
+              "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 5.ElmTerm\\Cub_3.StaCubic\\Switch 2.StaSwitch",
+              "pf_class": "StaSwitch",
+              "kind": "sta",
+              "degree": 0,
+              "inventory_type": "switch"
+            },
+            "selected_matches": [
+              {
+                "node_id": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 5.ElmTerm\\Cub_3.StaCubic\\Switch 2.StaSwitch",
+                "name": "Switch 2",
+                "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 5.ElmTerm\\Cub_3.StaCubic\\Switch 2.StaSwitch",
+                "pf_class": "StaSwitch",
+                "kind": "sta",
+                "degree": 0,
+                "inventory_type": "switch"
+              }
+            ],
+            "selected_object_names": [
+              "Switch 2"
+            ],
+            "selection_mode": "one",
+            "matches": [
+              {
+                "node_id": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 5.ElmTerm\\Cub_3.StaCubic\\Switch 2.StaSwitch",
+                "name": "Switch 2",
+                "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 5.ElmTerm\\Cub_3.StaCubic\\Switch 2.StaSwitch",
+                "pf_class": "StaSwitch",
+                "kind": "sta",
+                "degree": 0,
+                "inventory_type": "switch"
+              }
+            ],
+            "llm_decision": {
+              "selected_object_name": "Switch 2",
+              "selected_object_names": [],
+              "selection_mode": "one",
+              "confidence": "high",
+              "rationale": "The request explicitly specifies 'Schalter 2' (Switch 2), which matches the candidate 'Switch 2' exactly in the provided list.",
+              "alternatives": [
+                "Switch 1"
+              ],
+              "should_execute": true
+            },
+            "entity_type": "switch"
+          },
+          "switch": {
+            "name": "Switch 2",
+            "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 5.ElmTerm\\Cub_3.StaCubic\\Switch 2.StaSwitch",
+            "pf_class": "StaSwitch"
+          },
+          "state_before": "closed",
+          "state_after": "closed",
+          "state_before_raw": {
+            "status": "ok",
+            "state_source": "on_off",
+            "raw_value": 1
+          },
+          "state_after_raw": {
+            "status": "ok",
+            "state_source": "on_off",
+            "raw_value": 1
+          },
+          "apply_result": {
+            "status": "ok",
+            "apply_mode": "method",
+            "apply_target": "Close",
+            "method_result": 0
+          },
+          "loadflow": {
+            "executed": true,
+            "loadflow_command": "Load Flow Calculation"
+          }
+        },
+        "summary": {
+          "status": "ok",
+          "tool": "summarize_switch_result",
+          "project": "Nine-bus System(2)",
+          "answer": "Die Schalteroperation 'close' wurde für 'Switch 2' (StaSwitch) ausgeführt. Zustand vorher: closed. Zustand nachher: closed. Anschließend wurde ein Lastfluss gerechnet.",
+          "messages": []
+        }
+      },
+      "data_query": {
+        "inventory": null,
+        "instruction": null,
+        "resolution": {
+          "status": "ok",
+          "tool": "resolve_objects_from_inventory_llm",
+          "project": "Nine-bus System(2)",
+          "instruction": {
+            "query_type": "switch_operation",
+            "operation": "close",
+            "entity_type": "switch",
+            "entity_name_raw": "Schließe Schalter 2.",
+            "entity_name_candidates": [
+              "Schalter 2",
+              "2"
+            ],
+            "available_types": [
+              "switch"
+            ],
+            "debug_switch_decision": {
+              "operation": "close",
+              "should_execute": true,
+              "confidence": "high",
+              "rationale": "User request 'Schließe Schalter 2.' directly translates to 'Close switch 2.' in English, which is a clear instruction to perform a 'close' operation on the specified switch."
+            }
+          },
+          "asset_query": "Switch 2",
+          "selected_match": {
+            "node_id": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 5.ElmTerm\\Cub_3.StaCubic\\Switch 2.StaSwitch",
+            "name": "Switch 2",
+            "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 5.ElmTerm\\Cub_3.StaCubic\\Switch 2.StaSwitch",
+            "pf_class": "StaSwitch",
+            "kind": "sta",
+            "degree": 0,
+            "inventory_type": "switch"
+          },
+          "selected_matches": [
+            {
+              "node_id": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 5.ElmTerm\\Cub_3.StaCubic\\Switch 2.StaSwitch",
+              "name": "Switch 2",
+              "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 5.ElmTerm\\Cub_3.StaCubic\\Switch 2.StaSwitch",
+              "pf_class": "StaSwitch",
+              "kind": "sta",
+              "degree": 0,
+              "inventory_type": "switch"
+            }
+          ],
+          "selected_object_names": [
+            "Switch 2"
+          ],
+          "selection_mode": "one",
+          "matches": [
+            {
+              "node_id": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 5.ElmTerm\\Cub_3.StaCubic\\Switch 2.StaSwitch",
+              "name": "Switch 2",
+              "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 5.ElmTerm\\Cub_3.StaCubic\\Switch 2.StaSwitch",
+              "pf_class": "StaSwitch",
+              "kind": "sta",
+              "degree": 0,
+              "inventory_type": "switch"
+            }
+          ],
+          "llm_decision": {
+            "selected_object_name": "Switch 2",
+            "selected_object_names": [],
+            "selection_mode": "one",
+            "confidence": "high",
+            "rationale": "The request explicitly specifies 'Schalter 2' (Switch 2), which matches the candidate 'Switch 2' exactly in the provided list.",
+            "alternatives": [
+              "Switch 1"
+            ],
+            "should_execute": true
+          },
+          "entity_type": "switch"
+        },
+        "attribute_listing": null,
+        "attribute_selection": null,
+        "execution": null,
+        "summary": null
+      },
+      "debug": {
+        "planning": {
+          "debug_mode": true,
+          "project_name": "Nine-bus System(2)",
+          "initial_classification": {
+            "status": "ok",
+            "classification_mode": "llm",
+            "intent": "change_switch_state",
+            "confidence": "high",
+            "target_kind": "switch",
+            "safe_to_execute": true,
+            "missing_context": [
+              "exact switch name or ID"
+            ],
+            "required_steps": [
+              "interpret_switch_instruction",
+              "execute_switch_operation"
+            ],
+            "reasoning": "User requests to close switch 2, matching change_switch_state intent. Exact switch ID required for resolution."
+          },
+          "decomposition": {
+            "status": "ok",
+            "is_composite": false,
+            "subrequests": [],
+            "reasoning": "The request 'Schließe Schalter 2.' is a single, clear intent to close a specific switch. It contains no multiple goals, sequential actions requiring prior results, or references to previous outputs. The classification confirms it's a single 'change_switch_state' workflow with no need for decomposition."
+          },
+          "subrequests": [],
+          "plan_source": "standard",
+          "final_plan_steps": [
+            "interpret_switch_instruction",
+            "build_unified_inventory",
+            "resolve_objects_from_inventory_llm",
+            "execute_switch_operation",
+            "summarize_switch_result"
+          ],
+          "standard_plan_steps": [
+            "interpret_switch_instruction",
+            "build_unified_inventory",
+            "resolve_objects_from_inventory_llm",
+            "execute_switch_operation",
+            "summarize_switch_result"
+          ],
+          "classification_plan_steps": [
+            "interpret_switch_instruction",
+            "build_unified_inventory",
+            "resolve_objects_from_inventory_llm",
+            "execute_switch_operation"
+          ]
+        },
+        "selected_equipment": {
+          "resolved_load": null,
+          "entity_resolution": null,
+          "object_resolution": {
+            "status": "ok",
+            "tool": "resolve_objects_from_inventory_llm",
+            "project": "Nine-bus System(2)",
+            "instruction": {
+              "query_type": "switch_operation",
+              "operation": "close",
+              "entity_type": "switch",
+              "entity_name_raw": "Schließe Schalter 2.",
+              "entity_name_candidates": [
+                "Schalter 2",
+                "2"
+              ],
+              "available_types": [
+                "switch"
+              ],
+              "debug_switch_decision": {
+                "operation": "close",
+                "should_execute": true,
+                "confidence": "high",
+                "rationale": "User request 'Schließe Schalter 2.' directly translates to 'Close switch 2.' in English, which is a clear instruction to perform a 'close' operation on the specified switch."
+              }
+            },
+            "asset_query": "Switch 2",
+            "selected_match": {
+              "node_id": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 5.ElmTerm\\Cub_3.StaCubic\\Switch 2.StaSwitch",
+              "name": "Switch 2",
+              "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 5.ElmTerm\\Cub_3.StaCubic\\Switch 2.StaSwitch",
+              "pf_class": "StaSwitch",
+              "kind": "sta",
+              "degree": 0,
+              "inventory_type": "switch"
+            },
+            "selected_matches": [
+              {
+                "node_id": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 5.ElmTerm\\Cub_3.StaCubic\\Switch 2.StaSwitch",
+                "name": "Switch 2",
+                "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 5.ElmTerm\\Cub_3.StaCubic\\Switch 2.StaSwitch",
+                "pf_class": "StaSwitch",
+                "kind": "sta",
+                "degree": 0,
+                "inventory_type": "switch"
+              }
+            ],
+            "selected_object_names": [
+              "Switch 2"
+            ],
+            "selection_mode": "one",
+            "matches": [
+              {
+                "node_id": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 5.ElmTerm\\Cub_3.StaCubic\\Switch 2.StaSwitch",
+                "name": "Switch 2",
+                "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 5.ElmTerm\\Cub_3.StaCubic\\Switch 2.StaSwitch",
+                "pf_class": "StaSwitch",
+                "kind": "sta",
+                "degree": 0,
+                "inventory_type": "switch"
+              }
+            ],
+            "llm_decision": {
+              "selected_object_name": "Switch 2",
+              "selected_object_names": [],
+              "selection_mode": "one",
+              "confidence": "high",
+              "rationale": "The request explicitly specifies 'Schalter 2' (Switch 2), which matches the candidate 'Switch 2' exactly in the provided list.",
+              "alternatives": [
+                "Switch 1"
+              ],
+              "should_execute": true
+            },
+            "entity_type": "switch"
+          }
+        },
+        "trace": [
+          {
+            "step": "interpret_switch_instruction",
+            "effective_user_input": "Schließe Schalter 2.",
+            "source_subrequest": null,
+            "tool_spec": {
+              "name": "interpret_switch_instruction",
+              "description": "Interpret a natural-language switch request into a structured switch operation instruction.",
+              "capability_tags": [
+                "powerfactory",
+                "planning",
+                "nlp",
+                "switch"
+              ],
+              "mutating": false
+            },
+            "tool_kwargs": {
+              "services": {
+                "status": "ok",
+                "project_name": "Nine-bus System(2)"
+              },
+              "user_input": "Schließe Schalter 2."
+            },
+            "result": {
+              "status": "ok",
+              "tool": "interpret_switch_instruction",
+              "user_input": "Schließe Schalter 2.",
+              "project": "Nine-bus System(2)",
+              "instruction": {
+                "query_type": "switch_operation",
+                "operation": "close",
+                "entity_type": "switch",
+                "entity_name_raw": "Schließe Schalter 2.",
+                "entity_name_candidates": [
+                  "Schalter 2",
+                  "2"
+                ],
+                "available_types": [
+                  "switch"
+                ],
+                "debug_switch_decision": {
+                  "operation": "close",
+                  "should_execute": true,
+                  "confidence": "high",
+                  "rationale": "User request 'Schließe Schalter 2.' directly translates to 'Close switch 2.' in English, which is a clear instruction to perform a 'close' operation on the specified switch."
+                }
+              }
+            }
+          },
+          {
+            "step": "build_unified_inventory",
+            "effective_user_input": "Schließe Schalter 2.",
+            "source_subrequest": null,
+            "tool_spec": {
+              "name": "build_unified_inventory",
+              "description": "Build a unified non-topology PowerFactory inventory for supported object types.",
+              "capability_tags": [
+                "powerfactory",
+                "inventory",
+                "read_only"
+              ],
+              "mutating": false
+            },
+            "tool_kwargs": {
+              "services": {
+                "status": "ok",
+                "project_name": "Nine-bus System(2)"
+              },
+              "allowed_types": [
+                "switch"
+              ]
+            },
+            "result": {
+              "status": "ok",
+              "tool": "build_unified_inventory",
+              "project": "Nine-bus System(2)",
+              "inventory": {
+                "available_types": [
+                  "switch"
+                ],
+                "counts_by_type": {
+                  "switch": 18
+                },
+                "items_by_type": {
+                  "switch": [
+                    {
+                      "node_id": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 4.ElmTerm\\Cub_1.StaCubic\\Switch.StaSwitch",
+                      "name": "Switch",
+                      "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 4.ElmTerm\\Cub_1.StaCubic\\Switch.StaSwitch",
+                      "pf_class": "StaSwitch",
+                      "kind": "sta",
+                      "degree": 0,
+                      "inventory_type": "switch"
+                    },
+                    {
+                      "node_id": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 4.ElmTerm\\Cub_2.StaCubic\\Switch.StaSwitch",
+                      "name": "Switch",
+                      "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 4.ElmTerm\\Cub_2.StaCubic\\Switch.StaSwitch",
+                      "pf_class": "StaSwitch",
+                      "kind": "sta",
+                      "degree": 0,
+                      "inventory_type": "switch"
+                    },
+                    {
+                      "node_id": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 4.ElmTerm\\Cub_3.StaCubic\\Switch.StaSwitch",
+                      "name": "Switch",
+                      "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 4.ElmTerm\\Cub_3.StaCubic\\Switch.StaSwitch",
+                      "pf_class": "StaSwitch",
+                      "kind": "sta",
+                      "degree": 0,
+                      "inventory_type": "switch"
+                    },
+                    {
+                      "node_id": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 5.ElmTerm\\Cub_1.StaCubic\\Switch.StaSwitch",
+                      "name": "Switch",
+                      "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 5.ElmTerm\\Cub_1.StaCubic\\Switch.StaSwitch",
+                      "pf_class": "StaSwitch",
+                      "kind": "sta",
+                      "degree": 0,
+                      "inventory_type": "switch"
+                    },
+                    {
+                      "node_id": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 5.ElmTerm\\Cub_2.StaCubic\\Switch.StaSwitch",
+                      "name": "Switch",
+                      "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 5.ElmTerm\\Cub_2.StaCubic\\Switch.StaSwitch",
+                      "pf_class": "StaSwitch",
+                      "kind": "sta",
+                      "degree": 0,
+                      "inventory_type": "switch"
+                    },
+                    {
+                      "node_id": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 6.ElmTerm\\Cub_1.StaCubic\\Switch.StaSwitch",
+                      "name": "Switch",
+                      "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 6.ElmTerm\\Cub_1.StaCubic\\Switch.StaSwitch",
+                      "pf_class": "StaSwitch",
+                      "kind": "sta",
+                      "degree": 0,
+                      "inventory_type": "switch"
+                    },
+                    {
+                      "node_id": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 6.ElmTerm\\Cub_2.StaCubic\\Switch.StaSwitch",
+                      "name": "Switch",
+                      "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 6.ElmTerm\\Cub_2.StaCubic\\Switch.StaSwitch",
+                      "pf_class": "StaSwitch",
+                      "kind": "sta",
+                      "degree": 0,
+                      "inventory_type": "switch"
+                    },
+                    {
+                      "node_id": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 6.ElmTerm\\Cub_3.StaCubic\\Switch.StaSwitch",
+                      "name": "Switch",
+                      "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 6.ElmTerm\\Cub_3.StaCubic\\Switch.StaSwitch",
+                      "pf_class": "StaSwitch",
+                      "kind": "sta",
+                      "degree": 0,
+                      "inventory_type": "switch"
+                    },
+                    {
+                      "node_id": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 7.ElmTerm\\Cub_2.StaCubic\\Switch.StaSwitch",
+                      "name": "Switch",
+                      "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 7.ElmTerm\\Cub_2.StaCubic\\Switch.StaSwitch",
+                      "pf_class": "StaSwitch",
+                      "kind": "sta",
+                      "degree": 0,
+                      "inventory_type": "switch"
+                    },
+                    {
+                      "node_id": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 7.ElmTerm\\Cub_3.StaCubic\\Switch.StaSwitch",
+                      "name": "Switch",
+                      "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 7.ElmTerm\\Cub_3.StaCubic\\Switch.StaSwitch",
+                      "pf_class": "StaSwitch",
+                      "kind": "sta",
+                      "degree": 0,
+                      "inventory_type": "switch"
+                    },
+                    {
+                      "node_id": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 8.ElmTerm\\Cub_1.StaCubic\\Switch.StaSwitch",
+                      "name": "Switch",
+                      "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 8.ElmTerm\\Cub_1.StaCubic\\Switch.StaSwitch",
+                      "pf_class": "StaSwitch",
+                      "kind": "sta",
+                      "degree": 0,
+                      "inventory_type": "switch"
+                    },
+                    {
+                      "node_id": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 8.ElmTerm\\Cub_2.StaCubic\\Switch.StaSwitch",
+                      "name": "Switch",
+                      "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 8.ElmTerm\\Cub_2.StaCubic\\Switch.StaSwitch",
+                      "pf_class": "StaSwitch",
+                      "kind": "sta",
+                      "degree": 0,
+                      "inventory_type": "switch"
+                    },
+                    {
+                      "node_id": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 8.ElmTerm\\Cub_3.StaCubic\\Switch.StaSwitch",
+                      "name": "Switch",
+                      "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 8.ElmTerm\\Cub_3.StaCubic\\Switch.StaSwitch",
+                      "pf_class": "StaSwitch",
+                      "kind": "sta",
+                      "degree": 0,
+                      "inventory_type": "switch"
+                    },
+                    {
+                      "node_id": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 9.ElmTerm\\Cub_1.StaCubic\\Switch.StaSwitch",
+                      "name": "Switch",
+                      "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 9.ElmTerm\\Cub_1.StaCubic\\Switch.StaSwitch",
+                      "pf_class": "StaSwitch",
+                      "kind": "sta",
+                      "degree": 0,
+                      "inventory_type": "switch"
+                    },
+                    {
+                      "node_id": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 9.ElmTerm\\Cub_2.StaCubic\\Switch.StaSwitch",
+                      "name": "Switch",
+                      "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 9.ElmTerm\\Cub_2.StaCubic\\Switch.StaSwitch",
+                      "pf_class": "StaSwitch",
+                      "kind": "sta",
+                      "degree": 0,
+                      "inventory_type": "switch"
+                    },
+                    {
+                      "node_id": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 9.ElmTerm\\Cub_3.StaCubic\\Switch.StaSwitch",
+                      "name": "Switch",
+                      "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 9.ElmTerm\\Cub_3.StaCubic\\Switch.StaSwitch",
+                      "pf_class": "StaSwitch",
+                      "kind": "sta",
+                      "degree": 0,
+                      "inventory_type": "switch"
+                    },
+                    {
+                      "node_id": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 7.ElmTerm\\Cub_1.StaCubic\\Switch 1.StaSwitch",
+                      "name": "Switch 1",
+                      "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 7.ElmTerm\\Cub_1.StaCubic\\Switch 1.StaSwitch",
+                      "pf_class": "StaSwitch",
+                      "kind": "sta",
+                      "degree": 0,
+                      "inventory_type": "switch"
+                    },
+                    {
+                      "node_id": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 5.ElmTerm\\Cub_3.StaCubic\\Switch 2.StaSwitch",
+                      "name": "Switch 2",
+                      "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 5.ElmTerm\\Cub_3.StaCubic\\Switch 2.StaSwitch",
+                      "pf_class": "StaSwitch",
+                      "kind": "sta",
+                      "degree": 0,
+                      "inventory_type": "switch"
+                    }
+                  ]
+                },
+                "samples_by_type": {
+                  "switch": [
+                    {
+                      "name": "Switch",
+                      "pf_class": "StaSwitch",
+                      "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 4.ElmTerm\\Cub_1.StaCubic\\Switch.StaSwitch"
+                    },
+                    {
+                      "name": "Switch",
+                      "pf_class": "StaSwitch",
+                      "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 4.ElmTerm\\Cub_2.StaCubic\\Switch.StaSwitch"
+                    },
+                    {
+                      "name": "Switch",
+                      "pf_class": "StaSwitch",
+                      "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 4.ElmTerm\\Cub_3.StaCubic\\Switch.StaSwitch"
+                    },
+                    {
+                      "name": "Switch",
+                      "pf_class": "StaSwitch",
+                      "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 5.ElmTerm\\Cub_1.StaCubic\\Switch.StaSwitch"
+                    },
+                    {
+                      "name": "Switch",
+                      "pf_class": "StaSwitch",
+                      "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 5.ElmTerm\\Cub_2.StaCubic\\Switch.StaSwitch"
+                    },
+                    {
+                      "name": "Switch",
+                      "pf_class": "StaSwitch",
+                      "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 6.ElmTerm\\Cub_1.StaCubic\\Switch.StaSwitch"
+                    },
+                    {
+                      "name": "Switch",
+                      "pf_class": "StaSwitch",
+                      "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 6.ElmTerm\\Cub_2.StaCubic\\Switch.StaSwitch"
+                    },
+                    {
+                      "name": "Switch",
+                      "pf_class": "StaSwitch",
+                      "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 6.ElmTerm\\Cub_3.StaCubic\\Switch.StaSwitch"
+                    },
+                    {
+                      "name": "Switch",
+                      "pf_class": "StaSwitch",
+                      "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 7.ElmTerm\\Cub_2.StaCubic\\Switch.StaSwitch"
+                    },
+                    {
+                      "name": "Switch",
+                      "pf_class": "StaSwitch",
+                      "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 7.ElmTerm\\Cub_3.StaCubic\\Switch.StaSwitch"
+                    }
+                  ]
+                }
+              },
+              "allowed_types": [
+                "switch"
+              ]
+            }
+          },
+          {
+            "step": "resolve_objects_from_inventory_llm",
+            "effective_user_input": "Schließe Schalter 2.",
+            "source_subrequest": null,
+            "tool_spec": {
+              "name": "resolve_objects_from_inventory_llm",
+              "description": "Resolve PowerFactory objects by LLM-based exact candidate selection from a unified non-topology inventory.",
+              "capability_tags": [
+                "powerfactory",
+                "resolution",
+                "llm_match",
+                "read_only"
+              ],
+              "mutating": false
+            },
+            "tool_kwargs": {
+              "services": {
+                "status": "ok",
+                "project_name": "Nine-bus System(2)"
+              },
+              "instruction": {
+                "query_type": "switch_operation",
+                "operation": "close",
+                "entity_type": "switch",
+                "entity_name_raw": "Schließe Schalter 2.",
+                "entity_name_candidates": [
+                  "Schalter 2",
+                  "2"
+                ],
+                "available_types": [
+                  "switch"
+                ],
+                "debug_switch_decision": {
+                  "operation": "close",
+                  "should_execute": true,
+                  "confidence": "high",
+                  "rationale": "User request 'Schließe Schalter 2.' directly translates to 'Close switch 2.' in English, which is a clear instruction to perform a 'close' operation on the specified switch."
+                }
+              },
+              "inventory": {
+                "available_types": [
+                  "switch"
+                ],
+                "counts_by_type": {
+                  "switch": 18
+                },
+                "items_by_type": {
+                  "switch": {
+                    "type": "list",
+                    "length": 18,
+                    "preview": [
+                      {
+                        "node_id": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 4.ElmTerm\\Cub_1.StaCubic\\Switch.StaSwitch",
+                        "name": "Switch",
+                        "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 4.ElmTerm\\Cub_1.StaCubic\\Switch.StaSwitch",
+                        "pf_class": "StaSwitch",
+                        "kind": "sta",
+                        "degree": 0,
+                        "inventory_type": "switch"
+                      },
+                      {
+                        "node_id": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 4.ElmTerm\\Cub_2.StaCubic\\Switch.StaSwitch",
+                        "name": "Switch",
+                        "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 4.ElmTerm\\Cub_2.StaCubic\\Switch.StaSwitch",
+                        "pf_class": "StaSwitch",
+                        "kind": "sta",
+                        "degree": 0,
+                        "inventory_type": "switch"
+                      },
+                      {
+                        "node_id": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 4.ElmTerm\\Cub_3.StaCubic\\Switch.StaSwitch",
+                        "name": "Switch",
+                        "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 4.ElmTerm\\Cub_3.StaCubic\\Switch.StaSwitch",
+                        "pf_class": "StaSwitch",
+                        "kind": "sta",
+                        "degree": 0,
+                        "inventory_type": "switch"
+                      },
+                      {
+                        "node_id": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 5.ElmTerm\\Cub_1.StaCubic\\Switch.StaSwitch",
+                        "name": "Switch",
+                        "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 5.ElmTerm\\Cub_1.StaCubic\\Switch.StaSwitch",
+                        "pf_class": "StaSwitch",
+                        "kind": "sta",
+                        "degree": 0,
+                        "inventory_type": "switch"
+                      },
+                      {
+                        "node_id": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 5.ElmTerm\\Cub_2.StaCubic\\Switch.StaSwitch",
+                        "name": "Switch",
+                        "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 5.ElmTerm\\Cub_2.StaCubic\\Switch.StaSwitch",
+                        "pf_class": "StaSwitch",
+                        "kind": "sta",
+                        "degree": 0,
+                        "inventory_type": "switch"
+                      }
+                    ]
+                  }
+                },
+                "samples_by_type": {
+                  "switch": [
+                    {
+                      "name": "Switch",
+                      "pf_class": "StaSwitch",
+                      "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 4.ElmTerm\\Cub_1.StaCubic\\Switch.StaSwitch"
+                    },
+                    {
+                      "name": "Switch",
+                      "pf_class": "StaSwitch",
+                      "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 4.ElmTerm\\Cub_2.StaCubic\\Switch.StaSwitch"
+                    },
+                    {
+                      "name": "Switch",
+                      "pf_class": "StaSwitch",
+                      "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 4.ElmTerm\\Cub_3.StaCubic\\Switch.StaSwitch"
+                    },
+                    {
+                      "name": "Switch",
+                      "pf_class": "StaSwitch",
+                      "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 5.ElmTerm\\Cub_1.StaCubic\\Switch.StaSwitch"
+                    },
+                    {
+                      "name": "Switch",
+                      "pf_class": "StaSwitch",
+                      "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 5.ElmTerm\\Cub_2.StaCubic\\Switch.StaSwitch"
+                    },
+                    {
+                      "name": "Switch",
+                      "pf_class": "StaSwitch",
+                      "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 6.ElmTerm\\Cub_1.StaCubic\\Switch.StaSwitch"
+                    },
+                    {
+                      "name": "Switch",
+                      "pf_class": "StaSwitch",
+                      "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 6.ElmTerm\\Cub_2.StaCubic\\Switch.StaSwitch"
+                    },
+                    {
+                      "name": "Switch",
+                      "pf_class": "StaSwitch",
+                      "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 6.ElmTerm\\Cub_3.StaCubic\\Switch.StaSwitch"
+                    },
+                    {
+                      "name": "Switch",
+                      "pf_class": "StaSwitch",
+                      "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 7.ElmTerm\\Cub_2.StaCubic\\Switch.StaSwitch"
+                    },
+                    {
+                      "name": "Switch",
+                      "pf_class": "StaSwitch",
+                      "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 7.ElmTerm\\Cub_3.StaCubic\\Switch.StaSwitch"
+                    }
+                  ]
+                }
+              }
+            },
+            "result": {
+              "status": "ok",
+              "tool": "resolve_objects_from_inventory_llm",
+              "project": "Nine-bus System(2)",
+              "instruction": {
+                "query_type": "switch_operation",
+                "operation": "close",
+                "entity_type": "switch",
+                "entity_name_raw": "Schließe Schalter 2.",
+                "entity_name_candidates": [
+                  "Schalter 2",
+                  "2"
+                ],
+                "available_types": [
+                  "switch"
+                ],
+                "debug_switch_decision": {
+                  "operation": "close",
+                  "should_execute": true,
+                  "confidence": "high",
+                  "rationale": "User request 'Schließe Schalter 2.' directly translates to 'Close switch 2.' in English, which is a clear instruction to perform a 'close' operation on the specified switch."
+                }
+              },
+              "asset_query": "Switch 2",
+              "selected_match": {
+                "node_id": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 5.ElmTerm\\Cub_3.StaCubic\\Switch 2.StaSwitch",
+                "name": "Switch 2",
+                "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 5.ElmTerm\\Cub_3.StaCubic\\Switch 2.StaSwitch",
+                "pf_class": "StaSwitch",
+                "kind": "sta",
+                "degree": 0,
+                "inventory_type": "switch"
+              },
+              "selected_matches": [
+                {
+                  "node_id": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 5.ElmTerm\\Cub_3.StaCubic\\Switch 2.StaSwitch",
+                  "name": "Switch 2",
+                  "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 5.ElmTerm\\Cub_3.StaCubic\\Switch 2.StaSwitch",
+                  "pf_class": "StaSwitch",
+                  "kind": "sta",
+                  "degree": 0,
+                  "inventory_type": "switch"
+                }
+              ],
+              "selected_object_names": [
+                "Switch 2"
+              ],
+              "selection_mode": "one",
+              "matches": [
+                {
+                  "node_id": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 5.ElmTerm\\Cub_3.StaCubic\\Switch 2.StaSwitch",
+                  "name": "Switch 2",
+                  "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 5.ElmTerm\\Cub_3.StaCubic\\Switch 2.StaSwitch",
+                  "pf_class": "StaSwitch",
+                  "kind": "sta",
+                  "degree": 0,
+                  "inventory_type": "switch"
+                }
+              ],
+              "llm_decision": {
+                "selected_object_name": "Switch 2",
+                "selected_object_names": [],
+                "selection_mode": "one",
+                "confidence": "high",
+                "rationale": "The request explicitly specifies 'Schalter 2' (Switch 2), which matches the candidate 'Switch 2' exactly in the provided list.",
+                "alternatives": [
+                  "Switch 1"
+                ],
+                "should_execute": true
+              },
+              "entity_type": "switch"
+            }
+          },
+          {
+            "step": "execute_switch_operation",
+            "effective_user_input": "Schließe Schalter 2.",
+            "source_subrequest": null,
+            "tool_spec": {
+              "name": "execute_switch_operation",
+              "description": "Execute an open/close/toggle operation on a resolved switch object in PowerFactory.",
+              "capability_tags": [
+                "powerfactory",
+                "execution",
+                "switch",
+                "topology"
+              ],
+              "mutating": true
+            },
+            "tool_kwargs": {
+              "services": {
+                "status": "ok",
+                "project_name": "Nine-bus System(2)"
+              },
+              "instruction": {
+                "query_type": "switch_operation",
+                "operation": "close",
+                "entity_type": "switch",
+                "entity_name_raw": "Schließe Schalter 2.",
+                "entity_name_candidates": [
+                  "Schalter 2",
+                  "2"
+                ],
+                "available_types": [
+                  "switch"
+                ],
+                "debug_switch_decision": {
+                  "operation": "close",
+                  "should_execute": true,
+                  "confidence": "high",
+                  "rationale": "User request 'Schließe Schalter 2.' directly translates to 'Close switch 2.' in English, which is a clear instruction to perform a 'close' operation on the specified switch."
+                }
+              },
+              "resolution": {
+                "status": "ok",
+                "tool": "resolve_objects_from_inventory_llm",
+                "project": "<omitted>",
+                "instruction": {
+                  "query_type": "switch_operation",
+                  "operation": "close",
+                  "entity_type": "switch",
+                  "entity_name_raw": "Schließe Schalter 2.",
+                  "entity_name_candidates": [
+                    "Schalter 2",
+                    "2"
+                  ],
+                  "available_types": [
+                    "switch"
+                  ],
+                  "debug_switch_decision": {
+                    "operation": "close",
+                    "should_execute": true,
+                    "confidence": "high",
+                    "rationale": "User request 'Schließe Schalter 2.' directly translates to 'Close switch 2.' in English, which is a clear instruction to perform a 'close' operation on the specified switch."
+                  }
+                },
+                "asset_query": "Switch 2",
+                "selected_match": {
+                  "node_id": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 5.ElmTerm\\Cub_3.StaCubic\\Switch 2.StaSwitch",
+                  "name": "Switch 2",
+                  "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 5.ElmTerm\\Cub_3.StaCubic\\Switch 2.StaSwitch",
+                  "pf_class": "StaSwitch",
+                  "kind": "sta",
+                  "degree": 0,
+                  "inventory_type": "switch"
+                },
+                "selected_matches": [
+                  {
+                    "node_id": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 5.ElmTerm\\Cub_3.StaCubic\\Switch 2.StaSwitch",
+                    "name": "Switch 2",
+                    "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 5.ElmTerm\\Cub_3.StaCubic\\Switch 2.StaSwitch",
+                    "pf_class": "StaSwitch",
+                    "kind": "sta",
+                    "degree": 0,
+                    "inventory_type": "switch"
+                  }
+                ],
+                "selected_object_names": [
+                  "Switch 2"
+                ],
+                "selection_mode": "one",
+                "matches": [
+                  {
+                    "node_id": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 5.ElmTerm\\Cub_3.StaCubic\\Switch 2.StaSwitch",
+                    "name": "Switch 2",
+                    "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 5.ElmTerm\\Cub_3.StaCubic\\Switch 2.StaSwitch",
+                    "pf_class": "StaSwitch",
+                    "kind": "sta",
+                    "degree": 0,
+                    "inventory_type": "switch"
+                  }
+                ],
+                "llm_decision": {
+                  "selected_object_name": "Switch 2",
+                  "selected_object_names": [],
+                  "selection_mode": "one",
+                  "confidence": "high",
+                  "rationale": "The request explicitly specifies 'Schalter 2' (Switch 2), which matches the candidate 'Switch 2' exactly in the provided list.",
+                  "alternatives": [
+                    "Switch 1"
+                  ],
+                  "should_execute": true
+                },
+                "entity_type": "switch"
+              },
+              "run_loadflow_after": true
+            },
+            "result": {
+              "status": "ok",
+              "tool": "execute_switch_operation",
+              "project": "Nine-bus System(2)",
+              "studycase": "01- Load Flow",
+              "instruction": {
+                "query_type": "switch_operation",
+                "operation": "close",
+                "entity_type": "switch",
+                "entity_name_raw": "Schließe Schalter 2.",
+                "entity_name_candidates": [
+                  "Schalter 2",
+                  "2"
+                ],
+                "available_types": [
+                  "switch"
+                ],
+                "debug_switch_decision": {
+                  "operation": "close",
+                  "should_execute": true,
+                  "confidence": "high",
+                  "rationale": "User request 'Schließe Schalter 2.' directly translates to 'Close switch 2.' in English, which is a clear instruction to perform a 'close' operation on the specified switch."
+                }
+              },
+              "resolution": {
+                "status": "ok",
+                "tool": "resolve_objects_from_inventory_llm",
+                "project": "Nine-bus System(2)",
+                "instruction": {
+                  "query_type": "switch_operation",
+                  "operation": "close",
+                  "entity_type": "switch",
+                  "entity_name_raw": "Schließe Schalter 2.",
+                  "entity_name_candidates": [
+                    "Schalter 2",
+                    "2"
+                  ],
+                  "available_types": [
+                    "switch"
+                  ],
+                  "debug_switch_decision": {
+                    "operation": "close",
+                    "should_execute": true,
+                    "confidence": "high",
+                    "rationale": "User request 'Schließe Schalter 2.' directly translates to 'Close switch 2.' in English, which is a clear instruction to perform a 'close' operation on the specified switch."
+                  }
+                },
+                "asset_query": "Switch 2",
+                "selected_match": {
+                  "node_id": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 5.ElmTerm\\Cub_3.StaCubic\\Switch 2.StaSwitch",
+                  "name": "Switch 2",
+                  "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 5.ElmTerm\\Cub_3.StaCubic\\Switch 2.StaSwitch",
+                  "pf_class": "StaSwitch",
+                  "kind": "sta",
+                  "degree": 0,
+                  "inventory_type": "switch"
+                },
+                "selected_matches": [
+                  {
+                    "node_id": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 5.ElmTerm\\Cub_3.StaCubic\\Switch 2.StaSwitch",
+                    "name": "Switch 2",
+                    "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 5.ElmTerm\\Cub_3.StaCubic\\Switch 2.StaSwitch",
+                    "pf_class": "StaSwitch",
+                    "kind": "sta",
+                    "degree": 0,
+                    "inventory_type": "switch"
+                  }
+                ],
+                "selected_object_names": [
+                  "Switch 2"
+                ],
+                "selection_mode": "one",
+                "matches": [
+                  {
+                    "node_id": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 5.ElmTerm\\Cub_3.StaCubic\\Switch 2.StaSwitch",
+                    "name": "Switch 2",
+                    "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 5.ElmTerm\\Cub_3.StaCubic\\Switch 2.StaSwitch",
+                    "pf_class": "StaSwitch",
+                    "kind": "sta",
+                    "degree": 0,
+                    "inventory_type": "switch"
+                  }
+                ],
+                "llm_decision": {
+                  "selected_object_name": "Switch 2",
+                  "selected_object_names": [],
+                  "selection_mode": "one",
+                  "confidence": "high",
+                  "rationale": "The request explicitly specifies 'Schalter 2' (Switch 2), which matches the candidate 'Switch 2' exactly in the provided list.",
+                  "alternatives": [
+                    "Switch 1"
+                  ],
+                  "should_execute": true
+                },
+                "entity_type": "switch"
+              },
+              "switch": {
+                "name": "Switch 2",
+                "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 5.ElmTerm\\Cub_3.StaCubic\\Switch 2.StaSwitch",
+                "pf_class": "StaSwitch"
+              },
+              "state_before": "closed",
+              "state_after": "closed",
+              "state_before_raw": {
+                "status": "ok",
+                "state_source": "on_off",
+                "raw_value": 1
+              },
+              "state_after_raw": {
+                "status": "ok",
+                "state_source": "on_off",
+                "raw_value": 1
+              },
+              "apply_result": {
+                "status": "ok",
+                "apply_mode": "method",
+                "apply_target": "Close",
+                "method_result": 0
+              },
+              "loadflow": {
+                "executed": true,
+                "loadflow_command": "Load Flow Calculation"
+              }
+            }
+          },
+          {
+            "step": "summarize_switch_result",
+            "effective_user_input": "Schließe Schalter 2.",
+            "source_subrequest": null,
+            "tool_spec": {
+              "name": "summarize_switch_result",
+              "description": "Summarize the result of a switch state change for the end user.",
+              "capability_tags": [
+                "powerfactory",
+                "summary",
+                "switch"
+              ],
+              "mutating": false
+            },
+            "tool_kwargs": {
+              "services": {
+                "status": "ok",
+                "project_name": "Nine-bus System(2)"
+              },
+              "result_payload": {
+                "status": "ok",
+                "tool": "execute_switch_operation",
+                "project": "<omitted>",
+                "studycase": "01- Load Flow",
+                "instruction": {
+                  "query_type": "switch_operation",
+                  "operation": "close",
+                  "entity_type": "switch",
+                  "entity_name_raw": "Schließe Schalter 2.",
+                  "entity_name_candidates": [
+                    "Schalter 2",
+                    "2"
+                  ],
+                  "available_types": [
+                    "switch"
+                  ],
+                  "debug_switch_decision": {
+                    "operation": "close",
+                    "should_execute": true,
+                    "confidence": "high",
+                    "rationale": "User request 'Schließe Schalter 2.' directly translates to 'Close switch 2.' in English, which is a clear instruction to perform a 'close' operation on the specified switch."
+                  }
+                },
+                "resolution": {
+                  "status": "ok",
+                  "tool": "resolve_objects_from_inventory_llm",
+                  "project": "<omitted>",
+                  "instruction": {
+                    "query_type": "switch_operation",
+                    "operation": "close",
+                    "entity_type": "switch",
+                    "entity_name_raw": "Schließe Schalter 2.",
+                    "entity_name_candidates": [
+                      "Schalter 2",
+                      "2"
+                    ],
+                    "available_types": [
+                      "switch"
+                    ],
+                    "debug_switch_decision": {
+                      "operation": "close",
+                      "should_execute": true,
+                      "confidence": "high",
+                      "rationale": "User request 'Schließe Schalter 2.' directly translates to 'Close switch 2.' in English, which is a clear instruction to perform a 'close' operation on the specified switch."
+                    }
+                  },
+                  "asset_query": "Switch 2",
+                  "selected_match": {
+                    "node_id": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 5.ElmTerm\\Cub_3.StaCubic\\Switch 2.StaSwitch",
+                    "name": "Switch 2",
+                    "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 5.ElmTerm\\Cub_3.StaCubic\\Switch 2.StaSwitch",
+                    "pf_class": "StaSwitch",
+                    "kind": "sta",
+                    "degree": 0,
+                    "inventory_type": "switch"
+                  },
+                  "selected_matches": [
+                    {
+                      "node_id": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 5.ElmTerm\\Cub_3.StaCubic\\Switch 2.StaSwitch",
+                      "name": "Switch 2",
+                      "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 5.ElmTerm\\Cub_3.StaCubic\\Switch 2.StaSwitch",
+                      "pf_class": "StaSwitch",
+                      "kind": "sta",
+                      "degree": 0,
+                      "inventory_type": "switch"
+                    }
+                  ],
+                  "selected_object_names": [
+                    "Switch 2"
+                  ],
+                  "selection_mode": "one",
+                  "matches": [
+                    {
+                      "node_id": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 5.ElmTerm\\Cub_3.StaCubic\\Switch 2.StaSwitch",
+                      "name": "Switch 2",
+                      "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 5.ElmTerm\\Cub_3.StaCubic\\Switch 2.StaSwitch",
+                      "pf_class": "StaSwitch",
+                      "kind": "sta",
+                      "degree": 0,
+                      "inventory_type": "switch"
+                    }
+                  ],
+                  "llm_decision": {
+                    "selected_object_name": "Switch 2",
+                    "selected_object_names": [],
+                    "selection_mode": "one",
+                    "confidence": "high",
+                    "rationale": "The request explicitly specifies 'Schalter 2' (Switch 2), which matches the candidate 'Switch 2' exactly in the provided list.",
+                    "alternatives": [
+                      "Switch 1"
+                    ],
+                    "should_execute": true
+                  },
+                  "entity_type": "switch"
+                },
+                "switch": {
+                  "name": "Switch 2",
+                  "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 5.ElmTerm\\Cub_3.StaCubic\\Switch 2.StaSwitch",
+                  "pf_class": "StaSwitch"
+                },
+                "state_before": "closed",
+                "state_after": "closed",
+                "state_before_raw": {
+                  "status": "ok",
+                  "state_source": "on_off",
+                  "raw_value": 1
+                },
+                "state_after_raw": {
+                  "status": "ok",
+                  "state_source": "on_off",
+                  "raw_value": 1
+                },
+                "apply_result": {
+                  "status": "ok",
+                  "apply_mode": "method",
+                  "apply_target": "Close",
+                  "method_result": 0
+                },
+                "loadflow": {
+                  "executed": true,
+                  "loadflow_command": "Load Flow Calculation"
+                }
+              },
+              "user_input": "Schließe Schalter 2."
+            },
+            "result": {
+              "status": "ok",
+              "tool": "summarize_switch_result",
+              "project": "Nine-bus System(2)",
+              "answer": "Die Schalteroperation 'close' wurde für 'Switch 2' (StaSwitch) ausgeführt. Zustand vorher: closed. Zustand nachher: closed. Anschließend wurde ein Lastfluss gerechnet.",
+              "messages": []
+            }
+          }
+        ]
+      }
+    }
+  }
+}

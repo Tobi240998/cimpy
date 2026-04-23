@@ -1,0 +1,20 @@
+{
+  "started_at": "2026-04-23T14:56:10.420038",
+  "entrypoint": "cimpy.llm_routing.orchestrator.Orchestrator.handle",
+  "equivalent_cli": "python -m cimpy.llm_routing.run_router",
+  "user_inputs": [
+    "Reduziere Last B um 2 MW",
+    "Erhöhe Last B um 2 MW. Wie verändert sich die Auslastung der Leitung 4-5?",
+    "Schließe Schalter 2.",
+    "Welche Nachbarn hat Bus 4? Nutze Powerfactory.",
+    "Welche Trafos gibt es in Powerfactory?",
+    "Wie hoch ist die Spannung von Bus 3? Nutze Powerfactory",
+    "Wie hoch ist die Nennspannung von Bus 3? Nutze Powerfactory."
+  ],
+  "finished_at": "2026-04-23T15:30:40.563385",
+  "output_dir": "router_batch_results\\20260423_145610",
+  "num_runs": 7,
+  "num_errors": 1,
+  "total_duration_seconds": 2070.189,
+  "average_duration_seconds": 295.709
+}

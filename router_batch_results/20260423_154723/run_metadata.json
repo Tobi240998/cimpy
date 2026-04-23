@@ -1,0 +1,11 @@
+{
+  "started_at": "2026-04-23T15:47:23.986088",
+  "entrypoint": "cimpy.llm_routing.orchestrator.Orchestrator.handle",
+  "equivalent_cli": "python -m cimpy.llm_routing.run_router",
+  "user_inputs": [
+    "Was war die durchschnittliche Wirkleistung von Trafo 19-20 am 2026-01-09?",
+    "Was ist die Nennleistung von Trafo 19-20? Nutze historical cim.",
+    "Wie war die durchschnittliche Auslastung von Trafo 19-20 am 09.01.2026? ",
+    "Was sind die direkten Nachbarn von Last 3? Nutze historical cim."
+  ]
+}

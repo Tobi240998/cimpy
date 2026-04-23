@@ -22,7 +22,7 @@ class LLM_routeAgent:
             "- historical ist für historische CIM-Daten zuständig.\n"
             "- powerfactory ist für PowerFactory-Projektanfragen zuständig, inklusive lesender Abfragen und Änderungen.\n"
             "- Wenn die Anfrage explizit zeitbezogen/historisch ist (z.B. Datum, gestern, Verlauf, über den Tag, Maximum im Zeitraum), route zu historical.\n"
-            "- Wenn die Anfrage explizit auf das PowerFactory-Projekt, eine Simulation, einen Lastfluss oder eine Projektänderung verweist, route zu powerfactory.\n"
+            "- Wenn die Anfrage explizit auf PowerFactory, eine Simulation, einen Lastfluss oder eine Projektänderung verweist, route zu powerfactory.\n"
             "- Fragen nach Zustandswerten, Parametern oder technischen Attributen sind ohne klaren Quellenbezug mehrdeutig.\n"
             "- Wenn eine solche Anfrage weder einen expliziten Zeitbezug noch einen expliziten Hinweis auf historical/CIM oder powerfactory/Projekt enthält, MUSST du ask_user zurückgeben.\n"
             "- In diesem Fall darfst du NICHT direkt historical oder powerfactory wählen.\n"

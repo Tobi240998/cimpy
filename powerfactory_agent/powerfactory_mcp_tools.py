@@ -2839,12 +2839,28 @@ def _build_result_request_chain():
     prompt = ChatPromptTemplate.from_messages([
         (
             "system",
-            "You identify which PowerFactory result metrics the user is asking for.\n"
+            "You identify which PowerFactory result metrics the user is explicitly asking for.\n"
             "You may only choose from the provided supported metrics.\n"
             "Use the alias information semantically, not as exact string matching only.\n"
             "Do not invent new metrics.\n"
             "Return canonical internal metric names only.\n"
-            "If no supported metric is clearly requested, return an empty list and should_execute=false.\n\n"
+            "If no supported result metric is explicitly requested, return an empty list and should_execute=false.\n\n"
+
+            "Very important distinction:\n"
+            "- Distinguish strictly between the requested ACTION and the requested RESULT.\n"
+            "- A load-change instruction such as 'Erhöhe Last A um 2 MW' or 'Reduziere Last B um 2 MW' describes the action only.\n"
+            "- The change amount (for example '2 MW') is NOT automatically a requested result metric.\n"
+            "- Do NOT infer result metrics from the action target or from the action magnitude alone.\n"
+            "- Only return a result metric if the user explicitly asks to see, compare, display, analyze, or evaluate a result quantity.\n\n"
+
+            "Examples:\n"
+            "- 'Reduziere Last B um 2 MW' -> requested_metrics=[]\n"
+            "- 'Erhöhe Last A um 2 MW' -> requested_metrics=[]\n"
+            "- 'Erhöhe Last A um 2 MW. Wie verändert sich die Auslastung der Leitung 4-5?' -> requested_metrics=['line_loading']\n"
+            "- 'Reduziere Last A um 2 MW und zeige die Spannungen danach' -> requested_metrics=['bus_voltage']\n"
+            "- 'Wie ändern sich die Blindleistungen?' -> requested_metrics=['bus_q']\n"
+            "- 'Wie ändern sich die Wirkleistungen?' -> requested_metrics=['bus_p']\n\n"
+
             "{format_instructions}"
         ),
         (
@@ -2860,33 +2876,39 @@ def _build_result_request_chain():
 def _build_result_request_routing_chain():
     parser = PydanticOutputParser(pydantic_object=ResultRequestRoutingDecision)
     prompt = ChatPromptTemplate.from_messages([
-    (
-        "system",
-        "You decide how a PowerFactory load-change request should handle requested result values.\n"
-        "Choose exactly one mode:\n"
-        "- standard_metrics: the requested result can be handled by the supported standard metrics\n"
-        "- default_voltage: no concrete result question is present, so default to bus voltage\n"
-        "- delegate_result_query: a concrete result question is present, but it should be handled by a separate result data query\n\n"
-        "Rules:\n"
-        "- Use standard_metrics if the user request refers to a known physical quantity that matches supported metrics, even if phrasing is indirect, informal, or partially ambiguous.\n"
-        "- Use default_voltage only if no concrete result quantity is explicitly requested.\n"
-        "- Use delegate_result_query if a concrete result quantity is requested but does not fit the standard metrics cleanly.\n"
-        "- When using standard_metrics, return canonical metric names only.\n"
-        "- When using delegate_result_query, return a standalone follow-up query in result_query_text.\n\n"
-        "Examples:\n"
-        "- 'Wie verändert sich die Auslastung der Leitung 4-5?' -> mode=standard_metrics, requested_metrics=[\"line_loading\"]\n"
-        "- 'Wie hoch ist die Auslastung?' -> mode=standard_metrics, requested_metrics=[\"line_loading\"]\n"
-        "- 'Zeige die Spannungen danach' -> mode=standard_metrics, requested_metrics=[\"bus_voltage\"]\n"
-        "- 'Wie ändern sich die Blindleistungen?' -> mode=standard_metrics, requested_metrics=[\"bus_q\"]\n"
-        "- 'Wie verändern sich die Wirkleistungen?' -> mode=standard_metrics, requested_metrics=[\"bus_p\"]\n\n"
-        "{format_instructions}"
-    ),
-    (
-        "user",
-        "User request:\n{user_input}\n\n"
-        "Supported standard metrics and aliases:\n{supported_metrics_text}"
-    ),
-])
+        (
+            "system",
+            "You decide how a PowerFactory load-change request should handle requested result values.\n"
+            "Choose exactly one mode:\n"
+            "- standard_metrics: the requested result can be handled by the supported standard metrics\n"
+            "- default_voltage: no concrete result question is present, so default to bus voltage\n"
+            "- delegate_result_query: a concrete result question is present, but it should be handled by a separate result data query\n\n"
+
+            "Rules:\n"
+            "- Use standard_metrics only if the user explicitly asks for a result quantity.\n"
+            "- Use default_voltage if the user only requests the load change itself and does not explicitly ask for a result quantity.\n"
+            "- The action magnitude (for example '2 MW') is part of the load-change instruction, not automatically a requested result metric.\n"
+            "- Do NOT route to standard_metrics just because the action mentions MW, power, or load size.\n"
+            "- Use delegate_result_query only if a concrete result question is present but does not fit the standard metrics cleanly.\n"
+            "- When using standard_metrics, return canonical metric names only.\n"
+            "- When using delegate_result_query, return a standalone follow-up query in result_query_text.\n\n"
+
+            "Examples:\n"
+            "- 'Reduziere Last B um 2 MW' -> mode=default_voltage, requested_metrics=[]\n"
+            "- 'Erhöhe Last A um 2 MW' -> mode=default_voltage, requested_metrics=[]\n"
+            "- 'Reduziere Last A um 2 MW und zeige die Spannungen danach' -> mode=standard_metrics, requested_metrics=['bus_voltage']\n"
+            "- 'Erhöhe Last A um 2 MW. Wie verändert sich die Auslastung der Leitung 4-5?' -> mode=standard_metrics, requested_metrics=['line_loading']\n"
+            "- 'Wie ändern sich die Blindleistungen danach?' -> mode=standard_metrics, requested_metrics=['bus_q']\n"
+            "- 'Wie ändern sich die Wirkleistungen danach?' -> mode=standard_metrics, requested_metrics=['bus_p']\n\n"
+
+            "{format_instructions}"
+        ),
+        (
+            "user",
+            "User request:\n{user_input}\n\n"
+            "Supported standard metrics and aliases:\n{supported_metrics_text}"
+        ),
+    ])
     llm = get_llm()
     return prompt | llm | parser, parser
 

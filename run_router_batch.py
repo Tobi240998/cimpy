@@ -13,12 +13,10 @@ from cimpy.llm_routing.orchestrator import Orchestrator
 
 
 USER_INPUTS: List[str] = [
-    "Reduziere Last A um 2 MW",
-    "Erhöhe Last A um 2 MW. Wie verändert sich die Auslastung der Leitung 4-5?",
-    "Öffne Schalter 1.",
-    "Welche Nachbarn hat Last A? Nutze Powerfactory.",
-    "Welche Lasten gibt es in Powerfactory?",
-    "Wie hoch ist die Spannung von Bus 5? Nutze Powerfactory",
+    "Was war die durchschnittliche Wirkleistung von Trafo 19-20 am 2026-01-09?",
+    "Was ist die Nennleistung von Trafo 19-20? Nutze historical cim.",
+    "Wie war die durchschnittliche Auslastung von Trafo 19-20 am 09.01.2026? ",
+    "Was sind die direkten Nachbarn von Last 3? Nutze historical cim.",
 ]
 
 OUTPUT_DIR = Path("router_batch_results") / datetime.now().strftime("%Y%m%d_%H%M%S")
