@@ -1,0 +1,14 @@
+{
+  "started_at": "2026-04-23T09:52:42.702435",
+  "entrypoint": "cimpy.llm_routing.orchestrator.Orchestrator.handle",
+  "equivalent_cli": "python -m cimpy.llm_routing.run_router",
+  "user_inputs": [
+    "Reduziere Last A um 2 MW",
+    "Welche Nachbarn hat Last A? Nutze Powerfactory.",
+    "Wie hoch ist die Spannung von Bus 5? Nutze Powerfactory"
+  ],
+  "finished_at": "2026-04-23T09:56:03.159681",
+  "output_dir": "router_batch_results\\20260423_095242",
+  "num_runs": 3,
+  "num_errors": 0
+}

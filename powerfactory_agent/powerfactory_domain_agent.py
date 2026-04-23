@@ -67,10 +67,23 @@ class PowerFactoryDomainAgent:
                 "- query_element_data\n"
                 "- list_element_attributes\n"
                 "- unsupported_powerfactory_request\n\n"
-                "You may only use the internal steps defined below.\n"
-                "Use the step contracts exactly. If a step requires state, ensure that a producer step appears earlier in the plan.\n"
-                "If a request clearly combines multiple supported tasks, you may return a longer linear required_steps plan.\n"
-                "Do not invent tools or step names.\n\n"
+                "Important:\n"
+                "- For the standard supported intents, predefined standard plans already exist in the system.\n"
+                "- You do NOT need to invent, optimize, or reconstruct a tool plan for these standard cases.\n"
+                "- For standard cases, focus on selecting the correct intent, safety level, target kind, and missing context only.\n"
+                "- Only use required_steps if they are obvious and directly correspond to a standard supported workflow.\n"
+                "- Do not overthink step construction.\n"
+                "- Do not invent tools or step names.\n"
+                "- If the request clearly matches a standard supported case, return the matching intent and keep required_steps minimal.\n\n"
+                "Standard intent mapping guidance:\n"
+                "- change_load: requests to increase/reduce/set a load value.\n"
+                "- change_switch_state: requests to open/close/toggle a switch or breaker.\n"
+                "- topology_query: requests about neighbors, connectivity, topology, or attached assets.\n"
+                "- query_element_data: requests about technical values, parameters, or measured/result data of PowerFactory objects.\n"
+                "- list_element_attributes: requests asking which attributes/fields are available for an object.\n"
+                "- load_catalog: requests asking which loads are available.\n"
+                "- unsupported_powerfactory_request: requests outside the currently supported workflow.\n\n"
+                "Step contracts are provided only as background context. Standard plans already exist.\n\n"
                 "Step contracts:\n"
                 "{step_contracts}\n\n"
                 "Return only structured output.\n\n"
@@ -247,12 +260,14 @@ class PowerFactoryDomainAgent:
 
         primary_error = None
         try:
+            print("[DEBUG classify_request] primary planner START")
             chain = self.build_planner_chain()
             decision = chain.invoke({
                 "user_input": user_input,
                 "step_contracts": self._render_step_contracts_for_prompt(),
                 "format_instructions": self.planner_parser.get_format_instructions(),
             })
+            print("[DEBUG classify_request] primary planner END")
             normalized = _normalize_result(decision, "llm")
             if normalized is not None:
                 return normalized
@@ -280,11 +295,13 @@ class PowerFactoryDomainAgent:
 
         fallback_error = None
         try:
+            print("[DEBUG classify_request] fallback planner START")
             chain = fallback_prompt | self.llm | self.planner_parser
             decision = chain.invoke({
                 "user_input": user_input,
                 "format_instructions": self.planner_parser.get_format_instructions(),
             })
+            print("[DEBUG classify_request] fallback planner END")
             normalized = _normalize_result(decision, "fallback_llm_recovery")
             if normalized is not None:
                 return normalized
@@ -295,21 +312,12 @@ class PowerFactoryDomainAgent:
         return {
             "status": "ok",
             "classification_mode": "forced_fallback",
-            "intent": "query_element_data",
+            "intent": "unsupported_powerfactory_request",
             "confidence": "low",
             "target_kind": "unknown",
-            "safe_to_execute": True,
-            "missing_context": [],
-            "required_steps": [
-            "build_unified_inventory",
-            "interpret_data_query_instruction",
-            "classify_data_source",
-            "resolve_objects_from_inventory_llm",
-            "list_available_object_attributes",
-            "select_pf_object_attributes_llm",
-            "read_pf_object_attributes",
-            "summarize_pf_object_data_result",
-        ],
+            "safe_to_execute": False,
+            "missing_context": ["classification_failed"],
+            "required_steps": [],
             "reasoning": f"Primary failed: {primary_error} | Fallback failed: {fallback_error}",
         }
 
@@ -1766,7 +1774,9 @@ class PowerFactoryDomainAgent:
         print(f"[INPUT] {user_input}")
 
         # PowerFactory starten, Projekt aktivieren etc.
+        print("[DEBUG] build_powerfactory_services START")
         services = build_powerfactory_services(project_name=self.project_name)
+        print("[DEBUG] build_powerfactory_services END")
         if services["status"] != "ok":
             print("[ERROR] Services konnten nicht gebaut werden")
             return services

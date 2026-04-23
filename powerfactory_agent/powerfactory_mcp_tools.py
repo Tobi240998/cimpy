@@ -1520,7 +1520,7 @@ def _ensure_instruction_result_requests(instruction: dict, user_input: str = "")
     elif routing.get("mode") == "delegate_result_query":
         instruction_out["result_requests"] = normalized or list(DEFAULT_RESULT_REQUESTS)
     else:
-        instruction_out["result_requests"] = normalized or list(DEFAULT_RESULT_REQUESTS)
+        instruction_out["result_requests"] = list(DEFAULT_RESULT_REQUESTS)
 
     instruction_out["result_request_mode"] = routing.get("mode", "default_voltage")
     instruction_out["result_query_text"] = routing.get("result_query_text", "")

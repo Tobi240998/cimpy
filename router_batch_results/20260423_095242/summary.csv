@@ -1,0 +1,7 @@
+run_id,user_input,route,answer,status,error,details,json_path
+1,Reduziere Last A um 2 MW,POWERFACTORY,"Alle Busspannungen liegen innerhalb der zulässigen Grenzen (Umin=0.9500 p.u., Umax=1.0500 p.u.). Die Spannungsänderungen sind minimal:  
+- 3 Buses (Bus 1–3) unverändert (ΔU=0.0000 p.u.).  
+- 6 Buses (Bus 4–9) geringfügig erhöht (ΔU=0.0001–0.0006 p.u., maximal bei Bus 5: +0.0006 p.u.).  
+Keine Spannungsüberschreitung oder -unterschreitung. Die Lastreduzierung um 2 MW wurde nicht in den Spannungsdaten reflektiert.",ok,,,router_batch_results\20260423_095242\001_router_result.json
+2,Welche Nachbarn hat Last A? Nutze Powerfactory.,POWERFACTORY,"Direkte Nachbarn von 'Bus 4' (ElmTerm, Typ bus) im PowerFactory-Topologiegraphen: Line 4-5 (ElmLne), Line 4-6 (ElmLne), T1 (ElmTr2)",ok,,,router_batch_results\20260423_095242\002_router_result.json
+3,Wie hoch ist die Spannung von Bus 5? Nutze Powerfactory,POWERFACTORY,Lastflussergebnisse für 'Bus 5' (ElmTerm): Leiter-Leiter-Spannung: 222.20071987784573 kV (Lastflussergebnis) Für die angefragten Ergebnisgrößen wurde zuvor ein Lastfluss gerechnet.,ok,,,router_batch_results\20260423_095242\003_router_result.json
