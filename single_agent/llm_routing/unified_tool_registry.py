@@ -40,7 +40,10 @@ class UnifiedToolRegistry:
 
         if domain == "cim":
             if hasattr(self.cim_registry, "invoke"):
-                return self.cim_registry.invoke(tool_name, **kwargs)
+                try:
+                    return self.cim_registry.invoke(tool_name, kwargs)
+                except TypeError:
+                    return self.cim_registry.invoke(tool_name, **kwargs)
 
             handler = self.cim_registry._handlers.get(tool_name)
             if handler is None:
@@ -49,6 +52,7 @@ class UnifiedToolRegistry:
                     "error": "tool_not_found",
                     "details": f"CIM tool not found: {tool_name}",
                 }
+
             return handler(kwargs)
 
         if domain == "pf":

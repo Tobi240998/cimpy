@@ -54,12 +54,54 @@ class UnifiedExecutor:
 
     def _execute_cim(self, plan: UnifiedPlan) -> Dict[str, Any]:
         raw_plan = self._plan_to_raw_items(plan)
+        classification = getattr(plan, "classification", {}) or {}
 
-        return self.cim_agent.execute_plan(
-            user_input=plan.user_input,
-            classification=getattr(plan, "classification", {}) or {},
-            plan=raw_plan,
-        )
+        state: Dict[str, Any] = {
+            "user_input": plan.user_input,
+            "classification": classification,
+        }
+
+        debug_trace = []
+
+        for item in raw_plan:
+            step = item["step"]
+            full_tool_name = f"cim.{step}"
+
+            tool_kwargs = {
+                **state,
+                "cim_root": self.cim_agent.cim_root,
+                "user_input": item.get("user_input_override", plan.user_input),
+            }
+
+            tool_spec = self.registry.get_tool_spec(full_tool_name)
+            result = self.registry.invoke(full_tool_name, **tool_kwargs)
+
+            debug_trace.append({
+                "step": step,
+                "tool_spec": {
+                    "name": getattr(tool_spec, "name", step) if tool_spec else step,
+                    "description": getattr(tool_spec, "description", "") if tool_spec else "",
+                    "capability_tags": getattr(tool_spec, "capability_tags", []) if tool_spec else [],
+                    "mutating": getattr(tool_spec, "mutating", False) if tool_spec else False,
+                },
+                "result": result,
+            })
+
+            if not isinstance(result, dict):
+                return {
+                    "status": "error",
+                    "answer": f"CIM-Tool {step} returned non-dict result.",
+                    "debug_trace": debug_trace,
+                }
+
+            if result.get("status") == "error":
+                result["debug_trace"] = debug_trace
+                return result
+
+            state.update(result)
+
+        state["debug_trace"] = debug_trace
+        return state
 
     def _execute_powerfactory(self, plan: UnifiedPlan) -> Dict[str, Any]:
         pf_agent = self.powerfactory_agent
