@@ -3,7 +3,7 @@ from typing import Any, Dict, Optional
 from cimpy.single_agent.llm_routing.LLM_routeAgent import LLM_routeAgent
 from cimpy.single_agent.llm_routing.schemas import AskUserAction, CallToolAction, RouterAction
 
-from cimpy.powerfactory_agent.config import DEFAULT_PROJECT_NAME
+from cimpy.single_agent.pf.config import DEFAULT_PROJECT_NAME
 from cimpy.single_agent.pf.powerfactory_domain_agent import PowerFactoryDomainAgent
 
 from cimpy.llm_routing.config import CIM_ROOT

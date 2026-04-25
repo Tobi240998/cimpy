@@ -3,7 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Any, Callable, Dict, List, Optional
 
-from cimpy.cimpy_time_analysis.cim_mcp_tools import (
+from cimpy.single_agent.cim.cim_mcp_tools import (
     build_cim_services,
     _scan_snapshot_inventory_with_services,
     _resolve_cim_object_with_services,

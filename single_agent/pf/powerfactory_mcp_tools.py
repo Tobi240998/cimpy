@@ -9,29 +9,29 @@ from pydantic import BaseModel, Field
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.output_parsers import PydanticOutputParser
 
-from cimpy.powerfactory_agent.config import DEFAULT_PROJECT_NAME
-from cimpy.powerfactory_agent.langchain_llm import get_llm
-from cimpy.powerfactory_agent.pf_runner import _get_pf, _get_app, _activate_project_by_name
+from cimpy.single_agent.pf.config import DEFAULT_PROJECT_NAME
+from cimpy.single_agent.pf.langchain_llm import get_llm
+from cimpy.single_agent.pf.pf_runner import _get_pf, _get_app, _activate_project_by_name
 
 try:
-    from cimpy.powerfactory_agent.agents.LLM_interpreterAgent import LLM_interpreterAgent
-    from cimpy.powerfactory_agent.agents.PowerFactoryAgent import PowerFactoryAgent
-    from cimpy.powerfactory_agent.agents.Result_interpreterAgent import Result_interpreterAgent
+    from cimpy.single_agent.pf.agents.LLM_interpreterAgent import LLM_interpreterAgent
+    from cimpy.single_agent.pf.agents.PowerFactoryAgent import PowerFactoryAgent
+    from cimpy.single_agent.pf.agents.Result_interpreterAgent import Result_interpreterAgent
     from cimpy.powerfactory_agent.agents.LLM_resultAgent import LLM_resultAgent
 except ImportError:
-    from cimpy.powerfactory_agent.agents.LLM_interpreterAgent import LLM_interpreterAgent
-    from cimpy.powerfactory_agent.agents.PowerFactoryAgent import PowerFactoryAgent
-    from cimpy.powerfactory_agent.agents.Result_interpreterAgent import Result_interpreterAgent
-    from cimpy.powerfactory_agent.agents.LLM_resultAgent import LLM_resultAgent
+    from cimpy.single_agent.pf.agents.LLM_interpreterAgent import LLM_interpreterAgent
+    from cimpy.single_agent.pf.agents.PowerFactoryAgent import PowerFactoryAgent
+    from cimpy.single_agent.pf.agents.Result_interpreterAgent import Result_interpreterAgent
+    from cimpy.single_agent.pf.agents.LLM_resultAgent import LLM_resultAgent
 
-from cimpy.powerfactory_agent.powerfactory_topology_graph import (
+from cimpy.single_agent.pf.powerfactory_topology_graph import (
     build_powerfactory_topology_graph_from_services,
     find_matching_nodes,
     find_matches_in_inventory,
     query_powerfactory_topology_neighbors_from_services,
 )
 
-from cimpy.powerfactory_agent.schemas import (
+from cimpy.single_agent.pf.schemas import (
     DataQueryInstruction,
     RequestedAttributeNameDecision,
     AttributeDescriptionShortlistDecision,

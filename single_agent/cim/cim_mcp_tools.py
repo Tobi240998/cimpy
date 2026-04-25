@@ -6,36 +6,36 @@ from pydantic import BaseModel, Field
 from langchain_core.output_parsers import PydanticOutputParser
 from langchain_core.prompts import ChatPromptTemplate
 
-from cimpy.llm_routing.config import CIM_ROOT
-from cimpy.cimpy_time_analysis.load_cim_data import (
+from cimpy.single_agent.llm_routing.config import CIM_ROOT
+from cimpy.single_agent.cim.load_cim_data import (
     scan_snapshot_inventory as _scan_snapshot_inventory_raw,
     load_base_snapshot,
     build_network_index_from_snapshot,
     load_snapshots_for_time_window,
     load_cim_snapshots,
 )
-from cimpy.cimpy_time_analysis.cim_snapshot_cache import (
+from cimpy.single_agent.cim.cim_snapshot_cache import (
     preprocess_snapshots_for_states,
     summarize_snapshot_cache,
 )
-from cimpy.cimpy_time_analysis.llm_object_mapping import (
+from cimpy.single_agent.cim.llm_object_mapping import (
     interpret_user_query,
     interpret_equipment_type_query,
     resolve_requested_base_attributes,
     BASE_ATTRIBUTE_SPECS,
 )
-from cimpy.cimpy_time_analysis.llm_cim_orchestrator import handle_user_query
-from cimpy.cimpy_time_analysis.langchain_llm import get_llm
-from cimpy.cimpy_time_analysis.cim_queries import (
+from cimpy.single_agent.cim.llm_cim_orchestrator import handle_user_query
+from cimpy.single_agent.cim.langchain_llm import get_llm
+from cimpy.single_agent.cim.cim_queries import (
     query_equipment_metric_over_time,
     query_equipment_voltage_over_time,
     summarize_metric,
     summarize_voltage,
 )
 
-from cimpy.cimpy_time_analysis.cim_object_utils import collect_all_cim_objects
+from cimpy.single_agent.cim.cim_object_utils import collect_all_cim_objects
 
-from cimpy.cimpy_time_analysis.schemas import (
+from cimpy.single_agent.cim.schemas import (
     EquipmentTypeDecision,
     EquipmentInstanceDecision,
     ParsedQueryNormalizationDecision,

@@ -6,13 +6,13 @@ from pydantic import BaseModel, Field
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.output_parsers import PydanticOutputParser
 
-from cimpy.powerfactory_agent.config import DEFAULT_PROJECT_NAME
-from cimpy.powerfactory_agent.langchain_llm import get_llm
-from cimpy.powerfactory_agent.powerfactory_mcp_tools import (
+from cimpy.single_agent.pf.config import DEFAULT_PROJECT_NAME
+from cimpy.single_agent.pf.langchain_llm import get_llm
+from cimpy.single_agent.pf.powerfactory_mcp_tools import (
     build_powerfactory_services,
     _get_load_catalog_from_services,
 )
-from cimpy.powerfactory_agent.powerfactory_tool_registry import PowerFactoryToolRegistry
+from cimpy.single_agent.pf.powerfactory_tool_registry import PowerFactoryToolRegistry
 
 from copy import deepcopy
 

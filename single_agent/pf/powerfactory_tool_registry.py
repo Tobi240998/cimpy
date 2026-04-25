@@ -3,7 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Any, Callable, Dict, List
 
-from cimpy.powerfactory_agent.powerfactory_mcp_tools import (
+from cimpy.single_agent.pf.powerfactory_mcp_tools import (
     _classify_pf_object_data_source_with_services,
     _get_load_catalog_from_services,
     _interpret_instruction_with_services,
@@ -27,7 +27,7 @@ from cimpy.powerfactory_agent.powerfactory_mcp_tools import (
     _resolve_objects_from_inventory_llm_with_services, 
     _build_unified_inventory_from_services
 )
-from cimpy.powerfactory_agent.powerfactory_topology_graph import (
+from cimpy.single_agent.pf.powerfactory_topology_graph import (
     build_powerfactory_topology_graph_from_services,
     query_powerfactory_topology_neighbors_from_services,
 )

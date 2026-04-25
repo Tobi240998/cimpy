@@ -6,10 +6,10 @@ from pydantic import BaseModel, Field
 from langchain_core.output_parsers import PydanticOutputParser
 from langchain_core.prompts import ChatPromptTemplate
 
-from cimpy.cimpy_time_analysis.cim_tool_registry import CIMToolRegistry
-from cimpy.cimpy_time_analysis.langchain_llm import get_llm
+from cimpy.single_agent.cim.cim_tool_registry import CIMToolRegistry
+from cimpy.single_agent.cim.langchain_llm import get_llm
 
-from cimpy.cimpy_time_analysis.schemas import (
+from cimpy.single_agent.cim.schemas import (
     CIMRequestModeDecision,
     CIMRequestModeOnlyDecision,
     CIMCustomPlanDecision,
