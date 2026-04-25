@@ -40,29 +40,20 @@ class UnifiedToolRegistry:
 
         return self._normalize_spec(domain, tool_name, raw_spec)
 
-    def invoke(self, full_tool_name: str, **kwargs) -> Dict[str, Any]:
+    def invoke(self, full_tool_name: str, payload: Dict[str, Any]) -> Dict[str, Any]:
         domain, tool_name = self._split_name(full_tool_name)
 
         if domain == "cim":
-            if hasattr(self.cim_registry, "invoke"):
-                try:
-                    return self.cim_registry.invoke(tool_name, kwargs)
-                except TypeError:
-                    return self.cim_registry.invoke(tool_name, **kwargs)
-
-            handler = self.cim_registry._handlers.get(tool_name)
-            if handler is None:
-                return {
-                    "status": "error",
-                    "error": "tool_not_found",
-                    "details": f"CIM tool not found: {tool_name}",
-                }
-
-            return handler(kwargs)
+            return self.cim_registry.invoke(tool_name, payload)
 
         if domain == "pf":
-            return self.pf_registry.invoke(tool_name, **kwargs)
+            try:
+                return self.pf_registry.invoke(tool_name, payload)
+            except TypeError:
+                return self.pf_registry.invoke(tool_name, **payload)
 
+        print("[DEBUG PF registry module]", type(self.pf_registry).__module__)
+        print("[DEBUG PF registry class]", type(self.pf_registry))
         return {
             "status": "error",
             "error": "unknown_domain",

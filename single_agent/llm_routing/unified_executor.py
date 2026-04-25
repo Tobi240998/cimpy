@@ -74,7 +74,7 @@ class UnifiedExecutor:
             }
 
             tool_spec = self.registry.get_tool_spec(full_tool_name)
-            result = self.registry.invoke(full_tool_name, **tool_kwargs)
+            result = self.registry.invoke(full_tool_name, tool_kwargs)
 
             debug_trace.append({
                 "step": step,
@@ -152,7 +152,7 @@ class UnifiedExecutor:
 
             full_tool_name = f"pf.{step}"
             tool_spec = self.registry.get_tool_spec(full_tool_name)
-            result = self.registry.invoke(full_tool_name, **tool_kwargs)
+            result = self.registry.invoke(full_tool_name, tool_kwargs)
 
             debug_trace.append({
                 "step": step,

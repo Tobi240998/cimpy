@@ -606,18 +606,24 @@ class PowerFactoryToolRegistry:
             })
         return items
 
-    def invoke(self, step_name: str, **kwargs: Any) -> Dict[str, Any]:
-        spec = self.get_tool_spec(step_name)
+    def invoke(self, name: str, payload: Dict[str, Any]) -> Dict[str, Any]:
+        spec = self._registry.get(name)
 
-        if spec is None or spec.handler is None:
+        if spec is None:
             return {
                 "status": "error",
-                "tool": "powerfactory_tool_registry",
-                "error": f"Unknown tool step: {step_name}",
-                "available_tools": self.list_tools(),
+                "error": "tool_not_found",
+                "details": f"PowerFactory tool not found: {name}",
             }
 
-        return spec.handler(**kwargs)
+        if spec.handler is None:
+            return {
+                "status": "error",
+                "error": "missing_handler",
+                "details": f"PowerFactory tool has no handler: {name}",
+            }
+
+        return spec.handler(**payload)
 
     def _tool_get_load_catalog(self, services: Dict[str, Any], user_input: str, **kwargs: Any) -> Dict[str, Any]:
         return _get_load_catalog_from_services(services, user_input=user_input)

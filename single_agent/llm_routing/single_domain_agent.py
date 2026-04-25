@@ -1,13 +1,13 @@
 from typing import Any, Dict, Optional
 
-from cimpy.llm_routing.LLM_routeAgent import LLM_routeAgent
-from cimpy.llm_routing.schemas import AskUserAction, CallToolAction, RouterAction
+from cimpy.single_agent.llm_routing.LLM_routeAgent import LLM_routeAgent
+from cimpy.single_agent.llm_routing.schemas import AskUserAction, CallToolAction, RouterAction
 
 from cimpy.powerfactory_agent.config import DEFAULT_PROJECT_NAME
-from cimpy.powerfactory_agent.powerfactory_domain_agent import PowerFactoryDomainAgent
+from cimpy.single_agent.pf.powerfactory_domain_agent import PowerFactoryDomainAgent
 
 from cimpy.llm_routing.config import CIM_ROOT
-from cimpy.cimpy_time_analysis.cim_domain_agent import CIMDomainAgent
+from cimpy.single_agent.cim.cim_domain_agent import CIMDomainAgent
 
 from cimpy.single_agent.llm_routing.unified_plan import UnifiedPlan, UnifiedPlanStep
 from cimpy.single_agent.llm_routing.unified_executor import UnifiedExecutor
