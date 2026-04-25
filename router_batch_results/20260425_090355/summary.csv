@@ -1,0 +1,5 @@
+run_id,user_input,route,answer,status,error,details,duration_seconds,json_path
+1,Was war die durchschnittliche Wirkleistung von Trafo 19-20 am 2026-01-09?,HISTORICAL,Die durchschnittliche Wirkleistung von Trafo 19-20 am 2026-01-09 betrug 370.435 MW.,ok,,,73.423,router_batch_results\20260425_090355\001_router_result.json
+2,Was ist die Nennleistung von Trafo 19-20? Nutze historical cim.,HISTORICAL,1000.0 MVA,ok,,,56.475,router_batch_results\20260425_090355\002_router_result.json
+3,Wie war die durchschnittliche Auslastung von Trafo 19-20 am 09.01.2026? ,HISTORICAL,37.79 %,ok,,,99.116,router_batch_results\20260425_090355\003_router_result.json
+4,Was sind die direkten Nachbarn von Last 3? Nutze historical cim.,HISTORICAL,"Bus 03, Line 02 - 03, Line 03 - 04, Line 03 - 18",ok,,,406.013,router_batch_results\20260425_090355\004_router_result.json
