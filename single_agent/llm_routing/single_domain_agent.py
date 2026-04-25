@@ -11,6 +11,8 @@ from cimpy.single_agent.cim.cim_domain_agent import CIMDomainAgent
 
 from cimpy.single_agent.llm_routing.unified_plan import UnifiedPlan, UnifiedPlanStep
 from cimpy.single_agent.llm_routing.unified_executor import UnifiedExecutor
+from cimpy.single_agent.cim.cim_tool_registry import CIMToolRegistry
+from cimpy.single_agent.cim.cim_planner import CIMPlanner
 
 class SingleDomainAgent:
     """
@@ -29,10 +31,15 @@ class SingleDomainAgent:
         self._pending: Optional[Dict[str, Any]] = None
 
         self.powerfactory_agent = PowerFactoryDomainAgent(project_name=project_name)
-        self.cim_agent = CIMDomainAgent(cim_root=cim_root)
+        self.cim_registry = CIMToolRegistry(cim_root=cim_root)
+        self.cim_planner = CIMPlanner(
+        cim_root=cim_root,
+        registry=self.cim_registry,
+    )
 
         self.executor = UnifiedExecutor(
-            cim_agent=self.cim_agent,
+            cim_registry=self.cim_registry,
+            cim_root=cim_root,
             powerfactory_agent=self.powerfactory_agent,
         )
 
@@ -155,8 +162,8 @@ class SingleDomainAgent:
         )
 
     def _build_cim_unified_plan(self, user_input: str) -> UnifiedPlan:
-        classification = self.cim_agent.classify_request(user_input)
-        raw_plan = self.cim_agent.build_plan(classification)
+        classification = self.cim_planner.classify_request(user_input)
+        raw_plan = self.cim_planner.build_plan(classification)
 
         steps = [
             UnifiedPlanStep(

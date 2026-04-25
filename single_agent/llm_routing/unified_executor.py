@@ -6,13 +6,15 @@ from cimpy.single_agent.llm_routing.unified_plan import UnifiedPlan
 from cimpy.single_agent.pf.powerfactory_mcp_tools import build_powerfactory_services
 from cimpy.single_agent.llm_routing.unified_tool_registry import UnifiedToolRegistry
 
+
 class UnifiedExecutor:
-    def __init__(self, cim_agent, powerfactory_agent):
-        self.cim_agent = cim_agent
+    def __init__(self, cim_registry, cim_root: str, powerfactory_agent):
+        self.cim_registry = cim_registry
+        self.cim_root = cim_root
         self.powerfactory_agent = powerfactory_agent
 
         self.registry = UnifiedToolRegistry(
-            cim_registry=cim_agent.registry,
+            cim_registry=cim_registry,
             pf_registry=powerfactory_agent.registry,
         )
 
@@ -69,7 +71,7 @@ class UnifiedExecutor:
 
             tool_kwargs = {
                 **state,
-                "cim_root": self.cim_agent.cim_root,
+                "cim_root": self.cim_root,
                 "user_input": item.get("user_input_override", plan.user_input),
             }
 
