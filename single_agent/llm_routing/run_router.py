@@ -1,4 +1,4 @@
-from cimpy.llm_routing.orchestrator import Orchestrator
+from cimpy.single_agent.llm_routing.orchestrator import Orchestrator
 
 if __name__ == "__main__":
     orch = Orchestrator()
