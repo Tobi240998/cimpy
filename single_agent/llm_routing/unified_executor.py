@@ -4,12 +4,17 @@ from typing import Any, Dict, List
 
 from cimpy.single_agent.llm_routing.unified_plan import UnifiedPlan
 from cimpy.single_agent.pf.powerfactory_mcp_tools import build_powerfactory_services
-
+from cimpy.single_agent.llm_routing.unified_tool_registry import UnifiedToolRegistry
 
 class UnifiedExecutor:
     def __init__(self, cim_agent, powerfactory_agent):
         self.cim_agent = cim_agent
         self.powerfactory_agent = powerfactory_agent
+
+        self.registry = UnifiedToolRegistry(
+            cim_registry=cim_agent.registry,
+            pf_registry=powerfactory_agent.registry,
+        )
 
     def execute(self, plan: UnifiedPlan) -> Dict[str, Any]:
         if plan.domain == "cim":
@@ -103,8 +108,9 @@ class UnifiedExecutor:
                 state=state,
             )
 
-            tool_spec = pf_agent.registry.get_tool_spec(step)
-            result = pf_agent.registry.invoke(step, **tool_kwargs)
+            full_tool_name = f"pf.{step}"
+            tool_spec = self.registry.get_tool_spec(full_tool_name)
+            result = self.registry.invoke(full_tool_name, **tool_kwargs)
 
             debug_trace.append({
                 "step": step,
