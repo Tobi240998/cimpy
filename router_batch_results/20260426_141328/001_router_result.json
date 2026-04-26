@@ -1,0 +1,301 @@
+{
+  "run_id": 1,
+  "timestamp": "2026-04-26T14:13:50.449952",
+  "user_input": "Welche Lasten gibt es in PowerFactory?",
+  "duration_seconds": 22.13,
+  "router_output": {
+    "route": "POWERFACTORY",
+    "domain": "powerfactory",
+    "result": {
+      "status": "ok",
+      "tool": "powerfactory",
+      "agent": "SingleAgent",
+      "project": "Nine-bus System(2)",
+      "studycase": null,
+      "user_input": "Welche Lasten gibt es in PowerFactory?",
+      "classification": {
+        "status": "ok",
+        "classification_mode": "llm",
+        "intent": "load_catalog",
+        "confidence": "high",
+        "target_kind": "load",
+        "safe_to_execute": true,
+        "missing_context": [],
+        "required_steps": [
+          "get_load_catalog"
+        ],
+        "reasoning": "The request explicitly asks for available load objects in PowerFactory, matching the standard 'load_catalog' intent as per examples and documentation."
+      },
+      "plan": [
+        {
+          "step": "get_load_catalog",
+          "description": "Read the available catalog of PowerFactory objects of the requested type from the active project."
+        },
+        {
+          "step": "summarize_load_catalog",
+          "description": "Build a concise user-facing catalog answer."
+        }
+      ],
+      "available_tools": [
+        "UnifiedToolSpec(full_name='cim.scan_snapshot_inventory', name='scan_snapshot_inventory', domain='cim', description='Scan snapshot inventory and build base network index', input_schema={'type': 'object', 'properties': {'cim_root': {'type': 'string'}}, 'required': []}, output_schema_hint={'status': 'ok|error', 'tool': 'scan_snapshot_inventory', 'snapshot_inventory': 'dict', 'base_snapshot': 'dict', 'network_index': 'dict', 'equipment_catalog_summary': 'dict'}, capability_tags=['inventory', 'network_index', 'equipment_catalog', 'read_only'], mutating=False, requires_state=[], produces_state=['snapshot_inventory', 'base_snapshot', 'network_index', 'equipment_catalog_summary'], is_summary=False, domain_notes=['Builds and merges a deterministic equipment catalog from the base snapshot.'])",
+        "UnifiedToolSpec(full_name='cim.resolve_cim_object', name='resolve_cim_object', domain='cim', description='Resolve asset or equipment from user query and parse time/state intent', input_schema={'type': 'object', 'properties': {'cim_root': {'type': 'string'}, 'user_input': {'type': 'string'}, 'network_index': {'type': 'object'}}, 'required': ['user_input', 'network_index']}, output_schema_hint={'status': 'ok|error', 'tool': 'resolve_cim_object', 'parsed_query': 'dict', 'resolved_object': 'Any', 'resolution_mode': 'string', 'equipment_resolution_debug': 'dict'}, capability_tags=['object_resolution', 'query_parsing', 'equipment_catalog', 'llm_match', 'read_only'], mutating=False, requires_state=['network_index'], produces_state=['parsed_query', 'resolved_object', 'resolution_mode', 'equipment_resolution_debug'], is_summary=False, domain_notes=['Falls back to two-stage catalog resolution: equipment type first, equipment instance second.'])",
+        "UnifiedToolSpec(full_name='cim.list_equipment_of_type', name='list_equipment_of_type', domain='cim', description='List all concrete CIM objects of a resolved equipment type from the deterministic equipment catalog', input_schema={'type': 'object', 'properties': {'cim_root': {'type': 'string'}, 'user_input': {'type': 'string'}, 'network_index': {'type': 'object'}}, 'required': ['user_input', 'network_index']}, output_schema_hint={'status': 'ok|error', 'tool': 'list_equipment_of_type', 'selected_type': 'string', 'equipment_items': 'list[dict]', 'equipment_count': 'integer', 'answer': 'string'}, capability_tags=['equipment_catalog', 'asset_lookup', 'read_only'], mutating=False, requires_state=['network_index'], produces_state=['selected_type', 'equipment_items', 'equipment_count', 'answer'], is_summary=False, domain_notes=['Uses the same type-resolution stage as equipment resolution, but returns all objects of the selected type.'])",
+        "UnifiedToolSpec(full_name='cim.read_cim_base_values', name='read_cim_base_values', domain='cim', description='Read static CIM base or nameplate attributes from a resolved equipment object', input_schema={'type': 'object', 'properties': {'cim_root': {'type': 'string'}, 'user_input': {'type': 'string'}, 'resolved_object': {'type': 'object'}}, 'required': ['user_input', 'resolved_object']}, output_schema_hint={'status': 'ok|error', 'tool': 'read_cim_base_values', 'selected_attributes': 'list[str]', 'base_values': 'dict[str, Any]', 'answer': 'string'}, capability_tags=['base_values', 'nameplate_data', 'read_only'], mutating=False, requires_state=['resolved_object'], produces_state=['selected_attributes', 'base_values', 'answer', 'base_attribute_debug'], is_summary=False, domain_notes=['Supports direct technical attribute matching and controlled semantic LLM mapping.'])",
+        "UnifiedToolSpec(full_name='cim.resolve_cim_comparison', name='resolve_cim_comparison', domain='cim', description='Resolve a supported CIM comparison intent into required SV metric and base attributes', input_schema={'type': 'object', 'properties': {'cim_root': {'type': 'string'}, 'user_input': {'type': 'string'}, 'resolved_object': {'type': 'object'}, 'parsed_query': {'type': 'object'}}, 'required': ['user_input', 'resolved_object']}, output_schema_hint={'status': 'ok|error', 'tool': 'resolve_cim_comparison', 'comparison_resolution': 'dict', 'requested_base_attributes': 'list[str]', 'parsed_query': 'dict'}, capability_tags=['comparison_resolution', 'read_only'], mutating=False, requires_state=['resolved_object', 'parsed_query'], produces_state=['comparison_resolution', 'requested_base_attributes', 'parsed_query'], is_summary=False, domain_notes=['Determines which standard comparison should be executed before reading SV and base values.'])",
+        "UnifiedToolSpec(full_name='cim.load_snapshot_cache', name='load_snapshot_cache', domain='cim', description='Load relevant snapshots for the parsed time window and build snapshot cache', input_schema={'type': 'object', 'properties': {'cim_root': {'type': 'string'}, 'parsed_query': {'type': 'object'}, 'snapshot_inventory': {'type': 'object'}}, 'required': ['parsed_query', 'snapshot_inventory']}, output_schema_hint={'status': 'ok|error', 'tool': 'load_snapshot_cache', 'cim_snapshots': 'dict', 'required_state_types': 'list[str]', 'snapshot_cache': 'dict', 'snapshot_cache_summary': 'dict'}, capability_tags=['snapshot_loading', 'state_cache', 'read_only'], mutating=False, requires_state=['parsed_query', 'snapshot_inventory'], produces_state=['cim_snapshots', 'required_state_types', 'snapshot_cache', 'snapshot_cache_summary'], is_summary=False, domain_notes=[])",
+        "UnifiedToolSpec(full_name='cim.query_cim', name='query_cim', domain='cim', description='Run CIM analysis query using parsed query, network index and snapshot cache', input_schema={'type': 'object', 'properties': {'cim_root': {'type': 'string'}, 'user_input': {'type': 'string'}, 'snapshot_cache': {'type': 'object'}, 'network_index': {'type': 'object'}, 'parsed_query': {'type': 'object'}, 'classification': {'type': 'object'}}, 'required': ['user_input', 'network_index']}, output_schema_hint={'status': 'ok|error', 'tool': 'query_cim', 'answer': 'string'}, capability_tags=['analysis', 'read_only'], mutating=False, requires_state=['network_index', 'parsed_query'], produces_state=['answer'], is_summary=False, domain_notes=[])",
+        "UnifiedToolSpec(full_name='cim.compare_cim_values', name='compare_cim_values', domain='cim', description='Compare resolved SV results against resolved CIM base values using a standard comparison definition', input_schema={'type': 'object', 'properties': {'cim_root': {'type': 'string'}, 'resolved_object': {'type': 'object'}, 'comparison_resolution': {'type': 'object'}, 'query_result_data': {'type': 'object'}, 'base_values': {'type': 'object'}}, 'required': ['resolved_object', 'comparison_resolution', 'query_result_data', 'base_values']}, output_schema_hint={'status': 'ok|error', 'tool': 'compare_cim_values', 'comparison_result': 'dict', 'answer': 'string'}, capability_tags=['comparison', 'read_only'], mutating=False, requires_state=['resolved_object', 'comparison_resolution', 'query_result_data', 'base_values'], produces_state=['comparison_result', 'answer'], is_summary=False, domain_notes=[])",
+        "UnifiedToolSpec(full_name='cim.summarize_cim_result', name='summarize_cim_result', domain='cim', description='Return final CIM result with debug information', input_schema={'type': 'object', 'properties': {'cim_root': {'type': 'string'}, 'result_payload': {'type': 'object'}, 'user_input': {'type': 'string'}}, 'required': ['user_input']}, output_schema_hint={'status': 'ok|error', 'tool': 'summarize_cim_result', 'answer': 'string', 'debug': 'dict'}, capability_tags=['result', 'read_only'], mutating=False, requires_state=['answer'], produces_state=['summary'], is_summary=True, domain_notes=[])",
+        "UnifiedToolSpec(full_name='pf.get_load_catalog', name='get_load_catalog', domain='pf', description='Read the available catalog of PowerFactory objects of the requested type from the active project.', input_schema={}, output_schema_hint={}, capability_tags=[], mutating=False, requires_state=[], produces_state=['catalog_result'], is_summary=False, domain_notes=[])",
+        "UnifiedToolSpec(full_name='pf.interpret_instruction', name='interpret_instruction', domain='pf', description='Interpret a natural-language user request into a structured load-change instruction.', input_schema={}, output_schema_hint={}, capability_tags=[], mutating=False, requires_state=[], produces_state=['instruction'], is_summary=False, domain_notes=[])",
+        "UnifiedToolSpec(full_name='pf.resolve_load', name='resolve_load', domain='pf', description='Resolve the target load object inside the active PowerFactory project.', input_schema={}, output_schema_hint={}, capability_tags=[], mutating=False, requires_state=['instruction'], produces_state=['resolution'], is_summary=False, domain_notes=[])",
+        "UnifiedToolSpec(full_name='pf.execute_change_load', name='execute_change_load', domain='pf', description='Apply a load change in PowerFactory and run load flow before/after.', input_schema={}, output_schema_hint={}, capability_tags=[], mutating=True, requires_state=['instruction'], produces_state=['execution'], is_summary=False, domain_notes=[])",
+        "UnifiedToolSpec(full_name='pf.summarize_powerfactory_result', name='summarize_powerfactory_result', domain='pf', description='Summarize result data from a PowerFactory load workflow for the end user.', input_schema={}, output_schema_hint={}, capability_tags=[], mutating=False, requires_state=['execution'], produces_state=['summary'], is_summary=True, domain_notes=[])",
+        "UnifiedToolSpec(full_name='pf.build_topology_graph', name='build_topology_graph', domain='pf', description='Build a topology graph from the active PowerFactory project.', input_schema={}, output_schema_hint={}, capability_tags=[], mutating=False, requires_state=[], produces_state=['graph_result'], is_summary=False, domain_notes=[])",
+        "UnifiedToolSpec(full_name='pf.build_topology_inventory', name='build_topology_inventory', domain='pf', description='Build a typed inventory from the current PowerFactory topology graph.', input_schema={}, output_schema_hint={}, capability_tags=[], mutating=False, requires_state=['graph_result'], produces_state=['inventory_result'], is_summary=False, domain_notes=[])",
+        "UnifiedToolSpec(full_name='pf.interpret_entity_instruction', name='interpret_entity_instruction', domain='pf', description='Interpret a natural-language topology request into a structured generic PowerFactory entity instruction.', input_schema={}, output_schema_hint={}, capability_tags=[], mutating=False, requires_state=['inventory_result'], produces_state=['entity_instruction'], is_summary=False, domain_notes=[])",
+        "UnifiedToolSpec(full_name='pf.resolve_entity_from_inventory', name='resolve_entity_from_inventory', domain='pf', description='Resolve the requested generic asset from a typed topology inventory.', input_schema={}, output_schema_hint={}, capability_tags=[], mutating=False, requires_state=['entity_instruction', 'inventory_result', 'graph_result'], produces_state=['entity_resolution'], is_summary=False, domain_notes=[])",
+        "UnifiedToolSpec(full_name='pf.query_topology_neighbors', name='query_topology_neighbors', domain='pf', description='Query the direct neighbors of an asset in the PowerFactory topology graph.', input_schema={}, output_schema_hint={}, capability_tags=[], mutating=False, requires_state=['graph_result', 'entity_resolution'], produces_state=['topology_result'], is_summary=False, domain_notes=[])",
+        "UnifiedToolSpec(full_name='pf.interpret_switch_instruction', name='interpret_switch_instruction', domain='pf', description='Interpret a natural-language switch request into a structured switch operation instruction.', input_schema={}, output_schema_hint={}, capability_tags=[], mutating=False, requires_state=[], produces_state=['switch_instruction'], is_summary=False, domain_notes=[])",
+        "UnifiedToolSpec(full_name='pf.execute_switch_operation', name='execute_switch_operation', domain='pf', description='Execute an open/close/toggle operation on a resolved switch object in PowerFactory.', input_schema={}, output_schema_hint={}, capability_tags=[], mutating=True, requires_state=['switch_instruction', 'object_resolution'], produces_state=['switch_execution'], is_summary=False, domain_notes=[])",
+        "UnifiedToolSpec(full_name='pf.summarize_switch_result', name='summarize_switch_result', domain='pf', description='Summarize the result of a switch state change for the end user.', input_schema={}, output_schema_hint={}, capability_tags=[], mutating=False, requires_state=['switch_execution'], produces_state=['switch_summary', 'summary'], is_summary=True, domain_notes=[])",
+        "UnifiedToolSpec(full_name='pf.summarize_load_catalog', name='summarize_load_catalog', domain='pf', description='Build a concise user-facing catalog answer.', input_schema={}, output_schema_hint={}, capability_tags=[], mutating=False, requires_state=['catalog_result'], produces_state=['summary'], is_summary=True, domain_notes=[])",
+        "UnifiedToolSpec(full_name='pf.summarize_topology_result', name='summarize_topology_result', domain='pf', description='Build a concise user-facing topology answer.', input_schema={}, output_schema_hint={}, capability_tags=[], mutating=False, requires_state=['topology_result'], produces_state=['summary'], is_summary=True, domain_notes=[])",
+        "UnifiedToolSpec(full_name='pf.unsupported_request', name='unsupported_request', domain='pf', description='Return a controlled message for unsupported PowerFactory intent.', input_schema={}, output_schema_hint={}, capability_tags=[], mutating=False, requires_state=[], produces_state=[], is_summary=False, domain_notes=[])",
+        "UnifiedToolSpec(full_name='pf.classify_data_source', name='classify_data_source', domain='pf', description='Classify whether the data query should use base data or load-flow result data.', input_schema={}, output_schema_hint={}, capability_tags=[], mutating=False, requires_state=['data_query_instruction'], produces_state=['data_query_instruction', 'data_source_decision'], is_summary=False, domain_notes=[])",
+        "UnifiedToolSpec(full_name='pf.build_unified_inventory', name='build_unified_inventory', domain='pf', description='Build a unified non-topology PowerFactory inventory for supported object types.', input_schema={}, output_schema_hint={}, capability_tags=[], mutating=False, requires_state=[], produces_state=['unified_inventory_result', 'inventory_result'], is_summary=False, domain_notes=[])",
+        "UnifiedToolSpec(full_name='pf.interpret_data_query_instruction', name='interpret_data_query_instruction', domain='pf', description='Interpret a natural-language data query into a structured PowerFactory data-query instruction.', input_schema={}, output_schema_hint={}, capability_tags=[], mutating=False, requires_state=['unified_inventory_result'], produces_state=['data_query_instruction'], is_summary=False, domain_notes=[])",
+        "UnifiedToolSpec(full_name='pf.resolve_objects_from_inventory_llm', name='resolve_objects_from_inventory_llm', domain='pf', description='Resolve PowerFactory objects by LLM-based exact candidate selection from a unified non-topology inventory.', input_schema={}, output_schema_hint={}, capability_tags=[], mutating=False, requires_state=['unified_inventory_result'], produces_state=['object_resolution'], is_summary=False, domain_notes=[])",
+        "UnifiedToolSpec(full_name='pf.list_available_object_attributes', name='list_available_object_attributes', domain='pf', description='List semantic and raw attribute options for the selected PowerFactory object.', input_schema={}, output_schema_hint={}, capability_tags=[], mutating=False, requires_state=['data_query_instruction', 'object_resolution'], produces_state=['data_attribute_listing'], is_summary=False, domain_notes=[])",
+        "UnifiedToolSpec(full_name='pf.select_pf_object_attributes_llm', name='select_pf_object_attributes_llm', domain='pf', description='Select the best matching attribute handles from the available option list.', input_schema={}, output_schema_hint={}, capability_tags=[], mutating=False, requires_state=['data_query_instruction', 'object_resolution', 'data_attribute_listing'], produces_state=['data_attribute_selection'], is_summary=False, domain_notes=[])",
+        "UnifiedToolSpec(full_name='pf.read_pf_object_attributes', name='read_pf_object_attributes', domain='pf', description='Read selected attributes from a resolved PowerFactory object with dynamic loadflow fallback.', input_schema={}, output_schema_hint={}, capability_tags=[], mutating=False, requires_state=['data_query_instruction', 'object_resolution', 'data_attribute_selection'], produces_state=['data_query_execution'], is_summary=False, domain_notes=['Do not use this step before attribute selection is available.'])",
+        "UnifiedToolSpec(full_name='pf.summarize_pf_object_data_result', name='summarize_pf_object_data_result', domain='pf', description='Summarize queried PowerFactory object data for the end user.', input_schema={}, output_schema_hint={}, capability_tags=[], mutating=False, requires_state=['data_query_execution'], produces_state=['data_query_summary', 'summary'], is_summary=True, domain_notes=[])"
+      ],
+      "instruction": null,
+      "resolved_load": null,
+      "data": {},
+      "catalog": [
+        {
+          "loc_name": "Load A",
+          "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Load A.ElmLod",
+          "pf_class": "ElmLod",
+          "inventory_type": "load"
+        },
+        {
+          "loc_name": "Load B",
+          "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Load B.ElmLod",
+          "pf_class": "ElmLod",
+          "inventory_type": "load"
+        },
+        {
+          "loc_name": "Load C",
+          "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Load C.ElmLod",
+          "pf_class": "ElmLod",
+          "inventory_type": "load"
+        }
+      ],
+      "messages": [
+        "Verfügbare Lasten im aktiven PowerFactory-Projekt: Load A, Load B, Load C"
+      ],
+      "answer": "Verfügbare Lasten im aktiven PowerFactory-Projekt: Load A, Load B, Load C",
+      "summary": {
+        "status": "ok",
+        "tool": "merged_powerfactory_summary",
+        "answer": "Verfügbare Lasten im aktiven PowerFactory-Projekt: Load A, Load B, Load C",
+        "messages": [
+          "Verfügbare Lasten im aktiven PowerFactory-Projekt: Load A, Load B, Load C"
+        ],
+        "summary_count": 1,
+        "plan_steps": [
+          "get_load_catalog",
+          "summarize_load_catalog"
+        ]
+      },
+      "summary_parts": [
+        {
+          "status": "ok",
+          "tool": "summarize_load_catalog",
+          "answer": "Verfügbare Lasten im aktiven PowerFactory-Projekt: Load A, Load B, Load C",
+          "count": 3,
+          "requested_type": "load",
+          "loads": [
+            {
+              "loc_name": "Load A",
+              "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Load A.ElmLod",
+              "pf_class": "ElmLod",
+              "inventory_type": "load"
+            },
+            {
+              "loc_name": "Load B",
+              "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Load B.ElmLod",
+              "pf_class": "ElmLod",
+              "inventory_type": "load"
+            },
+            {
+              "loc_name": "Load C",
+              "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Load C.ElmLod",
+              "pf_class": "ElmLod",
+              "inventory_type": "load"
+            }
+          ]
+        }
+      ],
+      "topology": {
+        "graph_mode": null,
+        "graph_summary": {},
+        "build_debug": {},
+        "inventory": {},
+        "instruction": null,
+        "resolution": null,
+        "selected_node": null,
+        "neighbor_count": 0,
+        "neighbors": [],
+        "matches": []
+      },
+      "switch": {
+        "instruction": null,
+        "resolution": null,
+        "execution": null,
+        "summary": null
+      },
+      "data_query": {
+        "inventory": null,
+        "instruction": null,
+        "resolution": null,
+        "attribute_listing": null,
+        "attribute_selection": null,
+        "execution": null,
+        "summary": null
+      },
+      "debug": {
+        "planning": {},
+        "selected_equipment": {
+          "resolved_load": null,
+          "entity_resolution": null,
+          "object_resolution": null
+        },
+        "trace": [
+          {
+            "step": "get_load_catalog",
+            "effective_user_input": "Welche Lasten gibt es in PowerFactory?",
+            "source_subrequest": null,
+            "tool_spec": {
+              "name": "get_load_catalog",
+              "description": "Read the available catalog of PowerFactory objects of the requested type from the active project.",
+              "capability_tags": [],
+              "mutating": false
+            },
+            "tool_kwargs": {
+              "services": {
+                "status": "ok",
+                "project_name": "Nine-bus System(2)",
+                "studycase": "01- Load Flow"
+              },
+              "user_input": "Welche Lasten gibt es in PowerFactory?"
+            },
+            "result": {
+              "status": "ok",
+              "tool": "get_load_catalog",
+              "project": "Nine-bus System(2)",
+              "requested_type": "load",
+              "loads": [
+                {
+                  "loc_name": "Load A",
+                  "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Load A.ElmLod",
+                  "pf_class": "ElmLod",
+                  "inventory_type": "load"
+                },
+                {
+                  "loc_name": "Load B",
+                  "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Load B.ElmLod",
+                  "pf_class": "ElmLod",
+                  "inventory_type": "load"
+                },
+                {
+                  "loc_name": "Load C",
+                  "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Load C.ElmLod",
+                  "pf_class": "ElmLod",
+                  "inventory_type": "load"
+                }
+              ],
+              "count": 3
+            }
+          },
+          {
+            "step": "summarize_load_catalog",
+            "effective_user_input": "Welche Lasten gibt es in PowerFactory?",
+            "source_subrequest": null,
+            "tool_spec": {
+              "name": "summarize_load_catalog",
+              "description": "Build a concise user-facing catalog answer.",
+              "capability_tags": [],
+              "mutating": false
+            },
+            "tool_kwargs": {
+              "services": {
+                "status": "ok",
+                "project_name": "Nine-bus System(2)",
+                "studycase": "01- Load Flow"
+              },
+              "catalog_result": {
+                "status": "ok",
+                "tool": "get_load_catalog",
+                "project": "<omitted>",
+                "requested_type": "load",
+                "loads": [
+                  {
+                    "loc_name": "Load A",
+                    "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Load A.ElmLod",
+                    "pf_class": "ElmLod",
+                    "inventory_type": "load"
+                  },
+                  {
+                    "loc_name": "Load B",
+                    "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Load B.ElmLod",
+                    "pf_class": "ElmLod",
+                    "inventory_type": "load"
+                  },
+                  {
+                    "loc_name": "Load C",
+                    "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Load C.ElmLod",
+                    "pf_class": "ElmLod",
+                    "inventory_type": "load"
+                  }
+                ],
+                "count": 3
+              },
+              "user_input": "Welche Lasten gibt es in PowerFactory?"
+            },
+            "result": {
+              "status": "ok",
+              "tool": "summarize_load_catalog",
+              "answer": "Verfügbare Lasten im aktiven PowerFactory-Projekt: Load A, Load B, Load C",
+              "count": 3,
+              "requested_type": "load",
+              "loads": [
+                {
+                  "loc_name": "Load A",
+                  "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Load A.ElmLod",
+                  "pf_class": "ElmLod",
+                  "inventory_type": "load"
+                },
+                {
+                  "loc_name": "Load B",
+                  "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Load B.ElmLod",
+                  "pf_class": "ElmLod",
+                  "inventory_type": "load"
+                },
+                {
+                  "loc_name": "Load C",
+                  "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Load C.ElmLod",
+                  "pf_class": "ElmLod",
+                  "inventory_type": "load"
+                }
+              ]
+            }
+          }
+        ]
+      }
+    }
+  }
+}

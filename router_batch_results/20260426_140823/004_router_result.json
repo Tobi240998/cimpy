@@ -1,0 +1,14 @@
+{
+  "run_id": 4,
+  "timestamp": "2026-04-26T14:09:39.888243",
+  "user_input": "Welche Verbraucher sind im Modell vorhanden?",
+  "duration_seconds": 7.705,
+  "router_output": {
+    "route": "ASK_USER",
+    "question": "Soll die Liste der vorhandenen Verbraucher auf historische CIM-Daten oder das aktuelle PowerFactory-Projekt bezogen sein?",
+    "missing_fields": [
+      "data_source"
+    ],
+    "partial": {}
+  }
+}

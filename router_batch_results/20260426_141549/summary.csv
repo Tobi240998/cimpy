@@ -1,0 +1,5 @@
+run_id,user_input,route,answer,status,error,details,duration_seconds,json_path
+1,Welche Lasten gibt es in PowerFactory?,POWERFACTORY,"Verfügbare Lasten im aktiven PowerFactory-Projekt: Load A, Load B, Load C",ok,,,20.096,router_batch_results\20260426_141549\001_router_result.json
+2,Zeig mir alle verfügbaren Lasten im aktiven PowerFactory-Projekt.,POWERFACTORY,"Verfügbare Lasten im aktiven PowerFactory-Projekt: Load A, Load B, Load C",ok,,,18.408,router_batch_results\20260426_141549\002_router_result.json
+3,Liste die vorhandenen Loads in PowerFactory auf.,POWERFACTORY,"Verfügbare Lasten im aktiven PowerFactory-Projekt: Load A, Load B, Load C",ok,,,17.32,router_batch_results\20260426_141549\003_router_result.json
+4,Welche Verbraucher sind im PF-Modell vorhanden?,POWERFACTORY,"Verfügbare Lasten im aktiven PowerFactory-Projekt: Load A, Load B, Load C",ok,,,34.788,router_batch_results\20260426_141549\004_router_result.json

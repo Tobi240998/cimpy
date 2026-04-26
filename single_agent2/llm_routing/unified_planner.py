@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import json
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Literal, Optional
 
 from pydantic import BaseModel, Field
 from langchain_core.prompts import ChatPromptTemplate
@@ -12,18 +12,89 @@ from cimpy.single_agent2.llm_routing.langchain_llm import get_llm
 from cimpy.single_agent2.llm_routing.unified_plan import UnifiedPlan, UnifiedPlanStep
 
 
+STANDARD_WORKFLOWS = {
+    # ---------- PowerFactory ----------
+    "pf.load_catalog": [
+        "pf.get_load_catalog",
+        "pf.summarize_load_catalog",
+    ],
+    "pf.change_load": [
+        "pf.interpret_instruction",
+        "pf.resolve_load",
+        "pf.execute_change_load",
+        "pf.summarize_powerfactory_result",
+    ],
+    "pf.topology_query": [
+        "pf.build_topology_graph",
+        "pf.build_topology_inventory",
+        "pf.interpret_entity_instruction",
+        "pf.resolve_entity_from_inventory",
+        "pf.query_topology_neighbors",
+        "pf.summarize_topology_result",
+    ],
+    "pf.change_switch_state": [
+        "pf.build_unified_inventory",
+        "pf.interpret_switch_instruction",
+        "pf.resolve_objects_from_inventory_llm",
+        "pf.execute_switch_operation",
+        "pf.summarize_switch_result",
+    ],
+
+    # ---------- CIM ----------
+    "cim.standard_listing": [
+        "cim.scan_snapshot_inventory",
+        "cim.list_equipment_of_type",
+    ],
+    "cim.standard_base": [
+        "cim.scan_snapshot_inventory",
+        "cim.resolve_cim_object",
+        "cim.read_cim_base_values",
+        "cim.summarize_cim_result",
+    ],
+    "cim.standard_sv": [
+        "cim.scan_snapshot_inventory",
+        "cim.resolve_cim_object",
+        "cim.load_snapshot_cache",
+        "cim.query_cim",
+        "cim.summarize_cim_result",
+    ],
+    "cim.standard_comparison": [
+        "cim.scan_snapshot_inventory",
+        "cim.resolve_cim_object",
+        "cim.resolve_cim_comparison",
+        "cim.load_snapshot_cache",
+        "cim.query_cim",
+        "cim.read_cim_base_values",
+        "cim.compare_cim_values",
+        "cim.summarize_cim_result",
+    ],
+    "cim.topology_query": [
+    "cim.scan_snapshot_inventory",
+    "cim.resolve_cim_object",
+    "cim.query_cim",
+    "cim.summarize_cim_result",
+],
+}
+
 class UnifiedPlannerStepDecision(BaseModel):
     tool: str = Field(description="Full tool name, e.g. cim.query_cim or pf.get_load_catalog")
     reasoning: str = ""
 
 
 class UnifiedPlannerDecision(BaseModel):
-    domain: str = Field(description="One of: cim, powerfactory, clarification_needed, unsupported")
-    confidence: str = Field(description="One of: high, medium, low")
-    safe_to_execute: bool
+    domain: Literal["cim", "powerfactory", "pf", "clarification_needed", "unsupported"]
+    planning_mode: Literal[
+        "standard_workflow",
+        "custom_plan",
+        "clarification_needed",
+        "unsupported",
+    ]
+
+    workflow: Optional[str] = None
+    custom_steps: List[str] = Field(default_factory=list)
+    safe_to_execute: bool = True
     missing_context: List[str] = Field(default_factory=list)
     clarification_question: str = ""
-    steps: List[UnifiedPlannerStepDecision] = Field(default_factory=list)
     reasoning: str = ""
 
 
@@ -57,6 +128,57 @@ Domain guidance:
 - If the user explicitly says PowerFactory, choose PowerFactory.
 - If the user explicitly says CIM, historical data, CIM data or asks about date/time-based historical values, choose CIM.
 - If the user asks for technical attributes without a clear source, choose clarification_needed.
+
+Planning modes:
+- standard_workflow: choose one workflow key from the workflow list
+- custom_plan: provide explicit tool sequence
+- clarification_needed
+- unsupported
+
+If possible, always prefer standard_workflow.
+planning_mode MUST be exactly one of:
+- standard_workflow
+- custom_plan
+- clarification_needed
+- unsupported
+
+Do not use field names like "workflow" or "custom_steps" as planning_mode.
+
+Available standard workflows:
+{available_workflows}
+
+Workflow descriptions:
+
+- pf.load_catalog:
+  List objects (loads, lines, transformers, etc.) from the active PowerFactory project.
+
+- pf.change_load:
+  Modify load values in the PowerFactory project.
+
+- pf.topology_query:
+  Analyze connectivity and neighbors in the PowerFactory network graph.
+
+- pf.change_switch_state:
+  Open/close switches in the PowerFactory project.
+
+- cim.standard_listing:
+  List CIM objects of a certain type from snapshot inventory.
+
+- cim.standard_base:
+  Read static/base attributes from CIM data.
+
+- cim.standard_sv:
+  Read state variables (SV values) from CIM snapshot data.
+
+- cim.standard_comparison:
+  Compare CIM values across snapshots or time.
+
+- cim.topology_query:
+  Query topology relationships in CIM data, such as:
+  - direct neighbors of an object
+  - connected elements
+  - graph connectivity
+  - paths or adjacency relationships
 
 Planning rules:
 - Tool names must match the available tool list exactly.
@@ -102,6 +224,7 @@ Return only structured output.
                 "user_input": user_input,
                 "available_tools": self._format_tools_for_prompt(),
                 "format_instructions": self.parser.get_format_instructions(),
+                "available_workflows": "\n".join(STANDARD_WORKFLOWS.keys()),
             })
 
             data = decision.model_dump() if hasattr(decision, "model_dump") else decision.dict()
@@ -120,12 +243,21 @@ Return only structured output.
                 "planner_error": str(exc),
             }
 
-        if data["domain"] == "clarification_needed":
+                # --- Clarification ---
+        if data.get("planning_mode") == "clarification_needed":
             return {
                 "status": "needs_clarification",
                 "question": data.get("clarification_question")
                 or "Soll ich die Anfrage mit CIM-Daten oder mit dem PowerFactory-Projekt beantworten?",
                 "missing_context": data.get("missing_context", []),
+                "planner_decision": data,
+            }
+
+        # --- Unsupported ---
+        if data.get("planning_mode") == "unsupported":
+            return {
+                "status": "error",
+                "answer": "Die Anfrage wird aktuell nicht unterstützt.",
                 "planner_decision": data,
             }
 
@@ -136,35 +268,112 @@ Return only structured output.
                 "planner_decision": data,
             }
 
-        steps = []
-        for item in data.get("steps", []):
-            full_tool = item["tool"]
+        # --- Tool-Sequenz bestimmen ---
+        planning_mode = data.get("planning_mode")
+        tool_sequence = []
 
-            if "." not in full_tool:
+        if planning_mode == "standard_workflow":
+            workflow = data.get("workflow")
+
+            if workflow not in STANDARD_WORKFLOWS:
                 return {
                     "status": "error",
-                    "answer": f"Ungültiger Toolname ohne Domain-Präfix: {full_tool}",
+                    "answer": f"Unbekannter Standard-Workflow: {workflow}",
+                    "planner_decision": data,
+                }
+
+            tool_sequence = STANDARD_WORKFLOWS[workflow]
+
+        elif planning_mode == "custom_plan":
+            tool_sequence = data.get("custom_steps", []) or []
+
+            if not tool_sequence:
+                return {
+                    "status": "error",
+                    "answer": "Der UnifiedPlanner hat einen Custom Plan ohne Steps erzeugt.",
+                    "planner_decision": data,
+                }
+
+        else:
+            return {
+                "status": "error",
+                "answer": f"Ungültiger Planning Mode: {planning_mode}",
+                "planner_decision": data,
+            }
+
+        # --- Validierung + UnifiedPlanSteps bauen ---
+        steps = []
+        used_prefixes = set()
+
+        for full_tool in tool_sequence:
+            if not isinstance(full_tool, str) or "." not in full_tool:
+                return {
+                    "status": "error",
+                    "answer": f"Ungültiger Toolname im Plan: {full_tool}",
                     "planner_decision": data,
                 }
 
             prefix, tool_name = full_tool.split(".", 1)
-            domain = "powerfactory" if prefix == "pf" else "cim"
+
+            if prefix not in {"cim", "pf"}:
+                return {
+                    "status": "error",
+                    "answer": f"Unbekanntes Tool-Präfix im Plan: {prefix}",
+                    "planner_decision": data,
+                }
+
+            if self.registry.get_tool_spec(full_tool) is None:
+                return {
+                    "status": "error",
+                    "answer": f"Tool existiert nicht in der UnifiedToolRegistry: {full_tool}",
+                    "planner_decision": data,
+                }
+
+            used_prefixes.add(prefix)
+
+            step_domain = "powerfactory" if prefix == "pf" else "cim"
 
             steps.append(
                 UnifiedPlanStep(
-                    domain=domain,
+                    domain=step_domain,
                     tool=tool_name,
                     args={},
-                    description=item.get("reasoning", ""),
+                    description=f"{planning_mode}: {data.get('workflow') or 'custom_plan'}",
                 )
             )
 
-        plan_domain = "powerfactory" if data["domain"] in {"pf", "powerfactory"} else "cim"
+        if len(used_prefixes) != 1:
+            return {
+                "status": "error",
+                "answer": "Der UnifiedPlanner hat einen gemischten CIM/PF-Plan erzeugt. Hybrid-Pläne sind deaktiviert.",
+                "planner_decision": data,
+            }
+
+        inferred_prefix = next(iter(used_prefixes))
+        inferred_domain = "powerfactory" if inferred_prefix == "pf" else "cim"
+
+        declared_domain = data.get("domain")
+        if declared_domain in {"pf", "powerfactory"}:
+            declared_domain = "powerfactory"
+        elif declared_domain == "cim":
+            declared_domain = "cim"
+        else:
+            declared_domain = inferred_domain
+
+        if declared_domain != inferred_domain:
+            return {
+                "status": "error",
+                "answer": (
+                    f"Domain-Konflikt im Plan: domain={declared_domain}, "
+                    f"Tools gehören aber zu {inferred_domain}."
+                ),
+                "planner_decision": data,
+            }
 
         return {
             "status": "ok",
             "plan": UnifiedPlan(
-                domain=plan_domain,
+                domain=inferred_domain,
                 user_input=user_input,
                 steps=steps,
                 classification=data,

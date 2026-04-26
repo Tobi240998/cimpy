@@ -1,0 +1,17 @@
+{
+  "started_at": "2026-04-26T14:13:28.316329",
+  "entrypoint": "cimpy.single_agent.llm_routing.orchestrator.Orchestrator.handle",
+  "equivalent_cli": "python -m cimpy.single_agent.llm_routing.run_router",
+  "user_inputs": [
+    "Welche Lasten gibt es in PowerFactory?",
+    "Zeig mir alle verfügbaren Lasten im aktiven PowerFactory-Projekt.",
+    "Liste die vorhandenen Loads in PowerFactory auf.",
+    "Welche Verbraucher sind im PF-Modell vorhanden?"
+  ],
+  "finished_at": "2026-04-26T14:14:57.948625",
+  "output_dir": "router_batch_results\\20260426_141328",
+  "num_runs": 4,
+  "num_errors": 0,
+  "total_duration_seconds": 89.621,
+  "average_duration_seconds": 22.401
+}

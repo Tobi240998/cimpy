@@ -9,7 +9,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any, Dict, List
 
-from cimpy.llm_routing.orchestrator import Orchestrator
+from cimpy.single_agent2.llm_routing.orchestrator import Orchestrator
 
 
 USER_INPUTS: List[str] = [
@@ -504,8 +504,8 @@ def main() -> None:
 
     metadata = {
         "started_at": datetime.now().isoformat(),
-        "entrypoint": "cimpy.llm_routing.orchestrator.Orchestrator.handle",
-        "equivalent_cli": r"python -m cimpy.llm_routing.run_router",
+        "entrypoint": "cimpy.single_agent2.llm_routing.orchestrator.Orchestrator.handle",
+        "equivalent_cli": r"python -m cimpy.single_agent2.llm_routing.run_router",
         "user_inputs": USER_INPUTS,
         "trace_columns": [
             "domain",

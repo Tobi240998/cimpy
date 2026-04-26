@@ -1,0 +1,5 @@
+run_id,user_input,route,answer,status,error,details,duration_seconds,json_path
+1,Welche Lasten gibt es in PowerFactory?,POWERFACTORY,"Verfügbare Lasten im aktiven PowerFactory-Projekt: Load A, Load B, Load C",ok,,,22.494,router_batch_results\20260426_141116\001_router_result.json
+2,Zeig mir alle verfügbaren Lasten im aktiven Projekt.,POWERFACTORY,"Verfügbare Lasten im aktiven PowerFactory-Projekt: Load A, Load B, Load C",ok,,,31.023,router_batch_results\20260426_141116\002_router_result.json
+3,Liste die vorhandenen Loads auf.,ASK_USER,Soll die Liste der vorhandenen Loads auf historische CIM-Daten oder das aktuelle PowerFactory-Projekt bezogen sein?,,,,4.417,router_batch_results\20260426_141116\003_router_result.json
+4,Welche Verbraucher sind im Modell vorhanden?,ASK_USER,Soll die Liste der vorhandenen Verbraucher auf historische CIM-Daten oder das aktuelle PowerFactory-Projekt bezogen sein?,,,,7.703,router_batch_results\20260426_141116\004_router_result.json

@@ -1,0 +1,31 @@
+{
+  "run_id": 3,
+  "timestamp": "2026-04-26T14:54:14.325927",
+  "user_input": "Liste die vorhandenen Loads auf.",
+  "duration_seconds": 4.461,
+  "decision_trace": {
+    "domain": "",
+    "planning_mode": "",
+    "workflow": "",
+    "confidence": "",
+    "safe_to_execute": "",
+    "num_steps": 0,
+    "steps": "",
+    "planner_reasoning": "",
+    "resolved_object": "",
+    "resolved_object_confidence": "",
+    "selected_attributes": "",
+    "attribute_confidence": "",
+    "num_tool_calls": 0,
+    "executed_tools": "",
+    "failed_tool": ""
+  },
+  "router_output": {
+    "route": "ASK_USER",
+    "question": "Soll die Liste der vorhandenen Loads auf historische CIM-Daten oder das aktuelle PowerFactory-Projekt bezogen sein?",
+    "missing_fields": [
+      "data_source"
+    ],
+    "partial": {}
+  }
+}
