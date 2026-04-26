@@ -13,6 +13,8 @@ from cimpy.single_agent.llm_routing.unified_plan import UnifiedPlan, UnifiedPlan
 from cimpy.single_agent.llm_routing.unified_executor import UnifiedExecutor
 from cimpy.single_agent.cim.cim_tool_registry import CIMToolRegistry
 from cimpy.single_agent.cim.cim_planner import CIMPlanner
+from cimpy.single_agent.pf.pf_planner import PFPlanner
+from cimpy.single_agent.pf.powerfactory_tool_registry import PowerFactoryToolRegistry
 
 class SingleDomainAgent:
     """
@@ -41,6 +43,11 @@ class SingleDomainAgent:
             cim_registry=self.cim_registry,
             cim_root=cim_root,
             powerfactory_agent=self.powerfactory_agent,
+        )
+        self.pf_registry = PowerFactoryToolRegistry()
+        self.pf_planner = PFPlanner(
+            project_name=project_name,
+            registry=self.pf_registry,
         )
 
     def run(self, user_input: str) -> Dict[str, Any]:
@@ -133,8 +140,8 @@ class SingleDomainAgent:
             raise ValueError(f"Unknown domain: {domain}")
 
     def _build_powerfactory_unified_plan(self, user_input: str) -> UnifiedPlan:
-        classification = self.powerfactory_agent.classify_request(user_input)
-        raw_plan = self.powerfactory_agent.build_plan(
+        classification = self.pf_planner.classify_request(user_input)
+        raw_plan = self.pf_planner.build_plan(
             user_input=user_input,
             classification=classification,
         )

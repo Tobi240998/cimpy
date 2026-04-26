@@ -5,7 +5,14 @@ from typing import Any, Dict, List
 from cimpy.single_agent.llm_routing.unified_plan import UnifiedPlan
 from cimpy.single_agent.pf.powerfactory_mcp_tools import build_powerfactory_services
 from cimpy.single_agent.llm_routing.unified_tool_registry import UnifiedToolRegistry
-
+from cimpy.single_agent.pf.pf_execution_utils import (
+    build_pf_tool_kwargs,
+    build_pf_tool_kwargs_debug,
+    store_pf_step_result,
+    init_pf_execution_state,
+    build_pf_success_result,
+    build_pf_error_result,
+)
 
 class UnifiedExecutor:
     def __init__(self, cim_registry, cim_root: str, powerfactory_agent):
@@ -17,6 +24,7 @@ class UnifiedExecutor:
             cim_registry=cim_registry,
             pf_registry=powerfactory_agent.registry,
         )
+
 
     def execute(self, plan: UnifiedPlan) -> Dict[str, Any]:
         if plan.domain == "cim":
@@ -108,47 +116,24 @@ class UnifiedExecutor:
     def _execute_powerfactory(self, plan: UnifiedPlan) -> Dict[str, Any]:
         pf_agent = self.powerfactory_agent
         raw_plan = self._plan_to_raw_items(plan)
+        classification = getattr(plan, "classification", {}) or {}
 
         services = build_powerfactory_services(project_name=pf_agent.project_name)
         if services.get("status") != "ok":
             return services
 
         debug_trace: List[Dict[str, Any]] = []
-
-        state: Dict[str, Any] = {
-            "instruction": None,
-            "resolution": None,
-            "execution": None,
-            "summary": None,
-            "summary_results": [],
-            "catalog_result": None,
-            "graph_result": None,
-            "inventory_result": None,
-            "entity_instruction": None,
-            "entity_resolution": None,
-            "topology_result": None,
-            "switch_instruction": None,
-            "switch_execution": None,
-            "switch_summary": None,
-            "data_query_instruction": None,
-            "data_source_decision": None,
-            "data_attribute_listing": None,
-            "data_attribute_selection": None,
-            "data_query_execution": None,
-            "data_query_summary": None,
-            "unified_inventory_result": None,
-            "object_resolution": None,
-        }
+        state = init_pf_execution_state()
 
         for item in raw_plan:
             step = item["step"]
             effective_user_input = item.get("user_input_override", plan.user_input)
 
-            tool_kwargs = pf_agent._build_tool_kwargs(
+            tool_kwargs = build_pf_tool_kwargs(
                 step=step,
                 services=services,
                 effective_user_input=effective_user_input,
-                classification=getattr(plan, "classification", {}) or {},
+                classification=classification,
                 state=state,
             )
 
@@ -166,17 +151,19 @@ class UnifiedExecutor:
                     "capability_tags": tool_spec.capability_tags if tool_spec else [],
                     "mutating": tool_spec.mutating if tool_spec else False,
                 },
-                "tool_kwargs": pf_agent._build_tool_kwargs_debug(tool_kwargs),
+                "tool_kwargs": build_pf_tool_kwargs_debug(tool_kwargs),
                 "result": result,
             })
 
             if result.get("status") != "ok":
-                return pf_agent.build_error_result(
+                return build_pf_error_result(
                     error_result=result,
                     debug_trace=debug_trace,
+                    available_tools=self.registry.list_tool_specs(),
+                    planning_debug=getattr(plan, "planning_debug", {}) or {},
                 )
 
-            pf_agent._store_step_result(
+            store_pf_step_result(
                 step=step,
                 result=result,
                 state=state,
@@ -194,13 +181,13 @@ class UnifiedExecutor:
                         "source": "delegated_result_query",
                     }
 
-            if pf_agent._is_summary_step(step):
+            if tool_spec and tool_spec.is_summary:
                 state["summary_results"].append(result)
 
-        return pf_agent.build_success_result(
+        return build_pf_success_result(
             services=services,
             user_input=plan.user_input,
-            classification=getattr(plan, "classification", {}) or {},
+            classification=classification,
             plan=raw_plan,
             instruction=state.get("instruction"),
             resolution=state.get("resolution"),
@@ -223,4 +210,7 @@ class UnifiedExecutor:
             data_query_execution=state.get("data_query_execution"),
             data_query_summary=state.get("data_query_summary"),
             debug_trace=debug_trace,
+            available_tools=self.registry.list_tool_specs(),
+            planning_debug=getattr(plan, "planning_debug", {}) or {},
+            debug_mode=True,
         )
