@@ -1,13 +1,12 @@
 from typing import Any, Dict, Optional
 
-from cimpy.single_agent.llm_routing.LLM_routeAgent import LLM_routeAgent
 from cimpy.single_agent.llm_routing.schemas import AskUserAction, CallToolAction, RouterAction
 
 from cimpy.single_agent.pf.config import DEFAULT_PROJECT_NAME
-from cimpy.single_agent.pf.powerfactory_domain_agent import PowerFactoryDomainAgent
+
 
 from cimpy.llm_routing.config import CIM_ROOT
-from cimpy.single_agent.cim.cim_domain_agent import CIMDomainAgent
+
 
 from cimpy.single_agent.llm_routing.unified_plan import UnifiedPlan, UnifiedPlanStep
 from cimpy.single_agent.llm_routing.unified_executor import UnifiedExecutor
@@ -15,6 +14,7 @@ from cimpy.single_agent.cim.cim_tool_registry import CIMToolRegistry
 from cimpy.single_agent.cim.cim_planner import CIMPlanner
 from cimpy.single_agent.pf.pf_planner import PFPlanner
 from cimpy.single_agent.pf.powerfactory_tool_registry import PowerFactoryToolRegistry
+from cimpy.single_agent.llm_routing.domain_classifier import DomainClassifier
 
 class SingleDomainAgent:
     """
@@ -29,29 +29,33 @@ class SingleDomainAgent:
         project_name: str = DEFAULT_PROJECT_NAME,
         cim_root: str = CIM_ROOT,
     ):
-        self.router = LLM_routeAgent()
+        self.domain_classifier = DomainClassifier()
         self._pending: Optional[Dict[str, Any]] = None
 
-        self.powerfactory_agent = PowerFactoryDomainAgent(project_name=project_name)
+        # CIM
         self.cim_registry = CIMToolRegistry(cim_root=cim_root)
         self.cim_planner = CIMPlanner(
-        cim_root=cim_root,
-        registry=self.cim_registry,
-    )
-
-        self.executor = UnifiedExecutor(
-            cim_registry=self.cim_registry,
             cim_root=cim_root,
-            powerfactory_agent=self.powerfactory_agent,
+            registry=self.cim_registry,
         )
+
+        # PF
         self.pf_registry = PowerFactoryToolRegistry()
         self.pf_planner = PFPlanner(
             project_name=project_name,
             registry=self.pf_registry,
         )
 
+        # Executor (jetzt mit beiden Registries!)
+        self.executor = UnifiedExecutor(
+            cim_registry=self.cim_registry,
+            cim_root=cim_root,
+            pf_registry=self.pf_registry,
+            project_name=project_name,
+        )
+
     def run(self, user_input: str) -> Dict[str, Any]:
-        action: RouterAction = self.router.route(user_input, pending=self._pending)
+        action = self.domain_classifier.classify(user_input, pending=self._pending)
 
         if isinstance(action, AskUserAction):
             self._pending = {
@@ -165,7 +169,7 @@ class SingleDomainAgent:
             user_input=user_input,
             steps=steps,
             classification=classification,
-            reasoning=self.powerfactory_agent._last_planning_debug.get("plan_source", ""),
+            reasoning=self.pf_planner._last_planning_debug.get("plan_source", ""),
         )
 
     def _build_cim_unified_plan(self, user_input: str) -> UnifiedPlan:

@@ -15,14 +15,21 @@ from cimpy.single_agent.pf.pf_execution_utils import (
 )
 
 class UnifiedExecutor:
-    def __init__(self, cim_registry, cim_root: str, powerfactory_agent):
+    def __init__(
+        self,
+        cim_registry,
+        cim_root: str,
+        pf_registry,
+        project_name: str,
+    ):
         self.cim_registry = cim_registry
         self.cim_root = cim_root
-        self.powerfactory_agent = powerfactory_agent
+        self.pf_registry = pf_registry
+        self.project_name = project_name
 
         self.registry = UnifiedToolRegistry(
             cim_registry=cim_registry,
-            pf_registry=powerfactory_agent.registry,
+            pf_registry=pf_registry,
         )
 
 
@@ -114,11 +121,12 @@ class UnifiedExecutor:
         return state
 
     def _execute_powerfactory(self, plan: UnifiedPlan) -> Dict[str, Any]:
-        pf_agent = self.powerfactory_agent
+        services = build_powerfactory_services(
+            project_name=self.project_name
+        )
         raw_plan = self._plan_to_raw_items(plan)
         classification = getattr(plan, "classification", {}) or {}
 
-        services = build_powerfactory_services(project_name=pf_agent.project_name)
         if services.get("status") != "ok":
             return services
 
