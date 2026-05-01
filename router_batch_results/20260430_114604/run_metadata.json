@@ -1,0 +1,35 @@
+{
+  "started_at": "2026-04-30T11:46:04.152841",
+  "entrypoint": "cimpy.single_agent2.llm_routing.orchestrator.Orchestrator.handle",
+  "equivalent_cli": "python -m cimpy.single_agent2.llm_routing.run_router",
+  "user_inputs": [
+    "Erhöhe Last A um 20 MW.",
+    "Füge 20 MW bei Last A hinzu.",
+    "Mache Last A um 20 MW größer.",
+    "Erhöhe Load A um 20 MW.",
+    "Erhöhe Verbraucher A um 20 MW."
+  ],
+  "trace_columns": [
+    "domain",
+    "planning_mode",
+    "workflow",
+    "confidence",
+    "safe_to_execute",
+    "num_steps",
+    "steps",
+    "planner_reasoning",
+    "resolved_object",
+    "resolved_object_confidence",
+    "selected_attributes",
+    "attribute_confidence",
+    "num_tool_calls",
+    "executed_tools",
+    "failed_tool"
+  ],
+  "finished_at": "2026-04-30T11:46:48.249115",
+  "output_dir": "router_batch_results\\20260430_114604",
+  "num_runs": 5,
+  "num_errors": 0,
+  "total_duration_seconds": 44.094,
+  "average_duration_seconds": 8.807
+}

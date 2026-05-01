@@ -1,0 +1,32 @@
+{
+  "started_at": "2026-05-01T10:41:22.521866",
+  "entrypoint": "cimpy.llm_routing.orchestrator.Orchestrator.handle",
+  "equivalent_cli": "python -m cimpy.llm_routing.run_router",
+  "user_inputs": [
+    "Wie ist die Nennspannung von Bus 1 in PowerFactory?",
+    "Gib mir die Basisdaten-Nennspannung von Bus 1 aus Powerfactory.",
+    "Welche Nennspannung hat Bus 1 in Powerfactory?",
+    "Was ist die rated voltage von Bus 1 bei Powerfactory?",
+    "Was ist die obere Spannungsgrenze von Bus 1 in PowerFactory?",
+    "Wie hoch ist die untere Spannungsgrenze von Bus 1 in Powerfactory?",
+    "Nenne mir die Spannungsgrenzen von Bus 1 in Powerfactory.",
+    "Welche Umin- und Umax-Grenzen sind bei Bus 1 in Powerfactory hinterlegt?"
+  ],
+  "trace_columns": [
+    "domain",
+    "planning_mode",
+    "workflow",
+    "confidence",
+    "safe_to_execute",
+    "num_steps",
+    "steps",
+    "planner_reasoning",
+    "resolved_object",
+    "resolved_object_confidence",
+    "selected_attributes",
+    "attribute_confidence",
+    "num_tool_calls",
+    "executed_tools",
+    "failed_tool"
+  ]
+}

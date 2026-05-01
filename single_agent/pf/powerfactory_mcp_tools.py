@@ -4620,7 +4620,9 @@ def _build_pf_attribute_description_shortlist_chain():
             'Treat the attribute ID only as the identifier you return.\n'
             'Do NOT use naming patterns, prefixes, abbreviations, units, readability flags, sample values, or data-source hints.\n'
             'Compare the FULL user request against the provided descriptions only.\n'
-            'Select 3 to 8 candidate attribute names only if their descriptions are genuinely plausible matches.\n'
+            'Select all candidate attribute names whose descriptions are genuinely plausible matches.\n'
+            'It is valid to return only 1 or 2 candidates if only 1 or 2 descriptions are plausible, maximum number should be 5.\n'
+            'If you have more than 5 candidates, do not only take the first ones, but decide which ones fit best.\n'
             'If nothing is grounded enough in the provided descriptions, return an empty shortlist and should_execute=false.\n'
             'Do not invent attribute names.'
         ),

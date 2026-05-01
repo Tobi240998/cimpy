@@ -1,0 +1,25 @@
+run_id,user_input,route,answer,status,error,details,duration_seconds,json_path,domain,planning_mode,workflow,confidence,safe_to_execute,num_steps,steps,planner_reasoning,resolved_object,resolved_object_confidence,selected_attributes,attribute_confidence,num_tool_calls,executed_tools,failed_tool
+1,Welche Lasten gibt es in PowerFactory?,ASK_USER,"Können Sie mir sagen, welche Arten von Lasten im PowerFactory-Projekt enthalten sind?",,,,3.724,router_batch_results\20260430_105033\001_router_result.json,ASK_USER,,,,,0,,,,,,,0,,
+2,Zeig mir alle verfügbaren Lasten im aktiven PowerFactory-Projekt.,POWERFACTORY,"Verfügbare Lasten: Load A, Load B, Load C",ok,,,18.3,router_batch_results\20260430_105033\002_router_result.json,POWERFACTORY,,,low,False,1,get_load_catalog,"Primary failed: Failed to parse PFPlannerDecision from completion {""intent"": ""load_catalog"", ""confidence"": ""high"", ""target_kind"": ""load"", ""safe_to_execute"": true, ""reasoning"": ""The user is asking for a catalog of loads in PowerFactory. This request matches the standard workflow and intent."", ""required_steps"": [{""step_name"": ""get_load_catalog"", ""description"": ""Reads available load objects from active project.""}], ""missing_context"": [], ""summary"": {}}. Got: 1 validation error for PFPlannerDecision
+required_steps.0
+  Input should be a valid string [type=string_type, input_value={'step_name': 'get_load_c...s from active project.'}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.12/v/string_type
+For troubleshooting, visit: https://docs.langchain.com/oss/python/langchain/errors/OUTPUT_PARSING_FAILURE  | Fallback failed: Failed to parse PFPlannerDecision from completion {""properties"": {""intent"": {""description"": ""One of: load_catalog, change_load, topology_query, change_switch_state, query_element_data, list_element_attributes, unsupported_powerfactory_request"", ""title"": ""Intent""}, ""confidence"": {""description"": ""One of: high, medium, low"", ""title"": ""Confidence""}, ""target_kind"": {""description"": ""Main target type, e.g. load, topology_asset, switch, catalog, unknown"", ""title"": ""Target Kind""}, ""safe_to_execute"": {""description"": ""True if the request can be executed with the currently supported workflow"", ""title"": ""Safe To Execute""}, ""missing_context"": {""items"": {""type"": ""string""}, ""title"": ""Missing Context""}, ""required_steps"": {""items"": {""type"": ""string""}, ""title"": ""Required Steps""}, ""reasoning"": {""description"": ""Short explanation of why this plan was selected"", ""title"": ""Reasoning""}}, ""required"": [""intent"", ""confidence"", ""target_kind"", ""safe_to0\n``` \nThe response is incomplete and does not follow the provided JSON schema. It lacks confidence, missing contexts, required steps, reasoning for selection of plan, as well as other necessary details such as safe to execute status which are mandatory according to the given schema. The intent 'load_catalog' seems appropriate based on user request but it is also important that these additional fields be filled out correctly in a complete JSON response following the provided structure and rules.\n```json\n{\n  ""]}. Got: 5 validation errors for PFPlannerDecision
+intent
+  Field required [type=missing, input_value={'properties': {'intent':...ules.\n```json\n{\n  ""]}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.12/v/missing
+confidence
+  Field required [type=missing, input_value={'properties': {'intent':...ules.\n```json\n{\n  ""]}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.12/v/missing
+target_kind
+  Field required [type=missing, input_value={'properties': {'intent':...ules.\n```json\n{\n  ""]}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.12/v/missing
+safe_to_execute
+  Field required [type=missing, input_value={'properties': {'intent':...ules.\n```json\n{\n  ""]}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.12/v/missing
+reasoning
+  Field required [type=missing, input_value={'properties': {'intent':...ules.\n```json\n{\n  ""]}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.12/v/missing
+For troubleshooting, visit: https://docs.langchain.com/oss/python/langchain/errors/OUTPUT_PARSING_FAILURE ",,,,,1,get_load_catalog,
+3,Liste die vorhandenen Loads in Powerfactory auf.,HISTORICAL,Ich habe 1 Objekte vom Typ 'LoadAggregate' gefunden: _a03763f7-63b3-0048-ca57-4b18c1f7d3cd,ok,,,4.623,router_batch_results\20260430_105033\003_router_result.json,HISTORICAL,,,high,True,2,scan_snapshot_inventory | list_equipment_of_type,The user request to list all loads can be safely executed with standard_listing mode without additional context or planning steps.,,,,,2,scan_snapshot_inventory | list_equipment_of_type,
+4,Welche Verbraucher sind im PF-Modell vorhanden?,ASK_USER,"Können Sie mir sagen, welche Arten von Verbrauchern im PowerFactory Modell enthalten sind?",,,,0.504,router_batch_results\20260430_105033\004_router_result.json,ASK_USER,,,,,0,,,,,,,0,,

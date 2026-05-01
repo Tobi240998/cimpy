@@ -1,0 +1,31 @@
+{
+  "run_id": 1,
+  "timestamp": "2026-04-30T10:50:37.271883",
+  "user_input": "Welche Lasten gibt es in PowerFactory?",
+  "duration_seconds": 3.724,
+  "decision_trace": {
+    "domain": "ASK_USER",
+    "planning_mode": "",
+    "workflow": "",
+    "confidence": "",
+    "safe_to_execute": "",
+    "num_steps": 0,
+    "steps": "",
+    "planner_reasoning": "",
+    "resolved_object": "",
+    "resolved_object_confidence": "",
+    "selected_attributes": "",
+    "attribute_confidence": "",
+    "num_tool_calls": 0,
+    "executed_tools": "",
+    "failed_tool": ""
+  },
+  "router_output": {
+    "route": "ASK_USER",
+    "question": "Können Sie mir sagen, welche Arten von Lasten im PowerFactory-Projekt enthalten sind?",
+    "missing_fields": [
+      "data_source"
+    ],
+    "partial": {}
+  }
+}

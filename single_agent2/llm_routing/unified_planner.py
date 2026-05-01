@@ -97,12 +97,53 @@ class UnifiedPlannerDecision(BaseModel):
     clarification_question: str = ""
     reasoning: str = ""
 
+class UnifiedCompositeSubrequest(BaseModel):
+    user_input: str
+    depends_on_previous: bool = False
+
+
+class UnifiedCompositeDecision(BaseModel):
+    is_composite: bool
+    subrequests: List[UnifiedCompositeSubrequest] = Field(default_factory=list)
+    reasoning: str = ""
 
 class UnifiedPlanner:
     def __init__(self, registry):
         self.registry = registry
         self.llm = get_llm()
         self.parser = PydanticOutputParser(pydantic_object=UnifiedPlannerDecision)
+
+        self.composite_parser = PydanticOutputParser(
+            pydantic_object=UnifiedCompositeDecision
+        )
+
+        self.composite_prompt = ChatPromptTemplate.from_messages([
+            (
+                "system",
+                """
+        You are the composite-request analyzer of a unified single-agent energy-grid analysis system.
+
+        Your task:
+        - decide whether the user request contains one task or multiple sequential tasks
+        - split only when there are clearly multiple user goals or a later part depends on the result of an earlier part
+        - keep normal single workflow requests as one request
+        - do not invent missing technical details
+        - keep the same language as the original user input
+        - if unsure, prefer is_composite=false
+
+        Important:
+        - Do not split only because the sentence is long.
+        - Do not split if the request can be answered by one standard workflow.
+        - Split if the request asks to first identify objects and then query values or attributes of those identified objects.
+        - Split if the second part refers to previous results using words like "diese", "deren", "dazu", "die dazugehörigen", "those", "their".
+
+        Return only structured output.
+
+        {format_instructions}
+        """
+            ),
+            ("user", "User request:\n{user_input}")
+        ])
 
         self.prompt = ChatPromptTemplate.from_messages([
             (
@@ -230,6 +271,8 @@ Return only structured output.
             data = decision.model_dump() if hasattr(decision, "model_dump") else decision.dict()
 
         except OutputParserException as exc:
+            print("[DEBUG UnifiedPlanner parser error]", str(exc))
+            print("[DEBUG UnifiedPlanner llm_output]", getattr(exc, "llm_output", None))
             return {
                 "status": "error",
                 "answer": "Der UnifiedPlanner hat keine gültige strukturierte Ausgabe erzeugt.",
@@ -380,4 +423,47 @@ Return only structured output.
                 reasoning=data.get("reasoning", ""),
             ),
             "planner_decision": data,
+        }
+    
+    def decompose_request(self, user_input: str) -> Dict[str, Any]:
+        chain = self.composite_prompt | self.llm | self.composite_parser
+
+        try:
+            decision = chain.invoke({
+                "user_input": user_input,
+                "format_instructions": self.composite_parser.get_format_instructions(),
+            })
+            data = decision.model_dump() if hasattr(decision, "model_dump") else decision.dict()
+
+        except Exception as exc:
+            return {
+                "status": "ok",
+                "is_composite": False,
+                "subrequests": [],
+                "reasoning": f"Composite analysis failed, treated as single request: {exc}",
+            }
+
+        subrequests = data.get("subrequests", []) or []
+
+        if not data.get("is_composite", False):
+            return {
+                "status": "ok",
+                "is_composite": False,
+                "subrequests": [],
+                "reasoning": data.get("reasoning", ""),
+            }
+
+        if len(subrequests) < 2:
+            return {
+                "status": "ok",
+                "is_composite": False,
+                "subrequests": [],
+                "reasoning": "Composite decision had fewer than two subrequests; treated as single request.",
+            }
+
+        return {
+            "status": "ok",
+            "is_composite": True,
+            "subrequests": subrequests,
+            "reasoning": data.get("reasoning", ""),
         }

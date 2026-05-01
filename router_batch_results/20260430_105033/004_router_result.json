@@ -1,0 +1,31 @@
+{
+  "run_id": 4,
+  "timestamp": "2026-04-30T10:51:00.792459",
+  "user_input": "Welche Verbraucher sind im PF-Modell vorhanden?",
+  "duration_seconds": 0.504,
+  "decision_trace": {
+    "domain": "ASK_USER",
+    "planning_mode": "",
+    "workflow": "",
+    "confidence": "",
+    "safe_to_execute": "",
+    "num_steps": 0,
+    "steps": "",
+    "planner_reasoning": "",
+    "resolved_object": "",
+    "resolved_object_confidence": "",
+    "selected_attributes": "",
+    "attribute_confidence": "",
+    "num_tool_calls": 0,
+    "executed_tools": "",
+    "failed_tool": ""
+  },
+  "router_output": {
+    "route": "ASK_USER",
+    "question": "Können Sie mir sagen, welche Arten von Verbrauchern im PowerFactory Modell enthalten sind?",
+    "missing_fields": [
+      "data_source"
+    ],
+    "partial": {}
+  }
+}

@@ -1,0 +1,33 @@
+{
+  "run_id": 1,
+  "timestamp": "2026-05-01T11:53:48.779378",
+  "user_input": "Wie ist die Nennspannung von Bus 1 in PowerFactory?",
+  "duration_seconds": 4.312,
+  "decision_trace": {
+    "domain": "ERROR",
+    "planning_mode": "",
+    "workflow": "",
+    "confidence": "",
+    "safe_to_execute": "",
+    "num_steps": 0,
+    "steps": "",
+    "planner_reasoning": "",
+    "resolved_object": "",
+    "resolved_object_confidence": "",
+    "selected_attributes": "",
+    "attribute_confidence": "",
+    "num_tool_calls": 0,
+    "executed_tools": "",
+    "failed_tool": ""
+  },
+  "router_output": {
+    "route": "ERROR",
+    "result": {
+      "status": "error",
+      "error": "ResponseError",
+      "details": "model 'qwen3:30b' not found (status code: 404)",
+      "traceback": "Traceback (most recent call last):\n  File \"C:\\Users\\STELLER\\Documents\\Masterarbeit\\Test CIM\\cimpy fork\\cimpy\\run_router_batch.py\", line 559, in main\n    out = orch.handle(user_input)\n  File \"C:\\Users\\STELLER\\Documents\\Masterarbeit\\Test CIM\\cimpy fork\\cimpy\\llm_routing\\orchestrator.py\", line 50, in handle\n    result = historical_tool.invoke(args)\n  File \"C:\\Users\\STELLER\\Documents\\Masterarbeit\\Test CIM\\cimpy\\.venv\\lib\\site-packages\\langchain_core\\tools\\base.py\", line 642, in invoke\n    return self.run(tool_input, **kwargs)\n  File \"C:\\Users\\STELLER\\Documents\\Masterarbeit\\Test CIM\\cimpy\\.venv\\lib\\site-packages\\langchain_core\\tools\\base.py\", line 1000, in run\n    raise error_to_raise\n  File \"C:\\Users\\STELLER\\Documents\\Masterarbeit\\Test CIM\\cimpy\\.venv\\lib\\site-packages\\langchain_core\\tools\\base.py\", line 966, in run\n    response = context.run(self._run, *tool_args, **tool_kwargs)\n  File \"C:\\Users\\STELLER\\Documents\\Masterarbeit\\Test CIM\\cimpy\\.venv\\lib\\site-packages\\langchain_core\\tools\\structured.py\", line 97, in _run\n    return self.func(*args, **kwargs)\n  File \"C:\\Users\\STELLER\\Documents\\Masterarbeit\\Test CIM\\cimpy fork\\cimpy\\llm_routing\\tools.py\", line 31, in historical_tool\n    return agent.run(user_input)\n  File \"C:\\Users\\STELLER\\Documents\\Masterarbeit\\Test CIM\\cimpy fork\\cimpy\\cimpy_time_analysis\\cim_domain_agent.py\", line 716, in run\n    classification = self.classify_request(user_input)\n  File \"C:\\Users\\STELLER\\Documents\\Masterarbeit\\Test CIM\\cimpy fork\\cimpy\\cimpy_time_analysis\\cim_domain_agent.py\", line 437, in classify_request\n    fallback = self._fallback_request_mode_via_llm(user_input)\n  File \"C:\\Users\\STELLER\\Documents\\Masterarbeit\\Test CIM\\cimpy fork\\cimpy\\cimpy_time_analysis\\cim_domain_agent.py\", line 380, in _fallback_request_mode_via_llm\n    decision = chain.invoke({\n  File \"C:\\Users\\STELLER\\Documents\\Masterarbeit\\Test CIM\\cimpy\\.venv\\lib\\site-packages\\langchain_core\\runnables\\base.py\", line 3157, in invoke\n    input_ = context.run(step.invoke, input_, config)\n  File \"C:\\Users\\STELLER\\Documents\\Masterarbeit\\Test CIM\\cimpy\\.venv\\lib\\site-packages\\langchain_core\\language_models\\chat_models.py\", line 402, in invoke\n    self.generate_prompt(\n  File \"C:\\Users\\STELLER\\Documents\\Masterarbeit\\Test CIM\\cimpy\\.venv\\lib\\site-packages\\langchain_core\\language_models\\chat_models.py\", line 1121, in generate_prompt\n    return self.generate(prompt_messages, stop=stop, callbacks=callbacks, **kwargs)\n  File \"C:\\Users\\STELLER\\Documents\\Masterarbeit\\Test CIM\\cimpy\\.venv\\lib\\site-packages\\langchain_core\\language_models\\chat_models.py\", line 931, in generate\n    self._generate_with_cache(\n  File \"C:\\Users\\STELLER\\Documents\\Masterarbeit\\Test CIM\\cimpy\\.venv\\lib\\site-packages\\langchain_core\\language_models\\chat_models.py\", line 1233, in _generate_with_cache\n    result = self._generate(\n  File \"C:\\Users\\STELLER\\Documents\\Masterarbeit\\Test CIM\\cimpy\\.venv\\lib\\site-packages\\langchain_ollama\\chat_models.py\", line 1030, in _generate\n    final_chunk = self._chat_stream_with_aggregation(\n  File \"C:\\Users\\STELLER\\Documents\\Masterarbeit\\Test CIM\\cimpy\\.venv\\lib\\site-packages\\langchain_ollama\\chat_models.py\", line 965, in _chat_stream_with_aggregation\n    for chunk in self._iterate_over_stream(messages, stop, **kwargs):\n  File \"C:\\Users\\STELLER\\Documents\\Masterarbeit\\Test CIM\\cimpy\\.venv\\lib\\site-packages\\langchain_ollama\\chat_models.py\", line 1054, in _iterate_over_stream\n    for stream_resp in self._create_chat_stream(messages, stop, **kwargs):\n  File \"C:\\Users\\STELLER\\Documents\\Masterarbeit\\Test CIM\\cimpy\\.venv\\lib\\site-packages\\langchain_ollama\\chat_models.py\", line 952, in _create_chat_stream\n    yield from self._client.chat(**chat_params)\n  File \"C:\\Users\\STELLER\\Documents\\Masterarbeit\\Test CIM\\cimpy\\.venv\\lib\\site-packages\\ollama\\_client.py\", line 179, in inner\n    raise ResponseError(e.response.text, e.response.status_code) from None\nollama._types.ResponseError: model 'qwen3:30b' not found (status code: 404)\n",
+      "answer": "Batch-Ausführung fehlgeschlagen: ResponseError: model 'qwen3:30b' not found (status code: 404)"
+    }
+  }
+}

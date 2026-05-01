@@ -14,9 +14,9 @@ from cimpy.single_agent.llm_routing.orchestrator import Orchestrator
 
 USER_INPUTS: List[str] = [
     "Welche Lasten gibt es in PowerFactory?",
-    "Zeig mir alle verfügbaren Lasten im aktiven Projekt.",
-    "Liste die vorhandenen Loads auf.",
-    "Welche Verbraucher sind im Modell vorhanden?",
+    "Zeig mir alle verfügbaren Lasten im aktiven PowerFactory-Projekt.",
+    "Liste die vorhandenen Loads in Powerfactory auf.",
+    "Welche Verbraucher sind im PF-Modell vorhanden?",
 ]
 
 OUTPUT_DIR = Path("router_batch_results") / datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -69,42 +69,57 @@ def save_json(path: Path, payload: Dict[str, Any]) -> None:
         json.dump(payload, f, ensure_ascii=False, indent=2, default=json_default)
 
 
+def _clean_csv_cell(value: Any) -> str:
+    text = _stringify(value)
+    text = text.replace("\r\n", " ")
+    text = text.replace("\n", " ")
+    text = text.replace("\r", " ")
+    return text.strip()
+
+
 def save_csv(path: Path, rows: List[SummaryRow]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
-    with path.open("w", encoding="utf-8", newline="") as f:
+
+    fieldnames = list(asdict(rows[0]).keys()) if rows else [
+        "run_id",
+        "user_input",
+        "route",
+        "answer",
+        "status",
+        "error",
+        "details",
+        "duration_seconds",
+        "json_path",
+        "domain",
+        "planning_mode",
+        "workflow",
+        "confidence",
+        "safe_to_execute",
+        "num_steps",
+        "steps",
+        "planner_reasoning",
+        "resolved_object",
+        "resolved_object_confidence",
+        "selected_attributes",
+        "attribute_confidence",
+        "num_tool_calls",
+        "executed_tools",
+        "failed_tool",
+    ]
+
+    with path.open("w", encoding="utf-8-sig", newline="") as f:
         writer = csv.DictWriter(
             f,
-            fieldnames=list(asdict(rows[0]).keys()) if rows else [
-                "run_id",
-                "user_input",
-                "route",
-                "answer",
-                "status",
-                "error",
-                "details",
-                "duration_seconds",
-                "json_path",
-                "domain",
-                "planning_mode",
-                "workflow",
-                "confidence",
-                "safe_to_execute",
-                "num_steps",
-                "steps",
-                "planner_reasoning",
-                "resolved_object",
-                "resolved_object_confidence",
-                "selected_attributes",
-                "attribute_confidence",
-                "num_tool_calls",
-                "executed_tools",
-                "failed_tool",
-            ],
+            fieldnames=fieldnames,
+            delimiter=";",
+            quoting=csv.QUOTE_ALL,
         )
         writer.writeheader()
-        for row in rows:
-            writer.writerow(asdict(row))
 
+        for row in rows:
+            raw = asdict(row)
+            cleaned = {key: _clean_csv_cell(value) for key, value in raw.items()}
+            writer.writerow(cleaned)
 
 def _stringify(value: Any) -> str:
     if value is None:

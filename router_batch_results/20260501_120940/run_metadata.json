@@ -1,0 +1,33 @@
+{
+  "started_at": "2026-05-01T12:09:40.980808",
+  "entrypoint": "cimpy.llm_routing.orchestrator.Orchestrator.handle",
+  "equivalent_cli": "python -m cimpy.llm_routing.run_router",
+  "user_inputs": [
+    "Wie ist die Nennspannung von Bus 1 in PowerFactory?",
+    "Gib mir die Basisdaten-Nennspannung von Bus 1 aus Powerfactory.",
+    "Welche Nennspannung hat Bus 1 in Powerfactory?"
+  ],
+  "trace_columns": [
+    "domain",
+    "planning_mode",
+    "workflow",
+    "confidence",
+    "safe_to_execute",
+    "num_steps",
+    "steps",
+    "planner_reasoning",
+    "resolved_object",
+    "resolved_object_confidence",
+    "selected_attributes",
+    "attribute_confidence",
+    "num_tool_calls",
+    "executed_tools",
+    "failed_tool"
+  ],
+  "finished_at": "2026-05-01T12:22:18.970453",
+  "output_dir": "router_batch_results\\20260501_120940",
+  "num_runs": 3,
+  "num_errors": 1,
+  "total_duration_seconds": 757.991,
+  "average_duration_seconds": 252.586
+}

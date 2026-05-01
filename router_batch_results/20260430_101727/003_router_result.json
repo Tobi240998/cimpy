@@ -1,0 +1,34 @@
+{
+  "run_id": 3,
+  "timestamp": "2026-04-30T10:18:35.024739",
+  "user_input": "Liste die vorhandenen Loads auf.",
+  "duration_seconds": 5.03,
+  "decision_trace": {
+    "domain": "ASK_USER",
+    "planning_mode": "",
+    "workflow": "",
+    "confidence": "",
+    "safe_to_execute": "",
+    "num_steps": 0,
+    "steps": "",
+    "planner_reasoning": "",
+    "resolved_object": "",
+    "resolved_object_confidence": "",
+    "selected_attributes": "",
+    "attribute_confidence": "",
+    "num_tool_calls": 0,
+    "executed_tools": "",
+    "failed_tool": ""
+  },
+  "router_output": {
+    "route": "ASK_USER",
+    "status": "needs_clarification",
+    "question": "Soll ich die Anfrage mit den CIM-Daten oder mit dem PowerFactory-Projekt beantworten?",
+    "missing_fields": [
+      "data_source"
+    ],
+    "partial": {
+      "user_input": "Liste die vorhandenen Loads auf."
+    }
+  }
+}
