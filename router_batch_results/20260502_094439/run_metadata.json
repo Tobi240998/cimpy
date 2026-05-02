@@ -1,0 +1,34 @@
+{
+  "started_at": "2026-05-02T09:44:39.240962",
+  "entrypoint": "cimpy.llm_routing.orchestrator.Orchestrator.handle",
+  "equivalent_cli": "python -m cimpy.llm_routing.run_router",
+  "user_inputs": [
+    "Was ist die obere Spannungsgrenze von Bus 1 in PowerFactory?",
+    "Wie hoch ist die untere Spannungsgrenze von Bus 1 in Powerfactory?",
+    "Nenne mir die Spannungsgrenzen von Bus 1 in Powerfactory.",
+    "Welche Umin- und Umax-Grenzen sind bei Bus 1 in Powerfactory hinterlegt?"
+  ],
+  "trace_columns": [
+    "domain",
+    "planning_mode",
+    "workflow",
+    "confidence",
+    "safe_to_execute",
+    "num_steps",
+    "steps",
+    "planner_reasoning",
+    "resolved_object",
+    "resolved_object_confidence",
+    "selected_attributes",
+    "attribute_confidence",
+    "num_tool_calls",
+    "executed_tools",
+    "failed_tool"
+  ],
+  "finished_at": "2026-05-02T09:52:58.332193",
+  "output_dir": "router_batch_results\\20260502_094439",
+  "num_runs": 4,
+  "num_errors": 2,
+  "total_duration_seconds": 499.089,
+  "average_duration_seconds": 124.678
+}

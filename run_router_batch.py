@@ -13,9 +13,11 @@ from cimpy.llm_routing.orchestrator import Orchestrator
 
 
 USER_INPUTS: List[str] = [
-    "Wie ist die Nennspannung von Bus 1 in PowerFactory?",
-    "Gib mir die Basisdaten-Nennspannung von Bus 1 aus Powerfactory.",
-    "Welche Nennspannung hat Bus 1 in Powerfactory?",
+    "Was ist die obere Spannungsgrenze von Bus 1 in PowerFactory?",
+    "Wie hoch ist die untere Spannungsgrenze von Bus 1 in Powerfactory?",
+    "Nenne mir die Spannungsgrenzen von Bus 1 in Powerfactory.",
+    "Welche Umin- und Umax-Grenzen sind bei Bus 1 in Powerfactory hinterlegt?",
+
 ]
 
 OUTPUT_DIR = Path("router_batch_results") / datetime.now().strftime("%Y%m%d_%H%M%S")

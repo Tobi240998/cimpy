@@ -46,8 +46,8 @@ from cimpy.single_agent.pf.schemas import (
     SwitchInstructionDecision, 
     ResultRequestDecision, 
     ResultRequestRoutingDecision, 
-    InventoryCatalogTypeDecision
-)
+    InventoryCatalogTypeDecision, 
+ )
 
 def _to_py_list(value: Any) -> List[Any]:
     if value is None:
@@ -3105,6 +3105,7 @@ def _classify_data_source_preference(user_input: str) -> Dict[str, Any]:
         invoke_payload = {'user_input': user_input or ''}
         if parser is not None:
             invoke_payload['format_instructions'] = parser.get_format_instructions()
+
         decision = chain.invoke(invoke_payload)
 
         if hasattr(decision, 'model_dump'):
@@ -3120,16 +3121,45 @@ def _classify_data_source_preference(user_input: str) -> Dict[str, Any]:
         if selected not in {'base', 'result', 'ambiguous'}:
             selected = 'ambiguous'
 
+        confidence = str(decision_dict.get('confidence') or 'low').strip().lower()
+        if confidence not in {'high', 'medium', 'low'}:
+            confidence = 'low'
+
+        attribute_match_mode = str(
+            decision_dict.get('attribute_match_mode') or 'ambiguous'
+        ).strip().lower()
+        if attribute_match_mode not in {
+            'technical_name',
+            'semantic_description',
+            'ambiguous',
+        }:
+            attribute_match_mode = 'ambiguous'
+
+        attribute_match_confidence = str(
+            decision_dict.get('attribute_match_confidence') or 'low'
+        ).strip().lower()
+        if attribute_match_confidence not in {'high', 'medium', 'low'}:
+            attribute_match_confidence = 'low'
+
         return {
             'status': 'ok',
             'selected_data_source': selected,
-            'confidence': decision_dict.get('confidence', 'low'),
+            'confidence': confidence,
             'rationale': decision_dict.get('rationale', ''),
             'should_execute': bool(decision_dict.get('should_execute', False)),
             'decision_mode': 'llm',
             'llm_decision': decision_dict,
             'chain_mode': chain_mode,
+
+            # Attribute-matching routing
+            'attribute_match_mode': attribute_match_mode,
+            'attribute_match_confidence': attribute_match_confidence,
+            'attribute_match_rationale': decision_dict.get(
+                'attribute_match_rationale',
+                '',
+            ),
         }
+
     except Exception as e:
         return {
             'status': 'error',
@@ -3140,10 +3170,20 @@ def _classify_data_source_preference(user_input: str) -> Dict[str, Any]:
             'decision_mode': 'fallback_error',
             'llm_decision': {'error': str(e)},
             'chain_mode': 'failed',
+
+            # Safe defaults
+            'attribute_match_mode': 'ambiguous',
+            'attribute_match_confidence': 'low',
+            'attribute_match_rationale': (
+                f'Attribute-match-mode fallback wegen Fehler: {e}'
+            ),
         }
 def _resolve_data_source_preference(user_input: str) -> Dict[str, Any]:
     decision = _classify_data_source_preference(user_input)
     selected = decision.get('selected_data_source', 'base')
+    decision.setdefault("attribute_match_mode", "ambiguous")
+    decision.setdefault("attribute_match_confidence", "low")
+    decision.setdefault("attribute_match_rationale", "")
 
     if selected not in {'base', 'result'}:
         decision['fallback_applied'] = True
@@ -3489,6 +3529,7 @@ def _interpret_data_query_instruction_with_services(
 ) -> Dict[str, Any]:
     project_name = services['project_name']
     available_types = inventory.get('available_types', []) if isinstance(inventory, dict) else []
+
     if not available_types:
         return {
             'status': 'error',
@@ -3523,35 +3564,40 @@ def _interpret_data_query_instruction_with_services(
         else:
             llm_decision_dump = {}
 
-        raw_selected_entity_type = None
-        if hasattr(decision, 'selected_entity_type'):
-            raw_selected_entity_type = decision.selected_entity_type
-        elif isinstance(llm_decision_dump, dict):
-            raw_selected_entity_type = llm_decision_dump.get('selected_entity_type')
+        raw_selected_entity_type = (
+            decision.selected_entity_type
+            if hasattr(decision, 'selected_entity_type')
+            else llm_decision_dump.get('selected_entity_type')
+        )
 
         if raw_selected_entity_type in available_types:
             selected_entity_type = raw_selected_entity_type
 
-        if hasattr(decision, 'confidence'):
-            confidence = decision.confidence
-        else:
-            confidence = str(llm_decision_dump.get('confidence') or 'low')
+        confidence = (
+            decision.confidence
+            if hasattr(decision, 'confidence')
+            else str(llm_decision_dump.get('confidence') or 'low')
+        )
 
-        if hasattr(decision, 'rationale'):
-            rationale = decision.rationale
-        else:
-            rationale = str(llm_decision_dump.get('rationale') or '')
+        rationale = (
+            decision.rationale
+            if hasattr(decision, 'rationale')
+            else str(llm_decision_dump.get('rationale') or '')
+        )
 
-        if hasattr(decision, 'missing_context'):
-            missing_context = decision.missing_context or []
-        else:
-            raw_missing_context = llm_decision_dump.get('missing_context', [])
-            missing_context = raw_missing_context if isinstance(raw_missing_context, list) else []
+        missing_context = (
+            decision.missing_context
+            if hasattr(decision, 'missing_context')
+            else llm_decision_dump.get('missing_context', [])
+        )
+        if not isinstance(missing_context, list):
+            missing_context = []
 
-        if hasattr(decision, 'should_execute'):
-            should_execute = bool(decision.should_execute)
-        else:
-            should_execute = bool(llm_decision_dump.get('should_execute', False))
+        should_execute = (
+            decision.should_execute
+            if hasattr(decision, 'should_execute')
+            else bool(llm_decision_dump.get('should_execute', False))
+        )
 
     except Exception as e:
         llm_decision_dump = {'error': str(e)}
@@ -3559,14 +3605,53 @@ def _interpret_data_query_instruction_with_services(
     if not selected_entity_type:
         missing_context.append('entity_type')
 
-    requested_attribute_llm = _extract_requested_attribute_names_llm(user_input)
-    requested_attribute_names = requested_attribute_llm.get('requested_attribute_names', [])
+    # -----------------------------
+    # 🔥 Data source + Match Mode
+    # -----------------------------
     data_source_decision = _resolve_data_source_preference(user_input)
+
+    attribute_match_mode = {
+        "status": data_source_decision.get("status", "ok"),
+        "mode": data_source_decision.get("attribute_match_mode", "ambiguous"),
+        "confidence": data_source_decision.get("attribute_match_confidence", "low"),
+        "should_execute": data_source_decision.get("attribute_match_confidence", "low") in {"high", "medium"},
+        "rationale": data_source_decision.get("attribute_match_rationale", ""),
+        "source": "data_source_decision",
+    }
+
+    match_mode = attribute_match_mode.get("mode", "ambiguous")
+    match_confidence = attribute_match_mode.get("confidence", "low")
+
+    # -----------------------------
+    # 🔥 Attribute extraction skip
+    # -----------------------------
+    if match_mode == "semantic_description" and match_confidence in {"high", "medium"}:
+        requested_attribute_llm = {
+            "status": "skipped",
+            "requested_attribute_names": [],
+            "llm_decision": {
+                "reason": "Skipped technical attribute-name extraction because attribute_match_mode=semantic_description."
+            },
+            "chain_mode": "skipped_by_attribute_match_mode",
+        }
+        requested_attribute_names = []
+    else:
+        requested_attribute_llm = _extract_requested_attribute_names_llm(user_input)
+        requested_attribute_names = requested_attribute_llm.get("requested_attribute_names", [])
+
+    # -----------------------------
+    # Data source
+    # -----------------------------
     data_source_preference = data_source_decision.get('effective_data_source', 'base')
+
     data_source_note = data_source_decision.get('data_source_note') or (
-        'Basisdaten werden verwendet.' if data_source_preference == 'base' else 'Lastflussergebnisse werden verwendet.'
+        'Basisdaten werden verwendet.' if data_source_preference == 'base'
+        else 'Lastflussergebnisse werden verwendet.'
     )
 
+    # -----------------------------
+    # Final instruction
+    # -----------------------------
     instruction = {
         'query_type': 'element_data',
         'entity_type': selected_entity_type,
@@ -3579,6 +3664,7 @@ def _interpret_data_query_instruction_with_services(
         'data_source_preference': data_source_preference,
         'data_source_note': data_source_note,
         'data_source_decision': data_source_decision,
+        'attribute_match_mode': attribute_match_mode,
     }
 
     if not should_execute or not selected_entity_type:
@@ -3606,7 +3692,6 @@ def _interpret_data_query_instruction_with_services(
         'confidence': confidence,
         'rationale': rationale,
     }
-
 
 # ------------------------------------------------------------------
 # DATA QUERY ATTRIBUTE LISTING / EXECUTION
@@ -4915,9 +5000,6 @@ def _select_pf_object_attributes_llm_with_services(
             'details': f'Das aufgelöste Objekt konnte in PowerFactory nicht geladen werden: {object_full_name}',
         }
 
-    # ============================================================
-    # SINGLE SOURCE OF TRUTH: PF-EXPORT-LISTE (attribute_name + attribute_description)
-    # ============================================================
     export_attribute_options = _build_pf_description_attribute_options(pf_object)
     if not export_attribute_options:
         return {
@@ -4937,17 +5019,82 @@ def _select_pf_object_attributes_llm_with_services(
         if item.get('handle')
     }
 
-    candidate_attribute_handles: List[str] = []
+    attribute_match_mode = instruction.get('attribute_match_mode', {}) if isinstance(instruction, dict) else {}
+    preferred_match_mode = str(attribute_match_mode.get('mode') or 'ambiguous').strip().lower()
+    preferred_match_confidence = str(attribute_match_mode.get('confidence') or 'low').strip().lower()
 
-    # ============================================================
-    # 1) STRICT EXACT MATCH GEGEN attribute_name (PF-EXPORT)
-    # ============================================================
-    exact_match_result = _match_requested_attribute_names_exact(
-        requested_attribute_names=requested_attribute_names,
-        attribute_options=export_attribute_options,
-    )
+    if preferred_match_mode not in {'technical_name', 'semantic_description', 'ambiguous'}:
+        preferred_match_mode = 'ambiguous'
+    if preferred_match_confidence not in {'high', 'medium', 'low'}:
+        preferred_match_confidence = 'low'
 
-    if exact_match_result.get('should_execute'):
+    use_preferred_mode = preferred_match_confidence in {'high', 'medium'}
+
+    def _make_skipped_exact_result(reason: str) -> Dict[str, Any]:
+        return {
+            'status': 'skipped',
+            'selected_attribute_names': [],
+            'selected_attribute_handles': [],
+            'matched_candidates': [],
+            'should_execute': False,
+            'confidence': 'low',
+            'rationale': reason,
+        }
+
+    def _make_skipped_description_result(reason: str) -> Dict[str, Any]:
+        return {
+            'status': 'skipped',
+            'llm_decision': {
+                'selected_attribute_names': [],
+                'confidence': 'low',
+                'rationale': reason,
+                'missing_context': [],
+                'should_execute': False,
+            },
+            'matched_candidates': [],
+            'selected_attribute_handles': [],
+            'shortlist': {},
+        }
+
+    def _run_exact_match() -> Dict[str, Any]:
+        return _match_requested_attribute_names_exact(
+            requested_attribute_names=requested_attribute_names,
+            attribute_options=export_attribute_options,
+        )
+
+    def _run_description_match() -> Dict[str, Any]:
+        return _match_pf_attributes_by_description_with_llm(
+            obj=pf_object,
+            entity_type=entity_type or '',
+            object_name=object_name or '',
+            user_input=request_text,
+            source_preference='base',
+        )
+
+    def _extract_description_handles(pf_description_match: Dict[str, Any]) -> List[str]:
+        candidates = pf_description_match.get('matched_candidates', []) or []
+        handles: List[str] = []
+        seen_handles = set()
+
+        for item in candidates:
+            if not isinstance(item, dict):
+                continue
+
+            handle = item.get('handle')
+            if not handle:
+                attr_name = item.get('attribute_name')
+                if attr_name:
+                    handle = f'attr::{attr_name}'
+
+            if not handle or handle not in available_handles or handle in seen_handles:
+                continue
+
+            seen_handles.add(handle)
+            handles.append(handle)
+
+        return handles
+
+    def _return_exact_success(exact_match_result: Dict[str, Any], pf_description_match: Dict[str, Any] | None) -> Dict[str, Any]:
         selected_handles = [
             handle for handle in exact_match_result.get('selected_attribute_handles', [])
             if handle in available_handles
@@ -4964,9 +5111,12 @@ def _select_pf_object_attributes_llm_with_services(
             'request_text': request_text,
             'requested_attribute_names': requested_attribute_names,
             'requested_attribute_name_extraction': instruction.get('requested_attribute_name_extraction'),
+            'attribute_match_mode': attribute_match_mode,
             'selection_mode': 'exact_attribute_name',
             'exact_match_result': exact_match_result,
-            'pf_description_attribute_count': len(export_attribute_options),
+            'pf_description_match': (
+                pf_description_match.get('llm_decision') if isinstance(pf_description_match, dict) else None
+            ),
             'final_selected_handles': selected_handles,
             'final_rationale': exact_match_result.get('rationale'),
             'final_should_execute': True,
@@ -5000,48 +5150,12 @@ def _select_pf_object_attributes_llm_with_services(
             'selection_debug': selection_debug,
         }
 
-    # ============================================================
-    # 2) ZWEISTUFIGER MATCH GEGEN attribute_description (PF-EXPORT)
-    # ============================================================
-    pf_description_match = _match_pf_attributes_by_description_with_llm(
-        obj=pf_object,
-        entity_type=entity_type or '',
-        object_name=object_name or '',
-        user_input=request_text,
-        source_preference='base',
-    )
-
-    pf_description_attribute_count = len(export_attribute_options)
-    pf_description_match_candidates = pf_description_match.get('matched_candidates', []) or []
-
-    pf_description_match_handles: List[str] = []
-    seen_handles = set()
-    for item in pf_description_match_candidates:
-        if not isinstance(item, dict):
-            continue
-
-        handle = item.get('handle')
-        if not handle:
-            attr_name = item.get('attribute_name')
-            if attr_name:
-                handle = f'attr::{attr_name}'
-
-        if not handle or handle not in available_handles or handle in seen_handles:
-            continue
-
-        seen_handles.add(handle)
-        pf_description_match_handles.append(handle)
-
-    pf_description_confidence = str(
-        (pf_description_match.get('llm_decision') or {}).get('confidence', '')
-    ).strip().lower()
-
-    if (
-        pf_description_match.get('status') == 'ok'
-        and (pf_description_match.get('llm_decision') or {}).get('should_execute')
-        and pf_description_confidence == 'high'
-        and pf_description_match_handles
-    ):
+    def _return_description_success(
+        exact_match_result: Dict[str, Any],
+        pf_description_match: Dict[str, Any],
+        pf_description_match_handles: List[str],
+    ) -> Dict[str, Any]:
+        pf_description_match_candidates = pf_description_match.get('matched_candidates', []) or []
         selected_attributes = [
             item for item in pf_description_match_candidates
             if item.get('handle') in pf_description_match_handles
@@ -5055,9 +5169,10 @@ def _select_pf_object_attributes_llm_with_services(
             'request_text': request_text,
             'requested_attribute_names': requested_attribute_names,
             'requested_attribute_name_extraction': instruction.get('requested_attribute_name_extraction'),
+            'attribute_match_mode': attribute_match_mode,
             'selection_mode': 'attribute_description_llm',
             'exact_match_result': exact_match_result,
-            'pf_description_attribute_count': pf_description_attribute_count,
+            'pf_description_attribute_count': len(export_attribute_options),
             'pf_description_shortlist': (
                 (pf_description_match.get('shortlist') or {}).get('llm_decision')
                 if isinstance(pf_description_match, dict) else None
@@ -5100,9 +5215,102 @@ def _select_pf_object_attributes_llm_with_services(
             'selection_debug': selection_debug,
         }
 
+    def _description_success(pf_description_match: Dict[str, Any], handles: List[str]) -> bool:
+        pf_description_confidence = str(
+            (pf_description_match.get('llm_decision') or {}).get('confidence', '')
+        ).strip().lower()
+
+        return (
+            pf_description_match.get('status') == 'ok'
+            and (pf_description_match.get('llm_decision') or {}).get('should_execute')
+            and pf_description_confidence == 'high'
+            and bool(handles)
+        )
+
+    exact_match_result: Dict[str, Any] = _make_skipped_exact_result('Exact match not executed yet.')
+    pf_description_match: Dict[str, Any] = _make_skipped_description_result('Description match not executed yet.')
+    pf_description_match_handles: List[str] = []
+
     # ============================================================
-    # 3) KEIN TREFFER
+    # Routing:
+    # - semantic_description: description first, exact only as fallback
+    # - technical_name: exact first, description only as fallback
+    # - ambiguous: old robust order, exact then description
     # ============================================================
+
+    if preferred_match_mode == 'semantic_description' and use_preferred_mode:
+        exact_match_result = _make_skipped_exact_result(
+            'Skipped exact attribute_name match because attribute_match_mode=semantic_description.'
+        )
+
+        pf_description_match = _run_description_match()
+        pf_description_match_handles = _extract_description_handles(pf_description_match)
+
+        if _description_success(pf_description_match, pf_description_match_handles):
+            return _return_description_success(
+                exact_match_result=exact_match_result,
+                pf_description_match=pf_description_match,
+                pf_description_match_handles=pf_description_match_handles,
+            )
+
+        # Fallback: semantic path failed, now try exact technical match.
+        exact_match_result = _run_exact_match()
+        if exact_match_result.get('should_execute'):
+            return _return_exact_success(
+                exact_match_result=exact_match_result,
+                pf_description_match=pf_description_match,
+            )
+
+    elif preferred_match_mode == 'technical_name' and use_preferred_mode:
+        exact_match_result = _run_exact_match()
+
+        if exact_match_result.get('should_execute'):
+            pf_description_match = _make_skipped_description_result(
+                'Skipped description match because exact technical attribute match succeeded.'
+            )
+            return _return_exact_success(
+                exact_match_result=exact_match_result,
+                pf_description_match=pf_description_match,
+            )
+
+        # Fallback: technical path failed, now try semantic description match.
+        pf_description_match = _run_description_match()
+        pf_description_match_handles = _extract_description_handles(pf_description_match)
+
+        if _description_success(pf_description_match, pf_description_match_handles):
+            return _return_description_success(
+                exact_match_result=exact_match_result,
+                pf_description_match=pf_description_match,
+                pf_description_match_handles=pf_description_match_handles,
+            )
+
+    else:
+        # Ambiguous or low-confidence mode: keep old robust behavior.
+        exact_match_result = _run_exact_match()
+
+        if exact_match_result.get('should_execute'):
+            pf_description_match = _make_skipped_description_result(
+                'Skipped description match because exact attribute match succeeded in ambiguous/default mode.'
+            )
+            return _return_exact_success(
+                exact_match_result=exact_match_result,
+                pf_description_match=pf_description_match,
+            )
+
+        pf_description_match = _run_description_match()
+        pf_description_match_handles = _extract_description_handles(pf_description_match)
+
+        if _description_success(pf_description_match, pf_description_match_handles):
+            return _return_description_success(
+                exact_match_result=exact_match_result,
+                pf_description_match=pf_description_match,
+                pf_description_match_handles=pf_description_match_handles,
+            )
+
+    # ============================================================
+    # Kein Treffer
+    # ============================================================
+    candidate_attribute_handles: List[str] = []
     for handle in pf_description_match_handles:
         if handle and handle not in candidate_attribute_handles:
             candidate_attribute_handles.append(handle)
@@ -5120,9 +5328,10 @@ def _select_pf_object_attributes_llm_with_services(
         'request_text': request_text,
         'requested_attribute_names': requested_attribute_names,
         'requested_attribute_name_extraction': instruction.get('requested_attribute_name_extraction'),
+        'attribute_match_mode': attribute_match_mode,
         'selection_mode': 'no_match',
         'exact_match_result': exact_match_result,
-        'pf_description_attribute_count': pf_description_attribute_count,
+        'pf_description_attribute_count': len(export_attribute_options),
         'pf_description_shortlist': (
             (pf_description_match.get('shortlist') or {}).get('llm_decision')
             if isinstance(pf_description_match, dict) else None
@@ -5133,7 +5342,7 @@ def _select_pf_object_attributes_llm_with_services(
         ),
         'pf_description_match': pf_description_match.get('llm_decision') if isinstance(pf_description_match, dict) else None,
         'pf_description_match_handles': pf_description_match_handles,
-        'pf_description_match_candidates': pf_description_match_candidates,
+        'pf_description_match_candidates': pf_description_match.get('matched_candidates', []) if isinstance(pf_description_match, dict) else [],
         'candidate_attribute_handles': candidate_attribute_handles,
         'candidate_attributes': candidate_attributes,
         'final_selected_handles': [],
@@ -5146,25 +5355,25 @@ def _select_pf_object_attributes_llm_with_services(
     }
     _print_debug_block('Attribute Selection', selection_debug)
 
+    instruction_out = dict(instruction)
+    instruction_out['selected_attribute_handles'] = []
+    instruction_out['attribute_selection_debug'] = selection_debug
+
     return {
         'status': 'error',
         'tool': 'select_pf_object_attributes_llm',
         'project': project_name,
-        'instruction': instruction,
+        'instruction': instruction_out,
         'resolution': resolution,
         'attribute_listing': {
             **(attribute_listing if isinstance(attribute_listing, dict) else {}),
             'attribute_options': export_attribute_options,
         },
-        'error': 'attribute_selection_not_safe',
-        'details': 'Die Attributauswahl konnte nicht sicher genug aufgelöst werden. Kandidaten wurden zurückgegeben.',
-        'candidate_attribute_handles': candidate_attribute_handles,
+        'error': 'attribute_selection_failed',
+        'details': 'Es konnte kein passendes PowerFactory-Attribut sicher ausgewählt werden.',
+        'selected_attribute_handles': [],
+        'selected_attributes': [],
         'candidate_attributes': candidate_attributes,
-        'llm_decision': {
-            'path': 'attribute_description_llm',
-            **((pf_description_match.get('llm_decision') or {})),
-        },
-        'missing_context': ['attribute_selection'],
         'selection_debug': selection_debug,
     }
 

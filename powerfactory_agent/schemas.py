@@ -86,6 +86,15 @@ class DataSourceDecision(BaseModel):
     confidence: str = Field(description="One of: high, medium, low")
     rationale: str = Field(description="Short explanation for the decision")
     should_execute: bool = Field(description="True if the decision is grounded enough to use directly without fallback.")
+    attribute_match_mode: str = Field(
+        description="One of: technical_name, semantic_description, ambiguous"
+    )
+    attribute_match_confidence: str = Field(
+        description="One of: high, medium, low"
+    )
+    attribute_match_rationale: str = Field(
+        description="Short explanation of the selected attribute matching mode"
+    )
 
 
 class ResultPredefinedFieldDecision(BaseModel):
