@@ -33,11 +33,13 @@ class RequestedAttributeNameDecision(BaseModel):
 
 
 class AttributeDescriptionShortlistDecision(BaseModel):
-    shortlisted_attribute_names: List[str] = Field(default_factory=list)
-    confidence: Literal["high", "medium", "low"]
-    rationale: str
-    missing_context: List[str] = Field(default_factory=list)
-    should_execute: bool
+    shortlisted_attribute_names: List[str] = Field(
+        default_factory=list,
+        description=(
+            "PowerFactory attribute_name values copied exactly from the provided candidate list. "
+            "Return an empty list if no candidate is plausible."
+        ),
+    )
 
 
 class AttributeDescriptionMatchDecision(BaseModel):
@@ -94,6 +96,12 @@ class DataSourceDecision(BaseModel):
     )
     attribute_match_rationale: str = Field(
         description="Short explanation of the selected attribute matching mode"
+    )
+    attribute_cardinality: str = Field(
+        description="One of: one, multiple, ambiguous"
+    )
+    attribute_cardinality_rationale: str = Field(
+        description="Short explanation of whether the request asks for one or multiple attributes"
     )
 
 

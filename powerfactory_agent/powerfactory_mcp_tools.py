@@ -3100,6 +3100,11 @@ def _build_data_source_decision_chain():
             "Do NOT map semantic phrases to technical PowerFactory names in this step.\n"
             "Use attribute_match_confidence=high only when the distinction is clear.\n"
             "Return ONLY valid structured output matching the required schema."
+
+            "You also classify whether the attribute request asks for one or multiple attribute values.\n"
+            "Return attribute_cardinality=one if the user asks for a single value, for example 'die obere Spannungsgrenze', 'die untere Spannungsgrenze', 'die Nennspannung'.\n"
+            "Return attribute_cardinality=multiple if the user asks for multiple values, for example 'obere und untere Spannungsgrenze', 'Spannungsgrenzen', 'Grenzwerte', 'min und max', 'upper and lower limits'.\n"
+            "Return attribute_cardinality=ambiguous if this cannot be determined safely.\n"
         ),
         (
             'user',
@@ -3150,6 +3155,12 @@ def _classify_data_source_preference(user_input: str) -> Dict[str, Any]:
         if attribute_match_confidence not in {'high', 'medium', 'low'}:
             attribute_match_confidence = 'low'
 
+        attribute_cardinality = str(
+            decision_dict.get("attribute_cardinality") or "ambiguous"
+        ).strip().lower()
+        if attribute_cardinality not in {"one", "multiple", "ambiguous"}:
+            attribute_cardinality = "ambiguous"
+
         return {
             'status': 'ok',
             'selected_data_source': selected,
@@ -3167,6 +3178,9 @@ def _classify_data_source_preference(user_input: str) -> Dict[str, Any]:
                 'attribute_match_rationale',
                 '',
             ),
+
+            "attribute_cardinality": attribute_cardinality,
+            "attribute_cardinality_rationale": decision_dict.get("attribute_cardinality_rationale", ""),
         }
 
     except Exception as e:
@@ -3674,6 +3688,8 @@ def _interpret_data_query_instruction_with_services(
         'data_source_note': data_source_note,
         'data_source_decision': data_source_decision,
         'attribute_match_mode': attribute_match_mode,
+        'attribute_cardinality': data_source_decision.get("attribute_cardinality", "ambiguous"),
+        'attribute_cardinality_rationale': data_source_decision.get("attribute_cardinality_rationale", ""),
     }
 
     if not should_execute or not selected_entity_type:
@@ -4612,89 +4628,23 @@ def _format_pf_description_options_for_prompt(attribute_options: List[Dict[str, 
     return '\n'.join(lines)
 
 
-def _fallback_shortlist_pf_attributes_by_description(
-    attribute_options: List[Dict[str, Any]],
-    user_input: str,
-    max_candidates: int = 5,
-) -> Dict[str, Any]:
-    text = _safe_lower(user_input)
-    query_tokens = [t for t in _tokenize(text) if len(t) >= 3]
-
-    stopwords = {
-        'der', 'die', 'das', 'dem', 'den', 'des', 'ein', 'eine', 'einer', 'eines',
-        'und', 'oder', 'mit', 'von', 'für', 'auf', 'im', 'in', 'am', 'an', 'zu',
-        'ist', 'sind', 'was', 'welche', 'welcher', 'welches', 'line'
-    }
-    query_tokens = [t for t in query_tokens if t not in stopwords]
-
-    def _score(item: Dict[str, Any]) -> tuple[float, int, str]:
-        description = _safe_lower(item.get('attribute_description') or '')
-        attr_name = str(item.get('attribute_name') or '')
-        score = 0.0
-        matched_tokens = 0
-
-        for token in query_tokens:
-            if token and token in description:
-                matched_tokens += 1
-                score += 2.0
-
-        if any('therm' in token for token in query_tokens) and 'thermal' in description:
-            score += 4.0
-        if any(('auslast' in token) or ('belast' in token) for token in query_tokens) and 'loading' in description:
-            score += 5.0
-        if any('max' in token for token in query_tokens) and ('maximum' in description or 'max' in description):
-            score += 2.0
-        if any('spann' in token for token in query_tokens) and 'voltage' in description:
-            score += 3.0
-        if any('strom' in token for token in query_tokens) and 'current' in description:
-            score += 3.0
-        if any('nenn' in token for token in query_tokens) and ('nominal' in description or 'rated' in description):
-            score += 3.0
-        if any('grenz' in token for token in query_tokens) and 'limit' in description:
-            score += 3.0
-        if any('soll' in token for token in query_tokens) and 'setpoint' in description:
-            score += 3.0
-        if any('max' in token for token in query_tokens) and 'max' in attr_name.lower():
-            score += 1.0
-
-        return score, matched_tokens, attr_name
-
-    ranked = []
-    for item in attribute_options or []:
-        attr_name = item.get('attribute_name')
-        if not attr_name:
-            continue
-        score, matched_tokens, attr_name = _score(item)
-        if score <= 0:
-            continue
-        ranked.append((score, matched_tokens, attr_name, item))
-
-    ranked.sort(key=lambda x: (-x[0], -x[1], x[2]))
-    shortlisted = [name for _, _, name, _ in ranked[:max_candidates]]
-
-    return {
-        'shortlisted_attribute_names': shortlisted,
-        'confidence': 'low',
-        'rationale': 'Heuristische Fallback-Shortlist auf Basis der attribute_description, weil die strukturierte LLM-Antwort nicht parsebar war.',
-        'missing_context': [],
-        'should_execute': bool(shortlisted),
-    }
 
 def _build_structured_chain(prompt: ChatPromptTemplate, schema_model: Any):
     """
     Prefer native structured output if the LLM wrapper supports it.
-    Fall back to PydanticOutputParser otherwise.
+    Always return a parser as well so prompts with {format_instructions}
+    can be filled consistently.
     """
     llm = get_llm()
+    parser = PydanticOutputParser(pydantic_object=schema_model)
 
     if hasattr(llm, "with_structured_output"):
         try:
             structured_llm = llm.with_structured_output(schema_model)
-            return prompt | structured_llm, None, "native_structured_output"
+            return prompt | structured_llm, parser, "native_structured_output"
         except Exception:
             pass
 
-    parser = PydanticOutputParser(pydantic_object=schema_model)
     return prompt | llm | parser, parser, "pydantic_output_parser"
 
 
@@ -4703,29 +4653,44 @@ def _build_pf_attribute_description_shortlist_chain():
     prompt = ChatPromptTemplate.from_messages([
         (
             'system',
-            'You are a strict JSON extraction component for PowerFactory attribute shortlisting.\n'
-            'Your ONLY task is to shortlist candidate attribute names from the provided list.\n'
-            'You are NOT allowed to answer the user question.\n'
-            'You are NOT allowed to explain electrical concepts.\n'
-            'You are NOT allowed to request additional context.\n'
-            'Return ONLY valid structured output matching the required schema.\n'
-            'Use ONLY the DESCRIPTION text for semantic matching.\n'
-            'IGNORE the attribute ID/name for semantic interpretation.\n'
-            'Treat the attribute ID only as the identifier you return.\n'
-            'Do NOT use naming patterns, prefixes, abbreviations, units, readability flags, sample values, or data-source hints.\n'
-            'Compare the FULL user request against the provided descriptions only.\n'
-            'Select all candidate attribute names whose descriptions are genuinely plausible matches.\n'
-            'It is valid to return only 1 or 2 candidates if only 1 or 2 descriptions are plausible, maximum number should be 5.\n'
-            'If you have more than 5 candidates, do not only take the first ones, but decide which ones fit best.\n'
-            'If nothing is grounded enough in the provided descriptions, return an empty shortlist and should_execute=false.\n'
-            'Do not invent attribute names.'
+            'You are a structured-output component for PowerFactory attribute shortlisting.\n'
+            'Return only structured output matching the required schema.\n'
+            'Do not answer the user question.\n'
+            'Do not explain electrical concepts.\n'
+            'Do not write markdown or code fences.\n\n'
+
+            'Your task is only to create a shortlist for a later final matcher.\n'
+            'Select attribute_name values from the provided candidate list.\n'
+            'Every selected name must be copied exactly from an attribute_name in the provided list.\n'
+            'Do not invent attribute names.\n\n'
+
+            'Shortlisting rules:\n'
+            '- Include candidates whose attribute_description plausibly relates to the requested concept.\n'
+            '- The shortlist may include more than one candidate even for a singular user request.\n'
+            '- Do not try to decide between general attributes and OPF/context-specific attributes here.\n'
+            '- Do not reject candidates only because multiple candidates look similar.\n'
+            '- Return 0 to 8 candidates.\n'
+            '- If no candidate is plausible, return an empty list and should_execute=false.\n\n'
+
+            'Important:\n'
+            '- For requests involving limits, bounds, Grenzen, Grenzwerte, upper/lower, min/max, include all plausible limit candidates.\n'
+            '- For requests involving nominal/rated/base/setpoint values, include all plausible nominal/rated/base/setpoint candidates.\n'
+            '- Final disambiguation is handled later. Do not over-explain.\n\n'
+
+            'Consistency rules:\n'
+            '- If should_execute=true, shortlisted_attribute_names must contain at least one attribute_name.\n'
+            '- If you mention an attribute_name in the rationale as plausible, you must also include it in shortlisted_attribute_names.\n'
+            '- Do not mention plausible attribute names in the rationale unless they are also selected.\n'
+            '- If shortlisted_attribute_names is empty, should_execute must be false and confidence must be low.\n'
+
+            '{format_instructions}'
         ),
         (
             'user',
             'User request:\n{user_input}\n\n'
-            'Entity type: {entity_type}\n'
-            'Selected object: {object_name}\n\n'
-            'Available PowerFactory attribute descriptions:\n{attribute_options}'
+            'Entity type:\n{entity_type}\n\n'
+            'Selected object:\n{object_name}\n\n'
+            'Candidate PowerFactory attributes:\n{attribute_options}'
         ),
     ])
     return _build_structured_chain(prompt, AttributeDescriptionShortlistDecision)
@@ -4743,17 +4708,33 @@ def _build_pf_attribute_description_match_chain():
             'Return ONLY valid structured output matching the required schema.\n'
             'You may only select attribute names that appear EXACTLY in the provided shortlist.\n'
             'Do not invent names.\n'
-            'Choose an attribute only if it is clearly better than the alternatives.\n'
-            'You must consider the FULL user request, not only one keyword.\n'
-            'Be especially careful with conflicts such as Leiter-Erde vs Leiter-Leiter, nominal/base vs result/load-flow values, and setpoint vs measured values.\n'
-            'If multiple candidates remain plausible or the request conflicts with the shortlist, return should_execute=false.'
+            'Select one or more attributes if the user request asks for one or more values.\n'
+            'If the user request is singular and exactly one candidate is clearly best, select only that one.\n'
+            'If the user request is plural, compound, or asks for limits/ranges/bounds/grenzen, select all candidates that together answer the request.\n'
+            'Examples of plural/compound requests include Spannungsgrenzen, Grenzwerte, obere und untere Grenze, min/max values, limits, bounds, ranges.\n'
+            'For such plural/compound requests, multiple selected attributes are valid and should_execute=true if every selected attribute is grounded in the shortlist.\n'
+            'Return should_execute=false only if no candidate matches, the request conflicts with the shortlist, or the selected set would be incomplete for the requested concept.'
+            'Cardinality rules:\n'
+            '- If the user asks for one value, select exactly one attribute.\n'
+            '- Singular requests include phrases such as "die obere Spannungsgrenze", "die untere Spannungsgrenze", "der Grenzwert", "die Nennspannung".\n'
+            '- If the user asks for multiple values, select all attributes that jointly answer the request.\n'
+            '- Multiple-value requests include "obere und untere", "Grenzen", "Grenzwerte", "min und max", "upper and lower", "limits", "bounds", "range".\n'
+            '- Do not return multiple attributes for a singular request only because their descriptions are similar or identical.\n\n'
+
+            'Disambiguation rules for singular requests:\n'
+            '- If multiple candidates have the same description, choose the most general/base object attribute.\n'
+            '- Prefer attributes whose unit and sample value are meaningful for the requested physical quantity.\n'
+            '- Prefer non-context-specific attributes over attributes that are tied to OPF, outage, contingency, reliability, visualization, display, or auxiliary workflows, unless the user explicitly asks for that context.\n'
+            '- For singular requests, if one candidate is general and another is context-specific, select only the general candidate.\n'
+
         ),
         (
             'user',
             'User request:\n{user_input}\n\n'
             'Entity type: {entity_type}\n'
             'Selected object: {object_name}\n\n'
-            'Shortlisted real PowerFactory attributes with descriptions:\n{attribute_options}'
+            'Shortlisted real PowerFactory attributes with descriptions:\n{attribute_options}\n\n'
+            'Attribute request cardinality:\n{attribute_cardinality}\n\n'
         ),
     ])
     return _build_structured_chain(prompt, AttributeDescriptionMatchDecision)
@@ -4777,39 +4758,25 @@ def _shortlist_pf_attributes_by_description_with_llm(
 
     try:
         chain, parser, chain_mode = _build_pf_attribute_description_shortlist_chain()
+
         invoke_payload = {
             'user_input': user_input or '',
             'entity_type': entity_type or '',
             'object_name': object_name or '',
             'attribute_options': _format_pf_description_options_for_prompt(filtered_options),
         }
+
         if parser is not None:
             invoke_payload['format_instructions'] = parser.get_format_instructions()
 
         decision = chain.invoke(invoke_payload)
     except Exception as e:
-        fallback_decision = _fallback_shortlist_pf_attributes_by_description(
-            attribute_options=filtered_options,
-            user_input=user_input,
-            max_candidates=5,
-        )
-        shortlisted_names = [
-            name for name in fallback_decision.get('shortlisted_attribute_names', []) or []
-            if name in {item.get('attribute_name') for item in filtered_options if item.get('attribute_name')}
-        ]
-        shortlisted_options = [
-            item for item in filtered_options
-            if item.get('attribute_name') in shortlisted_names
-        ]
         return {
-            'status': 'ok',
-            'llm_decision': fallback_decision,
-            'shortlisted_attribute_names': shortlisted_names,
-            'shortlisted_options': shortlisted_options,
+            'status': 'error',
+            'error': 'pf_attribute_description_shortlist_parse_failed',
+            'details': str(e),
             'attribute_options': filtered_options,
-            'chain_mode': 'heuristic_fallback_after_parse_error',
-            'fallback_trigger': 'pf_attribute_description_shortlist_failed',
-            'fallback_details': str(e),
+            'chain_mode': 'llm_parse_failed',
         }
 
     shortlisted_names: List[str] = []
@@ -4832,12 +4799,18 @@ def _shortlist_pf_attributes_by_description_with_llm(
     ]
 
     return {
-        'status': 'ok',
-        'llm_decision': decision.model_dump(),
-        'shortlisted_attribute_names': shortlisted_names,
-        'shortlisted_options': shortlisted_options,
-        'attribute_options': filtered_options,
-        'chain_mode': chain_mode,
+        "status": "ok",
+        "llm_decision": {
+            "shortlisted_attribute_names": shortlisted_names,
+            "confidence": "medium" if shortlisted_names else "low",
+            "rationale": "Shortlist contains validated attribute_name values only.",
+            "missing_context": [],
+            "should_execute": bool(shortlisted_names),
+        },
+        "shortlisted_attribute_names": shortlisted_names,
+        "shortlisted_options": shortlisted_options,
+        "attribute_options": filtered_options,
+        "chain_mode": chain_mode,
     }
 
 
@@ -4847,6 +4820,7 @@ def _match_pf_attributes_by_description_with_llm(
     object_name: str,
     user_input: str,
     source_preference: str = 'base',
+    attribute_cardinality: str = 'ambiguous',
 ) -> Dict[str, Any]:
     shortlist_result = _shortlist_pf_attributes_by_description_with_llm(
         obj=obj,
@@ -4884,6 +4858,7 @@ def _match_pf_attributes_by_description_with_llm(
             'entity_type': entity_type or '',
             'object_name': object_name or '',
             'attribute_options': _format_pf_description_options_for_prompt(shortlisted_options),
+            'attribute_cardinality': attribute_cardinality
         }
         if parser is not None:
             invoke_payload['format_instructions'] = parser.get_format_instructions()
@@ -5071,13 +5046,16 @@ def _select_pf_object_attributes_llm_with_services(
             attribute_options=export_attribute_options,
         )
 
-    def _run_description_match() -> Dict[str, Any]:
+    attribute_cardinality = instruction.get('attribute_cardinality', 'ambiguous')
+
+    def _run_description_match():
         return _match_pf_attributes_by_description_with_llm(
             obj=pf_object,
             entity_type=entity_type or '',
             object_name=object_name or '',
             user_input=request_text,
             source_preference='base',
+            attribute_cardinality=attribute_cardinality,   # 🔥 NEU
         )
 
     def _extract_description_handles(pf_description_match: Dict[str, Any]) -> List[str]:
@@ -5865,6 +5843,8 @@ def _classify_pf_object_data_source_with_services(
     instruction_out['data_source_preference'] = decision.get('effective_data_source', 'base')
     instruction_out['data_source_note'] = decision.get('data_source_note')
     instruction_out['data_source_decision'] = decision
+    instruction_out['attribute_cardinality'] = decision.get("attribute_cardinality", "ambiguous")
+    instruction_out['attribute_cardinality_rationale'] = decision.get("attribute_cardinality_rationale", "")
     return {
         'status': 'ok',
         'tool': 'classify_data_source',
