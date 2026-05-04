@@ -40,6 +40,17 @@ STANDARD_WORKFLOWS = {
         "pf.summarize_switch_result",
     ],
 
+    "pf.query_element_data": [
+    "pf.build_unified_inventory",
+    "pf.interpret_data_query_instruction",
+    "pf.classify_data_source",
+    "pf.resolve_objects_from_inventory_llm",
+    "pf.list_available_object_attributes",
+    "pf.select_pf_object_attributes_llm",
+    "pf.read_pf_object_attributes",
+    "pf.summarize_pf_object_data_result",
+],
+
     # ---------- CIM ----------
     "cim.standard_listing": [
         "cim.scan_snapshot_inventory",
@@ -136,6 +147,7 @@ class UnifiedPlanner:
         - Do not split if the request can be answered by one standard workflow.
         - Split if the request asks to first identify objects and then query values or attributes of those identified objects.
         - Split if the second part refers to previous results using words like "diese", "deren", "dazu", "die dazugehörigen", "those", "their".
+        - Do not split compound attribute requests such as "obere und untere Spannungsgrenze", "min und max", "Grenzwerte", or "limits". These can be handled by one standard data-query workflow.
 
         Return only structured output.
 
@@ -201,6 +213,14 @@ Workflow descriptions:
 
 - pf.change_switch_state:
   Open/close switches in the PowerFactory project.
+
+- pf.query_element_data:
+  Query values, parameters, attributes, base data, technical data, limits, bounds, min/max values,
+  nominal values, setpoints, result values, calculated values, load-flow values, or operational states
+  of a specific object in the active PowerFactory project.
+  Examples: Nennspannung, Sollspannung, Spannung, obere/untere Spannungsgrenze, Grenzwerte,
+  Auslastung, Wirkleistung, Blindleistung, Schalterstellung, uknom, m:u.
+  Compound attribute requests such as "obere und untere Spannungsgrenze" are still one workflow.
 
 - cim.standard_listing:
   List CIM objects of a certain type from snapshot inventory.

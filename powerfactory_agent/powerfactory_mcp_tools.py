@@ -3201,6 +3201,7 @@ def _classify_data_source_preference(user_input: str) -> Dict[str, Any]:
                 f'Attribute-match-mode fallback wegen Fehler: {e}'
             ),
         }
+    
 def _resolve_data_source_preference(user_input: str) -> Dict[str, Any]:
     decision = _classify_data_source_preference(user_input)
     selected = decision.get('selected_data_source', 'base')
@@ -3629,7 +3630,7 @@ def _interpret_data_query_instruction_with_services(
         missing_context.append('entity_type')
 
     # -----------------------------
-    # 🔥 Data source + Match Mode
+    # Data source + Match Mode
     # -----------------------------
     data_source_decision = _resolve_data_source_preference(user_input)
 
@@ -3646,7 +3647,7 @@ def _interpret_data_query_instruction_with_services(
     match_confidence = attribute_match_mode.get("confidence", "low")
 
     # -----------------------------
-    # 🔥 Attribute extraction skip
+    # Attribute extraction skip
     # -----------------------------
     if match_mode == "semantic_description" and match_confidence in {"high", "medium"}:
         requested_attribute_llm = {

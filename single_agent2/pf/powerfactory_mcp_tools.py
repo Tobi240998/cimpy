@@ -3090,7 +3090,19 @@ def _build_data_source_decision_chain():
             "- \"Leitungsauslastung im Lastfluss\" -> result\n"
             "- \"Spannung\" -> result\n"
             "- \"Spannung in Kombination mit Nenn-, Soll-, zulässig, ...\" -> base\n"
+
+            "You also classify how the requested attribute should be matched.\n"
+            "Return attribute_match_mode=technical_name when the user explicitly wrote literal PowerFactory attribute names, e.g. uknom, m:u, c:loading, outserv.\n"
+            "Return attribute_match_mode=semantic_description when the user used natural-language descriptions, e.g. Nennspannung, Sollspannung, Auslastung, Blindleistung.\n"
+            "Return attribute_match_mode=ambiguous when the request is mixed or unclear.\n"
+            "Do NOT map semantic phrases to technical PowerFactory names in this step.\n"
+            "Use attribute_match_confidence=high only when the distinction is clear.\n"
             "Return ONLY valid structured output matching the required schema."
+
+            "You also classify whether the attribute request asks for one or multiple attribute values.\n"
+            "Return attribute_cardinality=one if the user asks for a single value, for example 'die obere Spannungsgrenze', 'die untere Spannungsgrenze', 'die Nennspannung'.\n"
+            "Return attribute_cardinality=multiple if the user asks for multiple values, for example 'obere und untere Spannungsgrenze', 'Spannungsgrenzen', 'Grenzwerte', 'min und max', 'upper and lower limits'.\n"
+            "Return attribute_cardinality=ambiguous if this cannot be determined safely.\n"
         ),
         (
             'user',
@@ -3141,6 +3153,12 @@ def _classify_data_source_preference(user_input: str) -> Dict[str, Any]:
         if attribute_match_confidence not in {'high', 'medium', 'low'}:
             attribute_match_confidence = 'low'
 
+        attribute_cardinality = str(
+            decision_dict.get("attribute_cardinality") or "ambiguous"
+        ).strip().lower()
+        if attribute_cardinality not in {"one", "multiple", "ambiguous"}:
+            attribute_cardinality = "ambiguous"
+
         return {
             'status': 'ok',
             'selected_data_source': selected,
@@ -3158,6 +3176,9 @@ def _classify_data_source_preference(user_input: str) -> Dict[str, Any]:
                 'attribute_match_rationale',
                 '',
             ),
+
+            "attribute_cardinality": attribute_cardinality,
+            "attribute_cardinality_rationale": decision_dict.get("attribute_cardinality_rationale", ""),
         }
 
     except Exception as e:
@@ -3178,6 +3199,7 @@ def _classify_data_source_preference(user_input: str) -> Dict[str, Any]:
                 f'Attribute-match-mode fallback wegen Fehler: {e}'
             ),
         }
+    
 def _resolve_data_source_preference(user_input: str) -> Dict[str, Any]:
     decision = _classify_data_source_preference(user_input)
     selected = decision.get('selected_data_source', 'base')
@@ -3606,7 +3628,7 @@ def _interpret_data_query_instruction_with_services(
         missing_context.append('entity_type')
 
     # -----------------------------
-    # 🔥 Data source + Match Mode
+    # Data source + Match Mode
     # -----------------------------
     data_source_decision = _resolve_data_source_preference(user_input)
 
@@ -3623,7 +3645,7 @@ def _interpret_data_query_instruction_with_services(
     match_confidence = attribute_match_mode.get("confidence", "low")
 
     # -----------------------------
-    # 🔥 Attribute extraction skip
+    # Attribute extraction skip
     # -----------------------------
     if match_mode == "semantic_description" and match_confidence in {"high", "medium"}:
         requested_attribute_llm = {
@@ -3665,6 +3687,8 @@ def _interpret_data_query_instruction_with_services(
         'data_source_note': data_source_note,
         'data_source_decision': data_source_decision,
         'attribute_match_mode': attribute_match_mode,
+        'attribute_cardinality': data_source_decision.get("attribute_cardinality", "ambiguous"),
+        'attribute_cardinality_rationale': data_source_decision.get("attribute_cardinality_rationale", ""),
     }
 
     if not should_execute or not selected_entity_type:
@@ -4629,36 +4653,35 @@ def _build_pf_attribute_description_shortlist_chain():
     prompt = ChatPromptTemplate.from_messages([
         (
             'system',
-            'You are a strict structured-output component for PowerFactory attribute shortlisting.\n'
-            'Your ONLY task is to select plausible attribute_name values from the provided candidate list.\n'
-            'You must return ONLY structured output matching the required schema.\n'
-            'Do not write markdown, prose, tables, bullet lists, explanations outside the schema, or code fences.\n'
+            'You are a structured-output component for PowerFactory attribute shortlisting.\n'
+            'Return only structured output matching the required schema.\n'
             'Do not answer the user question.\n'
+            'Do not explain electrical concepts.\n'
+            'Do not write markdown or code fences.\n\n'
+
+            'Your task is only to create a shortlist for a later final matcher.\n'
+            'Select attribute_name values from the provided candidate list.\n'
+            'Every selected name must be copied exactly from an attribute_name in the provided list.\n'
             'Do not invent attribute names.\n\n'
 
-            'Schema requirements:\n'
-            '- shortlisted_attribute_names must be a JSON array of strings.\n'
-            '- Every returned string must be copied EXACTLY from an attribute_name in the provided list.\n'
-            '- confidence must be one of: high, medium, low.\n'
-            '- missing_context must be a JSON array of strings, or an empty array.\n'
-            '- should_execute must be true only if at least one plausible candidate was selected.\n'
-            '- If no candidate is plausible, return shortlisted_attribute_names=[] and should_execute=false.\n\n'
+            'Shortlisting rules:\n'
+            '- Include candidates whose attribute_description plausibly relates to the requested concept.\n'
+            '- The shortlist may include more than one candidate even for a singular user request.\n'
+            '- Do not try to decide between general attributes and OPF/context-specific attributes here.\n'
+            '- Do not reject candidates only because multiple candidates look similar.\n'
+            '- Return 0 to 8 candidates.\n'
+            '- If no candidate is plausible, return an empty list and should_execute=false.\n\n'
 
-            'Matching task:\n'
-            '- Compare the FULL user request to the provided attribute descriptions.\n'
-            '- Use the attribute description as the main semantic evidence.\n'
-            '- The attribute_name is only the identifier you return, not the primary semantic evidence.\n'
-            '- Do not require a minimum number of candidates.\n'
-            '- Return 0 to 5 candidates.\n'
-            '- If only one or two candidates are plausible, return only one or two.\n'
-            '- Prefer a small, precise shortlist over a broad shortlist.\n\n'
+            'Important:\n'
+            '- For requests involving limits, bounds, Grenzen, Grenzwerte, upper/lower, min/max, include all plausible limit candidates.\n'
+            '- For requests involving nominal/rated/base/setpoint values, include all plausible nominal/rated/base/setpoint candidates.\n'
+            '- Final disambiguation is handled later. Do not over-explain.\n\n'
 
-            'Important semantic distinctions:\n'
-            '- Base/static/nominal/rated/setpoint/type/design parameters are different from load-flow or measured results.\n'
-            '- Nominal voltage, Nennspannung, rated voltage, base voltage, Spannungsebene, and Sollspannung should match descriptions expressing nominal/rated/base voltage of the object.\n'
-            '- Do not select outage, reliability, probability, switching, display, layout, formatting, or voltage-step-limit attributes unless the user explicitly asks for them.\n'
-            '- Do not select result/load-flow attributes when the user asks for base data.\n'
-            '- Do not select base attributes when the user asks for calculated/load-flow results.\n\n'
+            'Consistency rules:\n'
+            '- If should_execute=true, shortlisted_attribute_names must contain at least one attribute_name.\n'
+            '- If you mention an attribute_name in the rationale as plausible, you must also include it in shortlisted_attribute_names.\n'
+            '- Do not mention plausible attribute names in the rationale unless they are also selected.\n'
+            '- If shortlisted_attribute_names is empty, should_execute must be false and confidence must be low.\n'
 
             '{format_instructions}'
         ),
@@ -4667,7 +4690,7 @@ def _build_pf_attribute_description_shortlist_chain():
             'User request:\n{user_input}\n\n'
             'Entity type:\n{entity_type}\n\n'
             'Selected object:\n{object_name}\n\n'
-            'Candidate PowerFactory attributes with descriptions:\n{attribute_options}'
+            'Candidate PowerFactory attributes:\n{attribute_options}'
         ),
     ])
     return _build_structured_chain(prompt, AttributeDescriptionShortlistDecision)
@@ -4685,17 +4708,33 @@ def _build_pf_attribute_description_match_chain():
             'Return ONLY valid structured output matching the required schema.\n'
             'You may only select attribute names that appear EXACTLY in the provided shortlist.\n'
             'Do not invent names.\n'
-            'Choose an attribute only if it is clearly better than the alternatives.\n'
-            'You must consider the FULL user request, not only one keyword.\n'
-            'Be especially careful with conflicts such as Leiter-Erde vs Leiter-Leiter, nominal/base vs result/load-flow values, and setpoint vs measured values.\n'
-            'If multiple candidates remain plausible or the request conflicts with the shortlist, return should_execute=false.'
+            'Select one or more attributes if the user request asks for one or more values.\n'
+            'If the user request is singular and exactly one candidate is clearly best, select only that one.\n'
+            'If the user request is plural, compound, or asks for limits/ranges/bounds/grenzen, select all candidates that together answer the request.\n'
+            'Examples of plural/compound requests include Spannungsgrenzen, Grenzwerte, obere und untere Grenze, min/max values, limits, bounds, ranges.\n'
+            'For such plural/compound requests, multiple selected attributes are valid and should_execute=true if every selected attribute is grounded in the shortlist.\n'
+            'Return should_execute=false only if no candidate matches, the request conflicts with the shortlist, or the selected set would be incomplete for the requested concept.'
+            'Cardinality rules:\n'
+            '- If the user asks for one value, select exactly one attribute.\n'
+            '- Singular requests include phrases such as "die obere Spannungsgrenze", "die untere Spannungsgrenze", "der Grenzwert", "die Nennspannung".\n'
+            '- If the user asks for multiple values, select all attributes that jointly answer the request.\n'
+            '- Multiple-value requests include "obere und untere", "Grenzen", "Grenzwerte", "min und max", "upper and lower", "limits", "bounds", "range".\n'
+            '- Do not return multiple attributes for a singular request only because their descriptions are similar or identical.\n\n'
+
+            'Disambiguation rules for singular requests:\n'
+            '- If multiple candidates have the same description, choose the most general/base object attribute.\n'
+            '- Prefer attributes whose unit and sample value are meaningful for the requested physical quantity.\n'
+            '- Prefer non-context-specific attributes over attributes that are tied to OPF, outage, contingency, reliability, visualization, display, or auxiliary workflows, unless the user explicitly asks for that context.\n'
+            '- For singular requests, if one candidate is general and another is context-specific, select only the general candidate.\n'
+
         ),
         (
             'user',
             'User request:\n{user_input}\n\n'
             'Entity type: {entity_type}\n'
             'Selected object: {object_name}\n\n'
-            'Shortlisted real PowerFactory attributes with descriptions:\n{attribute_options}'
+            'Shortlisted real PowerFactory attributes with descriptions:\n{attribute_options}\n\n'
+            'Attribute request cardinality:\n{attribute_cardinality}\n\n'
         ),
     ])
     return _build_structured_chain(prompt, AttributeDescriptionMatchDecision)
@@ -4773,6 +4812,7 @@ def _match_pf_attributes_by_description_with_llm(
     object_name: str,
     user_input: str,
     source_preference: str = 'base',
+    attribute_cardinality: str = 'ambiguous',
 ) -> Dict[str, Any]:
     shortlist_result = _shortlist_pf_attributes_by_description_with_llm(
         obj=obj,
@@ -4810,6 +4850,7 @@ def _match_pf_attributes_by_description_with_llm(
             'entity_type': entity_type or '',
             'object_name': object_name or '',
             'attribute_options': _format_pf_description_options_for_prompt(shortlisted_options),
+            'attribute_cardinality': attribute_cardinality
         }
         if parser is not None:
             invoke_payload['format_instructions'] = parser.get_format_instructions()
@@ -5790,6 +5831,8 @@ def _classify_pf_object_data_source_with_services(
     instruction_out['data_source_preference'] = decision.get('effective_data_source', 'base')
     instruction_out['data_source_note'] = decision.get('data_source_note')
     instruction_out['data_source_decision'] = decision
+    instruction_out['attribute_cardinality'] = decision.get("attribute_cardinality", "ambiguous")
+    instruction_out['attribute_cardinality_rationale'] = decision.get("attribute_cardinality_rationale", "")
     return {
         'status': 'ok',
         'tool': 'classify_data_source',
@@ -5800,7 +5843,6 @@ def _classify_pf_object_data_source_with_services(
         'data_source_note': decision.get('data_source_note'),
         'data_source_decision': decision,
     }
-
 
 
 # ------------------------------------------------------------------
