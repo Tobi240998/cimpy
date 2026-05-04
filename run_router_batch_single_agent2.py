@@ -13,11 +13,10 @@ from cimpy.single_agent2.llm_routing.orchestrator import Orchestrator
 
 
 USER_INPUTS: List[str] = [
-    "Erhöhe Last A um 20 MW.",
-    "Füge 20 MW bei Last A hinzu.",
-    "Mache Last A um 20 MW größer.",
-    "Erhöhe Load A um 20 MW.",
-    "Erhöhe Verbraucher A um 20 MW.",
+    "Was ist die obere Spannungsgrenze von Bus 1 in PowerFactory?",
+    "Wie hoch ist die untere Spannungsgrenze von Bus 1 in Powerfactory?",
+    "Nenne mir die Spannungsgrenzen von Bus 1 in Powerfactory.",
+    "Welche Umin- und Umax-Grenzen sind bei Bus 1 in Powerfactory hinterlegt?",
 ]
 
 OUTPUT_DIR = Path("router_batch_results") / datetime.now().strftime("%Y%m%d_%H%M%S")

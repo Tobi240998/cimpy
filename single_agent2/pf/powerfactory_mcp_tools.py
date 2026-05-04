@@ -3097,7 +3097,7 @@ def _build_data_source_decision_chain():
             "Return attribute_match_mode=ambiguous when the request is mixed or unclear.\n"
             "Do NOT map semantic phrases to technical PowerFactory names in this step.\n"
             "Use attribute_match_confidence=high only when the distinction is clear.\n"
-            "Return ONLY valid structured output matching the required schema."
+            "Return ONLY valid structured output matching the required schema.\n\n"
 
             "You also classify whether the attribute request asks for one or multiple attribute values.\n"
             "Return attribute_cardinality=one if the user asks for a single value, for example 'die obere Spannungsgrenze', 'die untere Spannungsgrenze', 'die Nennspannung'.\n"
@@ -4652,45 +4652,42 @@ def _build_structured_chain(prompt: ChatPromptTemplate, schema_model: Any):
 def _build_pf_attribute_description_shortlist_chain():
     prompt = ChatPromptTemplate.from_messages([
         (
-            'system',
-            'You are a structured-output component for PowerFactory attribute shortlisting.\n'
-            'Return only structured output matching the required schema.\n'
-            'Do not answer the user question.\n'
-            'Do not explain electrical concepts.\n'
-            'Do not write markdown or code fences.\n\n'
+            "system",
+            "You are a structured-output component for PowerFactory attribute shortlisting.\n"
+            "Return only structured output matching the required schema.\n"
+            "The schema contains only one field: shortlisted_attribute_names.\n"
+            "Do not return confidence, rationale, missing_context, should_execute, markdown, prose, or code fences.\n\n"
 
-            'Your task is only to create a shortlist for a later final matcher.\n'
-            'Select attribute_name values from the provided candidate list.\n'
-            'Every selected name must be copied exactly from an attribute_name in the provided list.\n'
-            'Do not invent attribute names.\n\n'
+            "Task:\n"
+            "- Select attribute_name values from the provided candidate list.\n"
+            "- Every selected name must be copied exactly from an attribute_name in the provided list.\n"
+            "- Do not invent attribute names.\n"
+            "- Return 0 to 8 names.\n"
+            "- If no candidate is plausible, return an empty list.\n\n"
 
-            'Shortlisting rules:\n'
-            '- Include candidates whose attribute_description plausibly relates to the requested concept.\n'
-            '- The shortlist may include more than one candidate even for a singular user request.\n'
-            '- Do not try to decide between general attributes and OPF/context-specific attributes here.\n'
-            '- Do not reject candidates only because multiple candidates look similar.\n'
-            '- Return 0 to 8 candidates.\n'
-            '- If no candidate is plausible, return an empty list and should_execute=false.\n\n'
+            "Shortlisting rules:\n"
+            "- Use attribute_description as the main semantic evidence.\n"
+            "- Include candidates whose attribute_description plausibly relates to the requested concept.\n"
+            "- The shortlist may include more than one candidate even for a singular user request.\n"
+            "- Do not decide between general attributes and OPF/context-specific attributes here.\n"
+            "- Final disambiguation is handled later.\n\n"
 
-            'Important:\n'
-            '- For requests involving limits, bounds, Grenzen, Grenzwerte, upper/lower, min/max, include all plausible limit candidates.\n'
-            '- For requests involving nominal/rated/base/setpoint values, include all plausible nominal/rated/base/setpoint candidates.\n'
-            '- Final disambiguation is handled later. Do not over-explain.\n\n'
+            "Important semantic guidance:\n"
+            "- For limits, bounds, Grenzen, Grenzwerte, upper/lower, min/max, Umin, Umax, include plausible voltage-limit candidates.\n"
+            "Semantic bridge rules:\n"
+            "- Treat common engineering shorthand as semantic hints, not necessarily exact PowerFactory attribute names.\n"
+            "- Examples: umin means lower/minimum voltage limit; umax means upper/maximum voltage limit.\n"
+            "- If the exact shorthand is not an available attribute_name, shortlist attributes whose descriptions express the same concept.\n"
+            "- For nominal/rated/base/setpoint values, include plausible nominal/rated/base/setpoint candidates.\n\n"
 
-            'Consistency rules:\n'
-            '- If should_execute=true, shortlisted_attribute_names must contain at least one attribute_name.\n'
-            '- If you mention an attribute_name in the rationale as plausible, you must also include it in shortlisted_attribute_names.\n'
-            '- Do not mention plausible attribute names in the rationale unless they are also selected.\n'
-            '- If shortlisted_attribute_names is empty, should_execute must be false and confidence must be low.\n'
-
-            '{format_instructions}'
+            "{format_instructions}"
         ),
         (
-            'user',
-            'User request:\n{user_input}\n\n'
-            'Entity type:\n{entity_type}\n\n'
-            'Selected object:\n{object_name}\n\n'
-            'Candidate PowerFactory attributes:\n{attribute_options}'
+            "user",
+            "User request:\n{user_input}\n\n"
+            "Entity type:\n{entity_type}\n\n"
+            "Selected object:\n{object_name}\n\n"
+            "Candidate PowerFactory attributes:\n{attribute_options}"
         ),
     ])
     return _build_structured_chain(prompt, AttributeDescriptionShortlistDecision)
