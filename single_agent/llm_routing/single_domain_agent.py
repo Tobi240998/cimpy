@@ -134,14 +134,7 @@ class SingleDomainAgent:
 
         raise ValueError(f"Unknown domain: {domain}")
 
-        def build_domain_plan(self, domain: str, user_input: str) -> UnifiedPlan:
-            if domain == "powerfactory":
-                return self._build_powerfactory_unified_plan(user_input)
 
-            if domain == "cim":
-                return self._build_cim_unified_plan(user_input)
-
-            raise ValueError(f"Unknown domain: {domain}")
 
     def _build_powerfactory_unified_plan(self, user_input: str) -> UnifiedPlan:
         classification = self.pf_planner.classify_request(user_input)

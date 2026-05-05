@@ -104,8 +104,12 @@ class SingleDomainAgent:
             plan.model_dump() if hasattr(plan, "model_dump") else plan.dict()
         )
         result = self.executor.execute(plan)
-        debug = result.get("debug", {}) if isinstance(result, dict) else {}
-        trace = debug.get("trace", []) if isinstance(debug, dict) else []
+        trace = []
+        if isinstance(result, dict):
+            trace = result.get("debug_trace", [])
+            if not trace:
+                debug = result.get("debug", {})
+                trace = debug.get("trace", []) if isinstance(debug, dict) else []
 
         self._debug("EXECUTED_STEPS", [
             {
@@ -121,7 +125,10 @@ class SingleDomainAgent:
             if isinstance(item, dict)
         ])
 
-        self._debug("EXECUTION_RESULT", result)
+        self._debug("EXECUTION_RESULT_SUMMARY", {
+            "status": result.get("status") if isinstance(result, dict) else None,
+            "answer": result.get("answer") if isinstance(result, dict) else None,
+        })
 
         return {
             "route": plan.domain.upper(),

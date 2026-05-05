@@ -71,7 +71,28 @@ class UnifiedExecutor:
 
     def _execute_cim(self, plan: UnifiedPlan) -> Dict[str, Any]:
         raw_plan = self._plan_to_raw_items(plan)
-        classification = getattr(plan, "classification", {}) or {}
+        classification = dict(getattr(plan, "classification", {}) or {})
+
+        if classification.get("workflow") == "cim.topology_query":
+            classification["intent"] = "topology_query"
+
+        
+
+        workflow = classification.get("workflow")
+
+        workflow_to_cim_mode = {
+            "cim.standard_listing": ("asset_lookup", "standard_listing", "asset"),
+            "cim.standard_base": ("historical_analysis", "standard_base", "metric"),
+            "cim.standard_sv": ("historical_analysis", "standard_sv", "metric"),
+            "cim.standard_comparison": ("historical_analysis", "standard_comparison", "metric"),
+            "cim.topology_query": ("topology_query", "custom_plan", "topology"),
+        }
+
+        if workflow in workflow_to_cim_mode:
+            intent, request_mode, target_kind = workflow_to_cim_mode[workflow]
+            classification.setdefault("intent", intent)
+            classification.setdefault("request_mode", request_mode)
+            classification.setdefault("target_kind", target_kind)
 
         state: Dict[str, Any] = {
             "user_input": plan.user_input,

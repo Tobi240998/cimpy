@@ -16,6 +16,10 @@ from cimpy.cimpy_time_analysis.cim_queries import (
 )
 from cimpy.cimpy_time_analysis.llm_result_agent import LLM_resultAgent
 
+from pydantic import BaseModel, Field
+from langchain_core.prompts import ChatPromptTemplate
+from langchain_core.output_parsers import PydanticOutputParser
+from cimpy.single_agent2.llm_routing.langchain_llm import get_llm
 
 def _parse_dt_iso(s: str):
     if not s:
@@ -43,8 +47,75 @@ def _filter_snapshot_cache_by_time(snapshot_cache: dict, start_iso: str | None, 
             out[snap] = data
     return out
 
-# Refactoring: Heuristik
+class TopologyIntentDecision(BaseModel):
+    intent: str = Field(description="neighbors or component")
+    reasoning: str = ""
+
+
+_llm = get_llm()
+_parser = PydanticOutputParser(pydantic_object=TopologyIntentDecision)
+
+_prompt = ChatPromptTemplate.from_messages([
+    (
+        "system",
+        """
+You classify topology intent in power grid queries.
+
+Distinguish ONLY between:
+- neighbors: directly connected elements (1-hop)
+- component: full connected component (all reachable elements)
+
+Rules:
+- If the request contains "unmittelbar", "direkt", "directly connected", "neighbors", "direkt verbunden":
+  → neighbors
+- If the request asks for "Komponente", "zusammenhängend", "connected component", "alle verbundenen":
+  → component
+
+IMPORTANT:
+- "Komponenten" + "direkt/unmittelbar verbunden" = neighbors (NOT component)
+- prefer neighbors if wording is ambiguous but local
+
+Return only structured output.
+
+{format_instructions}
+"""
+    ),
+    ("user", "{user_input}")
+])
+
+def _classify_topology_intent_llm(user_input: str) -> dict:
+    try:
+        chain = _prompt | _llm | _parser
+        result = chain.invoke({
+            "user_input": user_input,
+            "format_instructions": _parser.get_format_instructions(),
+        })
+
+        data = result.model_dump() if hasattr(result, "model_dump") else result.dict()
+
+        intent = data.get("intent")
+        if intent in {"neighbors", "component"}:
+            return {
+                "is_topology": True,
+                "intent": intent,
+                "graph_level": "connectivity",
+            }
+
+    except Exception:
+        pass
+
+    # Fallback (safe default!)
+    return {
+        "is_topology": True,
+        "intent": "neighbors",
+        "graph_level": "connectivity",
+    }
+
 def _detect_topology_intent(user_input: str, analysis_plan: dict | None = None) -> dict:
+    
+    # ------------------------------
+    # 1) PRIMARY: analysis_plan
+    # ------------------------------
     if analysis_plan:
         topology_scope = analysis_plan.get("topology_scope", "none")
         needs_topology_graph = bool(analysis_plan.get("needs_topology_graph", False))
@@ -57,60 +128,10 @@ def _detect_topology_intent(user_input: str, analysis_plan: dict | None = None) 
                 "graph_level": graph_level,
             }
 
-    text = (user_input or "").lower()
-
-    graph_level = "connectivity"
-    if "topological node" in text or "topologicalnode" in text or "topolog" in text:
-        graph_level = "topological"
-
-    neighbor_keywords = [
-        "nachbar",
-        "nachbarn",
-        "benachbart",
-        "direkt verbunden",
-        "direkt angrenz",
-        "angeschlossen an",
-        "hängt an",
-        "womit verbunden",
-        "welche objekte sind mit",
-        "was ist mit",
-        "verbundene objekte",
-    ]
-
-    component_keywords = [
-        "komponente",
-        "zusammenhäng",
-        "connected component",
-        "insel",
-        "teilnetz",
-        "netzbereich",
-        "netzsegment",
-        "alles was verbunden ist",
-        "alle verbundenen",
-    ]
-
-    for kw in component_keywords:
-        if kw in text:
-            return {
-                "is_topology": True,
-                "intent": "component",
-                "graph_level": graph_level,
-            }
-
-    for kw in neighbor_keywords:
-        if kw in text:
-            return {
-                "is_topology": True,
-                "intent": "neighbors",
-                "graph_level": graph_level,
-            }
-
-    return {
-        "is_topology": False,
-        "intent": None,
-        "graph_level": graph_level,
-    }
-
+    # ------------------------------
+    # 2) LLM-based classification (NEW)
+    # ------------------------------
+    return _classify_topology_intent_llm(user_input)
 
 def _resolve_equipment_from_selection(parsed: dict, network_index: dict):
     equipment_selection = parsed.get("equipment_selection", []) or []

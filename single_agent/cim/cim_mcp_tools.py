@@ -1774,7 +1774,8 @@ def _iter_navigation_candidates_from_object(obj: Any) -> List[tuple[str, Any]]:
 
 def _resolve_candidate_value_deep(
     candidate_value: Any,
-    target_attr: str | None = None,
+    max_depth: int = 3,
+    max_list_items: int = 20,
 ) -> Dict[str, Any]:
     """
     Generic graph/value traversal for a candidate result.
@@ -2668,6 +2669,20 @@ def _query_cim_with_services(
         sv_metric = comparison_resolution.get("sv_metric")
         if sv_metric in {"P", "Q", "S"}:
             parsed_query["metric"] = sv_metric
+
+    request_mode = str((classification or {}).get("request_mode") or "").strip()
+    intent = str((classification or {}).get("intent") or "").strip()
+
+    if request_mode == "standard_topology_neighbors" or intent == "topology_query":
+        parsed_query["topology_intent"] = {
+            "is_topology": True,
+            "intent": "neighbors",
+            "graph_level": "connectivity",
+        }
+        parsed_query["state_detected"] = []
+        parsed_query["metric"] = None
+
+
 
     answer = handle_user_query(
         user_input=user_input,
