@@ -1774,9 +1774,7 @@ def _iter_navigation_candidates_from_object(obj: Any) -> List[tuple[str, Any]]:
 
 def _resolve_candidate_value_deep(
     candidate_value: Any,
-    *,
-    max_depth: int = 3,
-    max_list_items: int = 10,
+    target_attr: str | None = None,
 ) -> Dict[str, Any]:
     """
     Generic graph/value traversal for a candidate result.
@@ -1950,24 +1948,29 @@ def _resolve_base_candidate_agentically(
         for child_name, child_value in _iter_navigation_candidates_from_object(resolved_object):
             deep_result = _resolve_candidate_value_deep(child_value)
 
-            if deep_result.get("status") == "ok":
-                return {
-                    "status": "ok",
-                    "candidate": candidate_name,
-                    "resolved_attribute": candidate_name,
-                    "value": deep_result.get("value"),
-                    "searched_scopes": searched_scopes,
-                    "resolution_path": f"expanded_structural_lookup -> {child_name} -> {deep_result.get('resolution_path')}",
-                    "resolved_field": deep_result.get("resolved_field"),
-                }
+            if deep_result.get("status") != "ok":
+                continue
+
+            resolved_field = deep_result.get("resolved_field")
+
+            # Do not accept arbitrary metadata from neighboring objects
+            # as value for the requested base attribute.
+            if resolved_field != candidate_name:
+                continue
+
+            return {
+                "status": "ok",
+                "candidate": candidate_name,
+                "resolved_attribute": candidate_name,
+                "value": deep_result.get("value"),
+                "searched_scopes": searched_scopes,
+                "resolution_path": f"expanded_structural_lookup -> {child_name} -> {deep_result.get('resolution_path')}",
+                "resolved_field": resolved_field,
+            }
+
     except Exception as exc:
-        return {
-            "status": "error",
-            "candidate": candidate_name,
-            "error": "expanded_structural_lookup_failed",
-            "details": str(exc),
-            "searched_scopes": searched_scopes,
-        }
+        # Important: do not abort here. Let step 4 fallback run.
+        searched_scopes.append(f"expanded_structural_lookup_error: {exc}")
 
     # --------------------------------------------------------------
     # 4) Optional known heavy fallback for voltage-limit family

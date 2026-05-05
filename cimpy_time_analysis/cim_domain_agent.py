@@ -21,6 +21,7 @@ _ALLOWED_REQUEST_MODES = {
     "standard_base",
     "standard_listing",
     "standard_comparison",
+    "standard_topology_neighbors",
     "custom_plan",
     "clarification_needed",
 }
@@ -102,6 +103,7 @@ class CIMDomainAgent:
         - standard_listing
         - standard_comparison
         - custom_plan
+        - standard_topology_neighbors
         - clarification_needed
 
         Critical rules:
@@ -124,6 +126,7 @@ class CIMDomainAgent:
         - standard_base: standard static base/nameplate attribute request.
         - standard_listing: standard type-listing request asking which objects of a CIM equipment type exist in general.
         - standard_comparison: standard comparison/limit-check request comparing SV values against base values.
+        - standard_topology_neighbors: standard topology request asking for direct neighbors or directly connected objects of one concrete asset.
         - custom_plan: request is CIM-related and executable, but deviates from the standard cases and needs explicit step planning.
         - clarification_needed: request is CIM-related, but not safely executable because essential context is missing.
 
@@ -135,7 +138,7 @@ class CIMDomainAgent:
         component membership, graph relations, or direct connections, prefer:
         intent=topology_query
         target_kind=topology
-        request_mode=custom_plan
+        request_mode=standard_topology_neighbors
         safe_to_execute=true
         - standard_listing only applies when the user asks which objects of a CIM equipment type exist in general,
         for example:
@@ -177,10 +180,10 @@ class CIMDomainAgent:
         - "Welche Leitungen gibt es?" => intent=asset_lookup, request_mode=standard_listing, target_kind=asset, safe_to_execute=true
         - "Was ist r von Line 02-03?" => intent=historical_analysis, request_mode=standard_base, target_kind=metric, safe_to_execute=true
         - "Was war die Spannung von Bus 3 am 2026-01-09?" => intent=historical_analysis, request_mode=standard_sv, target_kind=metric, safe_to_execute=true
-        - "Was sind die direkten Nachbarn von Bus 3?" => intent=topology_query, request_mode=custom_plan, target_kind=topology, safe_to_execute=true
-        - "Was sind die direkten Nachbarn von Last 3?" => intent=topology_query, request_mode=custom_plan, target_kind=topology, safe_to_execute=true
-        - "Was sind die direkten Nachbarn von Trafo 19-20 in den CIM-Daten?" => intent=topology_query, request_mode=custom_plan, target_kind=topology, safe_to_execute=true
-        - "Was sind die direkten Nachbarn von Bus 3? Nutze historical CIM, nicht Powerfactory" => intent=topology_query, request_mode=custom_plan, target_kind=topology, safe_to_execute=true
+        - "Was sind die direkten Nachbarn von Bus 3?" => intent=topology_query, request_mode=standard_topology_neighbors, target_kind=topology, safe_to_execute=true
+        - "Was sind die direkten Nachbarn von Last 3?" => intent=topology_query, request_mode=standard_topology_neighbors, target_kind=topology, safe_to_execute=true
+        - "Was sind die direkten Nachbarn von Trafo 19-20 in den CIM-Daten?" => intent=topology_query, request_mode=standard_topology_neighbors, target_kind=topology, safe_to_execute=true
+        - "Was sind die direkten Nachbarn von Bus 3? Nutze historical CIM, nicht Powerfactory" => intent=topology_query, request_mode=standard_topology_neighbors, target_kind=topology, safe_to_execute=true
 
         {format_instructions}
         """
@@ -203,6 +206,7 @@ Allowed request modes:
 - standard_listing
 - standard_comparison
 - custom_plan
+- standard_topology_neighbors
 - clarification_needed
 
 Critical rules:
@@ -219,6 +223,7 @@ Key semantic anchors:
 - standard_base: asks for static nameplate / technical base attributes
 - standard_sv: asks for a dynamic state value only
 - standard_comparison: asks for utilization, loading, overload, threshold/limit checks, or compares a dynamic value against a base/reference/limit
+- standard_topology_neighbors: asks for direct neighbors, direct connections, or graph relations of a concrete asset
 - clarification_needed: essential context is missing
 
 Examples:
@@ -227,6 +232,7 @@ Examples:
 - "Wie hoch war die Spannung des Trafos 19-20 am 2026-01-09?" => standard_sv
 - "Wann war die höchste Auslastung von Trafo 19-20 am 2026-01-09?" => standard_comparison
 - "Was ist die Nennspannung von Trafo 19-20?" => standard_base
+- "Was sind die direkten Nachbarn von Trafo 19-20?" => standard_topology_neighbors
 
 {format_instructions}
 """
@@ -322,6 +328,12 @@ Practical guidance:
                 "read_cim_base_values",
                 "compare_cim_values",
             ]
+        
+        if request_mode == "standard_topology_neighbors":
+            return ["scan_snapshot_inventory", 
+                    "resolve_cim_object", 
+                    "query_cim", 
+                    "summarize_cim_result"]
 
         return []
 
@@ -561,6 +573,11 @@ Practical guidance:
                 add("query_cim")
                 add("read_cim_base_values")
                 add("compare_cim_values")
+                add("summarize_cim_result")
+            elif request_mode == "standard_topology_neighbors":
+                add("scan_snapshot_inventory")
+                add("resolve_cim_object")
+                add("query_cim")
                 add("summarize_cim_result")
             else:
                 intent = classification.get("intent", "")
