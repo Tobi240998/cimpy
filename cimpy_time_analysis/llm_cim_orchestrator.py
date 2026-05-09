@@ -117,6 +117,9 @@ def _detect_topology_intent(user_input: str, analysis_plan: dict | None = None) 
     # 1) PRIMARY: analysis_plan
     # ------------------------------
     if analysis_plan:
+        request_mode = analysis_plan.get("request_mode")
+        intent = analysis_plan.get("intent")
+
         topology_scope = analysis_plan.get("topology_scope", "none")
         needs_topology_graph = bool(analysis_plan.get("needs_topology_graph", False))
         graph_level = analysis_plan.get("graph_level", "connectivity") or "connectivity"
@@ -128,10 +131,17 @@ def _detect_topology_intent(user_input: str, analysis_plan: dict | None = None) 
                 "graph_level": graph_level,
             }
 
+        if request_mode == "standard_topology_neighbors" or intent == "topology_query":
+            return _classify_topology_intent_llm(user_input)
+
     # ------------------------------
-    # 2) LLM-based classification (NEW)
+    # 2) Default: no topology
     # ------------------------------
-    return _classify_topology_intent_llm(user_input)
+    return {
+        "is_topology": False,
+        "intent": "none",
+        "graph_level": "connectivity",
+    }
 
 def _resolve_equipment_from_selection(parsed: dict, network_index: dict):
     equipment_selection = parsed.get("equipment_selection", []) or []

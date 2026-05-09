@@ -1,0 +1,36 @@
+{
+  "started_at": "2026-05-09T12:12:37.790404",
+  "entrypoint": "cimpy.llm_routing.orchestrator.Orchestrator.handle",
+  "equivalent_cli": "python -m cimpy.llm_routing.run_router",
+  "user_inputs": [
+    "Zeig mir alle PowerFactory-Attribute für Line 4-5 in Powerfactory.",
+    "Lies in PF bei Bus 1 das Attribut vmin aus.",
+    "Gib für Bus 1 in Powerfactory den Wert von vmax zurück.",
+    "Lies in PF bei Line 4-5 das Attribut loading aus.",
+    "Zeige für Bus 1 den Wert von uknom in Powerfactory.",
+    "Was ist der Bemessungsfaktor von Trafo T1 in Powerfactory?"
+  ],
+  "trace_columns": [
+    "domain",
+    "planning_mode",
+    "workflow",
+    "confidence",
+    "safe_to_execute",
+    "num_steps",
+    "steps",
+    "planner_reasoning",
+    "resolved_object",
+    "resolved_object_confidence",
+    "selected_attributes",
+    "attribute_confidence",
+    "num_tool_calls",
+    "executed_tools",
+    "failed_tool"
+  ],
+  "finished_at": "2026-05-09T12:22:57.754923",
+  "output_dir": "router_batch_results\\20260509_121237",
+  "num_runs": 6,
+  "num_errors": 0,
+  "total_duration_seconds": 619.963,
+  "average_duration_seconds": 103.269
+}

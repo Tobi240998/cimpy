@@ -129,9 +129,14 @@ Return only structured output.
         }
 
 def _detect_topology_intent(user_input: str, analysis_plan: dict | None = None) -> dict:
-    # 1) If an upstream planner/domain agent already provided an explicit
-    # topology scope, trust it. This keeps compatibility with the multi-agent path.
+    
+    # ------------------------------
+    # 1) PRIMARY: analysis_plan
+    # ------------------------------
     if analysis_plan:
+        request_mode = analysis_plan.get("request_mode")
+        intent = analysis_plan.get("intent")
+
         topology_scope = analysis_plan.get("topology_scope", "none")
         needs_topology_graph = bool(analysis_plan.get("needs_topology_graph", False))
         graph_level = analysis_plan.get("graph_level", "connectivity") or "connectivity"
@@ -143,11 +148,17 @@ def _detect_topology_intent(user_input: str, analysis_plan: dict | None = None) 
                 "graph_level": graph_level,
             }
 
-    # 2) Otherwise use the LLM classifier instead of keyword heuristics.
-    return _classify_topology_intent_llm(
-        user_input=user_input,
-        analysis_plan=analysis_plan,
-    )
+        if request_mode == "standard_topology_neighbors" or intent == "topology_query":
+            return _classify_topology_intent_llm(user_input)
+
+    # ------------------------------
+    # 2) Default: no topology
+    # ------------------------------
+    return {
+        "is_topology": False,
+        "intent": "none",
+        "graph_level": "connectivity",
+    }
 
 
 def _resolve_equipment_from_selection(parsed: dict, network_index: dict):

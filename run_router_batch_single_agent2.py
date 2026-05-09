@@ -9,6 +9,8 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any, Dict, List
 
+from langchain_core.callbacks import get_usage_metadata_callback
+
 from cimpy.single_agent2.llm_routing.orchestrator import Orchestrator
 
 
@@ -32,6 +34,10 @@ class SummaryRow:
     error: str
     details: str
     duration_seconds: float
+    prompt_tokens: int
+    completion_tokens: int
+    total_tokens: int
+    token_details: str
     json_path: str
 
     # Decision / planning trace
@@ -89,6 +95,10 @@ def save_csv(path: Path, rows: List[SummaryRow]) -> None:
         "error",
         "details",
         "duration_seconds",
+        "prompt_tokens",
+        "completion_tokens",
+        "total_tokens",
+        "token_details",
         "json_path",
         "domain",
         "planning_mode",
@@ -346,6 +356,27 @@ def _extract_attribute_decision(result: Dict[str, Any]) -> tuple[str, str]:
     return "", ""
 
 
+def extract_token_usage(usage: Dict[str, Any]) -> tuple[int, int, int, str]:
+    prompt_tokens = 0
+    completion_tokens = 0
+    total_tokens = 0
+
+    if not isinstance(usage, dict):
+        return 0, 0, 0, ""
+
+    for model_usage in usage.values():
+        if not isinstance(model_usage, dict):
+            continue
+
+        prompt_tokens += int(model_usage.get("input_tokens", 0) or 0)
+        completion_tokens += int(model_usage.get("output_tokens", 0) or 0)
+        total_tokens += int(model_usage.get("total_tokens", 0) or 0)
+
+    if total_tokens == 0:
+        total_tokens = prompt_tokens + completion_tokens
+
+    return prompt_tokens, completion_tokens, total_tokens, _stringify(usage)
+
 def extract_decision_trace(out: Dict[str, Any]) -> Dict[str, Any]:
     trace = {
         "domain": "",
@@ -552,8 +583,12 @@ def main() -> None:
         run_start = time.perf_counter()
 
         try:
-            out = orch.handle(user_input)
+            with get_usage_metadata_callback() as cb:
+                out = orch.handle(user_input)
+
             duration_seconds = round(time.perf_counter() - run_start, 3)
+            usage = cb.usage_metadata or {}
+            prompt_tokens, completion_tokens, total_tokens, token_details = extract_token_usage(usage)
             decision_trace = extract_decision_trace(out)
 
             payload = {
@@ -561,6 +596,12 @@ def main() -> None:
                 "timestamp": datetime.now().isoformat(),
                 "user_input": user_input,
                 "duration_seconds": duration_seconds,
+                "token_usage": {
+                    "prompt_tokens": prompt_tokens,
+                    "completion_tokens": completion_tokens,
+                    "total_tokens": total_tokens,
+                    "details": usage,
+                },
                 "decision_trace": decision_trace,
                 "router_output": out,
             }
@@ -582,6 +623,10 @@ def main() -> None:
                     error=error,
                     details=details,
                     duration_seconds=duration_seconds,
+                    prompt_tokens=prompt_tokens,
+                    completion_tokens=completion_tokens,
+                    total_tokens=total_tokens,
+                    token_details=token_details,
                     json_path=str(output_path),
                     domain=decision_trace["domain"],
                     planning_mode=decision_trace["planning_mode"],
@@ -606,6 +651,7 @@ def main() -> None:
             print("WORKFLOW:", decision_trace["workflow"])
             print("STEPS:", decision_trace["steps"])
             print("DAUER (s):", duration_seconds)
+            print("TOKENS:", total_tokens)
             print("ANSWER:", answer)
 
         except Exception as e:
@@ -628,6 +674,12 @@ def main() -> None:
                 "timestamp": datetime.now().isoformat(),
                 "user_input": user_input,
                 "duration_seconds": duration_seconds,
+                "token_usage": {
+                    "prompt_tokens": 0,
+                    "completion_tokens": 0,
+                    "total_tokens": 0,
+                    "details": {},
+                },
                 "decision_trace": decision_trace,
                 "router_output": out,
             }
@@ -643,6 +695,10 @@ def main() -> None:
                     error=type(e).__name__,
                     details=str(e),
                     duration_seconds=duration_seconds,
+                    prompt_tokens=0,
+                    completion_tokens=0,
+                    total_tokens=0,
+                    token_details="",
                     json_path=str(output_path),
                     domain=decision_trace["domain"],
                     planning_mode=decision_trace["planning_mode"],

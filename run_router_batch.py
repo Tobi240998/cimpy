@@ -9,134 +9,18 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any, Dict, List
 
+from langchain_core.callbacks import get_usage_metadata_callback
+
 from cimpy.llm_routing.orchestrator import Orchestrator
 
 
 USER_INPUTS: List[str] = [
-    "Nenne mir die Spannungsgrenzen von Bus 1 in Powerfactory.",
-    "Welche Umin- und Umax-Grenzen sind bei Bus 1 in Powerfactory hinterlegt?",
-    "Wie ist die Spannung von Bus 1 nach dem Lastfluss?",
-    "Gib mir die aktuelle Busspannung von Bus 1 als Lastflussergebnis.",
-    "Welche Spannung hat Bus 1 im Lastfluss?",
-    "Was ist die Leiter-Leiter-Spannung von Bus 1 nach dem Loadflow?",
-    "Wie sind die Spannungen der Busse in PowerFactory?",
-    "Gib mir die Spannungen aller Busse in PF.",
-    "Welche Busspannungen gibt es nach dem Lastfluss in PF?",
-    "Zeige die Spannung für alle Busse in Powerfactory.",
-    "Wie ist die Auslastung von Line 4-5 in PowerFactory?",
-    "Gib mir die Leitungsauslastung von Leitung 4-5.",
-    "Wie hoch ist die Belastung von Line 4-5 nach dem Lastfluss?",
-    "Was ist die loading von Line 4-5?",
-    "Wie sind die Auslastungen der Leitungen in PowerFactory?",
-    "Gib mir die Auslastung aller Leitungen in Powefactory.",
-    "Welche Leitungsauslastungen liegen nach dem Lastfluss in PF vor?",
-    "Zeige die Belastung für alle Lines in PF.",
-    "Welche Attribute sind für Bus 1 in PowerFactory verfügbar?",
-    "Welche Datenfelder gibt es bei Bus 1 in Powerfactory?",
-    "Liste alle verfügbaren Attribute von Bus 1 in Powerfactory auf.",
-    "Zeig mir die verfügbaren Attribute für Bus 1 in Powerfactory.",
-    "Welche Attribute sind für Line 4-5 in Powerfactory verfügbar?",
-    "Liste die verfügbaren Attribute von Leitung 4-5 in Powerfactory auf.",
-    "Welche Datenfelder gibt es bei der Leitung 4-5 in Powerfactory?",
     "Zeig mir alle PowerFactory-Attribute für Line 4-5 in Powerfactory.",
     "Lies in PF bei Bus 1 das Attribut vmin aus.",
     "Gib für Bus 1 in Powerfactory den Wert von vmax zurück.",
     "Lies in PF bei Line 4-5 das Attribut loading aus.",
     "Zeige für Bus 1 den Wert von uknom in Powerfactory.",
     "Was ist der Bemessungsfaktor von Trafo T1 in Powerfactory?",
-    "Welche Länge hat Line 4-5 in Powerfactory?",
-    "Gib mir den Widerstand von Line 4-5 in PF.",
-    "Wie lang ist Leitung 4-5 in PF?",
-    "Was ist die Reaktanz von Line 4-5 in PF?",
-    "Gib mir die Nennspannungen aller Busse in Powerfactory.",
-    "Welche rated voltages haben die Busse in Powerfactory?",
-    "Zeige die Basisdaten-Nennspannung für alle Busse in Powerfactory.",
-    "Nenne mir die Nennspannung sämtlicher Busse in Powerfactory.",
-    "Welche Spannungsgrenzen haben die Busse in PF?",
-    "Gib Umin und Umax für alle Busse in PF zurück.",
-    "Zeige die oberen und unteren Spannungsgrenzen aller Busse in PF.",
-    "Welche Voltage Limits sind für die Busse in Powerfactory hinterlegt?",
-    "Welche Nachbarn hat Last A? Wie ist die Spannung dazu?",
-    "Was sind die direkten Nachbarn von Load A und welche Spannung haben diese?",
-    "Zeig mir die Nachbarn von Last A und nenne die zugehörige Spannung.",
-    "Welche Assets liegen neben Last A, und wie hoch ist deren Busspannung?",
-    "Welche Leitungen hängen in PF an Bus 5 und wie hoch ist deren Auslastung?",
-    "Zeig mir die in PF an Bus 5 angeschlossenen Lines inklusive Auslastung.",
-    "Welche Leitungen sind in Powerfactory mit Bus 5 verbunden und wie stark sind sie belastet?",
-    "Liste die Nachbarleitungen von Bus 5 mit ihrer Auslastung auf. Nutze Powerfactory.",
-    "Welche Nachbarn hat Bus 5? Welche Nennspannung haben diese? Nutze PF.",
-    "Zeige die direkten Nachbarn von Bus 5 in PF und deren Nennspannung.",
-    "Was ist in Powerfactory an Bus 5 angeschlossen, und welche rated voltage haben diese Objekte?",
-    "Liste die Nachbarn von Bus 5 in Powerfactory zusammen mit ihrer Basisdaten-Spannung auf.",
-    "Welche Nachbarn hat Last A? Welche Attribute sind dafür verfügbar? Nutze Powerfactory.",
-    "Zeig mir die direkten Nachbarn von Load A in PF und liste deren verfügbare Attribute.",
-    "Was hängt in PF an Last A, und welche Datenfelder gibt es für diese Objekte?",
-    "Bestimme die Nachbarn von Last A in PF und gib die verfügbaren Attribute dazu aus.",
-    "Öffne den Schalter Schalter 1 und gib danach die Busspannungen zurück.",
-    "Schalte Schalter 1 aus. Wie sind anschließend die Busspannungen?",
-    "Bitte Schalter 1 öffnen und danach die Spannungen der Busse ausgeben.",
-    "Trenne den Schalter Schalter 1 und nenne danach die Netzspannungen.",
-    "Erhöhe Last C um 20 MW und gib danach die Auslastungen der Leitungen zurück.",
-    "Last C um 20 MW vergrößern. Welche Leitungsauslastungen ergeben sich?",
-    "Bitte Last C um 20 MW erhöhen und anschließend die Belastung der Lines anzeigen.",
-    "Increase Load C by 20 MW and then show all line loadings.",
-    "Wie is die spannung von bus 1 nachm lastfluss im Simulationsprogramm?",
-    "Gib mir mal bitte die busspannungen nachm LF in PF.",
-    "Mach load a 5 mw hoeher und sag busspannungen.",
-    "Was haengt an bus 5 dran und wie stark isses belastet? Nutze PF.",
-    "Wie ist die Auslastung von Line in PF?",
-    "Welche Farbe hat Bus 1 in Powerfactory?",
-    "Wie ist die Spannung in PF?",
-    "Schalte Schalter B an.",
-    "Erhöhe Last 3 um 20 MW.",
-    "Welche direkten topologischen Nachbarn hat Trafo 19-20 in den CIM-Daten?",
-    "Was hängt direkt an Transformator 19/20 in den CIM-Daten?",
-    "Welche Betriebsmittel sind in den CIM-Daten unmittelbar mit Trf 19 20 verbunden?",
-    "Zu welcher zusammenhängenden Komponente gehört Trafo 19-20 bei den CIM-Daten?",
-    "Zeig mir die Komponenten in den CIM-Daten rund um Transformator 19/20.",
-    "Welche Betriebsmittel liegen in der topologischen Komponente von Trf 19 20 in den CIM-Daten?",
-    "Wie hat sich am 09.01.2026 in den CIM-Daten die Spannung an Trafo 19-20 über die Zeit entwickelt?",
-    "Zeig mir den Spannungsverlauf am 09.01.2026 von Transformator 19/20 aus den historischen Daten.",
-    "Welche Spannung liegt im Zeitverlauf am 09.01.2026 an Trf 19 20 an?",
-    "Gib mir Min, Max und Mittelwert der Spannung von Trafo 19-20 aus den CIM-Daten am 09.01.2026.",
-    "Wie sind minimale, maximale und mittlere Spannung an Transformator 19/20 in den historischen Daten?",
-    "Nenne für Trf 19 20 den minimalen, maximalen und mittleren Spannungswert in den CIM-Daten.",
-    "Wie hat sich in CIM die Wirkleistung von Load 27 über die Zeit entwickelt?",
-    "Zeig mir den historischen Verlauf der aktiven Leistung von Verbraucher 27.",
-    "Welche P-Werte hat Last 27 im Zeitverlauf?",
-    "Wie hoch ist die Blindleistung von Load 27 im Verlauf?",
-    "Zeig mir den Q-Verlauf von Verbraucher 27.",
-    "Welche reaktive Leistung hat Last 27 über die Zeit?",
-    "Wie hoch war die Scheinleistung von Trafo 19-20 über die Zeit?",
-    "Zeig mir die Auslastung von Transformator 19/20 im Zeitverlauf.",
-    "Wie stark war Trf 19 20 ausgelastet?",
-    "Wann hatte Trafo 19-20 seine höchste und niedrigste Auslastung?",
-    "Zu welchen Zeitpunkten war Transformator 19/20 am stärksten bzw. am schwächsten ausgelastet?",
-    "Nenne mir Peak- und Minimum-Zeitpunkt der Auslastung von Trf 19 20.",
-    "Welcher direkte Nachbar von Trafo 19-20 hatte die höchste Wirkleistung?",
-    "Welches direkt angeschlossene Betriebsmittel an Transformator 19/20 hatte den größten P-Wert?",
-    "Bei welchem direkten Nachbarn von Trf 19 20 war die Wirkleistung am höchsten?",
-    "Welcher Trafo in der Komponente von Trafo 19-20 war am höchsten ausgelastet?",
-    "Finde in der zusammenhängenden Komponente von Transformator 19/20 den Trafo mit der größten Auslastung.",
-    "Welcher Transformator in der Komponente rund um Trf 19 20 hatte die höchste Last?",
-    "Welcher direkte Nachbar von Load 27 hatte die kleinste Blindleistung?",
-    "Bei welchem unmittelbar verbundenen Betriebsmittel von Verbraucher 27 ist Q minimal?",
-    "Welcher Nachbar von Last 27 hat den niedrigsten Blindleistungswert?",
-    "Wie hoch war die Wirkleistung von Load 27 am 09.01.26 zwischen 14:00 und 15:00 Uhr?",
-    "Zeig mir den P-Verlauf von Verbraucher 27 im Zeitfenster 2026-01-09T14:00 bis 2026-01-09T15:00.",
-    "Welche aktive Leistung hatte Last 27 am 09.01.26 zwischen 14 und 15 Uhr?",
-    "Wie war die Spannung an Bus 19 am 09.01.2026 um 12 Uhr?",
-    "Zeig mir die Spannung von Bus 19 zum 2026-01-09T12:00:00Z.",
-    "Welche Spannung hatte Trf 19 20 Anfang 2026 mittags?",
-    "Wie ist die Spannung in den CIM-Daten?",
-    "Gib mir bitte die Spannung in den CIM-Daten.",
-    "Wie hoch ist aktuell die Spannung in CIM?",
-    "Wie hoch ist die Leistung in CIM?",
-    "Sag mir bitte die Wirkleistung in CIM.",
-    "Wie groß ist P gerade in CIM?",
-    "Wie war die durchschnittliche Auslastung von Trafo A am 09.01.2026?",
-    "Wie war die Auslastung von Leitung 128 am 09.01.26?"
-
 ]
 
 OUTPUT_DIR = Path("router_batch_results") / datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -152,6 +36,10 @@ class SummaryRow:
     error: str
     details: str
     duration_seconds: float
+    prompt_tokens: int
+    completion_tokens: int
+    total_tokens: int
+    token_details: str
     json_path: str
 
     # Decision / planning trace
@@ -209,6 +97,10 @@ def save_csv(path: Path, rows: List[SummaryRow]) -> None:
         "error",
         "details",
         "duration_seconds",
+        "prompt_tokens",
+        "completion_tokens",
+        "total_tokens",
+        "token_details",
         "json_path",
         "domain",
         "planning_mode",
@@ -467,6 +359,28 @@ def _extract_attribute_decision(result: Dict[str, Any]) -> tuple[str, str]:
     return "", ""
 
 
+def extract_token_usage(usage: Dict[str, Any]) -> tuple[int, int, int, str]:
+    prompt_tokens = 0
+    completion_tokens = 0
+    total_tokens = 0
+
+    if not isinstance(usage, dict):
+        return 0, 0, 0, ""
+
+    for model_usage in usage.values():
+        if not isinstance(model_usage, dict):
+            continue
+
+        prompt_tokens += int(model_usage.get("input_tokens", 0) or 0)
+        completion_tokens += int(model_usage.get("output_tokens", 0) or 0)
+        total_tokens += int(model_usage.get("total_tokens", 0) or 0)
+
+    if total_tokens == 0:
+        total_tokens = prompt_tokens + completion_tokens
+
+    return prompt_tokens, completion_tokens, total_tokens, _stringify(usage)
+
+
 def extract_decision_trace(out: Dict[str, Any]) -> Dict[str, Any]:
     trace = {
         "domain": "",
@@ -677,8 +591,12 @@ def main() -> None:
         run_start = time.perf_counter()
 
         try:
-            out = orch.handle(user_input)
+            with get_usage_metadata_callback() as cb:
+                out = orch.handle(user_input)
+
             duration_seconds = round(time.perf_counter() - run_start, 3)
+            usage = cb.usage_metadata or {}
+            prompt_tokens, completion_tokens, total_tokens, token_details = extract_token_usage(usage)
             decision_trace = extract_decision_trace(out)
 
             payload = {
@@ -686,6 +604,12 @@ def main() -> None:
                 "timestamp": datetime.now().isoformat(),
                 "user_input": user_input,
                 "duration_seconds": duration_seconds,
+                "token_usage": {
+                    "prompt_tokens": prompt_tokens,
+                    "completion_tokens": completion_tokens,
+                    "total_tokens": total_tokens,
+                    "details": usage,
+                },
                 "decision_trace": decision_trace,
                 "router_output": out,
             }
@@ -707,6 +631,10 @@ def main() -> None:
                     error=error,
                     details=details,
                     duration_seconds=duration_seconds,
+                    prompt_tokens=prompt_tokens,
+                    completion_tokens=completion_tokens,
+                    total_tokens=total_tokens,
+                    token_details=token_details,
                     json_path=str(output_path),
                     domain=decision_trace["domain"],
                     planning_mode=decision_trace["planning_mode"],
@@ -731,6 +659,7 @@ def main() -> None:
             print("WORKFLOW:", decision_trace["workflow"])
             print("STEPS:", decision_trace["steps"])
             print("DAUER (s):", duration_seconds)
+            print("TOKENS:", total_tokens)
             print("ANSWER:", answer)
 
         except Exception as e:
@@ -753,6 +682,12 @@ def main() -> None:
                 "timestamp": datetime.now().isoformat(),
                 "user_input": user_input,
                 "duration_seconds": duration_seconds,
+                "token_usage": {
+                    "prompt_tokens": 0,
+                    "completion_tokens": 0,
+                    "total_tokens": 0,
+                    "details": {},
+                },
                 "decision_trace": decision_trace,
                 "router_output": out,
             }
@@ -768,6 +703,10 @@ def main() -> None:
                     error=type(e).__name__,
                     details=str(e),
                     duration_seconds=duration_seconds,
+                    prompt_tokens=0,
+                    completion_tokens=0,
+                    total_tokens=0,
+                    token_details="",
                     json_path=str(output_path),
                     domain=decision_trace["domain"],
                     planning_mode=decision_trace["planning_mode"],
