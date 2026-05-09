@@ -1,0 +1,31 @@
+{
+  "run_id": 108,
+  "timestamp": "2026-05-07T17:48:39.323637",
+  "user_input": "Bei welchem unmittelbar verbundenen Betriebsmittel von Verbraucher 27 ist Q minimal?",
+  "duration_seconds": 5.111,
+  "decision_trace": {
+    "domain": "ASK_USER",
+    "planning_mode": "",
+    "workflow": "",
+    "confidence": "",
+    "safe_to_execute": "",
+    "num_steps": 0,
+    "steps": "",
+    "planner_reasoning": "",
+    "resolved_object": "",
+    "resolved_object_confidence": "",
+    "selected_attributes": "",
+    "attribute_confidence": "",
+    "num_tool_calls": 0,
+    "executed_tools": "",
+    "failed_tool": ""
+  },
+  "router_output": {
+    "route": "ASK_USER",
+    "question": "Bezieht sich Ihre Frage auf historische CIM-Daten oder das aktuelle PowerFactory-Projekt?",
+    "missing_fields": [
+      "data_source"
+    ],
+    "partial": {}
+  }
+}

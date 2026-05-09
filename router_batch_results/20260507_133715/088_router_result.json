@@ -1,0 +1,31 @@
+{
+  "run_id": 88,
+  "timestamp": "2026-05-07T16:57:03.293503",
+  "user_input": "Nenne für Trf 19 20 den minimalen, maximalen und mittleren Spannungswert in den CIM-Daten.",
+  "duration_seconds": 10.267,
+  "decision_trace": {
+    "domain": "ASK_USER",
+    "planning_mode": "",
+    "workflow": "",
+    "confidence": "",
+    "safe_to_execute": "",
+    "num_steps": 0,
+    "steps": "",
+    "planner_reasoning": "",
+    "resolved_object": "",
+    "resolved_object_confidence": "",
+    "selected_attributes": "",
+    "attribute_confidence": "",
+    "num_tool_calls": 0,
+    "executed_tools": "",
+    "failed_tool": ""
+  },
+  "router_output": {
+    "route": "ASK_USER",
+    "question": "Bitte geben Sie den Zeitraum an, für den Sie die minimalen, maximalen und mittleren Spannungen an Transformator 19/20 in den CIM-Daten benötigen.",
+    "missing_fields": [
+      "time_range"
+    ],
+    "partial": {}
+  }
+}

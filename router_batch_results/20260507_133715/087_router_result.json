@@ -1,0 +1,31 @@
+{
+  "run_id": 87,
+  "timestamp": "2026-05-07T16:56:53.022772",
+  "user_input": "Wie sind minimale, maximale und mittlere Spannung an Transformator 19/20 in den historischen Daten?",
+  "duration_seconds": 9.995,
+  "decision_trace": {
+    "domain": "ASK_USER",
+    "planning_mode": "",
+    "workflow": "",
+    "confidence": "",
+    "safe_to_execute": "",
+    "num_steps": 0,
+    "steps": "",
+    "planner_reasoning": "",
+    "resolved_object": "",
+    "resolved_object_confidence": "",
+    "selected_attributes": "",
+    "attribute_confidence": "",
+    "num_tool_calls": 0,
+    "executed_tools": "",
+    "failed_tool": ""
+  },
+  "router_output": {
+    "route": "ASK_USER",
+    "question": "Bitte geben Sie den Zeitraum an, für den Sie die minimalen, maximalen und mittleren Spannungen an Transformator 19/20 in den historischen Daten benötigen.",
+    "missing_fields": [
+      "time_range"
+    ],
+    "partial": {}
+  }
+}

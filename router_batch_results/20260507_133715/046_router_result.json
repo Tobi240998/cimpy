@@ -1,0 +1,33 @@
+{
+  "run_id": 46,
+  "timestamp": "2026-05-07T15:35:29.436035",
+  "user_input": "Zeig mir die Nachbarn von Last A und nenne die zugehörige Spannung.",
+  "duration_seconds": 4.958,
+  "decision_trace": {
+    "domain": "ASK_USER",
+    "planning_mode": "",
+    "workflow": "",
+    "confidence": "",
+    "safe_to_execute": "",
+    "num_steps": 0,
+    "steps": "",
+    "planner_reasoning": "",
+    "resolved_object": "",
+    "resolved_object_confidence": "",
+    "selected_attributes": "",
+    "attribute_confidence": "",
+    "num_tool_calls": 0,
+    "executed_tools": "",
+    "failed_tool": ""
+  },
+  "router_output": {
+    "route": "ASK_USER",
+    "question": "Bezieht sich Ihre Anfrage auf historische CIM-Daten oder das aktuelle PowerFactory-Projekt?",
+    "missing_fields": [
+      "data_source"
+    ],
+    "partial": {
+      "user_input": "Zeig mir die Nachbarn von Last A und nenne die zugehörige Spannung."
+    }
+  }
+}

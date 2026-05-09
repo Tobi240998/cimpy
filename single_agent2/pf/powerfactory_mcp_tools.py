@@ -4674,11 +4674,18 @@ def _build_pf_attribute_description_shortlist_chain():
 
             "Important semantic guidance:\n"
             "- For limits, bounds, Grenzen, Grenzwerte, upper/lower, min/max, Umin, Umax, include plausible voltage-limit candidates.\n"
-            "Semantic bridge rules:\n"
-            "- Treat common engineering shorthand as semantic hints, not necessarily exact PowerFactory attribute names.\n"
-            "- Examples: umin means lower/minimum voltage limit; umax means upper/maximum voltage limit.\n"
-            "- If the exact shorthand is not an available attribute_name, shortlist attributes whose descriptions express the same concept.\n"
             "- For nominal/rated/base/setpoint values, include plausible nominal/rated/base/setpoint candidates.\n\n"
+
+            "Examples for bus voltage attributes:\n"
+            "- User request: 'untere Spannungsgrenze von Bus 1' -> shortlist vmin if available.\n"
+            "- User request: 'untere Spannungsgrenze' -> shortlist vmin if available.\n"
+            "- User request: 'Umin von Bus 1' -> shortlist vmin if available when umin is not available.\n"
+            "- User request: 'obere Spannungsgrenze von Bus 1' -> shortlist vmax if available.\n"
+            "- User request: 'obere Spannungsgrenze' -> shortlist vmax if available.\n"
+            "- User request: 'Umax von Bus 1' -> shortlist vmax if available when umax is not available.\n"
+            "- User request: 'untere und obere Spannungsgrenze' -> shortlist vmin and vmax if available.\n"
+            "- User request: 'Umin und Umax' -> shortlist vmin and vmax if available when umin/umax are not available.\n"
+            "- Do not prefer dvmin/dvmax, iOPFCvmin/iOPFCvmax, vstep_bus, or vtarget for normal lower/upper voltage-limit requests unless the user explicitly asks for delta limits, OPF limits, voltage-step limits, or target voltage.\n\n"
 
             "{format_instructions}"
         ),

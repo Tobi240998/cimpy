@@ -1,0 +1,31 @@
+{
+  "run_id": 115,
+  "timestamp": "2026-05-08T18:10:13.614885",
+  "user_input": "Welche Spannung hatte Trf 19 20 Anfang 2026 mittags?",
+  "duration_seconds": 12.174,
+  "decision_trace": {
+    "domain": "ASK_USER",
+    "planning_mode": "",
+    "workflow": "",
+    "confidence": "",
+    "safe_to_execute": "",
+    "num_steps": 0,
+    "steps": "",
+    "planner_reasoning": "",
+    "resolved_object": "",
+    "resolved_object_confidence": "",
+    "selected_attributes": "",
+    "attribute_confidence": "",
+    "num_tool_calls": 0,
+    "executed_tools": "",
+    "failed_tool": ""
+  },
+  "router_output": {
+    "route": "ASK_USER",
+    "question": "Bitte geben Sie den genauen Zeitraum an, z.B. '2026-01-01 bis 2026-01-07', da 'Anfang 2026' zu ungenau ist.",
+    "missing_fields": [
+      "time_range"
+    ],
+    "partial": {}
+  }
+}

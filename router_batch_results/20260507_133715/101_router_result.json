@@ -1,0 +1,31 @@
+{
+  "run_id": 101,
+  "timestamp": "2026-05-07T16:59:03.000241",
+  "user_input": "Welcher direkte Nachbar von Trafo 19-20 hatte die höchste Wirkleistung?",
+  "duration_seconds": 14.073,
+  "decision_trace": {
+    "domain": "ASK_USER",
+    "planning_mode": "",
+    "workflow": "",
+    "confidence": "",
+    "safe_to_execute": "",
+    "num_steps": 0,
+    "steps": "",
+    "planner_reasoning": "",
+    "resolved_object": "",
+    "resolved_object_confidence": "",
+    "selected_attributes": "",
+    "attribute_confidence": "",
+    "num_tool_calls": 0,
+    "executed_tools": "",
+    "failed_tool": ""
+  },
+  "router_output": {
+    "route": "ASK_USER",
+    "question": "Bitte geben Sie den Zeitraum an, für den Sie die höchste Wirkleistung des direkten Nachbarn von Trafo 19-20 benötigen.",
+    "missing_fields": [
+      "time_range"
+    ],
+    "partial": {}
+  }
+}

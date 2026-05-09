@@ -4652,36 +4652,45 @@ def _build_structured_chain(prompt: ChatPromptTemplate, schema_model: Any):
 
 def _build_pf_attribute_description_shortlist_chain():
     prompt = ChatPromptTemplate.from_messages([
-        (
-            "system",
-            "You are a structured-output component for PowerFactory attribute shortlisting.\n"
-            "Return only structured output matching the required schema.\n"
-            "The schema contains only one field: shortlisted_attribute_names.\n"
-            "Do not return confidence, rationale, missing_context, should_execute, markdown, prose, or code fences.\n\n"
+(
+    "system",
+    "You are a strict structured-output extractor.\n"
+    "Your only task is to return PowerFactory attribute_name values from the candidate list.\n\n"
 
-            "Task:\n"
-            "- Select attribute_name values from the provided candidate list.\n"
-            "- Every selected name must be copied exactly from an attribute_name in the provided list.\n"
-            "- Do not invent attribute names.\n"
-            "- Return 0 to 8 names.\n"
-            "- If no candidate is plausible, return an empty list.\n\n"
+    "The output schema has exactly one field:\n"
+    "- shortlisted_attribute_names: list of strings\n\n"
 
-            "Shortlisting rules:\n"
-            "- Use attribute_description as the main semantic evidence.\n"
-            "- Include candidates whose attribute_description plausibly relates to the requested concept.\n"
-            "- The shortlist may include more than one candidate even for a singular user request.\n"
-            "- Do not decide between general attributes and OPF/context-specific attributes here.\n"
-            "- Final disambiguation is handled later.\n\n"
+    "Hard rules:\n"
+    "- Return only the structured output required by the schema.\n"
+    "- Do not write explanations.\n"
+    "- Do not write markdown.\n"
+    "- Do not write code fences.\n"
+    "- Do not add fields such as confidence, rationale, missing_context, or should_execute.\n"
+    "- Every returned name must be copied exactly from the provided candidate list.\n"
+    "- If no candidate is plausible, return an empty list.\n"
+    "- Return at most 5 names.\n\n"
 
-            "Important semantic guidance:\n"
-            "- For limits, bounds, Grenzen, Grenzwerte, upper/lower, min/max, Umin, Umax, include plausible voltage-limit candidates.\n"
-            "Semantic bridge rules:\n"
-            "- Treat common engineering shorthand as semantic hints, not necessarily exact PowerFactory attribute names.\n"
-            "- Examples: umin means lower/minimum voltage limit; umax means upper/maximum voltage limit.\n"
-            "- If the exact shorthand is not an available attribute_name, shortlist attributes whose descriptions express the same concept.\n"
-            "- For nominal/rated/base/setpoint values, include plausible nominal/rated/base/setpoint candidates.\n\n"
+    "Selection rules:\n"
+    "- Use attribute_description as the main semantic evidence.\n"
+    "- If the user asks for voltage limits, Spannungsgrenzen, Umin/Umax, upper/lower limits, select matching voltage-limit attributes such as vmin and vmax if available.\n"
+    "- If the user asks for lower voltage limit, untere Spannungsgrenze, Umin, minimum voltage limit, select vmin if available.\n"
+    "- If the user asks for upper voltage limit, obere Spannungsgrenze, Umax, maximum voltage limit, select vmax if available.\n"
+    "- If the user asks for nominal voltage, Nennspannung, rated voltage, select uknom and optionally unknom if both are plausible.\n"
+    "- If the user asks for line length, Länge, length, select dline if available.\n"
+    "- If the user asks for resistance, Widerstand, resistance, select R1 if available.\n"
+    "- If the user asks for reactance, Reaktanz, reactance, select X1 if available.\n"
+    "- Do not decide final uniqueness here. Final disambiguation happens later.\n\n"
 
-            "{format_instructions}"
+    "Examples:\n"
+    "- Request 'untere Spannungsgrenze' with candidates containing vmin -> shortlisted_attribute_names contains vmin.\n"
+    "- Request 'obere Spannungsgrenze' with candidates containing vmax -> shortlisted_attribute_names contains vmax.\n"
+    "- Request 'Spannungsgrenzen' with candidates containing vmin and vmax -> shortlisted_attribute_names contains vmin and vmax.\n"
+    "- Request 'Länge der Leitung' with candidates containing dline -> shortlisted_attribute_names contains dline.\n"
+    "- Request 'Widerstand der Leitung' with candidates containing R1 -> shortlisted_attribute_names contains R1.\n"
+    "- Request 'Reaktanz der Leitung' with candidates containing X1 -> shortlisted_attribute_names contains X1.\n\n"
+
+    "{format_instructions}"
+
         ),
         (
             "user",

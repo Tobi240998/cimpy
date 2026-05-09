@@ -1,0 +1,31 @@
+{
+  "run_id": 12,
+  "timestamp": "2026-05-07T14:03:35.779900",
+  "user_input": "Gib mir die Leitungsauslastung von Leitung 4-5.",
+  "duration_seconds": 6.321,
+  "decision_trace": {
+    "domain": "ASK_USER",
+    "planning_mode": "",
+    "workflow": "",
+    "confidence": "",
+    "safe_to_execute": "",
+    "num_steps": 0,
+    "steps": "",
+    "planner_reasoning": "",
+    "resolved_object": "",
+    "resolved_object_confidence": "",
+    "selected_attributes": "",
+    "attribute_confidence": "",
+    "num_tool_calls": 0,
+    "executed_tools": "",
+    "failed_tool": ""
+  },
+  "router_output": {
+    "route": "ASK_USER",
+    "question": "Bitte spezifizieren Sie, ob Sie historische CIM-Daten oder den aktuellen PowerFactory-Projektzustand meinen.",
+    "missing_fields": [
+      "data_source"
+    ],
+    "partial": {}
+  }
+}

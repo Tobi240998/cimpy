@@ -1,0 +1,31 @@
+{
+  "run_id": 100,
+  "timestamp": "2026-05-07T16:58:48.925116",
+  "user_input": "Nenne mir Peak- und Minimum-Zeitpunkt der Auslastung von Trf 19 20.",
+  "duration_seconds": 4.932,
+  "decision_trace": {
+    "domain": "ASK_USER",
+    "planning_mode": "",
+    "workflow": "",
+    "confidence": "",
+    "safe_to_execute": "",
+    "num_steps": 0,
+    "steps": "",
+    "planner_reasoning": "",
+    "resolved_object": "",
+    "resolved_object_confidence": "",
+    "selected_attributes": "",
+    "attribute_confidence": "",
+    "num_tool_calls": 0,
+    "executed_tools": "",
+    "failed_tool": ""
+  },
+  "router_output": {
+    "route": "ASK_USER",
+    "question": "Bitte geben Sie den Zeitraum an, für den Sie die Peak- und Minimum-Zeitpunkte der Auslastung von Trf 19/20 benötigen.",
+    "missing_fields": [
+      "time_range"
+    ],
+    "partial": {}
+  }
+}
