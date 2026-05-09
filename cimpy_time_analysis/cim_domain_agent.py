@@ -21,7 +21,7 @@ _ALLOWED_REQUEST_MODES = {
     "standard_base",
     "standard_listing",
     "standard_comparison",
-    "standard_topology_neighbors",
+    "standard_topology_query",
     "custom_plan",
     "clarification_needed",
 }
@@ -103,7 +103,7 @@ class CIMDomainAgent:
         - standard_listing
         - standard_comparison
         - custom_plan
-        - standard_topology_neighbors
+        - standard_topology_query
         - clarification_needed
 
         Critical rules:
@@ -126,7 +126,7 @@ class CIMDomainAgent:
         - standard_base: standard static base/nameplate attribute request.
         - standard_listing: standard type-listing request asking which objects of a CIM equipment type exist in general.
         - standard_comparison: standard comparison/limit-check request comparing SV values against base values.
-        - standard_topology_neighbors: standard topology request asking for direct neighbors or directly connected objects of one concrete asset.
+        - standard_topology_neighbors: standard topology request asking for direct neighbors, directly connected objects, graph relations, or the connected/topological component of one concrete asset.
         - custom_plan: request is CIM-related and executable, but deviates from the standard cases and needs explicit step planning.
         - clarification_needed: request is CIM-related, but not safely executable because essential context is missing.
 
@@ -138,7 +138,7 @@ class CIMDomainAgent:
         component membership, graph relations, or direct connections, prefer:
         intent=topology_query
         target_kind=topology
-        request_mode=standard_topology_neighbors
+        request_mode=standard_topology_query
         safe_to_execute=true
         - standard_listing only applies when the user asks which objects of a CIM equipment type exist in general,
         for example:
@@ -180,10 +180,10 @@ class CIMDomainAgent:
         - "Welche Leitungen gibt es?" => intent=asset_lookup, request_mode=standard_listing, target_kind=asset, safe_to_execute=true
         - "Was ist r von Line 02-03?" => intent=historical_analysis, request_mode=standard_base, target_kind=metric, safe_to_execute=true
         - "Was war die Spannung von Bus 3 am 2026-01-09?" => intent=historical_analysis, request_mode=standard_sv, target_kind=metric, safe_to_execute=true
-        - "Was sind die direkten Nachbarn von Bus 3?" => intent=topology_query, request_mode=standard_topology_neighbors, target_kind=topology, safe_to_execute=true
-        - "Was sind die direkten Nachbarn von Last 3?" => intent=topology_query, request_mode=standard_topology_neighbors, target_kind=topology, safe_to_execute=true
-        - "Was sind die direkten Nachbarn von Trafo 19-20 in den CIM-Daten?" => intent=topology_query, request_mode=standard_topology_neighbors, target_kind=topology, safe_to_execute=true
-        - "Was sind die direkten Nachbarn von Bus 3? Nutze historical CIM, nicht Powerfactory" => intent=topology_query, request_mode=standard_topology_neighbors, target_kind=topology, safe_to_execute=true
+        - "Was sind die direkten Nachbarn von Bus 3?" => intent=topology_query, request_mode=standard_topology_query, target_kind=topology, safe_to_execute=true
+        - "Was sind die direkten Nachbarn von Last 3?" => intent=topology_query, request_mode=standard_topology_query, target_kind=topology, safe_to_execute=true
+        - "Was sind die direkten Nachbarn von Trafo 19-20 in den CIM-Daten?" => intent=topology_query, request_mode=standard_topology_query, target_kind=topology, safe_to_execute=true
+        - "Was sind die direkten Nachbarn von Bus 3? Nutze historical CIM, nicht Powerfactory" => intent=topology_query, request_mode=standard_topology_query, target_kind=topology, safe_to_execute=true
 
         {format_instructions}
         """
@@ -206,7 +206,7 @@ Allowed request modes:
 - standard_listing
 - standard_comparison
 - custom_plan
-- standard_topology_neighbors
+- standard_topology_query
 - clarification_needed
 
 Critical rules:
@@ -223,7 +223,7 @@ Key semantic anchors:
 - standard_base: asks for static nameplate / technical base attributes
 - standard_sv: asks for a dynamic state value only
 - standard_comparison: asks for utilization, loading, overload, threshold/limit checks, or compares a dynamic value against a base/reference/limit
-- standard_topology_neighbors: asks for direct neighbors, direct connections, or graph relations of a concrete asset
+- standard_topology_query: asks for direct neighbors, direct connections, or graph relations of a concrete asset
 - clarification_needed: essential context is missing
 
 Examples:
@@ -232,7 +232,7 @@ Examples:
 - "Wie hoch war die Spannung des Trafos 19-20 am 2026-01-09?" => standard_sv
 - "Wann war die höchste Auslastung von Trafo 19-20 am 2026-01-09?" => standard_comparison
 - "Was ist die Nennspannung von Trafo 19-20?" => standard_base
-- "Was sind die direkten Nachbarn von Trafo 19-20?" => standard_topology_neighbors
+- "Was sind die direkten Nachbarn von Trafo 19-20?" => standard_topology_query
 
 {format_instructions}
 """
@@ -329,7 +329,7 @@ Practical guidance:
                 "compare_cim_values",
             ]
         
-        if request_mode == "standard_topology_neighbors":
+        if request_mode == "standard_topology_query":
             return ["scan_snapshot_inventory", 
                     "resolve_cim_object", 
                     "query_cim", 
@@ -574,7 +574,7 @@ Practical guidance:
                 add("read_cim_base_values")
                 add("compare_cim_values")
                 add("summarize_cim_result")
-            elif request_mode == "standard_topology_neighbors":
+            elif request_mode == "standard_topology_query":
                 add("scan_snapshot_inventory")
                 add("resolve_cim_object")
                 add("query_cim")
@@ -652,6 +652,67 @@ Practical guidance:
             "user_input": user_input,
         }
 
+    def _make_trace_safe_result(self, result: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Reduziert Tool-Ergebnisse für den Debug-Trace auf JSON-sichere,
+        kleine Informationen. Die echten Ergebnisse bleiben im context erhalten.
+        """
+        if not isinstance(result, dict):
+            return {"repr": repr(result)}
+
+        excluded_keys = {
+            "base_snapshot",
+            "network_index",
+            "snapshot_inventory",
+            "cim_snapshots",
+            "snapshot_cache",
+            "resolved_object",
+        }
+
+        safe: Dict[str, Any] = {}
+
+        for key, value in result.items():
+            if key in excluded_keys:
+                safe[key] = f"<omitted:{type(value).__name__}>"
+                continue
+
+            if key == "parsed_query" and isinstance(value, dict):
+                safe[key] = {
+                    "equipment_detected": value.get("equipment_detected", []),
+                    "state_detected": value.get("state_detected", []),
+                    "metric": value.get("metric"),
+                    "time_start": value.get("time_start"),
+                    "time_end": value.get("time_end"),
+                    "time_label": value.get("time_label"),
+                    "equipment_selection": value.get("equipment_selection", []),
+                }
+                continue
+
+            if key == "query_result_data" and isinstance(value, dict):
+                rows = value.get("rows", []) or []
+                safe[key] = {
+                    "query_mode": value.get("query_mode"),
+                    "metric": value.get("metric"),
+                    "summary": value.get("summary"),
+                    "row_count": len(rows),
+                    "rows_preview": rows[:3],
+                }
+                continue
+
+            if isinstance(value, (str, int, float, bool)) or value is None:
+                safe[key] = value
+            elif isinstance(value, (list, tuple)):
+                safe[key] = value[:20]
+            elif isinstance(value, dict):
+                safe[key] = {
+                    k: v for k, v in value.items()
+                    if isinstance(v, (str, int, float, bool)) or v is None
+                }
+            else:
+                safe[key] = repr(value)
+
+        return safe
+
     # ------------------------------------------------------------------
     # EXECUTION
     # ------------------------------------------------------------------
@@ -699,7 +760,7 @@ Practical guidance:
                     "capability_tags": tool_spec.capability_tags if tool_spec else [],
                     "mutating": tool_spec.mutating if tool_spec else False,
                 },
-                "result": result,
+                "result": self._make_trace_safe_result(result),
             })
 
             if result.get("status") != "ok":

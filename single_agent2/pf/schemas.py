@@ -36,9 +36,19 @@ class AttributeDescriptionShortlistDecision(BaseModel):
     shortlisted_attribute_names: List[str] = Field(
         default_factory=list,
         description=(
-            "PowerFactory attribute_name values copied exactly from the provided candidate list. "
-            "Return an empty list if no candidate is plausible."
+            "List of selected attribute_name values copied exactly from the candidate list. "
+            "If a candidate is described as plausible in the rationale, it must also appear in this list."
         ),
+    )
+    confidence: Literal["high", "medium", "low"] = Field(
+        description="Confidence of the shortlist selection."
+    )
+    rationale: str = Field(
+        description="Short explanation of why these candidates were shortlisted."
+    )
+    missing_context: List[str] = Field(default_factory=list)
+    should_execute: bool = Field(
+        description="True only if shortlisted_attribute_names contains at least one plausible candidate."
     )
 
 

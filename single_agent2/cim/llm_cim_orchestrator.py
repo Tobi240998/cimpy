@@ -148,7 +148,7 @@ def _detect_topology_intent(user_input: str, analysis_plan: dict | None = None) 
                 "graph_level": graph_level,
             }
 
-        if request_mode == "standard_topology_neighbors" or intent == "topology_query":
+        if request_mode == "standard_topology_query" or intent == "topology_query":
             return _classify_topology_intent_llm(user_input)
 
     # ------------------------------

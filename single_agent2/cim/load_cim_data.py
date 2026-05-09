@@ -265,7 +265,22 @@ def select_snapshot_names_by_time(snapshot_inventory, start_time=None, end_time=
     end_dt = _parse_iso_datetime(end_time)
 
     if start_dt is None or end_dt is None:
-        return [s["snapshot_name"] for s in snapshots]
+        snapshots_with_time = [
+            s for s in snapshots
+            if s.get("default_time") is not None
+        ]
+
+        if snapshots_with_time:
+            latest = max(
+                snapshots_with_time,
+                key=lambda s: (s.get("default_time"), s.get("snapshot_name") or "")
+            )
+            return [latest["snapshot_name"]]
+
+        if snapshots:
+            return [snapshots[-1]["snapshot_name"]]
+
+        return []
 
     selected = []
     for meta in snapshots:

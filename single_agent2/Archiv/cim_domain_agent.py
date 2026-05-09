@@ -634,6 +634,67 @@ Practical guidance:
             "classification": classification,
             "user_input": user_input,
         }
+    
+    def _make_trace_safe_result(self, result: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Reduziert Tool-Ergebnisse für den Debug-Trace auf JSON-sichere,
+        kleine Informationen. Die echten Ergebnisse bleiben im context erhalten.
+        """
+        if not isinstance(result, dict):
+            return {"repr": repr(result)}
+
+        excluded_keys = {
+            "base_snapshot",
+            "network_index",
+            "snapshot_inventory",
+            "cim_snapshots",
+            "snapshot_cache",
+            "resolved_object",
+        }
+
+        safe: Dict[str, Any] = {}
+
+        for key, value in result.items():
+            if key in excluded_keys:
+                safe[key] = f"<omitted:{type(value).__name__}>"
+                continue
+
+            if key == "parsed_query" and isinstance(value, dict):
+                safe[key] = {
+                    "equipment_detected": value.get("equipment_detected", []),
+                    "state_detected": value.get("state_detected", []),
+                    "metric": value.get("metric"),
+                    "time_start": value.get("time_start"),
+                    "time_end": value.get("time_end"),
+                    "time_label": value.get("time_label"),
+                    "equipment_selection": value.get("equipment_selection", []),
+                }
+                continue
+
+            if key == "query_result_data" and isinstance(value, dict):
+                rows = value.get("rows", []) or []
+                safe[key] = {
+                    "query_mode": value.get("query_mode"),
+                    "metric": value.get("metric"),
+                    "summary": value.get("summary"),
+                    "row_count": len(rows),
+                    "rows_preview": rows[:3],
+                }
+                continue
+
+            if isinstance(value, (str, int, float, bool)) or value is None:
+                safe[key] = value
+            elif isinstance(value, (list, tuple)):
+                safe[key] = value[:20]
+            elif isinstance(value, dict):
+                safe[key] = {
+                    k: v for k, v in value.items()
+                    if isinstance(v, (str, int, float, bool)) or v is None
+                }
+            else:
+                safe[key] = repr(value)
+
+        return safe
 
     # ------------------------------------------------------------------
     # EXECUTION
@@ -682,7 +743,7 @@ Practical guidance:
                     "capability_tags": tool_spec.capability_tags if tool_spec else [],
                     "mutating": tool_spec.mutating if tool_spec else False,
                 },
-                "result": result,
+                "result": self._make_trace_safe_result(result),
             })
 
             if result.get("status") != "ok":

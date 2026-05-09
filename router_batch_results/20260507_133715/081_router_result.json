@@ -11,7 +11,7 @@
     "safe_to_execute": "True",
     "num_steps": 4,
     "steps": "scan_snapshot_inventory | resolve_cim_object | query_cim | summarize_cim_result",
-    "planner_reasoning": "Request explicitly names a concrete asset (Transformator 19/20) and asks for surrounding components, matching topology_query semantics for direct neighbors. Asset name is specified, so no missing context. Request mode standard_topology_neighbors applies.",
+    "planner_reasoning": "Request explicitly names a concrete asset (Transformator 19/20) and asks for surrounding components, matching topology_query semantics for direct neighbors. Asset name is specified, so no missing context. Request mode standard_topology_query applies.",
     "resolved_object": "",
     "resolved_object_confidence": "",
     "selected_attributes": "",
@@ -30,11 +30,11 @@
         "intent": "topology_query",
         "confidence": "high",
         "target_kind": "topology",
-        "request_mode": "standard_topology_neighbors",
+        "request_mode": "standard_topology_query",
         "safe_to_execute": true,
         "missing_context": [],
         "required_steps": [],
-        "reasoning": "Request explicitly names a concrete asset (Transformator 19/20) and asks for surrounding components, matching topology_query semantics for direct neighbors. Asset name is specified, so no missing context. Request mode standard_topology_neighbors applies.",
+        "reasoning": "Request explicitly names a concrete asset (Transformator 19/20) and asks for surrounding components, matching topology_query semantics for direct neighbors. Asset name is specified, so no missing context. Request mode standard_topology_query applies.",
         "status": "ok",
         "classification_mode": "primary_llm_classifier"
       },
@@ -7924,7 +7924,7 @@
                 "time_end": null,
                 "time_label": null,
                 "intent": "topology_query",
-                "request_mode": "standard_topology_neighbors",
+                "request_mode": "standard_topology_query",
                 "is_topology_query": true
               },
               "resolved_object": "class=PowerTransformer\nDiagramObjects='list'\ndescription=''\nenergyIdentCodeEic=''\nmRID='_d3acef3d-077f-4dd2-a18b-5262ddd4383a'\nname='Trf 19 - 20'\nshortName=''\nControls='list'\nLocation=None\nMeasurements='list'\nEquipmentContainer=<cimpy.cgmes_v2_4_15.Substation.Substation object at 0x00000117F47C2380>\nOperationalLimitSet='list'\naggregate=False\nBaseVoltage=None\nSvStatus=None\nTerminals='list'\nPowerTransformerEnd=[<cimpy.cgmes_v2_4_15.PowerTransformerEnd.PowerTransformerEnd object at 0x00000117F483FC70>, <cimpy.cgmes_v2_4_15.PowerTransformerEnd.PowerTransformerEnd object at 0x00000117F483DBD0>]\nbeforeShCircuitHighestOperatingCurrent=0.0\nbeforeShCircuitHighestOperatingVoltage=0.0\nbeforeShortCircuitAnglePf=0.0\nhighSideMinOperatingU=0.0\nisPartOfGeneratorUnit=False\noperationalValuesConsidered=False\n",
@@ -7975,7 +7975,7 @@
                 "time_end": null,
                 "time_label": null,
                 "intent": "topology_query",
-                "request_mode": "standard_topology_neighbors",
+                "request_mode": "standard_topology_query",
                 "is_topology_query": true,
                 "topology_intent": {
                   "is_topology": true,
@@ -8030,7 +8030,7 @@
                   "time_end": null,
                   "time_label": null,
                   "intent": "topology_query",
-                  "request_mode": "standard_topology_neighbors",
+                  "request_mode": "standard_topology_query",
                   "is_topology_query": true,
                   "topology_intent": {
                     "is_topology": true,
@@ -8118,7 +8118,7 @@
           "user_input": "Zeig mir die Komponenten in den CIM-Daten rund um Transformator 19/20.",
           "classification_summary": {
             "intent": "topology_query",
-            "request_mode": "standard_topology_neighbors",
+            "request_mode": "standard_topology_query",
             "safe_to_execute": true,
             "target_kind": "topology",
             "confidence": "high",

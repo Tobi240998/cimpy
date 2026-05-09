@@ -4653,39 +4653,45 @@ def _build_pf_attribute_description_shortlist_chain():
     prompt = ChatPromptTemplate.from_messages([
         (
             "system",
-            "You are a structured-output component for PowerFactory attribute shortlisting.\n"
+            "You are a strict structured-output component for PowerFactory attribute shortlisting.\n"
+            "Your task is to select plausible attribute_name values from the provided candidate list.\n"
             "Return only structured output matching the required schema.\n"
-            "The schema contains only one field: shortlisted_attribute_names.\n"
-            "Do not return confidence, rationale, missing_context, should_execute, markdown, prose, or code fences.\n\n"
+            "Do not answer the user question.\n"
+            "Do not write markdown, tables, bullet lists outside the schema, or code fences.\n\n"
 
-            "Task:\n"
-            "- Select attribute_name values from the provided candidate list.\n"
-            "- Every selected name must be copied exactly from an attribute_name in the provided list.\n"
-            "- Do not invent attribute names.\n"
-            "- Return 0 to 8 names.\n"
-            "- If no candidate is plausible, return an empty list.\n\n"
+            "Schema rules:\n"
+            "- shortlisted_attribute_names must contain 0 to 5 attribute_name values copied exactly from the candidate list.\n"
+            "- confidence must be one of: high, medium, low.\n"
+            "- rationale must be one short sentence with this structure: "
+            "'Matched concept=<concept>; selected=<names>; rejected=<important near misses>; reason=<short reason>'.\n"
+            "- In rationale, mention only attribute_name values that are either selected or explicitly rejected as near misses.\n"
+            "- Do not use bullet points in rationale.\n"
+            "- missing_context must be an empty list unless information is truly missing.\n"
+            "- should_execute must be true only if shortlisted_attribute_names is non-empty.\n"
+            "- If no candidate is plausible, return shortlisted_attribute_names=[], confidence=low, missing_context=['attribute_selection'], should_execute=false.\n"
+            "- If you mention an attribute_name as plausible in rationale, it must also appear in shortlisted_attribute_names.\n\n"
+            "- If shortlisted_attribute_names is empty, rationale must explain whether this is because no semantic match was found, the request was ambiguous, or the candidate list did not contain a plausible attribute.\n"
+            "- The field shortlisted_attribute_names is the ONLY field used by the next step.\n"
+            "- If rationale says selected=<name>, then <name> MUST also be present in shortlisted_attribute_names.\n"
+            "- Never write selected=<name> in rationale while leaving shortlisted_attribute_names empty.\n"
+            "- If you find a matching attribute, put it in shortlisted_attribute_names first.\n"
 
-            "Shortlisting rules:\n"
+            "Matching task:\n"
+            "- Compare the full user request to the provided attribute descriptions.\n"
             "- Use attribute_description as the main semantic evidence.\n"
-            "- Include candidates whose attribute_description plausibly relates to the requested concept.\n"
-            "- The shortlist may include more than one candidate even for a singular user request.\n"
-            "- Do not decide between general attributes and OPF/context-specific attributes here.\n"
-            "- Final disambiguation is handled later.\n\n"
+            "- Attribute names may be used as supporting hints, but do not invent names.\n"
+            "- Prefer a small precise shortlist over a broad shortlist.\n"
+            "- Do not perform final disambiguation here; final selection happens later.\n\n"
 
-            "Important semantic guidance:\n"
-            "- For limits, bounds, Grenzen, Grenzwerte, upper/lower, min/max, Umin, Umax, include plausible voltage-limit candidates.\n"
-            "- For nominal/rated/base/setpoint values, include plausible nominal/rated/base/setpoint candidates.\n\n"
-
-            "Examples for bus voltage attributes:\n"
-            "- User request: 'untere Spannungsgrenze von Bus 1' -> shortlist vmin if available.\n"
-            "- User request: 'untere Spannungsgrenze' -> shortlist vmin if available.\n"
-            "- User request: 'Umin von Bus 1' -> shortlist vmin if available when umin is not available.\n"
-            "- User request: 'obere Spannungsgrenze von Bus 1' -> shortlist vmax if available.\n"
-            "- User request: 'obere Spannungsgrenze' -> shortlist vmax if available.\n"
-            "- User request: 'Umax von Bus 1' -> shortlist vmax if available when umax is not available.\n"
-            "- User request: 'untere und obere Spannungsgrenze' -> shortlist vmin and vmax if available.\n"
-            "- User request: 'Umin und Umax' -> shortlist vmin and vmax if available when umin/umax are not available.\n"
-            "- Do not prefer dvmin/dvmax, iOPFCvmin/iOPFCvmax, vstep_bus, or vtarget for normal lower/upper voltage-limit requests unless the user explicitly asks for delta limits, OPF limits, voltage-step limits, or target voltage.\n\n"
+            "Semantic guidance:\n"
+            "- 'untere Spannungsgrenze', 'Spannungsuntergrenze', 'Umin', 'minimum voltage limit', and 'lower voltage limit' refer to the lower voltage-limit concept; shortlist vmin if available.\n"
+            "- 'obere Spannungsgrenze', 'Spannungsobergrenze', 'Umax', 'maximum voltage limit', and 'upper voltage limit' refer to the upper voltage-limit concept; shortlist vmax if available.\n"
+            "- 'Spannungsgrenzen', 'Voltage Limits', 'Umin und Umax', 'obere und untere Spannungsgrenze' refer to both lower and upper voltage limits; shortlist vmin and vmax if available.\n"
+            "- 'Nennspannung', 'rated voltage', 'nominal voltage', 'base voltage', and 'Basisdaten-Nennspannung' refer to nominal/rated voltage; shortlist uknom and, if plausible, unknom.\n"
+            "- 'Länge', 'line length', and 'Leitungslänge' refer to line length; shortlist dline if available.\n"
+            "- 'Widerstand' and 'resistance' refer to resistance; shortlist R1 if available.\n"
+            "- 'Reaktanz' and 'reactance' refer to reactance; shortlist X1 if available.\n"
+            "- Do not prefer dvmin/dvmax, iOPFCvmin/iOPFCvmax, vstep_bus, or vtarget for normal voltage-limit requests unless the user explicitly asks for delta limits, OPF limits, voltage-step limits, or target voltage.\n\n"
 
             "{format_instructions}"
         ),
@@ -4694,11 +4700,10 @@ def _build_pf_attribute_description_shortlist_chain():
             "User request:\n{user_input}\n\n"
             "Entity type:\n{entity_type}\n\n"
             "Selected object:\n{object_name}\n\n"
-            "Candidate PowerFactory attributes:\n{attribute_options}"
+            "Candidate PowerFactory attributes with descriptions:\n{attribute_options}"
         ),
     ])
     return _build_structured_chain(prompt, AttributeDescriptionShortlistDecision)
-
 
 def _build_pf_attribute_description_match_chain():
     prompt = ChatPromptTemplate.from_messages([
@@ -4743,70 +4748,151 @@ def _build_pf_attribute_description_match_chain():
     ])
     return _build_structured_chain(prompt, AttributeDescriptionMatchDecision)
 
+#Hilfsfunktion, um Shortlist zu kürzen und Kontextlänge nicht zu sprengen
+def _chunk_list(items: List[Any], chunk_size: int) -> List[List[Any]]:
+    if chunk_size <= 0:
+        return [items]
+    return [items[i:i + chunk_size] for i in range(0, len(items), chunk_size)]
+
 def _shortlist_pf_attributes_by_description_with_llm(
     obj: Any,
     entity_type: str,
     object_name: str,
     user_input: str,
-    source_preference: str = 'base',
+    source_preference: str = "base",
 ) -> Dict[str, Any]:
     attribute_options = _build_pf_description_attribute_options(obj)
     if not attribute_options:
         return {
-            'status': 'error',
-            'error': 'empty_pf_description_attribute_options',
-            'attribute_options': [],
+            "status": "error",
+            "error": "empty_pf_description_attribute_options",
+            "attribute_options": [],
         }
 
     filtered_options = list(attribute_options)
+    chunks = _chunk_list(filtered_options, chunk_size=50)
 
-    try:
-        chain, parser, chain_mode = _build_pf_attribute_description_shortlist_chain()
-        invoke_payload = {
-            'user_input': user_input or '',
-            'entity_type': entity_type or '',
-            'object_name': object_name or '',
-            'attribute_options': _format_pf_description_options_for_prompt(filtered_options),
-        }
-        if parser is not None:
-            invoke_payload['format_instructions'] = parser.get_format_instructions()
+    all_shortlisted_names: List[str] = []
+    chunk_debug: List[Dict[str, Any]] = []
+    chain_mode = "unknown"
 
-        decision = chain.invoke(invoke_payload)
-    except Exception as e:
-        return {
-            'status': 'error',
-            'error': 'pf_attribute_description_shortlist_parse_failed',
-            'details': str(e),
-            'attribute_options': filtered_options,
-            'chain_mode': 'llm_parse_failed',
-        }
+    valid_names = {
+        item.get("attribute_name")
+        for item in filtered_options
+        if item.get("attribute_name")
+    }
 
+    for idx, chunk_options in enumerate(chunks, start=1):
+        try:
+            chain, parser, chain_mode = _build_pf_attribute_description_shortlist_chain()
+
+            invoke_payload = {
+                "user_input": user_input or "",
+                "entity_type": entity_type or "",
+                "object_name": object_name or "",
+                "attribute_options": _format_pf_description_options_for_prompt(chunk_options),
+            }
+
+            if parser is not None:
+                invoke_payload["format_instructions"] = parser.get_format_instructions()
+
+            decision = chain.invoke(invoke_payload)
+
+            if hasattr(decision, "model_dump"):
+                decision_dump = decision.model_dump()
+            elif hasattr(decision, "dict"):
+                decision_dump = decision.dict()
+            elif isinstance(decision, dict):
+                decision_dump = dict(decision)
+            else:
+                decision_dump = {}
+
+            raw_names = decision_dump.get("shortlisted_attribute_names", [])
+            if not isinstance(raw_names, list):
+                raw_names = []
+
+            chunk_valid_names = {
+                item.get("attribute_name")
+                for item in chunk_options
+                if item.get("attribute_name")
+            }
+
+            cleaned_names: List[str] = []
+            for name in raw_names:
+                cleaned = str(name).strip()
+                if cleaned and cleaned in chunk_valid_names and cleaned not in cleaned_names:
+                    cleaned_names.append(cleaned)
+
+            for name in cleaned_names:
+                if name not in all_shortlisted_names:
+                    all_shortlisted_names.append(name)
+
+            chunk_debug.append({
+                "chunk_index": idx,
+                "chunk_size": len(chunk_options),
+                "status": "ok",
+                "shortlisted_attribute_names": cleaned_names,
+                "llm_decision": decision_dump,
+            })
+
+        except Exception as e:
+            chunk_debug.append({
+                "chunk_index": idx,
+                "chunk_size": len(chunk_options),
+                "status": "error",
+                "error": "pf_attribute_description_shortlist_chunk_failed",
+                "details": str(e),
+            })
+            continue
+
+    # harte Validierung gegen echte attribute_name-Werte
     shortlisted_names: List[str] = []
     seen = set()
-    valid_names = {item.get('attribute_name') for item in filtered_options if item.get('attribute_name')}
 
-    for name in decision.shortlisted_attribute_names or []:
-        try:
-            cleaned = str(name).strip()
-        except Exception:
-            cleaned = ''
+    for name in all_shortlisted_names:
+        cleaned = str(name).strip()
         if not cleaned or cleaned not in valid_names or cleaned in seen:
             continue
         seen.add(cleaned)
         shortlisted_names.append(cleaned)
 
     shortlisted_options = [
-        item for item in filtered_options
-        if item.get('attribute_name') in shortlisted_names
+        item
+        for item in filtered_options
+        if item.get("attribute_name") in shortlisted_names
     ]
 
+    if not shortlisted_names:
+        return {
+            "status": "ok",
+            "llm_decision": {
+                "shortlisted_attribute_names": [],
+                "confidence": "low",
+                "rationale": "No chunk produced a valid shortlisted attribute.",
+                "missing_context": ["attribute_selection"],
+                "should_execute": False,
+            },
+            "shortlisted_attribute_names": [],
+            "shortlisted_options": [],
+            "attribute_options": filtered_options,
+            "chunk_debug": chunk_debug,
+            "chain_mode": chain_mode,
+        }
+
     return {
-        'status': 'ok',
-        'llm_decision': decision.model_dump(),
-        'shortlisted_attribute_names': shortlisted_names,
-        'shortlisted_options': shortlisted_options,
-        'attribute_options': filtered_options,
-        'chain_mode': chain_mode,
+        "status": "ok",
+        "llm_decision": {
+            "shortlisted_attribute_names": shortlisted_names,
+            "confidence": "medium",
+            "rationale": "Shortlist was built from LLM-based chunked attribute selection.",
+            "missing_context": [],
+            "should_execute": True,
+        },
+        "shortlisted_attribute_names": shortlisted_names,
+        "shortlisted_options": shortlisted_options,
+        "attribute_options": filtered_options,
+        "chunk_debug": chunk_debug,
+        "chain_mode": chain_mode,
     }
 
 
@@ -5101,6 +5187,10 @@ def _select_pf_object_attributes_llm_with_services(
             'final_rationale': exact_match_result.get('rationale'),
             'final_should_execute': True,
             'final_confidence': 'high',
+            'pf_description_chunk_debug': (
+                (pf_description_match.get('shortlist') or {}).get('chunk_debug')
+                if isinstance(pf_description_match, dict) else None
+            ),
         }
         _print_debug_block('Attribute Selection', selection_debug)
 

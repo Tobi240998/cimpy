@@ -231,8 +231,17 @@ Regeln:
   - P = Wirkleistung
   - Q = Blindleistung
   - S = Scheinleistung
+- Bei Topologiefragen ist das gesuchte Equipment immer das konkrete Referenzobjekt aus der Nutzerfrage.
+- Wörter wie "topologische Komponente", "zusammenhängende Komponente", "Nachbarn", "direkt verbunden", "ConnectivityNode", "TopologicalNode", "TopologicalIsland" beschreiben die Art der Topologieabfrage und sind NICHT automatisch das Ziel-Equipment.
+- Beispiel: "Welche Betriebsmittel liegen in der topologischen Komponente von Trf 19 20?" => equipment_detected = ["PowerTransformer"], nicht ["TopologicalIsland"].
+- Beispiel: "Welche direkten Nachbarn hat Load 27?" => equipment_detected = ["ConformLoad"], nicht ["ConnectivityNode"].
 - Wenn etwas unklar ist: entsprechende Liste leer lassen bzw. Feld auf null setzen.
 - time_start und time_end sollen, wenn möglich, als UTC-ISO-Strings ausgegeben werden.
+- Wenn kein konkreter Zeitpunkt oder Zeitraum genannt wird, lasse time_start und time_end auf null.
+- Interpretiere fehlende Zeitangaben NICHT automatisch als "alle verfügbaren Snapshots".
+- Wörter wie "historische CIM-Daten", "CIM-Daten" oder "historisch" beschreiben die Datenquelle und sind allein kein Zeitraum.
+- Wenn der Nutzer nach einem Einzelwert, Zustand, aktueller Auslastung, aktueller Leistung oder aktueller Spannung ohne Zeitangabe fragt, lasse time_start und time_end auf null.
+- Nur wenn der Nutzer ausdrücklich einen Verlauf, Trend, Zeitraum, Durchschnitt über die Zeit, Minimum/Maximum über die Zeit oder "alle Zeitpunkte" verlangt, ist ein mehrzeitpunktiger Zeitraum gemeint.
 - Für "am 2026-01-09" gilt:
   - time_start = "2026-01-09T00:00:00+00:00"
   - time_end   = "2026-01-10T00:00:00+00:00"

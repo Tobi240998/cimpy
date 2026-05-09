@@ -2673,7 +2673,7 @@ def _query_cim_with_services(
     request_mode = str((classification or {}).get("request_mode") or "").strip()
     intent = str((classification or {}).get("intent") or "").strip()
 
-    if request_mode == "standard_topology_neighbors" or intent == "topology_query":
+    if request_mode == "standard_topology_query" or intent == "topology_query":
         parsed_query["topology_intent"] = {
             "is_topology": True,
             "intent": "neighbors",

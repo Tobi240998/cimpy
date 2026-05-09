@@ -11,7 +11,7 @@
     "safe_to_execute": "True",
     "num_steps": 4,
     "steps": "scan_snapshot_inventory | resolve_cim_object | query_cim | summarize_cim_result",
-    "planner_reasoning": "The request explicitly asks for direct topological neighbors of a specific asset (Trafo 19-20) in CIM data, matching the topology_query intent and standard_topology_neighbors request mode. No missing context or time specification is required.",
+    "planner_reasoning": "The request explicitly asks for direct topological neighbors of a specific asset (Trafo 19-20) in CIM data, matching the topology_query intent and standard_topology_query request mode. No missing context or time specification is required.",
     "resolved_object": "",
     "resolved_object_confidence": "",
     "selected_attributes": "",
@@ -30,11 +30,11 @@
         "intent": "topology_query",
         "confidence": "high",
         "target_kind": "topology",
-        "request_mode": "standard_topology_neighbors",
+        "request_mode": "standard_topology_query",
         "safe_to_execute": true,
         "missing_context": [],
         "required_steps": [],
-        "reasoning": "The request explicitly asks for direct topological neighbors of a specific asset (Trafo 19-20) in CIM data, matching the topology_query intent and standard_topology_neighbors request mode. No missing context or time specification is required.",
+        "reasoning": "The request explicitly asks for direct topological neighbors of a specific asset (Trafo 19-20) in CIM data, matching the topology_query intent and standard_topology_query request mode. No missing context or time specification is required.",
         "status": "ok",
         "classification_mode": "primary_llm_classifier"
       },
@@ -7924,7 +7924,7 @@
                 "time_end": null,
                 "time_label": null,
                 "intent": "topology_query",
-                "request_mode": "standard_topology_neighbors",
+                "request_mode": "standard_topology_query",
                 "is_topology_query": true
               },
               "resolved_object": "class=PowerTransformer\nDiagramObjects='list'\ndescription=''\nenergyIdentCodeEic=''\nmRID='_d3acef3d-077f-4dd2-a18b-5262ddd4383a'\nname='Trf 19 - 20'\nshortName=''\nControls='list'\nLocation=None\nMeasurements='list'\nEquipmentContainer=<cimpy.cgmes_v2_4_15.Substation.Substation object at 0x00000117F47C2530>\nOperationalLimitSet='list'\naggregate=False\nBaseVoltage=None\nSvStatus=None\nTerminals='list'\nPowerTransformerEnd=[<cimpy.cgmes_v2_4_15.PowerTransformerEnd.PowerTransformerEnd object at 0x00000117F47C0250>, <cimpy.cgmes_v2_4_15.PowerTransformerEnd.PowerTransformerEnd object at 0x00000117F47C1930>]\nbeforeShCircuitHighestOperatingCurrent=0.0\nbeforeShCircuitHighestOperatingVoltage=0.0\nbeforeShortCircuitAnglePf=0.0\nhighSideMinOperatingU=0.0\nisPartOfGeneratorUnit=False\noperationalValuesConsidered=False\n",
@@ -7975,7 +7975,7 @@
                 "time_end": null,
                 "time_label": null,
                 "intent": "topology_query",
-                "request_mode": "standard_topology_neighbors",
+                "request_mode": "standard_topology_query",
                 "is_topology_query": true,
                 "topology_intent": {
                   "is_topology": true,
@@ -8030,7 +8030,7 @@
                   "time_end": null,
                   "time_label": null,
                   "intent": "topology_query",
-                  "request_mode": "standard_topology_neighbors",
+                  "request_mode": "standard_topology_query",
                   "is_topology_query": true,
                   "topology_intent": {
                     "is_topology": true,
@@ -8118,7 +8118,7 @@
           "user_input": "Welche direkten topologischen Nachbarn hat Trafo 19-20 in den CIM-Daten?",
           "classification_summary": {
             "intent": "topology_query",
-            "request_mode": "standard_topology_neighbors",
+            "request_mode": "standard_topology_query",
             "safe_to_execute": true,
             "target_kind": "topology",
             "confidence": "high",
