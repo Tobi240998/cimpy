@@ -1,0 +1,43 @@
+{
+  "run_id": 104,
+  "timestamp": "2026-05-10T10:16:46.248824",
+  "user_input": "Welcher Trafo in der Komponente von Trafo 19-20 war am höchsten ausgelastet?",
+  "duration_seconds": 11.17,
+  "token_usage": {
+    "prompt_tokens": 786,
+    "completion_tokens": 1168,
+    "total_tokens": 1954,
+    "details": {
+      "qwen3:30b": {
+        "input_tokens": 786,
+        "output_tokens": 1168,
+        "total_tokens": 1954
+      }
+    }
+  },
+  "decision_trace": {
+    "domain": "ASK_USER",
+    "planning_mode": "",
+    "workflow": "",
+    "confidence": "",
+    "safe_to_execute": "",
+    "num_steps": 0,
+    "steps": "",
+    "planner_reasoning": "",
+    "resolved_object": "",
+    "resolved_object_confidence": "",
+    "selected_attributes": "",
+    "attribute_confidence": "",
+    "num_tool_calls": 0,
+    "executed_tools": "",
+    "failed_tool": ""
+  },
+  "router_output": {
+    "route": "ASK_USER",
+    "question": "Bitte geben Sie den Zeitraum an, für den die höchste Auslastung des Transformators in der Komponente von Trafo 19-20 ermittelt werden soll.",
+    "missing_fields": [
+      "time_range"
+    ],
+    "partial": {}
+  }
+}

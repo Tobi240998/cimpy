@@ -1,0 +1,43 @@
+{
+  "run_id": 14,
+  "timestamp": "2026-05-09T16:50:39.788745",
+  "user_input": "Was ist die loading von Line 4-5?",
+  "duration_seconds": 6.19,
+  "token_usage": {
+    "prompt_tokens": 710,
+    "completion_tokens": 609,
+    "total_tokens": 1319,
+    "details": {
+      "qwen3:30b": {
+        "input_tokens": 710,
+        "output_tokens": 609,
+        "total_tokens": 1319
+      }
+    }
+  },
+  "decision_trace": {
+    "domain": "ASK_USER",
+    "planning_mode": "",
+    "workflow": "",
+    "confidence": "",
+    "safe_to_execute": "",
+    "num_steps": 0,
+    "steps": "",
+    "planner_reasoning": "",
+    "resolved_object": "",
+    "resolved_object_confidence": "",
+    "selected_attributes": "",
+    "attribute_confidence": "",
+    "num_tool_calls": 0,
+    "executed_tools": "",
+    "failed_tool": ""
+  },
+  "router_output": {
+    "route": "ASK_USER",
+    "question": "Bitte spezifizieren Sie, ob Sie historische CIM-Daten oder den aktuellen PowerFactory-Projektzustand meinen.",
+    "missing_fields": [
+      "data_source"
+    ],
+    "partial": {}
+  }
+}

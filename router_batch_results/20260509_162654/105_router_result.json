@@ -1,0 +1,43 @@
+{
+  "run_id": 105,
+  "timestamp": "2026-05-10T10:16:56.565588",
+  "user_input": "Finde in der zusammenhängenden Komponente von Transformator 19/20 den Trafo mit der größten Auslastung.",
+  "duration_seconds": 10.314,
+  "token_usage": {
+    "prompt_tokens": 807,
+    "completion_tokens": 1073,
+    "total_tokens": 1880,
+    "details": {
+      "qwen3:30b": {
+        "input_tokens": 807,
+        "output_tokens": 1073,
+        "total_tokens": 1880
+      }
+    }
+  },
+  "decision_trace": {
+    "domain": "ASK_USER",
+    "planning_mode": "",
+    "workflow": "",
+    "confidence": "",
+    "safe_to_execute": "",
+    "num_steps": 0,
+    "steps": "",
+    "planner_reasoning": "",
+    "resolved_object": "",
+    "resolved_object_confidence": "",
+    "selected_attributes": "",
+    "attribute_confidence": "",
+    "num_tool_calls": 0,
+    "executed_tools": "",
+    "failed_tool": ""
+  },
+  "router_output": {
+    "route": "ASK_USER",
+    "question": "Bezieht sich Ihre Anfrage auf historische CIM-Daten oder das aktuelle PowerFactory-Projekt?",
+    "missing_fields": [
+      "data_source"
+    ],
+    "partial": {}
+  }
+}

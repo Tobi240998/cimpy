@@ -1,0 +1,43 @@
+{
+  "run_id": 96,
+  "timestamp": "2026-05-10T10:15:27.892509",
+  "user_input": "Zeig mir die Auslastung von Transformator 19/20 im Zeitverlauf.",
+  "duration_seconds": 11.031,
+  "token_usage": {
+    "prompt_tokens": 811,
+    "completion_tokens": 1144,
+    "total_tokens": 1955,
+    "details": {
+      "qwen3:30b": {
+        "input_tokens": 811,
+        "output_tokens": 1144,
+        "total_tokens": 1955
+      }
+    }
+  },
+  "decision_trace": {
+    "domain": "ASK_USER",
+    "planning_mode": "",
+    "workflow": "",
+    "confidence": "",
+    "safe_to_execute": "",
+    "num_steps": 0,
+    "steps": "",
+    "planner_reasoning": "",
+    "resolved_object": "",
+    "resolved_object_confidence": "",
+    "selected_attributes": "",
+    "attribute_confidence": "",
+    "num_tool_calls": 0,
+    "executed_tools": "",
+    "failed_tool": ""
+  },
+  "router_output": {
+    "route": "ASK_USER",
+    "question": "Bitte geben Sie den Zeitraum an, für den die Auslastung von Transformator 19/20 angezeigt werden soll (z.B. 'vom 01.01.2023 bis 31.01.2023').",
+    "missing_fields": [
+      "time_range"
+    ],
+    "partial": {}
+  }
+}

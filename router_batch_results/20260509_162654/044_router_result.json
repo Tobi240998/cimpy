@@ -1,0 +1,43 @@
+{
+  "run_id": 44,
+  "timestamp": "2026-05-09T18:19:18.437714",
+  "user_input": "Welche Nachbarn hat Last A? Wie ist die Spannung dazu?",
+  "duration_seconds": 6.336,
+  "token_usage": {
+    "prompt_tokens": 715,
+    "completion_tokens": 620,
+    "total_tokens": 1335,
+    "details": {
+      "qwen3:30b": {
+        "input_tokens": 715,
+        "output_tokens": 620,
+        "total_tokens": 1335
+      }
+    }
+  },
+  "decision_trace": {
+    "domain": "ASK_USER",
+    "planning_mode": "",
+    "workflow": "",
+    "confidence": "",
+    "safe_to_execute": "",
+    "num_steps": 0,
+    "steps": "",
+    "planner_reasoning": "",
+    "resolved_object": "",
+    "resolved_object_confidence": "",
+    "selected_attributes": "",
+    "attribute_confidence": "",
+    "num_tool_calls": 0,
+    "executed_tools": "",
+    "failed_tool": ""
+  },
+  "router_output": {
+    "route": "ASK_USER",
+    "question": "Bezieht sich Ihre Frage auf historische CIM-Daten oder das aktuelle PowerFactory-Projekt?",
+    "missing_fields": [
+      "data_source"
+    ],
+    "partial": {}
+  }
+}

@@ -16,7 +16,6 @@ from cimpy.cimpy_time_analysis.langchain_llm import get_llm
 QueryMode = Literal[
     "topology",
     "state",
-    "topology_plus_state",
     "unknown",
 ]
 
@@ -239,8 +238,6 @@ def _infer_query_mode(
     needs_topology_graph: bool,
     needs_state_types: List[str],
 ) -> str:
-    if needs_topology_graph and needs_state_types:
-        return "topology_plus_state"
     if needs_topology_graph:
         return "topology"
     if needs_state_types:
@@ -359,17 +356,16 @@ Wichtige Regeln:
 1) Wenn die Frage topologisch ist, setze needs_topology_graph=true.
 2) Wenn die Frage Spannungen betrifft, nutze needs_state_types=["SvVoltage"].
 3) Wenn die Frage Leistungen / Auslastung betrifft, nutze needs_state_types=["SvPowerFlow"].
-4) Bei Kombinationen aus Topologie + Zustand nutze query_mode="topology_plus_state".
-5) target_equipment_types nur aus den verfügbaren Typen wählen.
-6) Wenn kein Zeitraum explizit genannt ist, darf requires_time_window trotzdem true sein, falls State-Daten gebraucht werden.
-7) metric_hint nur P, Q, S oder null.
-8) topology_scope nur "neighbors", "component", "path" oder "none".
-9) aggregation nur "max", "min", "mean", "sum" oder "none".
-10) graph_level nur "connectivity" oder "topological".
+4) target_equipment_types nur aus den verfügbaren Typen wählen.
+5) Wenn kein Zeitraum explizit genannt ist, darf requires_time_window trotzdem true sein, falls State-Daten gebraucht werden.
+6) metric_hint nur P, Q, S oder null.
+7) topology_scope nur "neighbors", "component", "path" oder "none".
+8) aggregation nur "max", "min", "mean", "sum" oder "none".
+9) graph_level nur "connectivity" oder "topological".
 
 Schema:
 {
-  "query_mode": "topology" | "state" | "topology_plus_state" | "unknown",
+  "query_mode": "topology" | "state" | "unknown",
   "needs_structure": true | false,
   "needs_topology_graph": true | false,
   "needs_state_types": ["SvVoltage" | "SvPowerFlow", ...],

@@ -1,0 +1,43 @@
+{
+  "run_id": 120,
+  "timestamp": "2026-05-10T12:22:19.332969",
+  "user_input": "Sag mir bitte die Wirkleistung in CIM.",
+  "duration_seconds": 4.835,
+  "token_usage": {
+    "prompt_tokens": 711,
+    "completion_tokens": 470,
+    "total_tokens": 1181,
+    "details": {
+      "qwen3:30b": {
+        "input_tokens": 711,
+        "output_tokens": 470,
+        "total_tokens": 1181
+      }
+    }
+  },
+  "decision_trace": {
+    "domain": "ASK_USER",
+    "planning_mode": "",
+    "workflow": "",
+    "confidence": "",
+    "safe_to_execute": "",
+    "num_steps": 0,
+    "steps": "",
+    "planner_reasoning": "",
+    "resolved_object": "",
+    "resolved_object_confidence": "",
+    "selected_attributes": "",
+    "attribute_confidence": "",
+    "num_tool_calls": 0,
+    "executed_tools": "",
+    "failed_tool": ""
+  },
+  "router_output": {
+    "route": "ASK_USER",
+    "question": "Bezieht sich Ihre Anfrage auf historische CIM-Daten oder auf das aktuelle PowerFactory-Projekt?",
+    "missing_fields": [
+      "data_source"
+    ],
+    "partial": {}
+  }
+}

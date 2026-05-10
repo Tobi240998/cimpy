@@ -1,0 +1,43 @@
+{
+  "run_id": 98,
+  "timestamp": "2026-05-10T10:15:43.861220",
+  "user_input": "Wann hatte Trafo 19-20 seine höchste und niedrigste Auslastung?",
+  "duration_seconds": 6.603,
+  "token_usage": {
+    "prompt_tokens": 806,
+    "completion_tokens": 675,
+    "total_tokens": 1481,
+    "details": {
+      "qwen3:30b": {
+        "input_tokens": 806,
+        "output_tokens": 675,
+        "total_tokens": 1481
+      }
+    }
+  },
+  "decision_trace": {
+    "domain": "ASK_USER",
+    "planning_mode": "",
+    "workflow": "",
+    "confidence": "",
+    "safe_to_execute": "",
+    "num_steps": 0,
+    "steps": "",
+    "planner_reasoning": "",
+    "resolved_object": "",
+    "resolved_object_confidence": "",
+    "selected_attributes": "",
+    "attribute_confidence": "",
+    "num_tool_calls": 0,
+    "executed_tools": "",
+    "failed_tool": ""
+  },
+  "router_output": {
+    "route": "ASK_USER",
+    "question": "Bitte geben Sie den Zeitraum an, für den die höchste und niedrigste Auslastung von Trafo 19-20 ermittelt werden soll (z.B. 'vom 01.01.2023 bis 31.01.2023').",
+    "missing_fields": [
+      "time_range"
+    ],
+    "partial": {}
+  }
+}

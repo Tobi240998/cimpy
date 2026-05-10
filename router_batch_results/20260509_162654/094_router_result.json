@@ -1,0 +1,43 @@
+{
+  "run_id": 94,
+  "timestamp": "2026-05-10T10:15:08.504383",
+  "user_input": "Welche reaktive Leistung hat Last 27 über die Zeit?",
+  "duration_seconds": 10.459,
+  "token_usage": {
+    "prompt_tokens": 799,
+    "completion_tokens": 1088,
+    "total_tokens": 1887,
+    "details": {
+      "qwen3:30b": {
+        "input_tokens": 799,
+        "output_tokens": 1088,
+        "total_tokens": 1887
+      }
+    }
+  },
+  "decision_trace": {
+    "domain": "ASK_USER",
+    "planning_mode": "",
+    "workflow": "",
+    "confidence": "",
+    "safe_to_execute": "",
+    "num_steps": 0,
+    "steps": "",
+    "planner_reasoning": "",
+    "resolved_object": "",
+    "resolved_object_confidence": "",
+    "selected_attributes": "",
+    "attribute_confidence": "",
+    "num_tool_calls": 0,
+    "executed_tools": "",
+    "failed_tool": ""
+  },
+  "router_output": {
+    "route": "ASK_USER",
+    "question": "Bitte geben Sie den Zeitraum an, für den die reaktive Leistung von Last 27 angezeigt werden soll (z.B. 'vom 01.01.2023 bis 31.01.2023').",
+    "missing_fields": [
+      "time_range"
+    ],
+    "partial": {}
+  }
+}

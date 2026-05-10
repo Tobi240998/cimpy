@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Any, Dict, List, Set
+from typing import Any, Dict, List, Set, Optional
 
 from pydantic import BaseModel, Field
 from langchain_core.output_parsers import PydanticOutputParser
@@ -36,7 +36,22 @@ _ALLOWED_INTENTS = {
 _ALLOWED_CONFIDENCE = {"high", "medium", "low"}
 _ALLOWED_TARGET_KINDS = {"asset", "metric", "topology", "unknown"}
 
+class CIMCompositeSubrequest(BaseModel):
+    user_input: str = Field(
+        description="A standalone CIM subrequest in the same language as the original user input"
+    )
+    depends_on_previous: bool = Field(
+        default=False,
+        description="True if this subrequest should use the result of the previous subrequest"
+    )
 
+
+class CIMCompositeDecomposition(BaseModel):
+    is_composite: bool = Field(
+        description="True if the original CIM request should be split into multiple sequential subrequests"
+    )
+    subrequests: List[CIMCompositeSubrequest] = Field(default_factory=list)
+    reasoning: str = Field(default="")
 
 
 class CIMDomainAgent:
@@ -443,20 +458,229 @@ Practical guidance:
             normalized["status"] = "ok"
             normalized["classification_mode"] = "primary_llm_classifier"
             return normalized
+
         except Exception as exc:
             primary_error = str(exc)
 
-        fallback = self._fallback_request_mode_via_llm(user_input)
-        fallback["status"] = "ok"
-        fallback["classification_mode"] = "fallback_llm_mode_classifier"
-        fallback["reasoning"] = (
-            f"{fallback.get('reasoning', '')} | "
-            f"primary_classifier_error={primary_error}"
-        ).strip(" |")
+        try:
+            fallback = self._fallback_request_mode_via_llm(user_input)
+            fallback["status"] = "ok"
+            fallback["classification_mode"] = "fallback_llm_mode_classifier"
+            fallback["reasoning"] = (
+                f"{fallback.get('reasoning', '')} | "
+                f"primary_classifier_error={primary_error}"
+            ).strip(" |")
+            return fallback
 
-        return fallback
+        except Exception as fallback_exc:
+            return {
+                "status": "ok",
+                "classification_mode": "forced_fallback_after_classifier_failure",
+                "intent": "unsupported_cim_request",
+                "confidence": "low",
+                "target_kind": "unknown",
+                "request_mode": "clarification_needed",
+                "safe_to_execute": False,
+                "missing_context": ["classification_failed"],
+                "required_steps": [],
+                "reasoning": (
+                    f"Primary classifier failed: {primary_error} | "
+                    f"Fallback classifier failed: {fallback_exc}"
+                ),
+            }
 
-    def build_plan(self, classification: Dict[str, Any]) -> List[Dict[str, Any]]:
+    def _build_decomposition_chain(self):
+        parser = PydanticOutputParser(pydantic_object=CIMCompositeDecomposition)
+
+        prompt = ChatPromptTemplate.from_messages([
+            (
+                "system",
+                """
+You are a decomposition assistant for a CIM domain agent.
+
+Your task:
+- decide whether a CIM user request should be split into multiple sequential subrequests
+- keep the same language as the original user request
+- return only structured output
+
+Rules:
+- Keep normal single-goal requests as one request.
+- Set is_composite=true only if the request clearly contains multiple user goals.
+- Split only when the parts can be executed sequentially.
+- Each subrequest must be understandable as a standalone CIM request.
+- Preserve execution order.
+- Do not invent equipment, dates, metrics, or attributes.
+- If a later subrequest refers to the result of an earlier one using words like "diese", "deren", "davon", "dazu", "die gefundenen", "those", "their", set depends_on_previous=true.
+- If unsure, prefer is_composite=false.
+- Always split if the request first asks for topology results such as direct neighbors, connected objects, graph relations, connected component, or topological component AND then asks for values, attributes, voltage, power, loading, limits, base data, or state data of those found objects.
+- This applies even if the first classifier classified the whole request as topology_query.
+- A second sentence such as "Was ist die Spannung dieser Nachbarn?", "Wie hoch ist deren Spannung?", "Was ist deren Auslastung?", "Welche Werte haben diese Objekte?" is a dependent second subrequest.
+- Words like "dieser Nachbarn", "diese Nachbarn", "deren", "diese", "davon", "die gefundenen" normally mean depends_on_previous=true.
+- If the first part identifies objects and the second part asks for data of those objects, is_composite must be true.
+
+Good composite examples:
+- "Welche direkten Nachbarn hat Trafo 19-20 und wie hoch ist deren Spannung am 2026-01-09?"
+  -> subrequest 1: "Welche direkten Nachbarn hat Trafo 19-20?"
+  -> subrequest 2: "Wie hoch ist die Spannung der gefundenen direkten Nachbarn am 2026-01-09?"
+
+- "Welche Leitungen gibt es und was ist deren Widerstand?"
+  -> subrequest 1: "Welche Leitungen gibt es?"
+  -> subrequest 2: "Was ist der Widerstand der gefundenen Leitungen?"
+
+Do NOT split examples:
+- "Was sind die obere und untere Spannungsgrenze von Bus 1?"
+- "Was war die maximale Spannung von Bus 3 am 2026-01-09?"
+- "Welche direkten Nachbarn hat Trafo 19-20?"
+
+{format_instructions}
+"""
+            ),
+            (
+                "user",
+                "Original user request:\n{user_input}\n\n"
+                "Current classification:\n{classification}"
+            ),
+        ])
+
+        return prompt | self.llm | parser
+
+    def _decompose_request(
+        self,
+        user_input: str,
+        classification: Dict[str, Any],
+    ) -> Dict[str, Any]:
+        try:
+            chain = self._build_decomposition_chain()
+            decision = chain.invoke({
+                "user_input": user_input,
+                "classification": classification,
+                "format_instructions": PydanticOutputParser(
+                    pydantic_object=CIMCompositeDecomposition
+                ).get_format_instructions(),
+            })
+
+            result = decision.model_dump() if hasattr(decision, "model_dump") else decision.dict()
+            return {"status": "ok", **result}
+
+        except Exception as exc:
+            return {
+                "status": "error",
+                "is_composite": False,
+                "subrequests": [],
+                "reasoning": f"Composite decomposition failed: {exc}",
+            }
+
+    def _plan_steps(self, plan: List[Dict[str, Any]]) -> List[str]:
+        return [
+            item.get("step")
+            for item in plan
+            if isinstance(item, dict) and item.get("step")
+        ]
+
+    def _add_subrequest_metadata(
+        self,
+        plan: List[Dict[str, Any]],
+        *,
+        user_input_override: str,
+        source_subrequest: str,
+        depends_on_previous: bool,
+        subrequest_classification: Dict[str, Any],
+    ) -> List[Dict[str, Any]]:
+        out: List[Dict[str, Any]] = []
+
+        for item in plan:
+            if not isinstance(item, dict):
+                continue
+
+            new_item = dict(item)
+            new_item["user_input_override"] = user_input_override
+            new_item["source_subrequest"] = source_subrequest
+            new_item["depends_on_previous"] = depends_on_previous
+            new_item["subrequest_classification"] = subrequest_classification
+            out.append(new_item)
+
+        return out
+
+    def _build_composite_plan(
+        self,
+        user_input: str,
+        classification: Dict[str, Any],
+    ) -> Optional[List[Dict[str, Any]]]:
+        decomposition = self._decompose_request(
+            user_input=user_input,
+            classification=classification,
+        )
+
+        if decomposition.get("status") != "ok":
+            return None
+
+        if not decomposition.get("is_composite", False):
+            return None
+
+        raw_subrequests = decomposition.get("subrequests", []) or []
+        if len(raw_subrequests) < 2:
+            return None
+
+        composite_plan: List[Dict[str, Any]] = []
+
+        for idx, subrequest in enumerate(raw_subrequests, start=1):
+            if hasattr(subrequest, "model_dump"):
+                subrequest = subrequest.model_dump()
+            elif hasattr(subrequest, "dict"):
+                subrequest = subrequest.dict()
+
+            if not isinstance(subrequest, dict):
+                continue
+
+            subrequest_text = str(subrequest.get("user_input") or "").strip()
+            if not subrequest_text:
+                continue
+
+            depends_on_previous = bool(subrequest.get("depends_on_previous", False))
+            source_subrequest = f"subrequest_{idx}"
+
+            sub_classification = self.classify_request(subrequest_text)
+            sub_plan = self.build_plan(
+                classification=sub_classification,
+                user_input=subrequest_text,
+                allow_composite=False,
+            )
+
+            if self._plan_steps(sub_plan) == ["unsupported_request"]:
+                return None
+
+            composite_plan.extend(
+                self._add_subrequest_metadata(
+                    sub_plan,
+                    user_input_override=subrequest_text,
+                    source_subrequest=source_subrequest,
+                    depends_on_previous=depends_on_previous,
+                    subrequest_classification=sub_classification,
+                )
+            )
+
+        if len(composite_plan) < 2:
+            return None
+
+        return composite_plan
+
+
+
+    def build_plan(
+        self,
+        classification: Dict[str, Any],
+        user_input: Optional[str] = None,
+        allow_composite: bool = True,
+    ) -> List[Dict[str, Any]]:
+        
+        if allow_composite and user_input:
+            composite_plan = self._build_composite_plan(
+                user_input=user_input,
+                classification=classification,
+            )
+            if composite_plan is not None:
+                return composite_plan
+    
         available_specs = {
             spec["name"]: spec
             for spec in self._available_tool_specs()
@@ -652,6 +876,55 @@ Practical guidance:
             "user_input": user_input,
         }
 
+    def _build_final_answer(self, user_input: str, summary_results: List[Dict[str, Any]]) -> str:
+        from langchain_core.prompts import ChatPromptTemplate
+
+        summaries = []
+        for idx, s in enumerate(summary_results, start=1):
+            answer = s.get("answer")
+            if isinstance(answer, str) and answer.strip():
+                summaries.append(f"{idx}. {answer.strip()}")
+
+        joined_summaries = "\n".join(summaries)
+
+        prompt = ChatPromptTemplate.from_messages([
+            (
+                "system",
+                """
+You are the final answer generator of a CIM energy-grid analysis agent.
+
+Your task:
+- answer the original user request completely and clearly
+- use the provided intermediate results
+- merge them into one coherent answer
+- resolve references like "these", "their", "those"
+- do not invent new data
+- if something is missing, explicitly state it
+
+Return only the final answer text.
+"""
+            ),
+            (
+                "user",
+                f"""
+Original user request:
+{user_input}
+
+Intermediate results:
+{joined_summaries}
+"""
+            )
+        ])
+
+        chain = prompt | self.llm
+        result = chain.invoke({})
+
+        if hasattr(result, "content"):
+            return result.content
+
+        return str(result)
+
+
     def _make_trace_safe_result(self, result: Dict[str, Any]) -> Dict[str, Any]:
         """
         Reduziert Tool-Ergebnisse für den Debug-Trace auf JSON-sichere,
@@ -729,19 +1002,48 @@ Practical guidance:
         }
 
         trace: List[Dict[str, Any]] = []
+        summary_results: List[Dict[str, Any]] = []
+        previous_context_parts: List[str] = []
 
         for item in plan:
             step = item["step"]
 
+            effective_user_input = item.get("user_input_override", user_input)
+            effective_classification = item.get("subrequest_classification", classification)
+
+            context["user_input"] = effective_user_input
+            context["classification"] = effective_classification
+
+            if item.get("depends_on_previous") and previous_context_parts:
+                context["previous_context"] = "\n\n".join(previous_context_parts)
+                context["original_user_input"] = user_input
+
+                context["user_input"] = (
+                    f"Ursprüngliche Gesamtanfrage:\n"
+                    f"{user_input}\n\n"
+                    f"Aktuelle Teilanfrage:\n"
+                    f"{effective_user_input}\n\n"
+                    f"Kontext aus vorherigen Teilanfragen:\n"
+                    f"{context['previous_context']}"
+                )
+            else:
+                context.pop("previous_context", None)
+                context.pop("original_user_input", None)
+
             if step == "unsupported_request":
                 result = self.build_unsupported_result(
-                    user_input=user_input,
-                    classification=classification,
+                    user_input=effective_user_input,
+                    classification=effective_classification,
                 )
+
                 trace.append({
                     "step": step,
+                    "effective_user_input": effective_user_input,
+                    "source_subrequest": item.get("source_subrequest"),
+                    "depends_on_previous": item.get("depends_on_previous", False),
                     "result": result,
                 })
+
                 result["debug"] = {
                     "trace": trace,
                     "classification": classification,
@@ -754,14 +1056,20 @@ Practical guidance:
 
             trace.append({
                 "step": step,
+                "effective_user_input": effective_user_input,
+                "effective_context_user_input": context.get("user_input"),
+                "previous_context": context.get("previous_context"),
+                "source_subrequest": item.get("source_subrequest"),
+                "depends_on_previous": item.get("depends_on_previous", False),
                 "tool_spec": {
                     "name": tool_spec.name if tool_spec else step,
                     "description": tool_spec.description if tool_spec else "",
                     "capability_tags": tool_spec.capability_tags if tool_spec else [],
                     "mutating": tool_spec.mutating if tool_spec else False,
                 },
-                "result": self._make_trace_safe_result(result),
+                "result": result,
             })
+            
 
             if result.get("status") != "ok":
                 result["agent"] = "CIMDomainAgent"
@@ -774,6 +1082,24 @@ Practical guidance:
 
             context.update(result)
 
+            if step == "summarize_cim_result":
+                summary_results.append(result)
+
+                answer = result.get("answer")
+                if isinstance(answer, str) and answer.strip():
+                    label = item.get("source_subrequest") or f"summary_{len(summary_results)}"
+                    previous_context_parts.append(f"{label}: {answer.strip()}")
+
+        if len(summary_results) > 1:
+            final_answer = self._build_final_answer(
+                user_input=user_input,
+                summary_results=summary_results,
+            )
+        elif len(summary_results) == 1:
+            final_answer = summary_results[0].get("answer", "") or context.get("answer", "")
+        else:
+            final_answer = context.get("answer", "")
+
         return {
             "status": "ok",
             "tool": "cim_agent",
@@ -781,7 +1107,8 @@ Practical guidance:
             "classification": classification,
             "plan": plan,
             "available_tools": self.registry.list_tool_specs(),
-            "answer": context.get("answer", ""),
+            "answer": final_answer,
+            "summary_parts": summary_results,
             "debug": {
                 "trace": trace,
             },
@@ -792,7 +1119,10 @@ Practical guidance:
     # ------------------------------------------------------------------
     def run(self, user_input: str) -> Dict[str, Any]:
         classification = self.classify_request(user_input)
-        plan = self.build_plan(classification)
+        plan = self.build_plan(
+            classification=classification,
+            user_input=user_input,
+        )
 
         result = self.execute_plan(
             user_input=user_input,

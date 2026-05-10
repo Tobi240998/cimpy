@@ -1,0 +1,45 @@
+{
+  "run_id": 102,
+  "timestamp": "2026-05-10T10:16:27.008020",
+  "user_input": "Welches direkt angeschlossene Betriebsmittel an Transformator 19/20 hatte den größten P-Wert?",
+  "duration_seconds": 16.189,
+  "token_usage": {
+    "prompt_tokens": 783,
+    "completion_tokens": 1685,
+    "total_tokens": 2468,
+    "details": {
+      "qwen3:30b": {
+        "input_tokens": 783,
+        "output_tokens": 1685,
+        "total_tokens": 2468
+      }
+    }
+  },
+  "decision_trace": {
+    "domain": "ASK_USER",
+    "planning_mode": "",
+    "workflow": "",
+    "confidence": "",
+    "safe_to_execute": "",
+    "num_steps": 0,
+    "steps": "",
+    "planner_reasoning": "",
+    "resolved_object": "",
+    "resolved_object_confidence": "",
+    "selected_attributes": "",
+    "attribute_confidence": "",
+    "num_tool_calls": 0,
+    "executed_tools": "",
+    "failed_tool": ""
+  },
+  "router_output": {
+    "route": "ASK_USER",
+    "question": "Bezieht sich diese Frage auf historische CIM-Daten oder das aktuelle PowerFactory-Projekt?",
+    "missing_fields": [
+      "data_source"
+    ],
+    "partial": {
+      "user_input": "Welches direkt angeschlossene Betriebsmittel an Transformator 19/20 hatte den größten P-Wert?"
+    }
+  }
+}

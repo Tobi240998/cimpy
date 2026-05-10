@@ -116,3 +116,13 @@ class BaseAttributeCandidateDecision(BaseModel):
     selected_candidates: List[str] = Field(default_factory=list)
     confidence: str = Field(description="One of: high, medium, low")
     rationale: str = Field(default="")
+
+
+class CIMCompositeSubrequest(BaseModel):
+    user_input: str = Field(description="Standalone CIM subrequest in the same language as the original user input")
+    depends_on_previous: bool = Field(default=False)
+
+class CIMCompositeDecomposition(BaseModel):
+    is_composite: bool = Field(description="True if the request should be split into sequential subrequests")
+    subrequests: List[CIMCompositeSubrequest] = Field(default_factory=list)
+    reasoning: str = Field(default="")

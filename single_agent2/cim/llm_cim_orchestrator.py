@@ -247,51 +247,6 @@ def handle_user_query(
     )
     print("topology_intent:", topology_intent)
 
-    # ---------------------------------------------------------
-    # Kombination: Topologie -> Equipment-Menge -> bestehende State-Query
-    # ---------------------------------------------------------
-    if (
-        analysis_plan
-        and analysis_plan.get("query_mode") == "topology_plus_state"
-        and "SvPowerFlow" in state_detected
-        and topology_intent.get("is_topology")
-    ):
-        graph_level = topology_intent.get("graph_level", "topological")
-        topology_scope = topology_intent.get("intent")
-        target_types = analysis_plan.get("target_equipment_types") or []
-        target_equipment_type = target_types[0] if target_types else None
-
-        if metric is None:
-            metric = analysis_plan.get("metric_hint") or "P"
-
-        aggregation = analysis_plan.get("aggregation") or "max"
-
-        if topology_scope == "component":
-            equipment_set = get_component_equipment_objects(
-                network_index=network_index,
-                reference_equipment_obj=equipment_obj,
-                level=graph_level,
-                target_equipment_type=target_equipment_type,
-            )
-        elif topology_scope == "neighbors":
-            equipment_set = get_neighbor_equipment_objects(
-                network_index=network_index,
-                reference_equipment_obj=equipment_obj,
-                level=graph_level,
-                target_equipment_type=target_equipment_type,
-            )
-        else:
-            equipment_set = []
-
-        result = aggregate_metric_over_equipment_set(
-            snapshot_cache=snapshot_cache,
-            network_index=network_index,
-            equipment_objects=equipment_set,
-            metric=metric,
-            aggregation=aggregation,
-        )
-
-        return agent.summarize(result, user_input)
 
     # ---------------------------------------------------------
     # Reine Topologie
