@@ -245,13 +245,16 @@ Regeln:
 - Für "am 2026-01-09" gilt:
   - time_start = "2026-01-09T00:00:00+00:00"
   - time_end   = "2026-01-10T00:00:00+00:00"
-- Für "09.01.2026" gilt dasselbe Datum wie für "2026-01-09".
+- Für "09.01.2026" oder "09.01.26" gilt dasselbe Datum wie für "2026-01-09".
 - Für "zwischen 09.01.2026 und 11.01.2026" gilt:
   - start = Beginn des ersten Tages
   - end   = Beginn des Tages NACH dem letzten Datum
 - Für "vom 09.01.2026 bis 11.01.2026" gilt dasselbe.
 - Für "gestern" / "heute" darfst du relative Zeiträume interpretieren.
 - time_label soll kurz sein.
+- Für "am 09.01.26 zwischen 14:00 und 15:00 Uhr" gilt:
+  - time_start = "2026-01-09T14:00:00+00:00"
+  - time_end   = "2026-01-09T15:00:00+00:00"
 
 Synonyme:
 - Trafo/Transformator/Transformer => PowerTransformer
@@ -1086,11 +1089,20 @@ def _parse_yyyy_mm_dd(s: str) -> Optional[datetime]:
 
 def _parse_dd_mm_yyyy(s: str) -> Optional[datetime]:
     s = (s or "").strip()
-    m = re.search(r"\b(\d{2})\.(\d{2})\.(\d{4})\b", s)
+    m = re.search(r"\b(\d{2})\.(\d{2})\.(\d{2}|\d{4})\b", s)
     if not m:
         return None
+
     try:
-        return datetime(int(m.group(3)), int(m.group(2)), int(m.group(1)), tzinfo=timezone.utc)
+        day = int(m.group(1))
+        month = int(m.group(2))
+        year = int(m.group(3))
+
+        if year < 100:
+            year += 2000
+
+        return datetime(year, month, day, tzinfo=timezone.utc)
+
     except ValueError:
         return None
 

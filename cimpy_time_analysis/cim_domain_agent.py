@@ -40,10 +40,7 @@ class CIMCompositeSubrequest(BaseModel):
     user_input: str = Field(
         description="A standalone CIM subrequest in the same language as the original user input"
     )
-    depends_on_previous: bool = Field(
-        default=False,
-        description="True if this subrequest should use the result of the previous subrequest"
-    )
+
 
 
 class CIMCompositeDecomposition(BaseModel):
@@ -141,7 +138,7 @@ class CIMDomainAgent:
         - standard_base: standard static base/nameplate attribute request.
         - standard_listing: standard type-listing request asking which objects of a CIM equipment type exist in general.
         - standard_comparison: standard comparison/limit-check request comparing SV values against base values.
-        - standard_topology_neighbors: standard topology request asking for direct neighbors, directly connected objects, graph relations, or the connected/topological component of one concrete asset.
+        - standard_topology_query: standard topology request asking for direct neighbors, directly connected objects, graph relations, or the connected/topological component of one concrete asset.
         - custom_plan: request is CIM-related and executable, but deviates from the standard cases and needs explicit step planning.
         - clarification_needed: request is CIM-related, but not safely executable because essential context is missing.
 
@@ -510,22 +507,17 @@ Rules:
 - Each subrequest must be understandable as a standalone CIM request.
 - Preserve execution order.
 - Do not invent equipment, dates, metrics, or attributes.
-- If a later subrequest refers to the result of an earlier one using words like "diese", "deren", "davon", "dazu", "die gefundenen", "those", "their", set depends_on_previous=true.
-- If unsure, prefer is_composite=false.
-- Always split if the request first asks for topology results such as direct neighbors, connected objects, graph relations, connected component, or topological component AND then asks for values, attributes, voltage, power, loading, limits, base data, or state data of those found objects.
-- This applies even if the first classifier classified the whole request as topology_query.
-- A second sentence such as "Was ist die Spannung dieser Nachbarn?", "Wie hoch ist deren Spannung?", "Was ist deren Auslastung?", "Welche Werte haben diese Objekte?" is a dependent second subrequest.
-- Words like "dieser Nachbarn", "diese Nachbarn", "deren", "diese", "davon", "die gefundenen" normally mean depends_on_previous=true.
-- If the first part identifies objects and the second part asks for data of those objects, is_composite must be true.
+
+
 
 Good composite examples:
-- "Welche direkten Nachbarn hat Trafo 19-20 und wie hoch ist deren Spannung am 2026-01-09?"
+- "Welche direkten Nachbarn hat Trafo 19-20? Wie war die Spannung von Trafo 19-20 am 2026-01-09?"
   -> subrequest 1: "Welche direkten Nachbarn hat Trafo 19-20?"
-  -> subrequest 2: "Wie hoch ist die Spannung der gefundenen direkten Nachbarn am 2026-01-09?"
+  -> subrequest 2: "Wie hoch ist die Spannung von Trafo 19-20 am 2026-01-09?"
 
-- "Welche Leitungen gibt es und was ist deren Widerstand?"
+- "Welche Leitungen gibt es und wie war die Auslastung von Line 4-5 am 2026-01-09?"
   -> subrequest 1: "Welche Leitungen gibt es?"
-  -> subrequest 2: "Was ist der Widerstand der gefundenen Leitungen?"
+  -> subrequest 2: "Wie war die Auslastung von Line 4-5 am 2026-01-09?"
 
 Do NOT split examples:
 - "Was sind die obere und untere Spannungsgrenze von Bus 1?"
@@ -583,7 +575,6 @@ Do NOT split examples:
         *,
         user_input_override: str,
         source_subrequest: str,
-        depends_on_previous: bool,
         subrequest_classification: Dict[str, Any],
     ) -> List[Dict[str, Any]]:
         out: List[Dict[str, Any]] = []
@@ -595,7 +586,6 @@ Do NOT split examples:
             new_item = dict(item)
             new_item["user_input_override"] = user_input_override
             new_item["source_subrequest"] = source_subrequest
-            new_item["depends_on_previous"] = depends_on_previous
             new_item["subrequest_classification"] = subrequest_classification
             out.append(new_item)
 
@@ -636,7 +626,6 @@ Do NOT split examples:
             if not subrequest_text:
                 continue
 
-            depends_on_previous = bool(subrequest.get("depends_on_previous", False))
             source_subrequest = f"subrequest_{idx}"
 
             sub_classification = self.classify_request(subrequest_text)
@@ -654,7 +643,6 @@ Do NOT split examples:
                     sub_plan,
                     user_input_override=subrequest_text,
                     source_subrequest=source_subrequest,
-                    depends_on_previous=depends_on_previous,
                     subrequest_classification=sub_classification,
                 )
             )
@@ -1003,7 +991,6 @@ Intermediate results:
 
         trace: List[Dict[str, Any]] = []
         summary_results: List[Dict[str, Any]] = []
-        previous_context_parts: List[str] = []
 
         for item in plan:
             step = item["step"]
@@ -1014,21 +1001,7 @@ Intermediate results:
             context["user_input"] = effective_user_input
             context["classification"] = effective_classification
 
-            if item.get("depends_on_previous") and previous_context_parts:
-                context["previous_context"] = "\n\n".join(previous_context_parts)
-                context["original_user_input"] = user_input
 
-                context["user_input"] = (
-                    f"Ursprüngliche Gesamtanfrage:\n"
-                    f"{user_input}\n\n"
-                    f"Aktuelle Teilanfrage:\n"
-                    f"{effective_user_input}\n\n"
-                    f"Kontext aus vorherigen Teilanfragen:\n"
-                    f"{context['previous_context']}"
-                )
-            else:
-                context.pop("previous_context", None)
-                context.pop("original_user_input", None)
 
             if step == "unsupported_request":
                 result = self.build_unsupported_result(
@@ -1040,7 +1013,7 @@ Intermediate results:
                     "step": step,
                     "effective_user_input": effective_user_input,
                     "source_subrequest": item.get("source_subrequest"),
-                    "depends_on_previous": item.get("depends_on_previous", False),
+
                     "result": result,
                 })
 
@@ -1060,7 +1033,6 @@ Intermediate results:
                 "effective_context_user_input": context.get("user_input"),
                 "previous_context": context.get("previous_context"),
                 "source_subrequest": item.get("source_subrequest"),
-                "depends_on_previous": item.get("depends_on_previous", False),
                 "tool_spec": {
                     "name": tool_spec.name if tool_spec else step,
                     "description": tool_spec.description if tool_spec else "",
@@ -1085,10 +1057,6 @@ Intermediate results:
             if step == "summarize_cim_result":
                 summary_results.append(result)
 
-                answer = result.get("answer")
-                if isinstance(answer, str) and answer.strip():
-                    label = item.get("source_subrequest") or f"summary_{len(summary_results)}"
-                    previous_context_parts.append(f"{label}: {answer.strip()}")
 
         if len(summary_results) > 1:
             final_answer = self._build_final_answer(
