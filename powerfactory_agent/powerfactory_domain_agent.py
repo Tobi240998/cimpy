@@ -165,8 +165,8 @@ class PowerFactoryDomainAgent:
                 "- Do not split merely because a request is long; split only if there are multiple distinct tasks.\n"
                 "- References such as 'dazu', 'deren', 'diese', 'die dazugehörigen', 'those', 'their', or similar may refer to the result of the previous subrequest.\n"
                 "- Especially split requests where the first part identifies PowerFactory objects and the second part asks for data of those identified objects, for example topology first and element data second.\n"
-                "- Example: 'Welche Nachbarn hat Last A? Wie ist die Spannung dazu?' should become two sequential subrequests: first determine the neighbors of Last A, then ask for the voltage of those neighbors.\n"
-                "- Example: 'Welche Leitungen hängen an Bus 5 und wie hoch ist deren Auslastung?' should become two sequential subrequests: first identify the connected lines, then query their loading.\n\n"
+                "- Example: 'Welche Nachbarn hat Last A? Wie ist die Spannung von Bus 1?' should become two sequential subrequests: first determine the neighbors of Last A, then ask for the voltage from bus 1.\n"
+                "- Example: 'Welche Leitungen hängen an Bus 5? Wie ist die Auslastung von Line 4-5?' should become two sequential subrequests: first identify the connected lines, then query the loading of line 4-5.\n\n"
                 "Important exceptions where you should keep the request as ONE single request (is_composite=false):\n"
                 "- If the request is primarily a load-change request and the second part only asks for supported result metrics of that same load-change workflow, do NOT split it.\n"
                 "- Supported integrated result metrics for a load-change workflow include: bus voltage, bus active power, bus reactive power, and line loading.\n"
@@ -177,7 +177,10 @@ class PowerFactoryDomainAgent:
                 "- In such cases, the second part is NOT a separate user goal but a requested result view of the same underlying load-change workflow.\n"
                 "- Therefore, keep is_composite=false for such requests.\n\n"
                 "General decision principle:\n"
-                "- If the second part can be understood as a result metric request of the first supported workflow, prefer is_composite=false.\n"
+                "- Only keep result-metric follow-up questions integrated for load-change workflows.\n"
+                "- For switch operations, split explicit follow-up data questions into a separate query_element_data subrequest.\n"
+                "- Example: 'Öffne Schalter 1. Welche Spannung ergibt sich an Bus 1?' should become two sequential subrequests: first open switch 1, then query the voltage of Bus 1..\n"
+                "- If the second part names a target object or asks for a concrete value such as voltage, loading, active power, reactive power, limits, or attributes, use is_composite=true.\n"
                 "- If the second part requires a genuinely separate object discovery or a different operational workflow, then use is_composite=true.\n"
                 "- If unsure, prefer is_composite=false.\n\n"
                 "Return only structured output.\n\n"
@@ -972,6 +975,9 @@ class PowerFactoryDomainAgent:
             if substeps == ["unsupported_request"]:
                 return None
 
+            for plan_item in subrequest_debug["plan"]:
+                plan_item["subrequest_classification"] = subrequest_debug["classification"]
+
             composite_plan.extend(subrequest_debug["plan"])
 
         composite_plan = self._deduplicate_composite_steps(composite_plan)
@@ -988,6 +994,7 @@ class PowerFactoryDomainAgent:
 
         return None
 
+    """
     def _build_extended_standard_composite_plan(
         self,
         user_input: str,
@@ -1040,6 +1047,9 @@ class PowerFactoryDomainAgent:
             if substeps == ["unsupported_request"]:
                 return None
 
+            for plan_item in subrequest_debug["plan"]:
+                plan_item["subrequest_classification"] = subrequest_debug["classification"]
+
             composite_plan.extend(subrequest_debug["plan"])
 
         composite_plan = self._deduplicate_composite_steps(composite_plan)
@@ -1053,6 +1063,7 @@ class PowerFactoryDomainAgent:
             return self._steps_to_plan(repaired_steps, user_input_override=user_input)
 
         return None
+    """
 
     def build_plan(self, user_input: str, classification: Dict[str, Any]) -> List[Dict[str, Any]]:
         self._reset_planning_debug()
@@ -1082,7 +1093,7 @@ class PowerFactoryDomainAgent:
         # 2) Wenn der Standardplan gültig ist, wie bisher weiter
         # ============================================================
         if standard_steps != ["unsupported_request"]:
-            extended_composite_plan = self._build_extended_standard_composite_plan(
+            """extended_composite_plan = self._build_extended_standard_composite_plan(
                 user_input=user_input,
                 classification=classification,
                 standard_plan=standard_plan,
@@ -1092,6 +1103,7 @@ class PowerFactoryDomainAgent:
                 self._last_planning_debug["plan_source"] = "extended_standard_from_decomposition"
                 self._last_planning_debug["final_plan_steps"] = self._plan_to_steps(extended_composite_plan)
                 return extended_composite_plan
+                """
 
             if classification_plan is not None and len(classification_steps) > len(standard_steps) and self._is_prefix_plan(standard_steps, classification_steps):
                 self._last_planning_debug["plan_source"] = "extended_standard_from_classification"
@@ -1403,12 +1415,13 @@ class PowerFactoryDomainAgent:
         for item in plan:
             step = item["step"]
             effective_user_input = item.get("user_input_override", user_input)
+            effective_classification = item.get("subrequest_classification") or classification
 
             tool_kwargs = self._build_tool_kwargs(
                 step=step,
                 services=services,
                 effective_user_input=effective_user_input,
-                classification=classification,
+                classification=effective_classification,
                 state=state,
             )
 
@@ -1418,6 +1431,7 @@ class PowerFactoryDomainAgent:
             debug_trace.append({
                 "step": step,
                 "effective_user_input": effective_user_input,
+                "effective_classification": effective_classification,
                 "source_subrequest": item.get("source_subrequest"),
                 "tool_spec": {
                     "name": tool_spec.name if tool_spec else step,
@@ -1859,6 +1873,11 @@ class PowerFactoryDomainAgent:
                 "step": item.get("step"),
                 "user_input_override": item.get("user_input_override"),
                 "source_subrequest": item.get("source_subrequest"),
+                "subrequest_intent": (
+                    item.get("subrequest_classification", {}).get("intent")
+                    if isinstance(item.get("subrequest_classification"), dict)
+                    else None
+                ),
             })
 
         result = self.execute_plan(
