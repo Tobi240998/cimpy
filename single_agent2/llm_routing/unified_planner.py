@@ -222,7 +222,7 @@ Workflow descriptions:
   - "Last C um 20 MW vergrößern. Welche Leitungsauslastungen ergeben sich?" -> pf.change_load
 
 - pf.topology_query:
-  Analyze connectivity and neighbors in the PowerFactory network graph.
+  Analyze connectivity and neighbors or directly connected assets in the PowerFactory network graph.
 
 - pf.change_switch_state:
   Change the switching state of a switch in the active PowerFactory project.
@@ -248,13 +248,40 @@ Workflow descriptions:
   List CIM objects of a certain type from snapshot inventory.
 
 - cim.standard_base:
-  Read static/base attributes from CIM data.
+  Read static base, nameplate, or technical attributes from CIM data.
+  Use this workflow for values that do not describe a time-dependent operating state.
+  Typical examples: Base Voltage, rated voltage, nominal voltage, nominal power,
+  impedance parameters, operating mode, technical IDs, mRID, static equipment metadata.
+  German examples: Nennspannung, Bemessungsspannung, Base Voltage, Nennleistung.
+  Example:
+  - "Was ist r von Line 02-03?" -> cim.standard_base
+  - "Was ist die Base Voltage von Bus 3?" -> cim.standard_base
+  Important distinction:
+  If the request asks for dynamic state values such as voltage, power, P, Q, S,
+  or values at a specific date/time, prefer cim.standard_sv unless the wording clearly
+  refers to static/rated/base attributes.
 
 - cim.standard_sv:
-  Read state variables (SV values) from CIM snapshot data.
+  Read dynamic state-variable values from CIM snapshot data.
+  Use this workflow for operating-state values that may vary by snapshot or time.
+  Typical examples: voltage magnitude, voltage angle, active power, reactive power,
+  apparent power, P, Q, S, current, breaker/switch state, or similar SV values.
+  Example:
+  - "Was war die Spannung von Bus 3 am 2026-01-09?" -> cim.standard_sv
+  - "Wie hoch war die Wirkleistung von Line 02-03?" -> cim.standard_sv
+  Important distinction:
+  If the request asks for loading, utilization, overload, limit checks, threshold violations,
+  or comparison against base/reference values, prefer cim.standard_comparison.
+  If the request asks for static rated/base attributes, use cim.standard_base.
 
 - cim.standard_comparison:
-  Compare CIM values across snapshots or time.
+  Compare CIM values across snapshots or compare dynamic SV values against base/reference/limit values.
+  Use this workflow for loading, utilization, overload, threshold violations,
+  voltage limit checks, min/max comparisons, or questions such as when the highest loading occurred.
+  Examples:
+  - "Was war die Auslastung von Trafo 19-20 am 2026-01-09?" -> cim.standard_comparison
+  - "Wie war die Spannung im Vergleich zu den Spannungsgrenzen?" -> cim.standard_comparison
+  - "Wann war die höchste Auslastung von Trafo 19-20?" -> cim.standard_comparison
 
 - cim.topology_query:
   Query topology relationships in CIM data, such as:
