@@ -49,7 +49,15 @@ STANDARD_WORKFLOWS = {
     "pf.select_pf_object_attributes_llm",
     "pf.read_pf_object_attributes",
     "pf.summarize_pf_object_data_result",
-],
+    ],
+
+    "pf.list_element_attributes": [
+    "pf.build_unified_inventory",
+    "pf.interpret_data_query_instruction",
+    "pf.classify_data_source",
+    "pf.resolve_objects_from_inventory_llm",
+    "pf.list_available_object_attributes",
+    ],
 
     # ---------- CIM ----------
     "cim.standard_listing": [
@@ -149,10 +157,13 @@ class UnifiedPlanner:
         - Split if the second part refers to previous results using words like "diese", "deren", "dazu", "die dazugehörigen", "those", "their".
         - Do not split compound attribute requests such as "obere und untere Spannungsgrenze", "min und max", "Grenzwerte", or "limits". These can be handled by one standard data-query workflow.
         - Do not split load-change requests when the second part asks for resulting load-flow values caused by the same load modification.
+        - Do split switch change requests when the second part asks for resulting load-flow values caused by the same switch change. This is handled with a separate workflow.
         Examples:
         - "Last C um 20 MW vergrößern. Welche Leitungsauslastungen ergeben sich?" -> is_composite=false
         - "Erhöhe Last A um 2 MW und zeige die Spannungen danach." -> is_composite=false
         - "Reduziere Last B um 1 MW. Wie ändern sich die Blindleistungen?" -> is_composite=false
+        - "Öffne Schalter 1 und zeige danach die Busspannungen." -> is_composite=true
+        - "Schließe Schalter 1. Wie hoch ist danach die Auslastung von Leitung 4-5?" -> is_composite=true
         
 
         Return only structured output.
@@ -175,8 +186,9 @@ You receive:
 
 Your task:
 - choose whether the request should be handled with CIM tools or PowerFactory tools
-- build an executable ordered tool plan
-- use only tools from the provided tool list
+- choose exactly one standard workflow whenever possible
+- use custom_plan only if no standard workflow fits
+- use internal tools only inside custom_steps when planning_mode="custom_plan"
 - do not mix CIM and PowerFactory tools in one plan
 - if the data source is ambiguous, ask for clarification
 - if the request is unsupported, mark unsupported
@@ -184,7 +196,7 @@ Your task:
 Domain guidance:
 - CIM is for CIM data, historical CIM snapshots, time-based analysis, base attributes, SV values, historical comparison.
 - PowerFactory is for the active PowerFactory project, simulations, load flow, switch operations, project object queries and changes.
-- If the user explicitly says PowerFactory, choose PowerFactory.
+- If the user explicitly says PowerFactory or PF or simulation tool, choose PowerFactory.
 - If the user explicitly says CIM, historical data, CIM data or asks about date/time-based historical values, choose CIM.
 - If the user asks for technical attributes without a clear source, choose clarification_needed.
 
@@ -202,6 +214,7 @@ planning_mode MUST be exactly one of:
 - unsupported
 
 Do not use field names like "workflow" or "custom_steps" as planning_mode.
+Do not use internal tool names as workflow values.
 
 Available standard workflows:
 {available_workflows}
@@ -213,8 +226,7 @@ Workflow descriptions:
 
 - pf.change_load:
   Modify load values in the active PowerFactory project.
-  Use this workflow for increasing, reducing, setting, or adjusting loads.
-  If the same request asks for resulting load-flow values after the load change,
+  If the same request also asks for resulting load-flow values after the load change,
   such as voltages, line loading, transformer loading, active power, reactive power,
   currents, or losses, still use pf.change_load.
   Examples:
@@ -222,27 +234,23 @@ Workflow descriptions:
   - "Last C um 20 MW vergrößern. Welche Leitungsauslastungen ergeben sich?" -> pf.change_load
 
 - pf.topology_query:
-  Analyze connectivity and neighbors or directly connected assets in the PowerFactory network graph.
+  Analyze connectivity and neighbors in the PowerFactory network graph.
 
 - pf.change_switch_state:
   Change the switching state of a switch in the active PowerFactory project.
   Use this workflow for explicit commands that open, close, connect, disconnect,
   switch on/off, or toggle a switch.
-  German trigger verbs include: öffne, öffnen, schließe, schließen, einschalten,
-  ausschalten, trennen, verbinden, umschalten.
   Examples:
   - "Öffne Schalter 1" -> pf.change_switch_state
   - "Schließe Schalter 1" -> pf.change_switch_state
-  - "Schalter 1 öffnen" -> pf.change_switch_state
-  - "Switch 1 close" -> pf.change_switch_state
 
 - pf.query_element_data:
-  Query values, parameters, attributes, base data, technical data, limits, bounds, min/max values,
-  nominal values, setpoints, result values, calculated values, load-flow values, or operational states
-  of a specific object in the active PowerFactory project.
-  Examples: Nennspannung, Sollspannung, Spannung, obere/untere Spannungsgrenze, Grenzwerte,
-  Auslastung, Wirkleistung, Blindleistung, Schalterstellung, uknom, m:u.
-  Compound attribute requests such as "obere und untere Spannungsgrenze" are still one workflow.
+  Query values, parameters, attributes, limits, nominal values,
+  load-flow values, or operational states of a specific object
+  in the active PowerFactory project.
+
+  
+CIM workflow descriptions:
 
 - cim.standard_listing:
   List CIM objects of a certain type from snapshot inventory.
@@ -290,7 +298,7 @@ Workflow descriptions:
   - graph connectivity
   - paths or adjacency relationships
 
-Planning rules:
+Planning rules for custom_plan steps:
 - Tool names must match the available tool list exactly.
 - A plan may only contain tools from one domain.
 - Use the shortest complete executable plan.
@@ -298,10 +306,16 @@ Planning rules:
 - Usually end with a summary tool if one exists for the workflow.
 - Do not invent tools, arguments, or object names.
 
-Available tools:
+Internal tools:
+The following tools are background information only.
+Use them only if planning_mode="custom_plan".
+Never use internal tool names as workflow values.
+
 {available_tools}
 
-Return only structured output.
+
+Return only structured output. 
+Do not use tools as standard workflows.  
 
 {format_instructions}
 """
