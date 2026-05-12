@@ -249,7 +249,13 @@ Workflow descriptions:
   load-flow values, or operational states of a specific object
   in the active PowerFactory project.
 
-  
+- pf.list_element_attributes:
+  List available attributes, fields, parameters, or data columns of a specific PowerFactory object.
+  Use this workflow when the user asks which attributes exist, not when the user asks for a specific attribute value.
+  Examples:
+  - "Welche Attribute gibt es für Bus 1 in PowerFactory?" -> pf.list_element_attributes
+  - "Welche Parameter hat Line 4-5?" -> pf.list_element_attributes
+
 CIM workflow descriptions:
 
 - cim.standard_listing:
