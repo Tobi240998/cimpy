@@ -148,6 +148,12 @@ class UnifiedPlanner:
         - Split if the request asks to first identify objects and then query values or attributes of those identified objects.
         - Split if the second part refers to previous results using words like "diese", "deren", "dazu", "die dazugehörigen", "those", "their".
         - Do not split compound attribute requests such as "obere und untere Spannungsgrenze", "min und max", "Grenzwerte", or "limits". These can be handled by one standard data-query workflow.
+        - Do not split load-change requests when the second part asks for resulting load-flow values caused by the same load modification.
+        Examples:
+        - "Last C um 20 MW vergrößern. Welche Leitungsauslastungen ergeben sich?" -> is_composite=false
+        - "Erhöhe Last A um 2 MW und zeige die Spannungen danach." -> is_composite=false
+        - "Reduziere Last B um 1 MW. Wie ändern sich die Blindleistungen?" -> is_composite=false
+        
 
         Return only structured output.
 
@@ -206,7 +212,14 @@ Workflow descriptions:
   List objects (loads, lines, transformers, etc.) from the active PowerFactory project.
 
 - pf.change_load:
-  Modify load values in the PowerFactory project.
+  Modify load values in the active PowerFactory project.
+  Use this workflow for increasing, reducing, setting, or adjusting loads.
+  If the same request asks for resulting load-flow values after the load change,
+  such as voltages, line loading, transformer loading, active power, reactive power,
+  currents, or losses, still use pf.change_load.
+  Examples:
+  - "Erhöhe Last A um 2 MW" -> pf.change_load
+  - "Last C um 20 MW vergrößern. Welche Leitungsauslastungen ergeben sich?" -> pf.change_load
 
 - pf.topology_query:
   Analyze connectivity and neighbors in the PowerFactory network graph.
