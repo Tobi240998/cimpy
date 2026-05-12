@@ -33,8 +33,8 @@ STANDARD_WORKFLOWS = {
         "pf.summarize_topology_result",
     ],
     "pf.change_switch_state": [
-        "pf.build_unified_inventory",
         "pf.interpret_switch_instruction",
+        "pf.build_unified_inventory",
         "pf.resolve_objects_from_inventory_llm",
         "pf.execute_switch_operation",
         "pf.summarize_switch_result",
