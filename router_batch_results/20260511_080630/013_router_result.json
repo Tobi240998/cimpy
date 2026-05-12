@@ -1,0 +1,56 @@
+{
+  "run_id": 13,
+  "timestamp": "2026-05-11T08:46:45.638603",
+  "user_input": "Zeige die direkten Nachbarn von Bus 5 in PF und deren Nennspannung.",
+  "duration_seconds": 32.387,
+  "token_usage": {
+    "prompt_tokens": 3553,
+    "completion_tokens": 3195,
+    "total_tokens": 6748,
+    "details": {
+      "qwen3:30b": {
+        "input_tokens": 3553,
+        "output_tokens": 3195,
+        "total_tokens": 6748
+      }
+    }
+  },
+  "decision_trace": {
+    "domain": "powerfactory",
+    "planning_mode": "custom_plan",
+    "workflow": "None",
+    "confidence": "",
+    "safe_to_execute": "True",
+    "num_steps": 0,
+    "steps": "",
+    "planner_reasoning": "The request asks for direct neighbors of Bus 5 in PowerFactory and their nominal voltage. 'pf.topology_query' retrieves the neighbors, and 'pf.query_element_data' is used to fetch the nominal voltage attribute for each neighbor. Both tools are required to fulfill the request.",
+    "resolved_object": "",
+    "resolved_object_confidence": "",
+    "selected_attributes": "",
+    "attribute_confidence": "",
+    "num_tool_calls": 0,
+    "executed_tools": "",
+    "failed_tool": ""
+  },
+  "router_output": {
+    "route": "ERROR",
+    "status": "error",
+    "result": {
+      "status": "error",
+      "answer": "Tool existiert nicht in der UnifiedToolRegistry: pf.topology_query",
+      "planner_decision": {
+        "domain": "powerfactory",
+        "planning_mode": "custom_plan",
+        "workflow": null,
+        "custom_steps": [
+          "pf.topology_query",
+          "pf.query_element_data"
+        ],
+        "safe_to_execute": true,
+        "missing_context": [],
+        "clarification_question": "",
+        "reasoning": "The request asks for direct neighbors of Bus 5 in PowerFactory and their nominal voltage. 'pf.topology_query' retrieves the neighbors, and 'pf.query_element_data' is used to fetch the nominal voltage attribute for each neighbor. Both tools are required to fulfill the request."
+      }
+    }
+  }
+}

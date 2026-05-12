@@ -202,7 +202,7 @@ def build_pf_tool_kwargs(
             ]
 
     elif step == "resolve_objects_from_inventory_llm":
-        if classification.get("intent") == "change_switch_state":
+        if state.get("switch_instruction"):
             tool_kwargs["instruction"] = state.get("switch_instruction")
         else:
             tool_kwargs["instruction"] = state.get("data_query_instruction")

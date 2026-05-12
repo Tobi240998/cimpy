@@ -1,0 +1,56 @@
+{
+  "run_id": 67,
+  "timestamp": "2026-05-11T00:54:19.178716",
+  "user_input": "Gib mir die Auslastung aller Leitungen in Powefactory.",
+  "duration_seconds": 43.443,
+  "token_usage": {
+    "prompt_tokens": 3541,
+    "completion_tokens": 4262,
+    "total_tokens": 7803,
+    "details": {
+      "qwen3:30b": {
+        "input_tokens": 3541,
+        "total_tokens": 7803,
+        "output_tokens": 4262
+      }
+    }
+  },
+  "decision_trace": {
+    "domain": "powerfactory",
+    "planning_mode": "custom_plan",
+    "workflow": "None",
+    "confidence": "",
+    "safe_to_execute": "True",
+    "num_steps": 0,
+    "steps": "",
+    "planner_reasoning": "User requested loading (Auslastung) of all lines in PowerFactory. First, get the catalog of lines using pf.get_load_catalog, then query each line's loading attribute using pf.query_element_data.",
+    "resolved_object": "",
+    "resolved_object_confidence": "",
+    "selected_attributes": "",
+    "attribute_confidence": "",
+    "num_tool_calls": 0,
+    "executed_tools": "",
+    "failed_tool": ""
+  },
+  "router_output": {
+    "route": "ERROR",
+    "status": "error",
+    "result": {
+      "status": "error",
+      "answer": "Tool existiert nicht in der UnifiedToolRegistry: pf.query_element_data",
+      "planner_decision": {
+        "domain": "powerfactory",
+        "planning_mode": "custom_plan",
+        "workflow": null,
+        "custom_steps": [
+          "pf.get_load_catalog",
+          "pf.query_element_data"
+        ],
+        "safe_to_execute": true,
+        "missing_context": [],
+        "clarification_question": "",
+        "reasoning": "User requested loading (Auslastung) of all lines in PowerFactory. First, get the catalog of lines using pf.get_load_catalog, then query each line's loading attribute using pf.query_element_data."
+      }
+    }
+  }
+}

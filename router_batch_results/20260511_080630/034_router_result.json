@@ -1,0 +1,44 @@
+{
+  "run_id": 34,
+  "timestamp": "2026-05-11T09:22:18.148211",
+  "user_input": "Wie ist die Spannung in PF?",
+  "duration_seconds": 18.071,
+  "token_usage": {
+    "prompt_tokens": 3525,
+    "completion_tokens": 1740,
+    "total_tokens": 5265,
+    "details": {
+      "qwen3:30b": {
+        "input_tokens": 3525,
+        "output_tokens": 1740,
+        "total_tokens": 5265
+      }
+    }
+  },
+  "decision_trace": {
+    "domain": "ASK_USER",
+    "planning_mode": "",
+    "workflow": "",
+    "confidence": "",
+    "safe_to_execute": "",
+    "num_steps": 0,
+    "steps": "",
+    "planner_reasoning": "",
+    "resolved_object": "",
+    "resolved_object_confidence": "",
+    "selected_attributes": "",
+    "attribute_confidence": "",
+    "num_tool_calls": 0,
+    "executed_tools": "",
+    "failed_tool": ""
+  },
+  "router_output": {
+    "route": "ASK_USER",
+    "status": "needs_clarification",
+    "question": "Please specify the exact PowerFactory object (e.g., bus name, line ID, or equipment) for which you want to check the voltage value.",
+    "missing_fields": [],
+    "partial": {
+      "user_input": "Wie ist die Spannung in PF?"
+    }
+  }
+}

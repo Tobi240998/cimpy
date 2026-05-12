@@ -1,0 +1,76 @@
+{
+  "run_id": 31,
+  "timestamp": "2026-05-11T09:20:46.089914",
+  "user_input": "Was haengt an bus 5 dran und wie stark isses belastet? Nutze PF.",
+  "duration_seconds": 24.012,
+  "token_usage": {
+    "prompt_tokens": 3542,
+    "completion_tokens": 2362,
+    "total_tokens": 5904,
+    "details": {
+      "qwen3:30b": {
+        "input_tokens": 3542,
+        "output_tokens": 2362,
+        "total_tokens": 5904
+      }
+    }
+  },
+  "decision_trace": {
+    "domain": "ASK_USER",
+    "planning_mode": "",
+    "workflow": "",
+    "confidence": "",
+    "safe_to_execute": "",
+    "num_steps": 0,
+    "steps": "",
+    "planner_reasoning": "",
+    "resolved_object": "",
+    "resolved_object_confidence": "",
+    "selected_attributes": "",
+    "attribute_confidence": "",
+    "num_tool_calls": 0,
+    "executed_tools": "",
+    "failed_tool": ""
+  },
+  "router_output": {
+    "route": "ASK_USER",
+    "status": "needs_clarification",
+    "question": "Please clarify whether you are asking about the current topology in the active PowerFactory project or a historical CIM snapshot for bus 5.",
+    "missing_fields": [],
+    "partial": {
+      "user_input": "Was haengt an bus 5 dran und wie stark isses belastet? Nutze PF.",
+      "composite": {
+        "status": "ok",
+        "is_composite": true,
+        "subrequests": [
+          {
+            "user_input": "Was haengt an bus 5 dran",
+            "depends_on_previous": false
+          },
+          {
+            "user_input": "wie stark isses belastet? Nutze PF",
+            "depends_on_previous": true
+          }
+        ],
+        "reasoning": "The request first asks to identify connected objects to bus 5 (user_input 1), then queries their load (user_input 2), which depends on the result of the first query. The second part refers to 'es' (it), indicating dependency on prior results."
+      },
+      "completed_results": [
+        {
+          "index": 1,
+          "user_input": "Was haengt an bus 5 dran",
+          "effective_input": "Was haengt an bus 5 dran",
+          "depends_on_previous": false,
+          "output": {
+            "route": "ASK_USER",
+            "status": "needs_clarification",
+            "question": "Please clarify whether you are asking about the current topology in the active PowerFactory project or a historical CIM snapshot for bus 5.",
+            "missing_fields": [],
+            "partial": {
+              "user_input": "Was haengt an bus 5 dran"
+            }
+          }
+        }
+      ]
+    }
+  }
+}

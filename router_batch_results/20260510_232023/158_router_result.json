@@ -1,0 +1,38 @@
+{
+  "run_id": 158,
+  "timestamp": "2026-05-11T07:51:24.611974",
+  "user_input": "Sag mir bitte die Wirkleistung in CIM.",
+  "duration_seconds": 0.128,
+  "token_usage": {
+    "prompt_tokens": 0,
+    "completion_tokens": 0,
+    "total_tokens": 0,
+    "details": {}
+  },
+  "decision_trace": {
+    "domain": "ERROR",
+    "planning_mode": "",
+    "workflow": "",
+    "confidence": "",
+    "safe_to_execute": "",
+    "num_steps": 0,
+    "steps": "",
+    "planner_reasoning": "",
+    "resolved_object": "",
+    "resolved_object_confidence": "",
+    "selected_attributes": "",
+    "attribute_confidence": "",
+    "num_tool_calls": 0,
+    "executed_tools": "",
+    "failed_tool": ""
+  },
+  "router_output": {
+    "route": "ERROR",
+    "status": "error",
+    "result": {
+      "status": "error",
+      "answer": "Der UnifiedPlanner konnte keinen Plan erzeugen.",
+      "planner_error": "model 'qwen3:30b' not found (status code: 404)"
+    }
+  }
+}

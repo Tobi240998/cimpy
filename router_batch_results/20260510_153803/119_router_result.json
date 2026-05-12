@@ -1,0 +1,3296 @@
+{
+  "run_id": 119,
+  "timestamp": "2026-05-10T19:43:32.244536",
+  "user_input": "Wie ist die Auslastung von Line in PF?",
+  "duration_seconds": 102.355,
+  "token_usage": {
+    "prompt_tokens": 7927,
+    "completion_tokens": 8898,
+    "total_tokens": 16825,
+    "details": {
+      "qwen3:30b": {
+        "total_tokens": 16825,
+        "input_tokens": 7927,
+        "output_tokens": 8898
+      }
+    }
+  },
+  "decision_trace": {
+    "domain": "POWERFACTORY",
+    "planning_mode": "",
+    "workflow": "",
+    "confidence": "",
+    "safe_to_execute": "",
+    "num_steps": 0,
+    "steps": "",
+    "planner_reasoning": "",
+    "resolved_object": "",
+    "resolved_object_confidence": "",
+    "selected_attributes": "",
+    "attribute_confidence": "",
+    "num_tool_calls": 4,
+    "executed_tools": "build_unified_inventory | interpret_data_query_instruction | classify_data_source | resolve_objects_from_inventory_llm",
+    "failed_tool": "resolve_objects_from_inventory_llm"
+  },
+  "router_output": {
+    "route": "POWERFACTORY",
+    "result": {
+      "status": "error",
+      "tool": "resolve_objects_from_inventory_llm",
+      "project": "Nine-bus System(2)",
+      "instruction": {
+        "query_type": "element_data",
+        "entity_type": "line",
+        "entity_name_raw": "Wie ist die Auslastung von Line in PF?",
+        "entity_name_candidates": [
+          "Line"
+        ],
+        "attribute_request_text": "Wie ist die Auslastung von Line in PF?",
+        "available_types": [
+          "bus",
+          "generator",
+          "line",
+          "load",
+          "switch",
+          "transformer"
+        ],
+        "requested_attribute_names": [],
+        "requested_attribute_name_extraction": {
+          "status": "skipped",
+          "requested_attribute_names": [],
+          "llm_decision": {
+            "reason": "Skipped technical attribute-name extraction because attribute_match_mode=semantic_description."
+          },
+          "chain_mode": "skipped_by_attribute_match_mode"
+        },
+        "data_source_preference": "result",
+        "data_source_note": "Lastflussergebnisse wurden explizit oder sicher angefordert.",
+        "data_source_decision": {
+          "status": "ok",
+          "selected_data_source": "result",
+          "confidence": "high",
+          "rationale": "User request 'Auslastung' (loading) without base data qualifiers (e.g., Nenn-, Soll-) matches example 'Auslastung -> result'. No load-flow context words like 'Lastfluss' are present, but the example 'Auslastung' is explicitly classified as result in the instructions.",
+          "should_execute": true,
+          "decision_mode": "llm",
+          "llm_decision": {
+            "selected_data_source": "result",
+            "confidence": "high",
+            "rationale": "User request 'Auslastung' (loading) without base data qualifiers (e.g., Nenn-, Soll-) matches example 'Auslastung -> result'. No load-flow context words like 'Lastfluss' are present, but the example 'Auslastung' is explicitly classified as result in the instructions.",
+            "should_execute": true,
+            "attribute_match_mode": "semantic_description",
+            "attribute_match_confidence": "high",
+            "attribute_match_rationale": "User used natural language 'Auslastung' (not technical names like 'c:loading' or 'm:loading')",
+            "attribute_cardinality": "one",
+            "attribute_cardinality_rationale": "Request asks for 'die Auslastung' (singular) of a single Line, not multiple values like 'obere und untere' or 'Grenzwerte'"
+          },
+          "chain_mode": "native_structured_output",
+          "attribute_match_mode": "semantic_description",
+          "attribute_match_confidence": "high",
+          "attribute_match_rationale": "User used natural language 'Auslastung' (not technical names like 'c:loading' or 'm:loading')",
+          "attribute_cardinality": "one",
+          "attribute_cardinality_rationale": "Request asks for 'die Auslastung' (singular) of a single Line, not multiple values like 'obere und untere' or 'Grenzwerte'",
+          "fallback_applied": false,
+          "effective_data_source": "result",
+          "data_source_note": "Lastflussergebnisse wurden explizit oder sicher angefordert."
+        },
+        "attribute_match_mode": {
+          "status": "ok",
+          "mode": "semantic_description",
+          "confidence": "high",
+          "should_execute": true,
+          "rationale": "User used natural language 'Auslastung' (not technical names like 'c:loading' or 'm:loading')",
+          "source": "data_source_decision"
+        },
+        "attribute_cardinality": "one",
+        "attribute_cardinality_rationale": "Request asks for 'die Auslastung' (singular) of a single Line, not multiple values like 'obere und untere' or 'Grenzwerte'"
+      },
+      "error": "invalid_object_selection",
+      "details": "Das LLM hat keinen gültigen exakten Namen aus der Kandidatenliste zurückgegeben.",
+      "llm_decision": {
+        "selected_object_name": null,
+        "selected_object_names": [],
+        "selection_mode": null,
+        "confidence": "low",
+        "rationale": "User request specifies 'Line' (singular) without a specific identifier, but available candidates are all specific lines (e.g., Line 4-5). No exact match exists for 'Line' as a generic term. __ALL__ is not applicable since the request is singular, not plural or explicit 'all'.",
+        "alternatives": [],
+        "should_execute": false
+      },
+      "candidate_names": [
+        "Line 4-5",
+        "Line 4-6",
+        "Line 5-7",
+        "Line 6-9",
+        "Line 7-8",
+        "Line 8-9"
+      ],
+      "agent": "PowerFactoryDomainAgent",
+      "available_tools": [
+        {
+          "name": "build_topology_graph",
+          "description": "Build a topology graph from the active PowerFactory project.",
+          "input_schema": {
+            "type": "object",
+            "properties": {
+              "services": {
+                "type": "object"
+              },
+              "contract_cubicles": {
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "services"
+            ]
+          },
+          "output_schema_hint": {
+            "status": "ok|error",
+            "tool": "build_topology_graph",
+            "graph_mode": "contracted|wiring",
+            "graph_summary": "dict",
+            "inventory": "dict",
+            "build_debug": "dict"
+          },
+          "capability_tags": [
+            "powerfactory",
+            "topology",
+            "graph",
+            "read_only"
+          ],
+          "mutating": false,
+          "requires_state": [],
+          "produces_state": [
+            "graph_result"
+          ],
+          "is_summary": false,
+          "domain_notes": []
+        },
+        {
+          "name": "build_topology_inventory",
+          "description": "Build a typed inventory from the current PowerFactory topology graph.",
+          "input_schema": {
+            "type": "object",
+            "properties": {
+              "services": {
+                "type": "object"
+              },
+              "topology_graph_result": {
+                "type": "object"
+              }
+            },
+            "required": [
+              "services",
+              "topology_graph_result"
+            ]
+          },
+          "output_schema_hint": {
+            "status": "ok|error",
+            "tool": "build_topology_inventory",
+            "inventory": "dict"
+          },
+          "capability_tags": [
+            "powerfactory",
+            "topology",
+            "inventory",
+            "read_only"
+          ],
+          "mutating": false,
+          "requires_state": [
+            "graph_result"
+          ],
+          "produces_state": [
+            "inventory_result"
+          ],
+          "is_summary": false,
+          "domain_notes": []
+        },
+        {
+          "name": "build_unified_inventory",
+          "description": "Build a unified non-topology PowerFactory inventory for supported object types.",
+          "input_schema": {
+            "type": "object",
+            "properties": {
+              "services": {
+                "type": "object"
+              },
+              "allowed_types": {
+                "type": "array"
+              }
+            },
+            "required": [
+              "services"
+            ]
+          },
+          "output_schema_hint": {
+            "status": "ok|error",
+            "tool": "build_unified_inventory",
+            "inventory": "dict"
+          },
+          "capability_tags": [
+            "powerfactory",
+            "inventory",
+            "read_only"
+          ],
+          "mutating": false,
+          "requires_state": [],
+          "produces_state": [
+            "unified_inventory_result",
+            "inventory_result"
+          ],
+          "is_summary": false,
+          "domain_notes": []
+        },
+        {
+          "name": "classify_data_source",
+          "description": "Classify whether the data query should use base data or load-flow result data.",
+          "input_schema": {
+            "type": "object",
+            "properties": {
+              "services": {
+                "type": "object"
+              },
+              "instruction": {
+                "type": "object"
+              }
+            },
+            "required": [
+              "services",
+              "instruction"
+            ]
+          },
+          "output_schema_hint": {
+            "status": "ok|error",
+            "tool": "classify_data_source",
+            "instruction": "dict",
+            "effective_data_source": "base|result"
+          },
+          "capability_tags": [
+            "powerfactory",
+            "data_query",
+            "classification",
+            "llm"
+          ],
+          "mutating": false,
+          "requires_state": [
+            "data_query_instruction"
+          ],
+          "produces_state": [
+            "data_query_instruction",
+            "data_source_decision"
+          ],
+          "is_summary": false,
+          "domain_notes": []
+        },
+        {
+          "name": "execute_change_load",
+          "description": "Apply a load change in PowerFactory and run load flow before/after.",
+          "input_schema": {
+            "type": "object",
+            "properties": {
+              "services": {
+                "type": "object"
+              },
+              "instruction": {
+                "type": "object"
+              }
+            },
+            "required": [
+              "services",
+              "instruction"
+            ]
+          },
+          "output_schema_hint": {
+            "status": "ok|error",
+            "tool": "execute_change_load",
+            "data": {
+              "u_before": "dict[str, float]",
+              "u_after": "dict[str, float]",
+              "delta_u": "dict[str, float]"
+            }
+          },
+          "capability_tags": [
+            "powerfactory",
+            "execution",
+            "loadflow",
+            "load"
+          ],
+          "mutating": true,
+          "requires_state": [
+            "instruction"
+          ],
+          "produces_state": [
+            "execution"
+          ],
+          "is_summary": false,
+          "domain_notes": []
+        },
+        {
+          "name": "execute_switch_operation",
+          "description": "Execute an open/close/toggle operation on a resolved switch object in PowerFactory.",
+          "input_schema": {
+            "type": "object",
+            "properties": {
+              "services": {
+                "type": "object"
+              },
+              "instruction": {
+                "type": "object"
+              },
+              "resolution": {
+                "type": "object"
+              },
+              "run_loadflow_after": {
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "services",
+              "instruction",
+              "resolution"
+            ]
+          },
+          "output_schema_hint": {
+            "status": "ok|error",
+            "tool": "execute_switch_operation",
+            "switch": "dict",
+            "state_before": "string|None",
+            "state_after": "string|None",
+            "loadflow": "dict"
+          },
+          "capability_tags": [
+            "powerfactory",
+            "execution",
+            "switch",
+            "topology"
+          ],
+          "mutating": true,
+          "requires_state": [
+            "switch_instruction",
+            "object_resolution"
+          ],
+          "produces_state": [
+            "switch_execution"
+          ],
+          "is_summary": false,
+          "domain_notes": []
+        },
+        {
+          "name": "get_load_catalog",
+          "description": "Read the available catalog of PowerFactory objects of the requested type from the active project.",
+          "input_schema": {
+            "type": "object",
+            "properties": {
+              "services": {
+                "type": "object"
+              },
+              "user_input": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "services"
+            ]
+          },
+          "output_schema_hint": {
+            "status": "ok|error",
+            "tool": "get_load_catalog",
+            "requested_type": "load|transformer|line|bus|switch|generator",
+            "loads": "list[object-metadata]"
+          },
+          "capability_tags": [
+            "powerfactory",
+            "read",
+            "catalog",
+            "inventory"
+          ],
+          "mutating": false,
+          "requires_state": [],
+          "produces_state": [
+            "catalog_result"
+          ],
+          "is_summary": false,
+          "domain_notes": []
+        },
+        {
+          "name": "interpret_data_query_instruction",
+          "description": "Interpret a natural-language data query into a structured PowerFactory data-query instruction.",
+          "input_schema": {
+            "type": "object",
+            "properties": {
+              "services": {
+                "type": "object"
+              },
+              "user_input": {
+                "type": "string"
+              },
+              "inventory": {
+                "type": "object"
+              }
+            },
+            "required": [
+              "services",
+              "user_input",
+              "inventory"
+            ]
+          },
+          "output_schema_hint": {
+            "status": "ok|error",
+            "tool": "interpret_data_query_instruction",
+            "instruction": "dict"
+          },
+          "capability_tags": [
+            "powerfactory",
+            "data_query",
+            "planning",
+            "llm"
+          ],
+          "mutating": false,
+          "requires_state": [
+            "unified_inventory_result"
+          ],
+          "produces_state": [
+            "data_query_instruction"
+          ],
+          "is_summary": false,
+          "domain_notes": []
+        },
+        {
+          "name": "interpret_entity_instruction",
+          "description": "Interpret a natural-language topology request into a structured generic PowerFactory entity instruction.",
+          "input_schema": {
+            "type": "object",
+            "properties": {
+              "services": {
+                "type": "object"
+              },
+              "user_input": {
+                "type": "string"
+              },
+              "inventory": {
+                "type": "object"
+              }
+            },
+            "required": [
+              "services",
+              "user_input",
+              "inventory"
+            ]
+          },
+          "output_schema_hint": {
+            "status": "ok|error",
+            "tool": "interpret_entity_instruction",
+            "instruction": "dict"
+          },
+          "capability_tags": [
+            "powerfactory",
+            "planning",
+            "nlp",
+            "topology",
+            "entity"
+          ],
+          "mutating": false,
+          "requires_state": [
+            "inventory_result"
+          ],
+          "produces_state": [
+            "entity_instruction"
+          ],
+          "is_summary": false,
+          "domain_notes": []
+        },
+        {
+          "name": "interpret_instruction",
+          "description": "Interpret a natural-language user request into a structured load-change instruction.",
+          "input_schema": {
+            "type": "object",
+            "properties": {
+              "services": {
+                "type": "object"
+              },
+              "user_input": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "services",
+              "user_input"
+            ]
+          },
+          "output_schema_hint": {
+            "status": "ok|error",
+            "tool": "interpret_instruction",
+            "instruction": "dict"
+          },
+          "capability_tags": [
+            "powerfactory",
+            "planning",
+            "nlp",
+            "load"
+          ],
+          "mutating": false,
+          "requires_state": [],
+          "produces_state": [
+            "instruction"
+          ],
+          "is_summary": false,
+          "domain_notes": []
+        },
+        {
+          "name": "interpret_switch_instruction",
+          "description": "Interpret a natural-language switch request into a structured switch operation instruction.",
+          "input_schema": {
+            "type": "object",
+            "properties": {
+              "services": {
+                "type": "object"
+              },
+              "user_input": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "services",
+              "user_input"
+            ]
+          },
+          "output_schema_hint": {
+            "status": "ok|error",
+            "tool": "interpret_switch_instruction",
+            "instruction": "dict"
+          },
+          "capability_tags": [
+            "powerfactory",
+            "planning",
+            "nlp",
+            "switch"
+          ],
+          "mutating": false,
+          "requires_state": [],
+          "produces_state": [
+            "switch_instruction"
+          ],
+          "is_summary": false,
+          "domain_notes": []
+        },
+        {
+          "name": "list_available_object_attributes",
+          "description": "List semantic and raw attribute options for the selected PowerFactory object.",
+          "input_schema": {
+            "type": "object",
+            "properties": {
+              "services": {
+                "type": "object"
+              },
+              "instruction": {
+                "type": "object"
+              },
+              "resolution": {
+                "type": "object"
+              }
+            },
+            "required": [
+              "services",
+              "instruction",
+              "resolution"
+            ]
+          },
+          "output_schema_hint": {
+            "status": "ok|error",
+            "tool": "list_available_object_attributes",
+            "attribute_options": "list"
+          },
+          "capability_tags": [
+            "powerfactory",
+            "data_query",
+            "attributes",
+            "read_only"
+          ],
+          "mutating": false,
+          "requires_state": [
+            "data_query_instruction",
+            "object_resolution"
+          ],
+          "produces_state": [
+            "data_attribute_listing"
+          ],
+          "is_summary": false,
+          "domain_notes": []
+        },
+        {
+          "name": "query_topology_neighbors",
+          "description": "Query the direct neighbors of an asset in the PowerFactory topology graph.",
+          "input_schema": {
+            "type": "object",
+            "properties": {
+              "services": {
+                "type": "object"
+              },
+              "topology_graph": {
+                "type": "object"
+              },
+              "asset_query": {
+                "type": "string"
+              },
+              "selected_node_id": {
+                "type": "string"
+              },
+              "matches": {
+                "type": "array"
+              },
+              "max_matches": {
+                "type": "integer"
+              }
+            },
+            "required": [
+              "services",
+              "topology_graph"
+            ]
+          },
+          "output_schema_hint": {
+            "status": "ok|error",
+            "tool": "query_topology_neighbors",
+            "selected_node": "dict",
+            "neighbors": "list[dict]"
+          },
+          "capability_tags": [
+            "powerfactory",
+            "topology",
+            "neighbors",
+            "read_only"
+          ],
+          "mutating": false,
+          "requires_state": [
+            "graph_result",
+            "entity_resolution"
+          ],
+          "produces_state": [
+            "topology_result"
+          ],
+          "is_summary": false,
+          "domain_notes": []
+        },
+        {
+          "name": "read_pf_object_attributes",
+          "description": "Read selected attributes from a resolved PowerFactory object with dynamic loadflow fallback.",
+          "input_schema": {
+            "type": "object",
+            "properties": {
+              "services": {
+                "type": "object"
+              },
+              "instruction": {
+                "type": "object"
+              },
+              "resolution": {
+                "type": "object"
+              }
+            },
+            "required": [
+              "services",
+              "instruction",
+              "resolution"
+            ]
+          },
+          "output_schema_hint": {
+            "status": "ok|error",
+            "tool": "read_pf_object_attributes",
+            "data": "dict"
+          },
+          "capability_tags": [
+            "powerfactory",
+            "data_query",
+            "read_only"
+          ],
+          "mutating": false,
+          "requires_state": [
+            "data_query_instruction",
+            "object_resolution",
+            "data_attribute_selection"
+          ],
+          "produces_state": [
+            "data_query_execution"
+          ],
+          "is_summary": false,
+          "domain_notes": [
+            "Do not use this step before attribute selection is available."
+          ]
+        },
+        {
+          "name": "resolve_entity_from_inventory",
+          "description": "Resolve the requested generic asset from a typed topology inventory.",
+          "input_schema": {
+            "type": "object",
+            "properties": {
+              "services": {
+                "type": "object"
+              },
+              "instruction": {
+                "type": "object"
+              },
+              "inventory": {
+                "type": "object"
+              },
+              "topology_graph": {
+                "type": "object"
+              },
+              "max_matches": {
+                "type": "integer"
+              }
+            },
+            "required": [
+              "services",
+              "instruction",
+              "inventory",
+              "topology_graph"
+            ]
+          },
+          "output_schema_hint": {
+            "status": "ok|error",
+            "tool": "resolve_entity_from_inventory",
+            "asset_query": "string",
+            "selected_match": "dict",
+            "matches": "list[dict]"
+          },
+          "capability_tags": [
+            "powerfactory",
+            "topology",
+            "entity",
+            "inventory",
+            "resolution",
+            "read_only"
+          ],
+          "mutating": false,
+          "requires_state": [
+            "entity_instruction",
+            "inventory_result",
+            "graph_result"
+          ],
+          "produces_state": [
+            "entity_resolution"
+          ],
+          "is_summary": false,
+          "domain_notes": []
+        },
+        {
+          "name": "resolve_load",
+          "description": "Resolve the target load object inside the active PowerFactory project.",
+          "input_schema": {
+            "type": "object",
+            "properties": {
+              "services": {
+                "type": "object"
+              },
+              "instruction": {
+                "type": "object"
+              }
+            },
+            "required": [
+              "services",
+              "instruction"
+            ]
+          },
+          "output_schema_hint": {
+            "status": "ok|error",
+            "tool": "resolve_load",
+            "resolution": "dict"
+          },
+          "capability_tags": [
+            "powerfactory",
+            "resolution",
+            "load"
+          ],
+          "mutating": false,
+          "requires_state": [
+            "instruction"
+          ],
+          "produces_state": [
+            "resolution"
+          ],
+          "is_summary": false,
+          "domain_notes": []
+        },
+        {
+          "name": "resolve_objects_from_inventory_llm",
+          "description": "Resolve PowerFactory objects by LLM-based exact candidate selection from a unified non-topology inventory.",
+          "input_schema": {
+            "type": "object",
+            "properties": {
+              "services": {
+                "type": "object"
+              },
+              "instruction": {
+                "type": "object"
+              },
+              "inventory": {
+                "type": "object"
+              }
+            },
+            "required": [
+              "services",
+              "instruction",
+              "inventory"
+            ]
+          },
+          "output_schema_hint": {
+            "status": "ok|error",
+            "tool": "resolve_objects_from_inventory_llm",
+            "selected_match": "dict",
+            "selected_matches": "list[dict]",
+            "selection_mode": "one|all"
+          },
+          "capability_tags": [
+            "powerfactory",
+            "resolution",
+            "llm_match",
+            "read_only"
+          ],
+          "mutating": false,
+          "requires_state": [
+            "unified_inventory_result"
+          ],
+          "produces_state": [
+            "object_resolution"
+          ],
+          "is_summary": false,
+          "domain_notes": []
+        },
+        {
+          "name": "select_pf_object_attributes_llm",
+          "description": "Select the best matching attribute handles from the available option list.",
+          "input_schema": {
+            "type": "object",
+            "properties": {
+              "services": {
+                "type": "object"
+              },
+              "instruction": {
+                "type": "object"
+              },
+              "resolution": {
+                "type": "object"
+              },
+              "attribute_listing": {
+                "type": "object"
+              }
+            },
+            "required": [
+              "services",
+              "instruction",
+              "resolution",
+              "attribute_listing"
+            ]
+          },
+          "output_schema_hint": {
+            "status": "ok|error",
+            "tool": "select_pf_object_attributes_llm",
+            "selected_attribute_handles": "list"
+          },
+          "capability_tags": [
+            "powerfactory",
+            "data_query",
+            "attributes",
+            "llm_match",
+            "read_only"
+          ],
+          "mutating": false,
+          "requires_state": [
+            "data_query_instruction",
+            "object_resolution",
+            "data_attribute_listing"
+          ],
+          "produces_state": [
+            "data_attribute_selection"
+          ],
+          "is_summary": false,
+          "domain_notes": []
+        },
+        {
+          "name": "summarize_load_catalog",
+          "description": "Build a concise user-facing catalog answer.",
+          "input_schema": {
+            "type": "object",
+            "properties": {
+              "services": {
+                "type": "object"
+              },
+              "catalog_result": {
+                "type": "object"
+              }
+            },
+            "required": [
+              "services",
+              "catalog_result"
+            ]
+          },
+          "output_schema_hint": {
+            "status": "ok|error",
+            "tool": "summarize_load_catalog",
+            "answer": "string"
+          },
+          "capability_tags": [
+            "powerfactory",
+            "summary",
+            "catalog"
+          ],
+          "mutating": false,
+          "requires_state": [
+            "catalog_result"
+          ],
+          "produces_state": [
+            "summary"
+          ],
+          "is_summary": true,
+          "domain_notes": []
+        },
+        {
+          "name": "summarize_pf_object_data_result",
+          "description": "Summarize queried PowerFactory object data for the end user.",
+          "input_schema": {
+            "type": "object",
+            "properties": {
+              "services": {
+                "type": "object"
+              },
+              "result_payload": {
+                "type": "object"
+              },
+              "user_input": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "services",
+              "result_payload",
+              "user_input"
+            ]
+          },
+          "output_schema_hint": {
+            "status": "ok|error",
+            "tool": "summarize_pf_object_data_result",
+            "answer": "string"
+          },
+          "capability_tags": [
+            "powerfactory",
+            "data_query",
+            "summary"
+          ],
+          "mutating": false,
+          "requires_state": [
+            "data_query_execution"
+          ],
+          "produces_state": [
+            "data_query_summary",
+            "summary"
+          ],
+          "is_summary": true,
+          "domain_notes": []
+        },
+        {
+          "name": "summarize_powerfactory_result",
+          "description": "Summarize result data from a PowerFactory load workflow for the end user.",
+          "input_schema": {
+            "type": "object",
+            "properties": {
+              "services": {
+                "type": "object"
+              },
+              "result_payload": {
+                "type": "object"
+              },
+              "user_input": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "services",
+              "result_payload",
+              "user_input"
+            ]
+          },
+          "output_schema_hint": {
+            "status": "ok|error",
+            "tool": "summarize_powerfactory_result",
+            "answer": "string"
+          },
+          "capability_tags": [
+            "powerfactory",
+            "summary",
+            "result"
+          ],
+          "mutating": false,
+          "requires_state": [
+            "execution"
+          ],
+          "produces_state": [
+            "summary"
+          ],
+          "is_summary": true,
+          "domain_notes": []
+        },
+        {
+          "name": "summarize_switch_result",
+          "description": "Summarize the result of a switch state change for the end user.",
+          "input_schema": {
+            "type": "object",
+            "properties": {
+              "services": {
+                "type": "object"
+              },
+              "result_payload": {
+                "type": "object"
+              },
+              "user_input": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "services",
+              "result_payload",
+              "user_input"
+            ]
+          },
+          "output_schema_hint": {
+            "status": "ok|error",
+            "tool": "summarize_switch_result",
+            "answer": "string"
+          },
+          "capability_tags": [
+            "powerfactory",
+            "summary",
+            "switch"
+          ],
+          "mutating": false,
+          "requires_state": [
+            "switch_execution"
+          ],
+          "produces_state": [
+            "switch_summary",
+            "summary"
+          ],
+          "is_summary": true,
+          "domain_notes": []
+        },
+        {
+          "name": "summarize_topology_result",
+          "description": "Build a concise user-facing topology answer.",
+          "input_schema": {
+            "type": "object",
+            "properties": {
+              "services": {
+                "type": "object"
+              },
+              "topology_result": {
+                "type": "object"
+              },
+              "graph_result": {
+                "type": "object"
+              },
+              "inventory_result": {
+                "type": "object"
+              },
+              "entity_instruction": {
+                "type": "object"
+              },
+              "entity_resolution": {
+                "type": "object"
+              }
+            },
+            "required": [
+              "services",
+              "topology_result"
+            ]
+          },
+          "output_schema_hint": {
+            "status": "ok|error",
+            "tool": "summarize_topology_result",
+            "answer": "string"
+          },
+          "capability_tags": [
+            "powerfactory",
+            "summary",
+            "topology"
+          ],
+          "mutating": false,
+          "requires_state": [
+            "topology_result"
+          ],
+          "produces_state": [
+            "summary"
+          ],
+          "is_summary": true,
+          "domain_notes": []
+        },
+        {
+          "name": "unsupported_request",
+          "description": "Return a controlled message for unsupported PowerFactory intent.",
+          "input_schema": {
+            "type": "object",
+            "properties": {
+              "services": {
+                "type": "object"
+              },
+              "user_input": {
+                "type": "string"
+              },
+              "classification": {
+                "type": "object"
+              }
+            },
+            "required": [
+              "services",
+              "user_input",
+              "classification"
+            ]
+          },
+          "output_schema_hint": {
+            "status": "error",
+            "tool": "powerfactory",
+            "answer": "string"
+          },
+          "capability_tags": [
+            "powerfactory",
+            "control"
+          ],
+          "mutating": false,
+          "requires_state": [],
+          "produces_state": [],
+          "is_summary": false,
+          "domain_notes": []
+        }
+      ],
+      "answer": "Die Anfrage konnte nicht sauber ausgeführt werden (invalid_object_selection). Details: Das LLM hat keinen gültigen exakten Namen aus der Kandidatenliste zurückgegeben.",
+      "debug": {
+        "planning": {
+          "debug_mode": true,
+          "project_name": "Nine-bus System(2)",
+          "initial_classification": {
+            "status": "ok",
+            "classification_mode": "llm",
+            "intent": "query_element_data",
+            "confidence": "high",
+            "target_kind": "line",
+            "safe_to_execute": true,
+            "missing_context": [
+              "line_name"
+            ],
+            "required_steps": [
+              "interpret_data_query_instruction"
+            ],
+            "reasoning": "The user is asking for the loading value (Auslastung) of a line, which is a query for an attribute value. This falls under query_element_data. The specific line name is missing, hence 'line_name' is listed in missing_context."
+          },
+          "decomposition": {
+            "status": "ok",
+            "is_composite": false,
+            "subrequests": [],
+            "reasoning": "The request asks for a single data point (line loading) but lacks the specific line name. This is a single query with missing context, not multiple distinct tasks requiring sequential execution. No splitting is needed as there is no reference to prior results or multiple user goals."
+          },
+          "subrequests": [],
+          "plan_source": "standard",
+          "final_plan_steps": [
+            "build_unified_inventory",
+            "interpret_data_query_instruction",
+            "classify_data_source",
+            "resolve_objects_from_inventory_llm",
+            "list_available_object_attributes",
+            "select_pf_object_attributes_llm",
+            "read_pf_object_attributes",
+            "summarize_pf_object_data_result"
+          ],
+          "standard_plan_steps": [
+            "build_unified_inventory",
+            "interpret_data_query_instruction",
+            "classify_data_source",
+            "resolve_objects_from_inventory_llm",
+            "list_available_object_attributes",
+            "select_pf_object_attributes_llm",
+            "read_pf_object_attributes",
+            "summarize_pf_object_data_result"
+          ],
+          "classification_plan_steps": [
+            "build_unified_inventory",
+            "interpret_data_query_instruction"
+          ]
+        },
+        "trace": [
+          {
+            "step": "build_unified_inventory",
+            "effective_user_input": "Wie ist die Auslastung von Line in PF?",
+            "source_subrequest": null,
+            "tool_spec": {
+              "name": "build_unified_inventory",
+              "description": "Build a unified non-topology PowerFactory inventory for supported object types.",
+              "capability_tags": [
+                "powerfactory",
+                "inventory",
+                "read_only"
+              ],
+              "mutating": false
+            },
+            "tool_kwargs": {
+              "services": {
+                "status": "ok",
+                "project_name": "Nine-bus System(2)"
+              },
+              "allowed_types": [
+                "bus",
+                "load",
+                "line",
+                "transformer",
+                "generator",
+                "switch"
+              ]
+            },
+            "result": {
+              "status": "ok",
+              "tool": "build_unified_inventory",
+              "project": "Nine-bus System(2)",
+              "inventory": {
+                "available_types": [
+                  "bus",
+                  "generator",
+                  "line",
+                  "load",
+                  "switch",
+                  "transformer"
+                ],
+                "counts_by_type": {
+                  "bus": 9,
+                  "load": 3,
+                  "line": 6,
+                  "transformer": 3,
+                  "generator": 3,
+                  "switch": 18
+                },
+                "items_by_type": {
+                  "bus": [
+                    {
+                      "node_id": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 1.ElmTerm",
+                      "name": "Bus 1",
+                      "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 1.ElmTerm",
+                      "pf_class": "ElmTerm",
+                      "kind": "pf_object",
+                      "degree": 0,
+                      "inventory_type": "bus"
+                    },
+                    {
+                      "node_id": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 2.ElmTerm",
+                      "name": "Bus 2",
+                      "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 2.ElmTerm",
+                      "pf_class": "ElmTerm",
+                      "kind": "pf_object",
+                      "degree": 0,
+                      "inventory_type": "bus"
+                    },
+                    {
+                      "node_id": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 3.ElmTerm",
+                      "name": "Bus 3",
+                      "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 3.ElmTerm",
+                      "pf_class": "ElmTerm",
+                      "kind": "pf_object",
+                      "degree": 0,
+                      "inventory_type": "bus"
+                    },
+                    {
+                      "node_id": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 4.ElmTerm",
+                      "name": "Bus 4",
+                      "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 4.ElmTerm",
+                      "pf_class": "ElmTerm",
+                      "kind": "pf_object",
+                      "degree": 0,
+                      "inventory_type": "bus"
+                    },
+                    {
+                      "node_id": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 5.ElmTerm",
+                      "name": "Bus 5",
+                      "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 5.ElmTerm",
+                      "pf_class": "ElmTerm",
+                      "kind": "pf_object",
+                      "degree": 0,
+                      "inventory_type": "bus"
+                    },
+                    {
+                      "node_id": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 6.ElmTerm",
+                      "name": "Bus 6",
+                      "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 6.ElmTerm",
+                      "pf_class": "ElmTerm",
+                      "kind": "pf_object",
+                      "degree": 0,
+                      "inventory_type": "bus"
+                    },
+                    {
+                      "node_id": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 7.ElmTerm",
+                      "name": "Bus 7",
+                      "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 7.ElmTerm",
+                      "pf_class": "ElmTerm",
+                      "kind": "pf_object",
+                      "degree": 0,
+                      "inventory_type": "bus"
+                    },
+                    {
+                      "node_id": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 8.ElmTerm",
+                      "name": "Bus 8",
+                      "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 8.ElmTerm",
+                      "pf_class": "ElmTerm",
+                      "kind": "pf_object",
+                      "degree": 0,
+                      "inventory_type": "bus"
+                    },
+                    {
+                      "node_id": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 9.ElmTerm",
+                      "name": "Bus 9",
+                      "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 9.ElmTerm",
+                      "pf_class": "ElmTerm",
+                      "kind": "pf_object",
+                      "degree": 0,
+                      "inventory_type": "bus"
+                    }
+                  ],
+                  "load": [
+                    {
+                      "node_id": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Load A.ElmLod",
+                      "name": "Load A",
+                      "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Load A.ElmLod",
+                      "pf_class": "ElmLod",
+                      "kind": "pf_object",
+                      "degree": 0,
+                      "inventory_type": "load"
+                    },
+                    {
+                      "node_id": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Load B.ElmLod",
+                      "name": "Load B",
+                      "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Load B.ElmLod",
+                      "pf_class": "ElmLod",
+                      "kind": "pf_object",
+                      "degree": 0,
+                      "inventory_type": "load"
+                    },
+                    {
+                      "node_id": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Load C.ElmLod",
+                      "name": "Load C",
+                      "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Load C.ElmLod",
+                      "pf_class": "ElmLod",
+                      "kind": "pf_object",
+                      "degree": 0,
+                      "inventory_type": "load"
+                    }
+                  ],
+                  "line": [
+                    {
+                      "node_id": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Line 4-5.ElmLne",
+                      "name": "Line 4-5",
+                      "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Line 4-5.ElmLne",
+                      "pf_class": "ElmLne",
+                      "kind": "pf_object",
+                      "degree": 0,
+                      "inventory_type": "line"
+                    },
+                    {
+                      "node_id": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Line 4-6.ElmLne",
+                      "name": "Line 4-6",
+                      "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Line 4-6.ElmLne",
+                      "pf_class": "ElmLne",
+                      "kind": "pf_object",
+                      "degree": 0,
+                      "inventory_type": "line"
+                    },
+                    {
+                      "node_id": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Line 5-7.ElmLne",
+                      "name": "Line 5-7",
+                      "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Line 5-7.ElmLne",
+                      "pf_class": "ElmLne",
+                      "kind": "pf_object",
+                      "degree": 0,
+                      "inventory_type": "line"
+                    },
+                    {
+                      "node_id": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Line 6-9.ElmLne",
+                      "name": "Line 6-9",
+                      "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Line 6-9.ElmLne",
+                      "pf_class": "ElmLne",
+                      "kind": "pf_object",
+                      "degree": 0,
+                      "inventory_type": "line"
+                    },
+                    {
+                      "node_id": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Line 7-8.ElmLne",
+                      "name": "Line 7-8",
+                      "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Line 7-8.ElmLne",
+                      "pf_class": "ElmLne",
+                      "kind": "pf_object",
+                      "degree": 0,
+                      "inventory_type": "line"
+                    },
+                    {
+                      "node_id": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Line 8-9.ElmLne",
+                      "name": "Line 8-9",
+                      "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Line 8-9.ElmLne",
+                      "pf_class": "ElmLne",
+                      "kind": "pf_object",
+                      "degree": 0,
+                      "inventory_type": "line"
+                    }
+                  ],
+                  "transformer": [
+                    {
+                      "node_id": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\T1.ElmTr2",
+                      "name": "T1",
+                      "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\T1.ElmTr2",
+                      "pf_class": "ElmTr2",
+                      "kind": "pf_object",
+                      "degree": 0,
+                      "inventory_type": "transformer"
+                    },
+                    {
+                      "node_id": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\T2.ElmTr2",
+                      "name": "T2",
+                      "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\T2.ElmTr2",
+                      "pf_class": "ElmTr2",
+                      "kind": "pf_object",
+                      "degree": 0,
+                      "inventory_type": "transformer"
+                    },
+                    {
+                      "node_id": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\T3.ElmTr2",
+                      "name": "T3",
+                      "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\T3.ElmTr2",
+                      "pf_class": "ElmTr2",
+                      "kind": "pf_object",
+                      "degree": 0,
+                      "inventory_type": "transformer"
+                    }
+                  ],
+                  "generator": [
+                    {
+                      "node_id": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\G1.ElmSym",
+                      "name": "G1",
+                      "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\G1.ElmSym",
+                      "pf_class": "ElmSym",
+                      "kind": "pf_object",
+                      "degree": 0,
+                      "inventory_type": "generator"
+                    },
+                    {
+                      "node_id": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\G2.ElmSym",
+                      "name": "G2",
+                      "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\G2.ElmSym",
+                      "pf_class": "ElmSym",
+                      "kind": "pf_object",
+                      "degree": 0,
+                      "inventory_type": "generator"
+                    },
+                    {
+                      "node_id": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\G3.ElmSym",
+                      "name": "G3",
+                      "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\G3.ElmSym",
+                      "pf_class": "ElmSym",
+                      "kind": "pf_object",
+                      "degree": 0,
+                      "inventory_type": "generator"
+                    }
+                  ],
+                  "switch": [
+                    {
+                      "node_id": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 4.ElmTerm\\Cub_1.StaCubic\\Switch.StaSwitch",
+                      "name": "Switch",
+                      "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 4.ElmTerm\\Cub_1.StaCubic\\Switch.StaSwitch",
+                      "pf_class": "StaSwitch",
+                      "kind": "sta",
+                      "degree": 0,
+                      "inventory_type": "switch"
+                    },
+                    {
+                      "node_id": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 4.ElmTerm\\Cub_2.StaCubic\\Switch.StaSwitch",
+                      "name": "Switch",
+                      "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 4.ElmTerm\\Cub_2.StaCubic\\Switch.StaSwitch",
+                      "pf_class": "StaSwitch",
+                      "kind": "sta",
+                      "degree": 0,
+                      "inventory_type": "switch"
+                    },
+                    {
+                      "node_id": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 4.ElmTerm\\Cub_3.StaCubic\\Switch.StaSwitch",
+                      "name": "Switch",
+                      "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 4.ElmTerm\\Cub_3.StaCubic\\Switch.StaSwitch",
+                      "pf_class": "StaSwitch",
+                      "kind": "sta",
+                      "degree": 0,
+                      "inventory_type": "switch"
+                    },
+                    {
+                      "node_id": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 5.ElmTerm\\Cub_1.StaCubic\\Switch.StaSwitch",
+                      "name": "Switch",
+                      "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 5.ElmTerm\\Cub_1.StaCubic\\Switch.StaSwitch",
+                      "pf_class": "StaSwitch",
+                      "kind": "sta",
+                      "degree": 0,
+                      "inventory_type": "switch"
+                    },
+                    {
+                      "node_id": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 5.ElmTerm\\Cub_2.StaCubic\\Switch.StaSwitch",
+                      "name": "Switch",
+                      "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 5.ElmTerm\\Cub_2.StaCubic\\Switch.StaSwitch",
+                      "pf_class": "StaSwitch",
+                      "kind": "sta",
+                      "degree": 0,
+                      "inventory_type": "switch"
+                    },
+                    {
+                      "node_id": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 6.ElmTerm\\Cub_1.StaCubic\\Switch.StaSwitch",
+                      "name": "Switch",
+                      "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 6.ElmTerm\\Cub_1.StaCubic\\Switch.StaSwitch",
+                      "pf_class": "StaSwitch",
+                      "kind": "sta",
+                      "degree": 0,
+                      "inventory_type": "switch"
+                    },
+                    {
+                      "node_id": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 6.ElmTerm\\Cub_2.StaCubic\\Switch.StaSwitch",
+                      "name": "Switch",
+                      "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 6.ElmTerm\\Cub_2.StaCubic\\Switch.StaSwitch",
+                      "pf_class": "StaSwitch",
+                      "kind": "sta",
+                      "degree": 0,
+                      "inventory_type": "switch"
+                    },
+                    {
+                      "node_id": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 6.ElmTerm\\Cub_3.StaCubic\\Switch.StaSwitch",
+                      "name": "Switch",
+                      "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 6.ElmTerm\\Cub_3.StaCubic\\Switch.StaSwitch",
+                      "pf_class": "StaSwitch",
+                      "kind": "sta",
+                      "degree": 0,
+                      "inventory_type": "switch"
+                    },
+                    {
+                      "node_id": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 7.ElmTerm\\Cub_2.StaCubic\\Switch.StaSwitch",
+                      "name": "Switch",
+                      "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 7.ElmTerm\\Cub_2.StaCubic\\Switch.StaSwitch",
+                      "pf_class": "StaSwitch",
+                      "kind": "sta",
+                      "degree": 0,
+                      "inventory_type": "switch"
+                    },
+                    {
+                      "node_id": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 7.ElmTerm\\Cub_3.StaCubic\\Switch.StaSwitch",
+                      "name": "Switch",
+                      "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 7.ElmTerm\\Cub_3.StaCubic\\Switch.StaSwitch",
+                      "pf_class": "StaSwitch",
+                      "kind": "sta",
+                      "degree": 0,
+                      "inventory_type": "switch"
+                    },
+                    {
+                      "node_id": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 8.ElmTerm\\Cub_1.StaCubic\\Switch.StaSwitch",
+                      "name": "Switch",
+                      "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 8.ElmTerm\\Cub_1.StaCubic\\Switch.StaSwitch",
+                      "pf_class": "StaSwitch",
+                      "kind": "sta",
+                      "degree": 0,
+                      "inventory_type": "switch"
+                    },
+                    {
+                      "node_id": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 8.ElmTerm\\Cub_2.StaCubic\\Switch.StaSwitch",
+                      "name": "Switch",
+                      "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 8.ElmTerm\\Cub_2.StaCubic\\Switch.StaSwitch",
+                      "pf_class": "StaSwitch",
+                      "kind": "sta",
+                      "degree": 0,
+                      "inventory_type": "switch"
+                    },
+                    {
+                      "node_id": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 8.ElmTerm\\Cub_3.StaCubic\\Switch.StaSwitch",
+                      "name": "Switch",
+                      "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 8.ElmTerm\\Cub_3.StaCubic\\Switch.StaSwitch",
+                      "pf_class": "StaSwitch",
+                      "kind": "sta",
+                      "degree": 0,
+                      "inventory_type": "switch"
+                    },
+                    {
+                      "node_id": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 9.ElmTerm\\Cub_1.StaCubic\\Switch.StaSwitch",
+                      "name": "Switch",
+                      "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 9.ElmTerm\\Cub_1.StaCubic\\Switch.StaSwitch",
+                      "pf_class": "StaSwitch",
+                      "kind": "sta",
+                      "degree": 0,
+                      "inventory_type": "switch"
+                    },
+                    {
+                      "node_id": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 9.ElmTerm\\Cub_2.StaCubic\\Switch.StaSwitch",
+                      "name": "Switch",
+                      "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 9.ElmTerm\\Cub_2.StaCubic\\Switch.StaSwitch",
+                      "pf_class": "StaSwitch",
+                      "kind": "sta",
+                      "degree": 0,
+                      "inventory_type": "switch"
+                    },
+                    {
+                      "node_id": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 9.ElmTerm\\Cub_3.StaCubic\\Switch.StaSwitch",
+                      "name": "Switch",
+                      "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 9.ElmTerm\\Cub_3.StaCubic\\Switch.StaSwitch",
+                      "pf_class": "StaSwitch",
+                      "kind": "sta",
+                      "degree": 0,
+                      "inventory_type": "switch"
+                    },
+                    {
+                      "node_id": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 7.ElmTerm\\Cub_1.StaCubic\\Switch 1.StaSwitch",
+                      "name": "Switch 1",
+                      "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 7.ElmTerm\\Cub_1.StaCubic\\Switch 1.StaSwitch",
+                      "pf_class": "StaSwitch",
+                      "kind": "sta",
+                      "degree": 0,
+                      "inventory_type": "switch"
+                    },
+                    {
+                      "node_id": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 5.ElmTerm\\Cub_3.StaCubic\\Switch 2.StaSwitch",
+                      "name": "Switch 2",
+                      "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 5.ElmTerm\\Cub_3.StaCubic\\Switch 2.StaSwitch",
+                      "pf_class": "StaSwitch",
+                      "kind": "sta",
+                      "degree": 0,
+                      "inventory_type": "switch"
+                    }
+                  ]
+                },
+                "samples_by_type": {
+                  "bus": [
+                    {
+                      "name": "Bus 1",
+                      "pf_class": "ElmTerm",
+                      "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 1.ElmTerm"
+                    },
+                    {
+                      "name": "Bus 2",
+                      "pf_class": "ElmTerm",
+                      "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 2.ElmTerm"
+                    },
+                    {
+                      "name": "Bus 3",
+                      "pf_class": "ElmTerm",
+                      "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 3.ElmTerm"
+                    },
+                    {
+                      "name": "Bus 4",
+                      "pf_class": "ElmTerm",
+                      "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 4.ElmTerm"
+                    },
+                    {
+                      "name": "Bus 5",
+                      "pf_class": "ElmTerm",
+                      "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 5.ElmTerm"
+                    },
+                    {
+                      "name": "Bus 6",
+                      "pf_class": "ElmTerm",
+                      "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 6.ElmTerm"
+                    },
+                    {
+                      "name": "Bus 7",
+                      "pf_class": "ElmTerm",
+                      "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 7.ElmTerm"
+                    },
+                    {
+                      "name": "Bus 8",
+                      "pf_class": "ElmTerm",
+                      "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 8.ElmTerm"
+                    },
+                    {
+                      "name": "Bus 9",
+                      "pf_class": "ElmTerm",
+                      "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 9.ElmTerm"
+                    }
+                  ],
+                  "load": [
+                    {
+                      "name": "Load A",
+                      "pf_class": "ElmLod",
+                      "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Load A.ElmLod"
+                    },
+                    {
+                      "name": "Load B",
+                      "pf_class": "ElmLod",
+                      "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Load B.ElmLod"
+                    },
+                    {
+                      "name": "Load C",
+                      "pf_class": "ElmLod",
+                      "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Load C.ElmLod"
+                    }
+                  ],
+                  "line": [
+                    {
+                      "name": "Line 4-5",
+                      "pf_class": "ElmLne",
+                      "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Line 4-5.ElmLne"
+                    },
+                    {
+                      "name": "Line 4-6",
+                      "pf_class": "ElmLne",
+                      "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Line 4-6.ElmLne"
+                    },
+                    {
+                      "name": "Line 5-7",
+                      "pf_class": "ElmLne",
+                      "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Line 5-7.ElmLne"
+                    },
+                    {
+                      "name": "Line 6-9",
+                      "pf_class": "ElmLne",
+                      "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Line 6-9.ElmLne"
+                    },
+                    {
+                      "name": "Line 7-8",
+                      "pf_class": "ElmLne",
+                      "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Line 7-8.ElmLne"
+                    },
+                    {
+                      "name": "Line 8-9",
+                      "pf_class": "ElmLne",
+                      "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Line 8-9.ElmLne"
+                    }
+                  ],
+                  "transformer": [
+                    {
+                      "name": "T1",
+                      "pf_class": "ElmTr2",
+                      "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\T1.ElmTr2"
+                    },
+                    {
+                      "name": "T2",
+                      "pf_class": "ElmTr2",
+                      "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\T2.ElmTr2"
+                    },
+                    {
+                      "name": "T3",
+                      "pf_class": "ElmTr2",
+                      "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\T3.ElmTr2"
+                    }
+                  ],
+                  "generator": [
+                    {
+                      "name": "G1",
+                      "pf_class": "ElmSym",
+                      "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\G1.ElmSym"
+                    },
+                    {
+                      "name": "G2",
+                      "pf_class": "ElmSym",
+                      "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\G2.ElmSym"
+                    },
+                    {
+                      "name": "G3",
+                      "pf_class": "ElmSym",
+                      "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\G3.ElmSym"
+                    }
+                  ],
+                  "switch": [
+                    {
+                      "name": "Switch",
+                      "pf_class": "StaSwitch",
+                      "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 4.ElmTerm\\Cub_1.StaCubic\\Switch.StaSwitch"
+                    },
+                    {
+                      "name": "Switch",
+                      "pf_class": "StaSwitch",
+                      "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 4.ElmTerm\\Cub_2.StaCubic\\Switch.StaSwitch"
+                    },
+                    {
+                      "name": "Switch",
+                      "pf_class": "StaSwitch",
+                      "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 4.ElmTerm\\Cub_3.StaCubic\\Switch.StaSwitch"
+                    },
+                    {
+                      "name": "Switch",
+                      "pf_class": "StaSwitch",
+                      "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 5.ElmTerm\\Cub_1.StaCubic\\Switch.StaSwitch"
+                    },
+                    {
+                      "name": "Switch",
+                      "pf_class": "StaSwitch",
+                      "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 5.ElmTerm\\Cub_2.StaCubic\\Switch.StaSwitch"
+                    },
+                    {
+                      "name": "Switch",
+                      "pf_class": "StaSwitch",
+                      "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 6.ElmTerm\\Cub_1.StaCubic\\Switch.StaSwitch"
+                    },
+                    {
+                      "name": "Switch",
+                      "pf_class": "StaSwitch",
+                      "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 6.ElmTerm\\Cub_2.StaCubic\\Switch.StaSwitch"
+                    },
+                    {
+                      "name": "Switch",
+                      "pf_class": "StaSwitch",
+                      "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 6.ElmTerm\\Cub_3.StaCubic\\Switch.StaSwitch"
+                    },
+                    {
+                      "name": "Switch",
+                      "pf_class": "StaSwitch",
+                      "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 7.ElmTerm\\Cub_2.StaCubic\\Switch.StaSwitch"
+                    },
+                    {
+                      "name": "Switch",
+                      "pf_class": "StaSwitch",
+                      "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 7.ElmTerm\\Cub_3.StaCubic\\Switch.StaSwitch"
+                    }
+                  ]
+                }
+              },
+              "allowed_types": [
+                "bus",
+                "load",
+                "line",
+                "transformer",
+                "generator",
+                "switch"
+              ]
+            }
+          },
+          {
+            "step": "interpret_data_query_instruction",
+            "effective_user_input": "Wie ist die Auslastung von Line in PF?",
+            "source_subrequest": null,
+            "tool_spec": {
+              "name": "interpret_data_query_instruction",
+              "description": "Interpret a natural-language data query into a structured PowerFactory data-query instruction.",
+              "capability_tags": [
+                "powerfactory",
+                "data_query",
+                "planning",
+                "llm"
+              ],
+              "mutating": false
+            },
+            "tool_kwargs": {
+              "services": {
+                "status": "ok",
+                "project_name": "Nine-bus System(2)"
+              },
+              "user_input": "Wie ist die Auslastung von Line in PF?",
+              "inventory": {
+                "available_types": [
+                  "bus",
+                  "generator",
+                  "line",
+                  "load",
+                  "switch",
+                  "transformer"
+                ],
+                "counts_by_type": {
+                  "bus": 9,
+                  "load": 3,
+                  "line": 6,
+                  "transformer": 3,
+                  "generator": 3,
+                  "switch": 18
+                },
+                "items_by_type": {
+                  "bus": [
+                    {
+                      "node_id": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 1.ElmTerm",
+                      "name": "Bus 1",
+                      "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 1.ElmTerm",
+                      "pf_class": "ElmTerm",
+                      "kind": "pf_object",
+                      "degree": 0,
+                      "inventory_type": "bus"
+                    },
+                    {
+                      "node_id": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 2.ElmTerm",
+                      "name": "Bus 2",
+                      "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 2.ElmTerm",
+                      "pf_class": "ElmTerm",
+                      "kind": "pf_object",
+                      "degree": 0,
+                      "inventory_type": "bus"
+                    },
+                    {
+                      "node_id": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 3.ElmTerm",
+                      "name": "Bus 3",
+                      "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 3.ElmTerm",
+                      "pf_class": "ElmTerm",
+                      "kind": "pf_object",
+                      "degree": 0,
+                      "inventory_type": "bus"
+                    },
+                    {
+                      "node_id": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 4.ElmTerm",
+                      "name": "Bus 4",
+                      "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 4.ElmTerm",
+                      "pf_class": "ElmTerm",
+                      "kind": "pf_object",
+                      "degree": 0,
+                      "inventory_type": "bus"
+                    },
+                    {
+                      "node_id": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 5.ElmTerm",
+                      "name": "Bus 5",
+                      "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 5.ElmTerm",
+                      "pf_class": "ElmTerm",
+                      "kind": "pf_object",
+                      "degree": 0,
+                      "inventory_type": "bus"
+                    },
+                    {
+                      "node_id": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 6.ElmTerm",
+                      "name": "Bus 6",
+                      "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 6.ElmTerm",
+                      "pf_class": "ElmTerm",
+                      "kind": "pf_object",
+                      "degree": 0,
+                      "inventory_type": "bus"
+                    },
+                    {
+                      "node_id": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 7.ElmTerm",
+                      "name": "Bus 7",
+                      "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 7.ElmTerm",
+                      "pf_class": "ElmTerm",
+                      "kind": "pf_object",
+                      "degree": 0,
+                      "inventory_type": "bus"
+                    },
+                    {
+                      "node_id": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 8.ElmTerm",
+                      "name": "Bus 8",
+                      "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 8.ElmTerm",
+                      "pf_class": "ElmTerm",
+                      "kind": "pf_object",
+                      "degree": 0,
+                      "inventory_type": "bus"
+                    },
+                    {
+                      "node_id": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 9.ElmTerm",
+                      "name": "Bus 9",
+                      "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 9.ElmTerm",
+                      "pf_class": "ElmTerm",
+                      "kind": "pf_object",
+                      "degree": 0,
+                      "inventory_type": "bus"
+                    }
+                  ],
+                  "load": [
+                    {
+                      "node_id": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Load A.ElmLod",
+                      "name": "Load A",
+                      "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Load A.ElmLod",
+                      "pf_class": "ElmLod",
+                      "kind": "pf_object",
+                      "degree": 0,
+                      "inventory_type": "load"
+                    },
+                    {
+                      "node_id": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Load B.ElmLod",
+                      "name": "Load B",
+                      "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Load B.ElmLod",
+                      "pf_class": "ElmLod",
+                      "kind": "pf_object",
+                      "degree": 0,
+                      "inventory_type": "load"
+                    },
+                    {
+                      "node_id": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Load C.ElmLod",
+                      "name": "Load C",
+                      "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Load C.ElmLod",
+                      "pf_class": "ElmLod",
+                      "kind": "pf_object",
+                      "degree": 0,
+                      "inventory_type": "load"
+                    }
+                  ],
+                  "line": [
+                    {
+                      "node_id": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Line 4-5.ElmLne",
+                      "name": "Line 4-5",
+                      "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Line 4-5.ElmLne",
+                      "pf_class": "ElmLne",
+                      "kind": "pf_object",
+                      "degree": 0,
+                      "inventory_type": "line"
+                    },
+                    {
+                      "node_id": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Line 4-6.ElmLne",
+                      "name": "Line 4-6",
+                      "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Line 4-6.ElmLne",
+                      "pf_class": "ElmLne",
+                      "kind": "pf_object",
+                      "degree": 0,
+                      "inventory_type": "line"
+                    },
+                    {
+                      "node_id": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Line 5-7.ElmLne",
+                      "name": "Line 5-7",
+                      "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Line 5-7.ElmLne",
+                      "pf_class": "ElmLne",
+                      "kind": "pf_object",
+                      "degree": 0,
+                      "inventory_type": "line"
+                    },
+                    {
+                      "node_id": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Line 6-9.ElmLne",
+                      "name": "Line 6-9",
+                      "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Line 6-9.ElmLne",
+                      "pf_class": "ElmLne",
+                      "kind": "pf_object",
+                      "degree": 0,
+                      "inventory_type": "line"
+                    },
+                    {
+                      "node_id": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Line 7-8.ElmLne",
+                      "name": "Line 7-8",
+                      "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Line 7-8.ElmLne",
+                      "pf_class": "ElmLne",
+                      "kind": "pf_object",
+                      "degree": 0,
+                      "inventory_type": "line"
+                    },
+                    {
+                      "node_id": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Line 8-9.ElmLne",
+                      "name": "Line 8-9",
+                      "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Line 8-9.ElmLne",
+                      "pf_class": "ElmLne",
+                      "kind": "pf_object",
+                      "degree": 0,
+                      "inventory_type": "line"
+                    }
+                  ],
+                  "transformer": [
+                    {
+                      "node_id": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\T1.ElmTr2",
+                      "name": "T1",
+                      "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\T1.ElmTr2",
+                      "pf_class": "ElmTr2",
+                      "kind": "pf_object",
+                      "degree": 0,
+                      "inventory_type": "transformer"
+                    },
+                    {
+                      "node_id": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\T2.ElmTr2",
+                      "name": "T2",
+                      "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\T2.ElmTr2",
+                      "pf_class": "ElmTr2",
+                      "kind": "pf_object",
+                      "degree": 0,
+                      "inventory_type": "transformer"
+                    },
+                    {
+                      "node_id": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\T3.ElmTr2",
+                      "name": "T3",
+                      "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\T3.ElmTr2",
+                      "pf_class": "ElmTr2",
+                      "kind": "pf_object",
+                      "degree": 0,
+                      "inventory_type": "transformer"
+                    }
+                  ],
+                  "generator": [
+                    {
+                      "node_id": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\G1.ElmSym",
+                      "name": "G1",
+                      "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\G1.ElmSym",
+                      "pf_class": "ElmSym",
+                      "kind": "pf_object",
+                      "degree": 0,
+                      "inventory_type": "generator"
+                    },
+                    {
+                      "node_id": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\G2.ElmSym",
+                      "name": "G2",
+                      "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\G2.ElmSym",
+                      "pf_class": "ElmSym",
+                      "kind": "pf_object",
+                      "degree": 0,
+                      "inventory_type": "generator"
+                    },
+                    {
+                      "node_id": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\G3.ElmSym",
+                      "name": "G3",
+                      "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\G3.ElmSym",
+                      "pf_class": "ElmSym",
+                      "kind": "pf_object",
+                      "degree": 0,
+                      "inventory_type": "generator"
+                    }
+                  ],
+                  "switch": {
+                    "type": "list",
+                    "length": 18,
+                    "preview": [
+                      {
+                        "node_id": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 4.ElmTerm\\Cub_1.StaCubic\\Switch.StaSwitch",
+                        "name": "Switch",
+                        "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 4.ElmTerm\\Cub_1.StaCubic\\Switch.StaSwitch",
+                        "pf_class": "StaSwitch",
+                        "kind": "sta",
+                        "degree": 0,
+                        "inventory_type": "switch"
+                      },
+                      {
+                        "node_id": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 4.ElmTerm\\Cub_2.StaCubic\\Switch.StaSwitch",
+                        "name": "Switch",
+                        "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 4.ElmTerm\\Cub_2.StaCubic\\Switch.StaSwitch",
+                        "pf_class": "StaSwitch",
+                        "kind": "sta",
+                        "degree": 0,
+                        "inventory_type": "switch"
+                      },
+                      {
+                        "node_id": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 4.ElmTerm\\Cub_3.StaCubic\\Switch.StaSwitch",
+                        "name": "Switch",
+                        "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 4.ElmTerm\\Cub_3.StaCubic\\Switch.StaSwitch",
+                        "pf_class": "StaSwitch",
+                        "kind": "sta",
+                        "degree": 0,
+                        "inventory_type": "switch"
+                      },
+                      {
+                        "node_id": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 5.ElmTerm\\Cub_1.StaCubic\\Switch.StaSwitch",
+                        "name": "Switch",
+                        "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 5.ElmTerm\\Cub_1.StaCubic\\Switch.StaSwitch",
+                        "pf_class": "StaSwitch",
+                        "kind": "sta",
+                        "degree": 0,
+                        "inventory_type": "switch"
+                      },
+                      {
+                        "node_id": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 5.ElmTerm\\Cub_2.StaCubic\\Switch.StaSwitch",
+                        "name": "Switch",
+                        "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 5.ElmTerm\\Cub_2.StaCubic\\Switch.StaSwitch",
+                        "pf_class": "StaSwitch",
+                        "kind": "sta",
+                        "degree": 0,
+                        "inventory_type": "switch"
+                      }
+                    ]
+                  }
+                },
+                "samples_by_type": {
+                  "bus": [
+                    {
+                      "name": "Bus 1",
+                      "pf_class": "ElmTerm",
+                      "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 1.ElmTerm"
+                    },
+                    {
+                      "name": "Bus 2",
+                      "pf_class": "ElmTerm",
+                      "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 2.ElmTerm"
+                    },
+                    {
+                      "name": "Bus 3",
+                      "pf_class": "ElmTerm",
+                      "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 3.ElmTerm"
+                    },
+                    {
+                      "name": "Bus 4",
+                      "pf_class": "ElmTerm",
+                      "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 4.ElmTerm"
+                    },
+                    {
+                      "name": "Bus 5",
+                      "pf_class": "ElmTerm",
+                      "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 5.ElmTerm"
+                    },
+                    {
+                      "name": "Bus 6",
+                      "pf_class": "ElmTerm",
+                      "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 6.ElmTerm"
+                    },
+                    {
+                      "name": "Bus 7",
+                      "pf_class": "ElmTerm",
+                      "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 7.ElmTerm"
+                    },
+                    {
+                      "name": "Bus 8",
+                      "pf_class": "ElmTerm",
+                      "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 8.ElmTerm"
+                    },
+                    {
+                      "name": "Bus 9",
+                      "pf_class": "ElmTerm",
+                      "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 9.ElmTerm"
+                    }
+                  ],
+                  "load": [
+                    {
+                      "name": "Load A",
+                      "pf_class": "ElmLod",
+                      "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Load A.ElmLod"
+                    },
+                    {
+                      "name": "Load B",
+                      "pf_class": "ElmLod",
+                      "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Load B.ElmLod"
+                    },
+                    {
+                      "name": "Load C",
+                      "pf_class": "ElmLod",
+                      "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Load C.ElmLod"
+                    }
+                  ],
+                  "line": [
+                    {
+                      "name": "Line 4-5",
+                      "pf_class": "ElmLne",
+                      "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Line 4-5.ElmLne"
+                    },
+                    {
+                      "name": "Line 4-6",
+                      "pf_class": "ElmLne",
+                      "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Line 4-6.ElmLne"
+                    },
+                    {
+                      "name": "Line 5-7",
+                      "pf_class": "ElmLne",
+                      "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Line 5-7.ElmLne"
+                    },
+                    {
+                      "name": "Line 6-9",
+                      "pf_class": "ElmLne",
+                      "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Line 6-9.ElmLne"
+                    },
+                    {
+                      "name": "Line 7-8",
+                      "pf_class": "ElmLne",
+                      "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Line 7-8.ElmLne"
+                    },
+                    {
+                      "name": "Line 8-9",
+                      "pf_class": "ElmLne",
+                      "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Line 8-9.ElmLne"
+                    }
+                  ],
+                  "transformer": [
+                    {
+                      "name": "T1",
+                      "pf_class": "ElmTr2",
+                      "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\T1.ElmTr2"
+                    },
+                    {
+                      "name": "T2",
+                      "pf_class": "ElmTr2",
+                      "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\T2.ElmTr2"
+                    },
+                    {
+                      "name": "T3",
+                      "pf_class": "ElmTr2",
+                      "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\T3.ElmTr2"
+                    }
+                  ],
+                  "generator": [
+                    {
+                      "name": "G1",
+                      "pf_class": "ElmSym",
+                      "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\G1.ElmSym"
+                    },
+                    {
+                      "name": "G2",
+                      "pf_class": "ElmSym",
+                      "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\G2.ElmSym"
+                    },
+                    {
+                      "name": "G3",
+                      "pf_class": "ElmSym",
+                      "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\G3.ElmSym"
+                    }
+                  ],
+                  "switch": [
+                    {
+                      "name": "Switch",
+                      "pf_class": "StaSwitch",
+                      "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 4.ElmTerm\\Cub_1.StaCubic\\Switch.StaSwitch"
+                    },
+                    {
+                      "name": "Switch",
+                      "pf_class": "StaSwitch",
+                      "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 4.ElmTerm\\Cub_2.StaCubic\\Switch.StaSwitch"
+                    },
+                    {
+                      "name": "Switch",
+                      "pf_class": "StaSwitch",
+                      "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 4.ElmTerm\\Cub_3.StaCubic\\Switch.StaSwitch"
+                    },
+                    {
+                      "name": "Switch",
+                      "pf_class": "StaSwitch",
+                      "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 5.ElmTerm\\Cub_1.StaCubic\\Switch.StaSwitch"
+                    },
+                    {
+                      "name": "Switch",
+                      "pf_class": "StaSwitch",
+                      "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 5.ElmTerm\\Cub_2.StaCubic\\Switch.StaSwitch"
+                    },
+                    {
+                      "name": "Switch",
+                      "pf_class": "StaSwitch",
+                      "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 6.ElmTerm\\Cub_1.StaCubic\\Switch.StaSwitch"
+                    },
+                    {
+                      "name": "Switch",
+                      "pf_class": "StaSwitch",
+                      "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 6.ElmTerm\\Cub_2.StaCubic\\Switch.StaSwitch"
+                    },
+                    {
+                      "name": "Switch",
+                      "pf_class": "StaSwitch",
+                      "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 6.ElmTerm\\Cub_3.StaCubic\\Switch.StaSwitch"
+                    },
+                    {
+                      "name": "Switch",
+                      "pf_class": "StaSwitch",
+                      "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 7.ElmTerm\\Cub_2.StaCubic\\Switch.StaSwitch"
+                    },
+                    {
+                      "name": "Switch",
+                      "pf_class": "StaSwitch",
+                      "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 7.ElmTerm\\Cub_3.StaCubic\\Switch.StaSwitch"
+                    }
+                  ]
+                }
+              }
+            },
+            "result": {
+              "status": "ok",
+              "tool": "interpret_data_query_instruction",
+              "project": "Nine-bus System(2)",
+              "user_input": "Wie ist die Auslastung von Line in PF?",
+              "instruction": {
+                "query_type": "element_data",
+                "entity_type": "line",
+                "entity_name_raw": "Wie ist die Auslastung von Line in PF?",
+                "entity_name_candidates": [
+                  "Line"
+                ],
+                "attribute_request_text": "Wie ist die Auslastung von Line in PF?",
+                "available_types": [
+                  "bus",
+                  "generator",
+                  "line",
+                  "load",
+                  "switch",
+                  "transformer"
+                ],
+                "requested_attribute_names": [],
+                "requested_attribute_name_extraction": {
+                  "status": "skipped",
+                  "requested_attribute_names": [],
+                  "llm_decision": {
+                    "reason": "Skipped technical attribute-name extraction because attribute_match_mode=semantic_description."
+                  },
+                  "chain_mode": "skipped_by_attribute_match_mode"
+                },
+                "data_source_preference": "result",
+                "data_source_note": "Lastflussergebnisse wurden explizit oder sicher angefordert.",
+                "data_source_decision": {
+                  "status": "ok",
+                  "selected_data_source": "result",
+                  "confidence": "high",
+                  "rationale": "Request uses 'Auslastung' (loading) without base data qualifiers (e.g., Nenn-, Soll-, max) and matches example 'Auslastung -> result'. No load-flow calculation indicators (e.g., 'nach Lastfluss') but the term 'Auslastung' inherently refers to load-flow results per examples.",
+                  "should_execute": true,
+                  "decision_mode": "llm",
+                  "llm_decision": {
+                    "selected_data_source": "result",
+                    "confidence": "high",
+                    "rationale": "Request uses 'Auslastung' (loading) without base data qualifiers (e.g., Nenn-, Soll-, max) and matches example 'Auslastung -> result'. No load-flow calculation indicators (e.g., 'nach Lastfluss') but the term 'Auslastung' inherently refers to load-flow results per examples.",
+                    "should_execute": true,
+                    "attribute_match_mode": "semantic_description",
+                    "attribute_match_confidence": "high",
+                    "attribute_match_rationale": "User used natural language 'Auslastung' (not technical names like 'c:loading' or 'm:loading')",
+                    "attribute_cardinality": "one",
+                    "attribute_cardinality_rationale": "Request asks for singular 'Auslastung' (not multiple terms like 'obere und untere' or 'Grenzen')"
+                  },
+                  "chain_mode": "native_structured_output",
+                  "attribute_match_mode": "semantic_description",
+                  "attribute_match_confidence": "high",
+                  "attribute_match_rationale": "User used natural language 'Auslastung' (not technical names like 'c:loading' or 'm:loading')",
+                  "attribute_cardinality": "one",
+                  "attribute_cardinality_rationale": "Request asks for singular 'Auslastung' (not multiple terms like 'obere und untere' or 'Grenzen')",
+                  "fallback_applied": false,
+                  "effective_data_source": "result",
+                  "data_source_note": "Lastflussergebnisse wurden explizit oder sicher angefordert."
+                },
+                "attribute_match_mode": {
+                  "status": "ok",
+                  "mode": "semantic_description",
+                  "confidence": "high",
+                  "should_execute": true,
+                  "rationale": "User used natural language 'Auslastung' (not technical names like 'c:loading' or 'm:loading')",
+                  "source": "data_source_decision"
+                },
+                "attribute_cardinality": "one",
+                "attribute_cardinality_rationale": "Request asks for singular 'Auslastung' (not multiple terms like 'obere und untere' or 'Grenzen')"
+              },
+              "llm_decision": {
+                "selected_entity_type": "line",
+                "confidence": "high",
+                "rationale": "User query explicitly mentions 'Line', which directly corresponds to the 'line' entity type in PowerFactory.",
+                "missing_context": [],
+                "should_execute": true
+              },
+              "requested_attribute_name_extraction": {
+                "status": "skipped",
+                "requested_attribute_names": [],
+                "llm_decision": {
+                  "reason": "Skipped technical attribute-name extraction because attribute_match_mode=semantic_description."
+                },
+                "chain_mode": "skipped_by_attribute_match_mode"
+              },
+              "confidence": "high",
+              "rationale": "User query explicitly mentions 'Line', which directly corresponds to the 'line' entity type in PowerFactory."
+            }
+          },
+          {
+            "step": "classify_data_source",
+            "effective_user_input": "Wie ist die Auslastung von Line in PF?",
+            "source_subrequest": null,
+            "tool_spec": {
+              "name": "classify_data_source",
+              "description": "Classify whether the data query should use base data or load-flow result data.",
+              "capability_tags": [
+                "powerfactory",
+                "data_query",
+                "classification",
+                "llm"
+              ],
+              "mutating": false
+            },
+            "tool_kwargs": {
+              "services": {
+                "status": "ok",
+                "project_name": "Nine-bus System(2)"
+              },
+              "instruction": {
+                "query_type": "element_data",
+                "entity_type": "line",
+                "entity_name_raw": "Wie ist die Auslastung von Line in PF?",
+                "entity_name_candidates": [
+                  "Line"
+                ],
+                "attribute_request_text": "Wie ist die Auslastung von Line in PF?",
+                "available_types": [
+                  "bus",
+                  "generator",
+                  "line",
+                  "load",
+                  "switch",
+                  "transformer"
+                ],
+                "requested_attribute_names": [],
+                "requested_attribute_name_extraction": {
+                  "status": "skipped",
+                  "requested_attribute_names": [],
+                  "llm_decision": {
+                    "reason": "Skipped technical attribute-name extraction because attribute_match_mode=semantic_description."
+                  },
+                  "chain_mode": "skipped_by_attribute_match_mode"
+                },
+                "data_source_preference": "result",
+                "data_source_note": "Lastflussergebnisse wurden explizit oder sicher angefordert.",
+                "data_source_decision": {
+                  "status": "ok",
+                  "selected_data_source": "result",
+                  "confidence": "high",
+                  "rationale": "Request uses 'Auslastung' (loading) without base data qualifiers (e.g., Nenn-, Soll-, max) and matches example 'Auslastung -> result'. No load-flow calculation indicators (e.g., 'nach Lastfluss') but the term 'Auslastung' inherently refers to load-flow results per examples.",
+                  "should_execute": true,
+                  "decision_mode": "llm",
+                  "llm_decision": {
+                    "selected_data_source": "result",
+                    "confidence": "high",
+                    "rationale": "Request uses 'Auslastung' (loading) without base data qualifiers (e.g., Nenn-, Soll-, max) and matches example 'Auslastung -> result'. No load-flow calculation indicators (e.g., 'nach Lastfluss') but the term 'Auslastung' inherently refers to load-flow results per examples.",
+                    "should_execute": true,
+                    "attribute_match_mode": "semantic_description",
+                    "attribute_match_confidence": "high",
+                    "attribute_match_rationale": "User used natural language 'Auslastung' (not technical names like 'c:loading' or 'm:loading')",
+                    "attribute_cardinality": "one",
+                    "attribute_cardinality_rationale": "Request asks for singular 'Auslastung' (not multiple terms like 'obere und untere' or 'Grenzen')"
+                  },
+                  "chain_mode": "native_structured_output",
+                  "attribute_match_mode": "semantic_description",
+                  "attribute_match_confidence": "high",
+                  "attribute_match_rationale": "User used natural language 'Auslastung' (not technical names like 'c:loading' or 'm:loading')",
+                  "attribute_cardinality": "one",
+                  "attribute_cardinality_rationale": "Request asks for singular 'Auslastung' (not multiple terms like 'obere und untere' or 'Grenzen')",
+                  "fallback_applied": false,
+                  "effective_data_source": "result",
+                  "data_source_note": "Lastflussergebnisse wurden explizit oder sicher angefordert."
+                },
+                "attribute_match_mode": {
+                  "status": "ok",
+                  "mode": "semantic_description",
+                  "confidence": "high",
+                  "should_execute": true,
+                  "rationale": "User used natural language 'Auslastung' (not technical names like 'c:loading' or 'm:loading')",
+                  "source": "data_source_decision"
+                },
+                "attribute_cardinality": "one",
+                "attribute_cardinality_rationale": "Request asks for singular 'Auslastung' (not multiple terms like 'obere und untere' or 'Grenzen')"
+              }
+            },
+            "result": {
+              "status": "ok",
+              "tool": "classify_data_source",
+              "project": "Nine-bus System(2)",
+              "instruction": {
+                "query_type": "element_data",
+                "entity_type": "line",
+                "entity_name_raw": "Wie ist die Auslastung von Line in PF?",
+                "entity_name_candidates": [
+                  "Line"
+                ],
+                "attribute_request_text": "Wie ist die Auslastung von Line in PF?",
+                "available_types": [
+                  "bus",
+                  "generator",
+                  "line",
+                  "load",
+                  "switch",
+                  "transformer"
+                ],
+                "requested_attribute_names": [],
+                "requested_attribute_name_extraction": {
+                  "status": "skipped",
+                  "requested_attribute_names": [],
+                  "llm_decision": {
+                    "reason": "Skipped technical attribute-name extraction because attribute_match_mode=semantic_description."
+                  },
+                  "chain_mode": "skipped_by_attribute_match_mode"
+                },
+                "data_source_preference": "result",
+                "data_source_note": "Lastflussergebnisse wurden explizit oder sicher angefordert.",
+                "data_source_decision": {
+                  "status": "ok",
+                  "selected_data_source": "result",
+                  "confidence": "high",
+                  "rationale": "User request 'Auslastung' (loading) without base data qualifiers (e.g., Nenn-, Soll-) matches example 'Auslastung -> result'. No load-flow context words like 'Lastfluss' are present, but the example 'Auslastung' is explicitly classified as result in the instructions.",
+                  "should_execute": true,
+                  "decision_mode": "llm",
+                  "llm_decision": {
+                    "selected_data_source": "result",
+                    "confidence": "high",
+                    "rationale": "User request 'Auslastung' (loading) without base data qualifiers (e.g., Nenn-, Soll-) matches example 'Auslastung -> result'. No load-flow context words like 'Lastfluss' are present, but the example 'Auslastung' is explicitly classified as result in the instructions.",
+                    "should_execute": true,
+                    "attribute_match_mode": "semantic_description",
+                    "attribute_match_confidence": "high",
+                    "attribute_match_rationale": "User used natural language 'Auslastung' (not technical names like 'c:loading' or 'm:loading')",
+                    "attribute_cardinality": "one",
+                    "attribute_cardinality_rationale": "Request asks for 'die Auslastung' (singular) of a single Line, not multiple values like 'obere und untere' or 'Grenzwerte'"
+                  },
+                  "chain_mode": "native_structured_output",
+                  "attribute_match_mode": "semantic_description",
+                  "attribute_match_confidence": "high",
+                  "attribute_match_rationale": "User used natural language 'Auslastung' (not technical names like 'c:loading' or 'm:loading')",
+                  "attribute_cardinality": "one",
+                  "attribute_cardinality_rationale": "Request asks for 'die Auslastung' (singular) of a single Line, not multiple values like 'obere und untere' or 'Grenzwerte'",
+                  "fallback_applied": false,
+                  "effective_data_source": "result",
+                  "data_source_note": "Lastflussergebnisse wurden explizit oder sicher angefordert."
+                },
+                "attribute_match_mode": {
+                  "status": "ok",
+                  "mode": "semantic_description",
+                  "confidence": "high",
+                  "should_execute": true,
+                  "rationale": "User used natural language 'Auslastung' (not technical names like 'c:loading' or 'm:loading')",
+                  "source": "data_source_decision"
+                },
+                "attribute_cardinality": "one",
+                "attribute_cardinality_rationale": "Request asks for 'die Auslastung' (singular) of a single Line, not multiple values like 'obere und untere' or 'Grenzwerte'"
+              },
+              "selected_data_source": "result",
+              "effective_data_source": "result",
+              "data_source_note": "Lastflussergebnisse wurden explizit oder sicher angefordert.",
+              "data_source_decision": {
+                "status": "ok",
+                "selected_data_source": "result",
+                "confidence": "high",
+                "rationale": "User request 'Auslastung' (loading) without base data qualifiers (e.g., Nenn-, Soll-) matches example 'Auslastung -> result'. No load-flow context words like 'Lastfluss' are present, but the example 'Auslastung' is explicitly classified as result in the instructions.",
+                "should_execute": true,
+                "decision_mode": "llm",
+                "llm_decision": {
+                  "selected_data_source": "result",
+                  "confidence": "high",
+                  "rationale": "User request 'Auslastung' (loading) without base data qualifiers (e.g., Nenn-, Soll-) matches example 'Auslastung -> result'. No load-flow context words like 'Lastfluss' are present, but the example 'Auslastung' is explicitly classified as result in the instructions.",
+                  "should_execute": true,
+                  "attribute_match_mode": "semantic_description",
+                  "attribute_match_confidence": "high",
+                  "attribute_match_rationale": "User used natural language 'Auslastung' (not technical names like 'c:loading' or 'm:loading')",
+                  "attribute_cardinality": "one",
+                  "attribute_cardinality_rationale": "Request asks for 'die Auslastung' (singular) of a single Line, not multiple values like 'obere und untere' or 'Grenzwerte'"
+                },
+                "chain_mode": "native_structured_output",
+                "attribute_match_mode": "semantic_description",
+                "attribute_match_confidence": "high",
+                "attribute_match_rationale": "User used natural language 'Auslastung' (not technical names like 'c:loading' or 'm:loading')",
+                "attribute_cardinality": "one",
+                "attribute_cardinality_rationale": "Request asks for 'die Auslastung' (singular) of a single Line, not multiple values like 'obere und untere' or 'Grenzwerte'",
+                "fallback_applied": false,
+                "effective_data_source": "result",
+                "data_source_note": "Lastflussergebnisse wurden explizit oder sicher angefordert."
+              }
+            }
+          },
+          {
+            "step": "resolve_objects_from_inventory_llm",
+            "effective_user_input": "Wie ist die Auslastung von Line in PF?",
+            "source_subrequest": null,
+            "tool_spec": {
+              "name": "resolve_objects_from_inventory_llm",
+              "description": "Resolve PowerFactory objects by LLM-based exact candidate selection from a unified non-topology inventory.",
+              "capability_tags": [
+                "powerfactory",
+                "resolution",
+                "llm_match",
+                "read_only"
+              ],
+              "mutating": false
+            },
+            "tool_kwargs": {
+              "services": {
+                "status": "ok",
+                "project_name": "Nine-bus System(2)"
+              },
+              "instruction": {
+                "query_type": "element_data",
+                "entity_type": "line",
+                "entity_name_raw": "Wie ist die Auslastung von Line in PF?",
+                "entity_name_candidates": [
+                  "Line"
+                ],
+                "attribute_request_text": "Wie ist die Auslastung von Line in PF?",
+                "available_types": [
+                  "bus",
+                  "generator",
+                  "line",
+                  "load",
+                  "switch",
+                  "transformer"
+                ],
+                "requested_attribute_names": [],
+                "requested_attribute_name_extraction": {
+                  "status": "skipped",
+                  "requested_attribute_names": [],
+                  "llm_decision": {
+                    "reason": "Skipped technical attribute-name extraction because attribute_match_mode=semantic_description."
+                  },
+                  "chain_mode": "skipped_by_attribute_match_mode"
+                },
+                "data_source_preference": "result",
+                "data_source_note": "Lastflussergebnisse wurden explizit oder sicher angefordert.",
+                "data_source_decision": {
+                  "status": "ok",
+                  "selected_data_source": "result",
+                  "confidence": "high",
+                  "rationale": "User request 'Auslastung' (loading) without base data qualifiers (e.g., Nenn-, Soll-) matches example 'Auslastung -> result'. No load-flow context words like 'Lastfluss' are present, but the example 'Auslastung' is explicitly classified as result in the instructions.",
+                  "should_execute": true,
+                  "decision_mode": "llm",
+                  "llm_decision": {
+                    "selected_data_source": "result",
+                    "confidence": "high",
+                    "rationale": "User request 'Auslastung' (loading) without base data qualifiers (e.g., Nenn-, Soll-) matches example 'Auslastung -> result'. No load-flow context words like 'Lastfluss' are present, but the example 'Auslastung' is explicitly classified as result in the instructions.",
+                    "should_execute": true,
+                    "attribute_match_mode": "semantic_description",
+                    "attribute_match_confidence": "high",
+                    "attribute_match_rationale": "User used natural language 'Auslastung' (not technical names like 'c:loading' or 'm:loading')",
+                    "attribute_cardinality": "one",
+                    "attribute_cardinality_rationale": "Request asks for 'die Auslastung' (singular) of a single Line, not multiple values like 'obere und untere' or 'Grenzwerte'"
+                  },
+                  "chain_mode": "native_structured_output",
+                  "attribute_match_mode": "semantic_description",
+                  "attribute_match_confidence": "high",
+                  "attribute_match_rationale": "User used natural language 'Auslastung' (not technical names like 'c:loading' or 'm:loading')",
+                  "attribute_cardinality": "one",
+                  "attribute_cardinality_rationale": "Request asks for 'die Auslastung' (singular) of a single Line, not multiple values like 'obere und untere' or 'Grenzwerte'",
+                  "fallback_applied": false,
+                  "effective_data_source": "result",
+                  "data_source_note": "Lastflussergebnisse wurden explizit oder sicher angefordert."
+                },
+                "attribute_match_mode": {
+                  "status": "ok",
+                  "mode": "semantic_description",
+                  "confidence": "high",
+                  "should_execute": true,
+                  "rationale": "User used natural language 'Auslastung' (not technical names like 'c:loading' or 'm:loading')",
+                  "source": "data_source_decision"
+                },
+                "attribute_cardinality": "one",
+                "attribute_cardinality_rationale": "Request asks for 'die Auslastung' (singular) of a single Line, not multiple values like 'obere und untere' or 'Grenzwerte'"
+              },
+              "inventory": {
+                "available_types": [
+                  "bus",
+                  "generator",
+                  "line",
+                  "load",
+                  "switch",
+                  "transformer"
+                ],
+                "counts_by_type": {
+                  "bus": 9,
+                  "load": 3,
+                  "line": 6,
+                  "transformer": 3,
+                  "generator": 3,
+                  "switch": 18
+                },
+                "items_by_type": {
+                  "bus": [
+                    {
+                      "node_id": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 1.ElmTerm",
+                      "name": "Bus 1",
+                      "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 1.ElmTerm",
+                      "pf_class": "ElmTerm",
+                      "kind": "pf_object",
+                      "degree": 0,
+                      "inventory_type": "bus"
+                    },
+                    {
+                      "node_id": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 2.ElmTerm",
+                      "name": "Bus 2",
+                      "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 2.ElmTerm",
+                      "pf_class": "ElmTerm",
+                      "kind": "pf_object",
+                      "degree": 0,
+                      "inventory_type": "bus"
+                    },
+                    {
+                      "node_id": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 3.ElmTerm",
+                      "name": "Bus 3",
+                      "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 3.ElmTerm",
+                      "pf_class": "ElmTerm",
+                      "kind": "pf_object",
+                      "degree": 0,
+                      "inventory_type": "bus"
+                    },
+                    {
+                      "node_id": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 4.ElmTerm",
+                      "name": "Bus 4",
+                      "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 4.ElmTerm",
+                      "pf_class": "ElmTerm",
+                      "kind": "pf_object",
+                      "degree": 0,
+                      "inventory_type": "bus"
+                    },
+                    {
+                      "node_id": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 5.ElmTerm",
+                      "name": "Bus 5",
+                      "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 5.ElmTerm",
+                      "pf_class": "ElmTerm",
+                      "kind": "pf_object",
+                      "degree": 0,
+                      "inventory_type": "bus"
+                    },
+                    {
+                      "node_id": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 6.ElmTerm",
+                      "name": "Bus 6",
+                      "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 6.ElmTerm",
+                      "pf_class": "ElmTerm",
+                      "kind": "pf_object",
+                      "degree": 0,
+                      "inventory_type": "bus"
+                    },
+                    {
+                      "node_id": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 7.ElmTerm",
+                      "name": "Bus 7",
+                      "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 7.ElmTerm",
+                      "pf_class": "ElmTerm",
+                      "kind": "pf_object",
+                      "degree": 0,
+                      "inventory_type": "bus"
+                    },
+                    {
+                      "node_id": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 8.ElmTerm",
+                      "name": "Bus 8",
+                      "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 8.ElmTerm",
+                      "pf_class": "ElmTerm",
+                      "kind": "pf_object",
+                      "degree": 0,
+                      "inventory_type": "bus"
+                    },
+                    {
+                      "node_id": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 9.ElmTerm",
+                      "name": "Bus 9",
+                      "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 9.ElmTerm",
+                      "pf_class": "ElmTerm",
+                      "kind": "pf_object",
+                      "degree": 0,
+                      "inventory_type": "bus"
+                    }
+                  ],
+                  "load": [
+                    {
+                      "node_id": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Load A.ElmLod",
+                      "name": "Load A",
+                      "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Load A.ElmLod",
+                      "pf_class": "ElmLod",
+                      "kind": "pf_object",
+                      "degree": 0,
+                      "inventory_type": "load"
+                    },
+                    {
+                      "node_id": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Load B.ElmLod",
+                      "name": "Load B",
+                      "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Load B.ElmLod",
+                      "pf_class": "ElmLod",
+                      "kind": "pf_object",
+                      "degree": 0,
+                      "inventory_type": "load"
+                    },
+                    {
+                      "node_id": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Load C.ElmLod",
+                      "name": "Load C",
+                      "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Load C.ElmLod",
+                      "pf_class": "ElmLod",
+                      "kind": "pf_object",
+                      "degree": 0,
+                      "inventory_type": "load"
+                    }
+                  ],
+                  "line": [
+                    {
+                      "node_id": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Line 4-5.ElmLne",
+                      "name": "Line 4-5",
+                      "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Line 4-5.ElmLne",
+                      "pf_class": "ElmLne",
+                      "kind": "pf_object",
+                      "degree": 0,
+                      "inventory_type": "line"
+                    },
+                    {
+                      "node_id": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Line 4-6.ElmLne",
+                      "name": "Line 4-6",
+                      "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Line 4-6.ElmLne",
+                      "pf_class": "ElmLne",
+                      "kind": "pf_object",
+                      "degree": 0,
+                      "inventory_type": "line"
+                    },
+                    {
+                      "node_id": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Line 5-7.ElmLne",
+                      "name": "Line 5-7",
+                      "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Line 5-7.ElmLne",
+                      "pf_class": "ElmLne",
+                      "kind": "pf_object",
+                      "degree": 0,
+                      "inventory_type": "line"
+                    },
+                    {
+                      "node_id": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Line 6-9.ElmLne",
+                      "name": "Line 6-9",
+                      "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Line 6-9.ElmLne",
+                      "pf_class": "ElmLne",
+                      "kind": "pf_object",
+                      "degree": 0,
+                      "inventory_type": "line"
+                    },
+                    {
+                      "node_id": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Line 7-8.ElmLne",
+                      "name": "Line 7-8",
+                      "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Line 7-8.ElmLne",
+                      "pf_class": "ElmLne",
+                      "kind": "pf_object",
+                      "degree": 0,
+                      "inventory_type": "line"
+                    },
+                    {
+                      "node_id": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Line 8-9.ElmLne",
+                      "name": "Line 8-9",
+                      "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Line 8-9.ElmLne",
+                      "pf_class": "ElmLne",
+                      "kind": "pf_object",
+                      "degree": 0,
+                      "inventory_type": "line"
+                    }
+                  ],
+                  "transformer": [
+                    {
+                      "node_id": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\T1.ElmTr2",
+                      "name": "T1",
+                      "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\T1.ElmTr2",
+                      "pf_class": "ElmTr2",
+                      "kind": "pf_object",
+                      "degree": 0,
+                      "inventory_type": "transformer"
+                    },
+                    {
+                      "node_id": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\T2.ElmTr2",
+                      "name": "T2",
+                      "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\T2.ElmTr2",
+                      "pf_class": "ElmTr2",
+                      "kind": "pf_object",
+                      "degree": 0,
+                      "inventory_type": "transformer"
+                    },
+                    {
+                      "node_id": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\T3.ElmTr2",
+                      "name": "T3",
+                      "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\T3.ElmTr2",
+                      "pf_class": "ElmTr2",
+                      "kind": "pf_object",
+                      "degree": 0,
+                      "inventory_type": "transformer"
+                    }
+                  ],
+                  "generator": [
+                    {
+                      "node_id": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\G1.ElmSym",
+                      "name": "G1",
+                      "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\G1.ElmSym",
+                      "pf_class": "ElmSym",
+                      "kind": "pf_object",
+                      "degree": 0,
+                      "inventory_type": "generator"
+                    },
+                    {
+                      "node_id": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\G2.ElmSym",
+                      "name": "G2",
+                      "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\G2.ElmSym",
+                      "pf_class": "ElmSym",
+                      "kind": "pf_object",
+                      "degree": 0,
+                      "inventory_type": "generator"
+                    },
+                    {
+                      "node_id": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\G3.ElmSym",
+                      "name": "G3",
+                      "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\G3.ElmSym",
+                      "pf_class": "ElmSym",
+                      "kind": "pf_object",
+                      "degree": 0,
+                      "inventory_type": "generator"
+                    }
+                  ],
+                  "switch": {
+                    "type": "list",
+                    "length": 18,
+                    "preview": [
+                      {
+                        "node_id": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 4.ElmTerm\\Cub_1.StaCubic\\Switch.StaSwitch",
+                        "name": "Switch",
+                        "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 4.ElmTerm\\Cub_1.StaCubic\\Switch.StaSwitch",
+                        "pf_class": "StaSwitch",
+                        "kind": "sta",
+                        "degree": 0,
+                        "inventory_type": "switch"
+                      },
+                      {
+                        "node_id": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 4.ElmTerm\\Cub_2.StaCubic\\Switch.StaSwitch",
+                        "name": "Switch",
+                        "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 4.ElmTerm\\Cub_2.StaCubic\\Switch.StaSwitch",
+                        "pf_class": "StaSwitch",
+                        "kind": "sta",
+                        "degree": 0,
+                        "inventory_type": "switch"
+                      },
+                      {
+                        "node_id": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 4.ElmTerm\\Cub_3.StaCubic\\Switch.StaSwitch",
+                        "name": "Switch",
+                        "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 4.ElmTerm\\Cub_3.StaCubic\\Switch.StaSwitch",
+                        "pf_class": "StaSwitch",
+                        "kind": "sta",
+                        "degree": 0,
+                        "inventory_type": "switch"
+                      },
+                      {
+                        "node_id": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 5.ElmTerm\\Cub_1.StaCubic\\Switch.StaSwitch",
+                        "name": "Switch",
+                        "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 5.ElmTerm\\Cub_1.StaCubic\\Switch.StaSwitch",
+                        "pf_class": "StaSwitch",
+                        "kind": "sta",
+                        "degree": 0,
+                        "inventory_type": "switch"
+                      },
+                      {
+                        "node_id": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 5.ElmTerm\\Cub_2.StaCubic\\Switch.StaSwitch",
+                        "name": "Switch",
+                        "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 5.ElmTerm\\Cub_2.StaCubic\\Switch.StaSwitch",
+                        "pf_class": "StaSwitch",
+                        "kind": "sta",
+                        "degree": 0,
+                        "inventory_type": "switch"
+                      }
+                    ]
+                  }
+                },
+                "samples_by_type": {
+                  "bus": [
+                    {
+                      "name": "Bus 1",
+                      "pf_class": "ElmTerm",
+                      "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 1.ElmTerm"
+                    },
+                    {
+                      "name": "Bus 2",
+                      "pf_class": "ElmTerm",
+                      "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 2.ElmTerm"
+                    },
+                    {
+                      "name": "Bus 3",
+                      "pf_class": "ElmTerm",
+                      "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 3.ElmTerm"
+                    },
+                    {
+                      "name": "Bus 4",
+                      "pf_class": "ElmTerm",
+                      "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 4.ElmTerm"
+                    },
+                    {
+                      "name": "Bus 5",
+                      "pf_class": "ElmTerm",
+                      "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 5.ElmTerm"
+                    },
+                    {
+                      "name": "Bus 6",
+                      "pf_class": "ElmTerm",
+                      "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 6.ElmTerm"
+                    },
+                    {
+                      "name": "Bus 7",
+                      "pf_class": "ElmTerm",
+                      "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 7.ElmTerm"
+                    },
+                    {
+                      "name": "Bus 8",
+                      "pf_class": "ElmTerm",
+                      "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 8.ElmTerm"
+                    },
+                    {
+                      "name": "Bus 9",
+                      "pf_class": "ElmTerm",
+                      "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 9.ElmTerm"
+                    }
+                  ],
+                  "load": [
+                    {
+                      "name": "Load A",
+                      "pf_class": "ElmLod",
+                      "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Load A.ElmLod"
+                    },
+                    {
+                      "name": "Load B",
+                      "pf_class": "ElmLod",
+                      "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Load B.ElmLod"
+                    },
+                    {
+                      "name": "Load C",
+                      "pf_class": "ElmLod",
+                      "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Load C.ElmLod"
+                    }
+                  ],
+                  "line": [
+                    {
+                      "name": "Line 4-5",
+                      "pf_class": "ElmLne",
+                      "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Line 4-5.ElmLne"
+                    },
+                    {
+                      "name": "Line 4-6",
+                      "pf_class": "ElmLne",
+                      "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Line 4-6.ElmLne"
+                    },
+                    {
+                      "name": "Line 5-7",
+                      "pf_class": "ElmLne",
+                      "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Line 5-7.ElmLne"
+                    },
+                    {
+                      "name": "Line 6-9",
+                      "pf_class": "ElmLne",
+                      "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Line 6-9.ElmLne"
+                    },
+                    {
+                      "name": "Line 7-8",
+                      "pf_class": "ElmLne",
+                      "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Line 7-8.ElmLne"
+                    },
+                    {
+                      "name": "Line 8-9",
+                      "pf_class": "ElmLne",
+                      "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Line 8-9.ElmLne"
+                    }
+                  ],
+                  "transformer": [
+                    {
+                      "name": "T1",
+                      "pf_class": "ElmTr2",
+                      "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\T1.ElmTr2"
+                    },
+                    {
+                      "name": "T2",
+                      "pf_class": "ElmTr2",
+                      "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\T2.ElmTr2"
+                    },
+                    {
+                      "name": "T3",
+                      "pf_class": "ElmTr2",
+                      "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\T3.ElmTr2"
+                    }
+                  ],
+                  "generator": [
+                    {
+                      "name": "G1",
+                      "pf_class": "ElmSym",
+                      "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\G1.ElmSym"
+                    },
+                    {
+                      "name": "G2",
+                      "pf_class": "ElmSym",
+                      "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\G2.ElmSym"
+                    },
+                    {
+                      "name": "G3",
+                      "pf_class": "ElmSym",
+                      "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\G3.ElmSym"
+                    }
+                  ],
+                  "switch": [
+                    {
+                      "name": "Switch",
+                      "pf_class": "StaSwitch",
+                      "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 4.ElmTerm\\Cub_1.StaCubic\\Switch.StaSwitch"
+                    },
+                    {
+                      "name": "Switch",
+                      "pf_class": "StaSwitch",
+                      "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 4.ElmTerm\\Cub_2.StaCubic\\Switch.StaSwitch"
+                    },
+                    {
+                      "name": "Switch",
+                      "pf_class": "StaSwitch",
+                      "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 4.ElmTerm\\Cub_3.StaCubic\\Switch.StaSwitch"
+                    },
+                    {
+                      "name": "Switch",
+                      "pf_class": "StaSwitch",
+                      "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 5.ElmTerm\\Cub_1.StaCubic\\Switch.StaSwitch"
+                    },
+                    {
+                      "name": "Switch",
+                      "pf_class": "StaSwitch",
+                      "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 5.ElmTerm\\Cub_2.StaCubic\\Switch.StaSwitch"
+                    },
+                    {
+                      "name": "Switch",
+                      "pf_class": "StaSwitch",
+                      "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 6.ElmTerm\\Cub_1.StaCubic\\Switch.StaSwitch"
+                    },
+                    {
+                      "name": "Switch",
+                      "pf_class": "StaSwitch",
+                      "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 6.ElmTerm\\Cub_2.StaCubic\\Switch.StaSwitch"
+                    },
+                    {
+                      "name": "Switch",
+                      "pf_class": "StaSwitch",
+                      "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 6.ElmTerm\\Cub_3.StaCubic\\Switch.StaSwitch"
+                    },
+                    {
+                      "name": "Switch",
+                      "pf_class": "StaSwitch",
+                      "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 7.ElmTerm\\Cub_2.StaCubic\\Switch.StaSwitch"
+                    },
+                    {
+                      "name": "Switch",
+                      "pf_class": "StaSwitch",
+                      "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 7.ElmTerm\\Cub_3.StaCubic\\Switch.StaSwitch"
+                    }
+                  ]
+                }
+              }
+            },
+            "result": {
+              "status": "error",
+              "tool": "resolve_objects_from_inventory_llm",
+              "project": "Nine-bus System(2)",
+              "instruction": {
+                "query_type": "element_data",
+                "entity_type": "line",
+                "entity_name_raw": "Wie ist die Auslastung von Line in PF?",
+                "entity_name_candidates": [
+                  "Line"
+                ],
+                "attribute_request_text": "Wie ist die Auslastung von Line in PF?",
+                "available_types": [
+                  "bus",
+                  "generator",
+                  "line",
+                  "load",
+                  "switch",
+                  "transformer"
+                ],
+                "requested_attribute_names": [],
+                "requested_attribute_name_extraction": {
+                  "status": "skipped",
+                  "requested_attribute_names": [],
+                  "llm_decision": {
+                    "reason": "Skipped technical attribute-name extraction because attribute_match_mode=semantic_description."
+                  },
+                  "chain_mode": "skipped_by_attribute_match_mode"
+                },
+                "data_source_preference": "result",
+                "data_source_note": "Lastflussergebnisse wurden explizit oder sicher angefordert.",
+                "data_source_decision": {
+                  "status": "ok",
+                  "selected_data_source": "result",
+                  "confidence": "high",
+                  "rationale": "User request 'Auslastung' (loading) without base data qualifiers (e.g., Nenn-, Soll-) matches example 'Auslastung -> result'. No load-flow context words like 'Lastfluss' are present, but the example 'Auslastung' is explicitly classified as result in the instructions.",
+                  "should_execute": true,
+                  "decision_mode": "llm",
+                  "llm_decision": {
+                    "selected_data_source": "result",
+                    "confidence": "high",
+                    "rationale": "User request 'Auslastung' (loading) without base data qualifiers (e.g., Nenn-, Soll-) matches example 'Auslastung -> result'. No load-flow context words like 'Lastfluss' are present, but the example 'Auslastung' is explicitly classified as result in the instructions.",
+                    "should_execute": true,
+                    "attribute_match_mode": "semantic_description",
+                    "attribute_match_confidence": "high",
+                    "attribute_match_rationale": "User used natural language 'Auslastung' (not technical names like 'c:loading' or 'm:loading')",
+                    "attribute_cardinality": "one",
+                    "attribute_cardinality_rationale": "Request asks for 'die Auslastung' (singular) of a single Line, not multiple values like 'obere und untere' or 'Grenzwerte'"
+                  },
+                  "chain_mode": "native_structured_output",
+                  "attribute_match_mode": "semantic_description",
+                  "attribute_match_confidence": "high",
+                  "attribute_match_rationale": "User used natural language 'Auslastung' (not technical names like 'c:loading' or 'm:loading')",
+                  "attribute_cardinality": "one",
+                  "attribute_cardinality_rationale": "Request asks for 'die Auslastung' (singular) of a single Line, not multiple values like 'obere und untere' or 'Grenzwerte'",
+                  "fallback_applied": false,
+                  "effective_data_source": "result",
+                  "data_source_note": "Lastflussergebnisse wurden explizit oder sicher angefordert."
+                },
+                "attribute_match_mode": {
+                  "status": "ok",
+                  "mode": "semantic_description",
+                  "confidence": "high",
+                  "should_execute": true,
+                  "rationale": "User used natural language 'Auslastung' (not technical names like 'c:loading' or 'm:loading')",
+                  "source": "data_source_decision"
+                },
+                "attribute_cardinality": "one",
+                "attribute_cardinality_rationale": "Request asks for 'die Auslastung' (singular) of a single Line, not multiple values like 'obere und untere' or 'Grenzwerte'"
+              },
+              "error": "invalid_object_selection",
+              "details": "Das LLM hat keinen gültigen exakten Namen aus der Kandidatenliste zurückgegeben.",
+              "llm_decision": {
+                "selected_object_name": null,
+                "selected_object_names": [],
+                "selection_mode": null,
+                "confidence": "low",
+                "rationale": "User request specifies 'Line' (singular) without a specific identifier, but available candidates are all specific lines (e.g., Line 4-5). No exact match exists for 'Line' as a generic term. __ALL__ is not applicable since the request is singular, not plural or explicit 'all'.",
+                "alternatives": [],
+                "should_execute": false
+              },
+              "candidate_names": [
+                "Line 4-5",
+                "Line 4-6",
+                "Line 5-7",
+                "Line 6-9",
+                "Line 7-8",
+                "Line 8-9"
+              ]
+            }
+          }
+        ]
+      }
+    }
+  }
+}

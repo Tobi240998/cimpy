@@ -1,0 +1,43 @@
+{
+  "run_id": 142,
+  "timestamp": "2026-05-10T20:04:49.128469",
+  "user_input": "Wie hoch war die Scheinleistung von Trafo 19-20 über die Zeit?",
+  "duration_seconds": 8.24,
+  "token_usage": {
+    "prompt_tokens": 803,
+    "completion_tokens": 847,
+    "total_tokens": 1650,
+    "details": {
+      "qwen3:30b": {
+        "input_tokens": 803,
+        "output_tokens": 847,
+        "total_tokens": 1650
+      }
+    }
+  },
+  "decision_trace": {
+    "domain": "ASK_USER",
+    "planning_mode": "",
+    "workflow": "",
+    "confidence": "",
+    "safe_to_execute": "",
+    "num_steps": 0,
+    "steps": "",
+    "planner_reasoning": "",
+    "resolved_object": "",
+    "resolved_object_confidence": "",
+    "selected_attributes": "",
+    "attribute_confidence": "",
+    "num_tool_calls": 0,
+    "executed_tools": "",
+    "failed_tool": ""
+  },
+  "router_output": {
+    "route": "ASK_USER",
+    "question": "Bitte geben Sie den Zeitraum an, für den die Scheinleistung von Trafo 19-20 angezeigt werden soll (z.B. 'vom 01.01.2023 bis 31.01.2023').",
+    "missing_fields": [
+      "time_range"
+    ],
+    "partial": {}
+  }
+}

@@ -1,0 +1,56 @@
+{
+  "run_id": 15,
+  "timestamp": "2026-05-11T08:49:15.355030",
+  "user_input": "Liste die Nachbarn von Bus 5 in Powerfactory zusammen mit ihrer Basisdaten-Spannung auf.",
+  "duration_seconds": 34.356,
+  "token_usage": {
+    "prompt_tokens": 3557,
+    "completion_tokens": 3324,
+    "total_tokens": 6881,
+    "details": {
+      "qwen3:30b": {
+        "input_tokens": 3557,
+        "output_tokens": 3324,
+        "total_tokens": 6881
+      }
+    }
+  },
+  "decision_trace": {
+    "domain": "powerfactory",
+    "planning_mode": "custom_plan",
+    "workflow": "None",
+    "confidence": "",
+    "safe_to_execute": "True",
+    "num_steps": 0,
+    "steps": "",
+    "planner_reasoning": "The request asks for neighbors of Bus 5 in PowerFactory along with their base voltage data. The topology query (pf.topology_query) identifies neighbors, and reading object attributes (pf.read_pf_object_attributes) retrieves voltage data. Both steps are required to fulfill the request.",
+    "resolved_object": "",
+    "resolved_object_confidence": "",
+    "selected_attributes": "",
+    "attribute_confidence": "",
+    "num_tool_calls": 0,
+    "executed_tools": "",
+    "failed_tool": ""
+  },
+  "router_output": {
+    "route": "ERROR",
+    "status": "error",
+    "result": {
+      "status": "error",
+      "answer": "Tool existiert nicht in der UnifiedToolRegistry: pf.topology_query",
+      "planner_decision": {
+        "domain": "powerfactory",
+        "planning_mode": "custom_plan",
+        "workflow": null,
+        "custom_steps": [
+          "pf.topology_query",
+          "pf.read_pf_object_attributes"
+        ],
+        "safe_to_execute": true,
+        "missing_context": [],
+        "clarification_question": "",
+        "reasoning": "The request asks for neighbors of Bus 5 in PowerFactory along with their base voltage data. The topology query (pf.topology_query) identifies neighbors, and reading object attributes (pf.read_pf_object_attributes) retrieves voltage data. Both steps are required to fulfill the request."
+      }
+    }
+  }
+}

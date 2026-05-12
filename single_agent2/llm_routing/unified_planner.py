@@ -212,7 +212,16 @@ Workflow descriptions:
   Analyze connectivity and neighbors in the PowerFactory network graph.
 
 - pf.change_switch_state:
-  Open/close switches in the PowerFactory project.
+  Change the switching state of a switch in the active PowerFactory project.
+  Use this workflow for explicit commands that open, close, connect, disconnect,
+  switch on/off, or toggle a switch.
+  German trigger verbs include: öffne, öffnen, schließe, schließen, einschalten,
+  ausschalten, trennen, verbinden, umschalten.
+  Examples:
+  - "Öffne Schalter 1" -> pf.change_switch_state
+  - "Schließe Schalter 1" -> pf.change_switch_state
+  - "Schalter 1 öffnen" -> pf.change_switch_state
+  - "Switch 1 close" -> pf.change_switch_state
 
 - pf.query_element_data:
   Query values, parameters, attributes, base data, technical data, limits, bounds, min/max values,

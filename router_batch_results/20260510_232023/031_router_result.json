@@ -1,0 +1,44 @@
+{
+  "run_id": 31,
+  "timestamp": "2026-05-11T00:06:10.625972",
+  "user_input": "Toggle Schalter 1.",
+  "duration_seconds": 57.239,
+  "token_usage": {
+    "prompt_tokens": 3521,
+    "completion_tokens": 5725,
+    "total_tokens": 9246,
+    "details": {
+      "qwen3:30b": {
+        "input_tokens": 3521,
+        "total_tokens": 9246,
+        "output_tokens": 5725
+      }
+    }
+  },
+  "decision_trace": {
+    "domain": "ERROR",
+    "planning_mode": "",
+    "workflow": "",
+    "confidence": "",
+    "safe_to_execute": "",
+    "num_steps": 0,
+    "steps": "",
+    "planner_reasoning": "",
+    "resolved_object": "",
+    "resolved_object_confidence": "",
+    "selected_attributes": "",
+    "attribute_confidence": "",
+    "num_tool_calls": 0,
+    "executed_tools": "",
+    "failed_tool": ""
+  },
+  "router_output": {
+    "route": "ERROR",
+    "status": "error",
+    "result": {
+      "status": "error",
+      "answer": "Der UnifiedPlanner hat keine gültige strukturierte Ausgabe erzeugt.",
+      "planner_error": "Invalid json output: \nFor troubleshooting, visit: https://docs.langchain.com/oss/python/langchain/errors/OUTPUT_PARSING_FAILURE "
+    }
+  }
+}

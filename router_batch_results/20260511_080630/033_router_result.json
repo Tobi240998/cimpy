@@ -1,0 +1,53 @@
+{
+  "run_id": 33,
+  "timestamp": "2026-05-11T09:22:00.075552",
+  "user_input": "Welche Farbe hat Bus 1 in Powerfactory?",
+  "duration_seconds": 10.616,
+  "token_usage": {
+    "prompt_tokens": 3533,
+    "completion_tokens": 946,
+    "total_tokens": 4479,
+    "details": {
+      "qwen3:30b": {
+        "input_tokens": 3533,
+        "output_tokens": 946,
+        "total_tokens": 4479
+      }
+    }
+  },
+  "decision_trace": {
+    "domain": "powerfactory",
+    "planning_mode": "unsupported",
+    "workflow": "None",
+    "confidence": "",
+    "safe_to_execute": "True",
+    "num_steps": 0,
+    "steps": "",
+    "planner_reasoning": "The request asks for the color of a bus in PowerFactory, which is a visual/graphical attribute not stored in PowerFactory's data model or accessible via any available tools. The provided PowerFactory tools only handle technical attributes (e.g., voltage, power, topology), not visual properties like color. No tool exists to query or retrieve bus color information.",
+    "resolved_object": "",
+    "resolved_object_confidence": "",
+    "selected_attributes": "",
+    "attribute_confidence": "",
+    "num_tool_calls": 0,
+    "executed_tools": "",
+    "failed_tool": ""
+  },
+  "router_output": {
+    "route": "ERROR",
+    "status": "error",
+    "result": {
+      "status": "error",
+      "answer": "Die Anfrage wird aktuell nicht unterstützt.",
+      "planner_decision": {
+        "domain": "powerfactory",
+        "planning_mode": "unsupported",
+        "workflow": null,
+        "custom_steps": [],
+        "safe_to_execute": true,
+        "missing_context": [],
+        "clarification_question": "",
+        "reasoning": "The request asks for the color of a bus in PowerFactory, which is a visual/graphical attribute not stored in PowerFactory's data model or accessible via any available tools. The provided PowerFactory tools only handle technical attributes (e.g., voltage, power, topology), not visual properties like color. No tool exists to query or retrieve bus color information."
+      }
+    }
+  }
+}
