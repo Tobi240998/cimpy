@@ -12,19 +12,26 @@ class Orchestrator:
         self._pending: Optional[Dict[str, Any]] = None
 
     def handle(self, user_input: str) -> Dict[str, Any]:
-        action: RouterAction = self.router.route(user_input, pending=self._pending) # Aufruf des LLM-Routers
+        action: RouterAction = self.router.route(
+            user_input,
+            pending=self._pending,
+        )
 
-        # falls LLM AskUserAction zurückgibt -> Ausgabe der gesammelten Infos für diesen Fall -> run_router stellt gezielte Nachfrage
+        # AskUserAction -> Rückfrage erzeugen
         if isinstance(action, AskUserAction):
             self._pending = {
                 "intended_tool": action.intended_tool,
                 "missing_fields": action.missing_fields,
                 "partial": {
                     **(action.partial or {}),
-                    "user_input": (action.partial or {}).get("user_input", user_input),
+                    "user_input": (action.partial or {}).get(
+                        "user_input",
+                        user_input,
+                    ),
                 },
                 "question": action.question,
-}
+            }
+
             return {
                 "route": "ASK_USER",
                 "question": action.question,
@@ -32,7 +39,7 @@ class Orchestrator:
                 "partial": action.partial,
             }
 
-        # falls LLM CallToolAction zurückgibt -> Ausgabe der gesammelten Infos für diesen Fall und Aufruf der Tools
+        # CallToolAction -> Tool ausführen
         if isinstance(action, CallToolAction):
             pending = self._pending
 
@@ -43,21 +50,18 @@ class Orchestrator:
                 partial = pending.get("partial") or {}
                 original_user_input = partial.get("user_input")
 
-            args.setdefault("user_input", original_user_input or user_input)
+            args.setdefault(
+                "user_input",
+                original_user_input or user_input,
+            )
 
             self._pending = None
 
+            # Tool ausführen
             if action.tool == "historical":
                 result = historical_tool.invoke(args)
             else:
                 result = powerfactory_tool.invoke(args)
-
-            final_answer = build_final_answer_with_llm(
-                llm=self.router.llm,
-                user_input=args.get("user_input", user_input),
-                route=action.tool,
-                execution_result=result,
-            )
 
             # Robust gegen Nicht-Dict-Ergebnisse
             if not isinstance(result, dict):
@@ -65,6 +69,22 @@ class Orchestrator:
 
             # Rohantwort sichern
             result["raw_answer"] = result.get("answer")
+
+            # Kleiner, kontrollierter Payload für den Finalizer
+            finalizer_payload = {
+                "status": result.get("status"),
+                "answer": result.get("raw_answer"),
+                "error": result.get("error"),
+                "details": result.get("details"),
+            }
+
+            # Finale Antwort generieren
+            final_answer = build_final_answer_with_llm(
+                llm=self.router.llm,
+                user_input=args.get("user_input", user_input),
+                route=action.tool,
+                execution_result=finalizer_payload,
+            )
 
             # Finale LLM-Antwort normalisieren
             if hasattr(final_answer, "content"):
@@ -77,7 +97,14 @@ class Orchestrator:
                 "result": result,
             }
 
-        return {"route": "ERROR", "result": {"status": "error", "message": "Unknown action"}} # Fallback
+        # Fallback
+        return {
+            "route": "ERROR",
+            "result": {
+                "status": "error",
+                "message": "Unknown action",
+            },
+        }
     
 
 def build_final_answer_with_llm(
