@@ -15,170 +15,13 @@ from cimpy.llm_routing.orchestrator import Orchestrator
 
 
 USER_INPUTS: List[str] = [
-    "Welche Lasten gibt es in PowerFactory?",
-    "Zeig mir alle verfügbaren Lasten im aktiven PowerFactory-Projekt.",
-    "Liste die vorhandenen Loads in Powerfactory auf.",
-    "Welche Verbraucher sind im PF-Modell vorhanden?",
-    "Erhöhe Last A um 20 MW.",
-    "Füge 20 MW bei Last A hinzu.",
-    "Mache Last A um 20 MW größer.",
-    "Erhöhe Load A um 20 MW.",
-    "Erhöhe Verbraucher A um 20 MW.",
-    "Reduziere Last B um 30 MW.",
-    "Verringere Last B um 30 MW.",
-    "Ziehe 30 MW von Last B ab.",
-    "Mache Load B um 30 MW kleiner.",
-    "Reduziere Last B um 30 MW. Wie ist die Auslastung von Line 4-5?",
-    "Senke Last B um 30 MW und gib die Auslastung der Leitung 4-5 aus.",
-    "Last B 30 MW runter, danach bitte die Belastung von Line 4-5.",
-    "Ziehe bei Last B 30 MW ab und nenne mir anschließend die Leitungsauslastung von Leitung 4-5.",
-    "Reduziere Last A um 5 MW und gib danach die Auslastungen aller Leitungen zurück.",
-    "Senke Last A um 5 MW. Wie hoch sind anschließend die Leitungsauslastungen?",
-    "Last A minus 5 MW; bitte danach alle Leitungsbelastungen ausgeben.",
-    "Ziehe 5 MW von Load A ab und zeige die Auslastungen der Lines.",
-    "Öffne den Schalter Schalter 1.",
-    "Schalte Schalter 1 aus.",
-    "Trenne den Schalter Schalter 1.",
-    "Bitte öffne Switch 1.",
-    "Schließe den Schalter Schalter 1.",
-    "Schalte Schalter 1 ein.",
-    "Zuschalten: Schalter 1.",
-    "Please close switch 1.",
-    "Schalte den Schalter Schalter 1 um.",
-    "Toggle Schalter 1.",
-    "Wechsle den Zustand von Schalter 1.",
-    "Bitte den Schalter Schalter 1 umschalten.",
-    "Welche direkten Nachbarn hat Last A in Powerfactory?",
-    "Wer ist in PF direkt mit Load A verbunden?",
-    "Zeig mir die unmittelbaren Nachbarn von Verbraucher A in Powerfactory.",
-    "An welche Assets grenzt Last A in Powerfactory direkt?",
-    "Welche direkten Nachbarn hat Bus 5 in PF?",
-    "Was ist bei Powerfactory direkt mit Bus 5 verbunden?",
-    "Zeig mir die unmittelbaren Nachbarn von Bus 5 in Powerfactory.",
-    "Welche Assets hängen direkt an Bus 5 in Powerfactory?",
-    "Welche Nachbarn hat Line 4-5 in Powerfactory?",
-    "Was ist in PF direkt mit Leitung 4-5 verbunden?",
-    "Zeig mir die angrenzenden Elemente von Line 4-5 in Powerfactory.",
-    "Welche direkten Nachbarn hat die Leitung 04 - 05 in Powerfactory?",
-    "Wie ist die Nennspannung von Bus 1 in PowerFactory?",
-    "Gib mir die Basisdaten-Nennspannung von Bus 1 aus Powerfactory.",
-    "Welche Nennspannung hat Bus 1 in Powerfactory?",
-    "Was ist die rated voltage von Bus 1 bei Powerfactory?",
-    "Was ist die obere Spannungsgrenze von Bus 1 in PowerFactory?",
-    "Wie hoch ist die untere Spannungsgrenze von Bus 1 in Powerfactory?",
-    "Nenne mir die Spannungsgrenzen von Bus 1 in Powerfactory.",
-    "Welche Umin- und Umax-Grenzen sind bei Bus 1 in Powerfactory hinterlegt?",
-    "Wie ist die Spannung von Bus 1 nach dem Lastfluss?",
-    "Gib mir die aktuelle Busspannung von Bus 1 als Lastflussergebnis.",
-    "Welche Spannung hat Bus 1 im Lastfluss?",
-    "Was ist die Leiter-Leiter-Spannung von Bus 1 nach dem Loadflow?",
-    "Wie sind die Spannungen der Busse in PowerFactory?",
-    "Gib mir die Spannungen aller Busse in PF.",
-    "Welche Busspannungen gibt es nach dem Lastfluss in PF?",
-    "Zeige die Spannung für alle Busse in Powerfactory.",
-    "Wie ist die Auslastung von Line 4-5 in PowerFactory?",
-    "Gib mir die Leitungsauslastung von Leitung 4-5 in PF.",
-    "Wie hoch ist die Belastung von Line 4-5 nach dem Lastfluss in PF?",
-    "Was ist die loading von Line 4-5 in PF?",
-    "Wie sind die Auslastungen der Leitungen in PowerFactory?",
-    "Gib mir die Auslastung aller Leitungen in Powefactory.",
-    "Welche Leitungsauslastungen liegen nach dem Lastfluss in PF vor?",
-    "Zeige die Belastung für alle Lines in PF.",
-    "Welche Attribute sind für Bus 1 in PowerFactory verfügbar?",
-    "Welche Datenfelder gibt es bei Bus 1 in Powerfactory?",
-    "Liste alle verfügbaren Attribute von Bus 1 in Powerfactory auf.",
-    "Zeig mir die verfügbaren Attribute für Bus 1 in Powerfactory.",
-    "Welche Attribute sind für Line 4-5 in Powerfactory verfügbar?",
-    "Liste die verfügbaren Attribute von Leitung 4-5 in Powerfactory auf.",
-    "Welche Datenfelder gibt es bei der Leitung 4-5 in Powerfactory?",
-    "Zeig mir alle PowerFactory-Attribute für Line 4-5 in Powerfactory.",
-    "Lies in PF bei Bus 1 das Attribut vmin aus.",
-    "Gib für Bus 1 in Powerfactory den Wert von vmax zurück.",
-    "Lies in PF bei Line 4-5 das Attribut loading aus.",
-    "Zeige für Bus 1 den Wert von uknom in Powerfactory.",
-    "Was ist der Bemessungsfaktor von Trafo T1 in Powerfactory?",
-    "Welche Länge hat Line 4-5 in Powerfactory?",
-    "Gib mir den Widerstand von Line 4-5 in PF.",
-    "Wie lang ist Leitung 4-5 in PF?",
-    "Was ist die Reaktanz von Line 4-5 in PF?",
-    "Gib mir die Nennspannungen aller Busse in Powerfactory.",
-    "Welche rated voltages haben die Busse in Powerfactory?",
-    "Zeige die Basisdaten-Nennspannung für alle Busse in Powerfactory.",
-    "Nenne mir die Nennspannung sämtlicher Busse in Powerfactory.",
-    "Welche Spannungsgrenzen haben die Busse in PF?",
-    "Gib Umin und Umax für alle Busse in PF zurück.",
-    "Zeige die oberen und unteren Spannungsgrenzen aller Busse in PF.",
-    "Welche Voltage Limits sind für die Busse in Powerfactory hinterlegt?",
-    "Welche Leitungen hängen in PF an Bus 5 und wie hoch ist deren Auslastung in PF?",
-    "Zeig mir die in PF an Bus 5 angeschlossenen Lines inklusive Auslastung in PF.",
-    "Welche Leitungen sind in Powerfactory mit Bus 5 verbunden und wie stark sind sie belastet?",
-    "Liste die Nachbarleitungen von Bus 5 mit ihrer Auslastung auf. Nutze Powerfactory.",
-    "Welche Nachbarn hat Bus 5? Welche Nennspannung haben diese? Nutze PF.",
-    "Zeige die direkten Nachbarn von Bus 5 in PF und deren Nennspannung.",
-    "Was ist in Powerfactory an Bus 5 angeschlossen, und welche rated voltage haben diese Objekte?",
-    "Liste die Nachbarn von Bus 5 in Powerfactory zusammen mit ihrer Basisdaten-Spannung auf.",
-    "Welche Nachbarn hat Last A? Welche Attribute sind dafür verfügbar? Nutze Powerfactory.",
-    "Zeig mir die direkten Nachbarn von Load A in PF und liste deren verfügbare Attribute.",
-    "Was hängt in PF an Last A, und welche Datenfelder gibt es für diese Objekte?",
-    "Bestimme die Nachbarn von Last A in PF und gib die verfügbaren Attribute dazu aus.",
-    "Öffne den Schalter Schalter 1 und gib danach die Busspannungen zurück.",
-    "Schalte Schalter 1 aus. Wie sind anschließend die Busspannungen?",
-    "Bitte Schalter 1 öffnen und danach die Spannungen der Busse ausgeben.",
-    "Trenne den Schalter Schalter 1 und nenne danach die Netzspannungen.",
-    "Erhöhe Last C um 20 MW und gib danach die Auslastungen der Leitungen zurück.",
-    "Last C um 20 MW vergrößern. Welche Leitungsauslastungen ergeben sich?",
-    "Bitte Last C um 20 MW erhöhen und anschließend die Belastung der Lines anzeigen.",
-    "Increase Load C by 20 MW and then show all line loadings.",
-    "Wie is die spannung von bus 1 nachm lastfluss im Simulationsprogramm?",
-    "Gib mir mal bitte die busspannungen nachm LF in PF.",
-    "Mach load a 5 mw hoeher und sag busspannungen.",
-    "Was haengt an bus 5 dran und wie stark isses belastet? Nutze PF.",
-    "Wie ist die Auslastung von Line in PF?",
-    "Welche Farbe hat Bus 1 in Powerfactory?",
-    "Wie ist die Spannung in PF?",
-    "Schalte Schalter B an.",
-    "Erhöhe Last 3 um 20 MW.",
-    "Welche direkten topologischen Nachbarn hat Trafo 19-20 in den CIM-Daten?",
-    "Was hängt direkt an Transformator 19/20 in den CIM-Daten?",
-    "Welche Betriebsmittel sind in den CIM-Daten unmittelbar mit Trf 19 20 verbunden?",
-    "Zu welcher zusammenhängenden Komponente gehört Trafo 19-20 bei den CIM-Daten?",
-    "Zeig mir die Komponenten in den CIM-Daten rund um Transformator 19/20.",
-    "Welche Betriebsmittel liegen in der topologischen Komponente von Trf 19 20 in den CIM-Daten?",
-    "Wie hat sich am 09.01.2026 in den CIM-Daten die Spannung an Trafo 19-20 über die Zeit entwickelt?",
-    "Zeig mir den Spannungsverlauf am 09.01.2026 von Transformator 19/20 aus den historischen Daten.",
-    "Welche Spannung liegt im Zeitverlauf am 09.01.2026 an Trf 19 20 an?",
-    "Gib mir Min, Max und Mittelwert der Spannung von Trafo 19-20 aus den CIM-Daten am 09.01.2026.",
-    "Wie sind minimale, maximale und mittlere Spannung an Transformator 19/20 in den historischen Daten?",
-    "Nenne für Trf 19 20 den minimalen, maximalen und mittleren Spannungswert in den CIM-Daten.",
-    "Wie hat sich in CIM die Wirkleistung von Load 27 über die Zeit entwickelt?",
-    "Zeig mir den historischen Verlauf der aktiven Leistung von Verbraucher 27.",
-    "Welche P-Werte hat Last 27 im Zeitverlauf?",
-    "Wie hoch ist die Blindleistung von Load 27 im Verlauf?",
-    "Zeig mir den Q-Verlauf von Verbraucher 27.",
-    "Welche reaktive Leistung hat Last 27 über die Zeit?",
-    "Wie hoch war die Scheinleistung von Trafo 19-20 über die Zeit?",
-    "Zeig mir die Auslastung von Transformator 19/20 im Zeitverlauf.",
-    "Wie stark war Trf 19 20 ausgelastet?",
-    "Wann hatte Trafo 19-20 seine höchste und niedrigste Auslastung?",
-    "Zu welchen Zeitpunkten war Transformator 19/20 am stärksten bzw. am schwächsten ausgelastet?",
-    "Nenne mir Peak- und Minimum-Zeitpunkt der Auslastung von Trf 19 20.",
-    "Wie hoch war die Wirkleistung von Load 27 am 09.01.26 zwischen 14:00 und 15:00 Uhr?",
-    "Zeig mir den P-Verlauf von Verbraucher 27 im Zeitfenster 2026-01-09T14:00 bis 2026-01-09T15:00.",
-    "Welche aktive Leistung hatte Last 27 am 09.01.26 zwischen 14 und 15 Uhr?",
-    "Wie war die Spannung an Bus 19 am 09.01.2026 um 12 Uhr?",
-    "Zeig mir die Spannung von Bus 19 zum 2026-01-09T12:00:00Z.",
-    "Welche Spannung hatte Trf 19 20 Anfang 2026 mittags?",
-    "Wie ist die Spannung in den CIM-Daten?",
-    "Gib mir bitte die Spannung in den CIM-Daten.",
-    "Wie hoch ist aktuell die Spannung in CIM?",
-    "Wie hoch ist die Leistung in CIM?",
-    "Sag mir bitte die Wirkleistung in CIM.",
-    "Wie groß ist P gerade in CIM?",
-    "Wie war die durchschnittliche Auslastung von Trafo A am 09.01.2026?",
+    "Was ist die rated voltage von Bus 1 bei PowerFactory?",
+    "Wie hat sich in CIM die Wirkleistung von Load 27 am 09.01.2026 über die Zeit entwickelt?",
+    "Zu welchen Zeitpunkten war Transformator 19/20 am 09.01.26 am stärksten bzw. am schwächsten ausgelastet?",
+    "Wie ist die Spannung in den CIM-Daten?"
     "Wie war die Auslastung von Leitung 128 am 09.01.26?",
-    "Welche direkten Nachbarn hat Trafo 19-20 in den CIM-Daten? Wie hoch ist die Spannung von Trafo 19-20 am 09.01.2026?",
-    "Zu welcher topologischen Komponente gehört Load 27? Wie hoch war die Wirkleistung von Load 27 am 09.01.2026?",
-    "Welche Betriebsmittel sind mit Bus 19 verbunden? Wie hoch war die Spannung an Bus 19 am 09.01.2026?"
+
+
 ]
 
 OUTPUT_DIR = Path("router_batch_results") / datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -229,10 +72,81 @@ def json_default(obj: Any) -> str:
         return "<non-serializable>"
 
 
+def make_json_safe(
+    value: Any,
+    max_depth: int = 8,
+    _depth: int = 0,
+    _seen: set[int] | None = None,
+) -> Any:
+    if _seen is None:
+        _seen = set()
+
+    if _depth > max_depth:
+        return "<max_depth>"
+
+    if value is None or isinstance(value, (str, int, float, bool)):
+        return value
+
+    obj_id = id(value)
+
+    if isinstance(value, (dict, list, tuple, set)):
+        if obj_id in _seen:
+            return "<circular_reference>"
+
+        _seen.add(obj_id)
+
+        if isinstance(value, dict):
+            safe_dict: Dict[str, Any] = {}
+
+            for key, item in value.items():
+                key_text = str(key)
+
+                if key_text in {
+                    "services",
+                    "app",
+                    "project",
+                    "studycase",
+                    "context",
+                    "topology_graph",
+                    "resolved_object",
+                    "snapshot_cache",
+                    "network_index",
+                    "cim_snapshots",
+                    "base_snapshot",
+                }:
+                    safe_dict[key_text] = f"<omitted:{type(item).__name__}>"
+                else:
+                    safe_dict[key_text] = make_json_safe(
+                        item,
+                        max_depth=max_depth,
+                        _depth=_depth + 1,
+                        _seen=_seen,
+                    )
+
+            _seen.remove(obj_id)
+            return safe_dict
+
+        safe_list = [
+            make_json_safe(
+                item,
+                max_depth=max_depth,
+                _depth=_depth + 1,
+                _seen=_seen,
+            )
+            for item in list(value)[:100]
+        ]
+
+        _seen.remove(obj_id)
+        return safe_list
+
+    return f"<non_serializable:{type(value).__name__}>"
+
+
 def save_json(path: Path, payload: Dict[str, Any]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
+    safe_payload = make_json_safe(payload)
     with path.open("w", encoding="utf-8") as f:
-        json.dump(payload, f, ensure_ascii=False, indent=2, default=json_default)
+        json.dump(safe_payload, f, ensure_ascii=False, indent=2, default=json_default)
 
 
 def _clean_csv_cell(value: Any) -> str:
@@ -300,7 +214,7 @@ def _stringify(value: Any) -> str:
     if isinstance(value, (int, float, bool)):
         return str(value)
     try:
-        return json.dumps(value, ensure_ascii=False, default=json_default)
+        return json.dumps(make_json_safe(value), ensure_ascii=False, default=json_default)
     except Exception:
         return str(value)
 

@@ -1,0 +1,48 @@
+{
+  "run_id": 157,
+  "timestamp": "2026-05-13T19:40:49.260572",
+  "user_input": "Wie hoch ist die Leistung in CIM?",
+  "duration_seconds": 13.709,
+  "token_usage": {
+    "prompt_tokens": 4465,
+    "completion_tokens": 1378,
+    "total_tokens": 5843,
+    "details": {
+      "qwen3:30b": {
+        "input_tokens": 4465,
+        "output_tokens": 1378,
+        "total_tokens": 5843
+      }
+    }
+  },
+  "decision_trace": {
+    "domain": "ASK_USER",
+    "planning_mode": "",
+    "workflow": "",
+    "confidence": "",
+    "safe_to_execute": "",
+    "num_steps": 0,
+    "steps": "",
+    "planner_reasoning": "",
+    "resolved_object": "",
+    "resolved_object_confidence": "",
+    "selected_attributes": "",
+    "attribute_confidence": "",
+    "num_tool_calls": 0,
+    "executed_tools": "",
+    "failed_tool": ""
+  },
+  "router_output": {
+    "route": "ASK_USER",
+    "status": "needs_clarification",
+    "question": "Bitte geben Sie an, welche spezifische Leistung (z.B. an einem bestimmten Übertragungsleiter, Transformator oder Bus) und in welchem Zeitrahmen (z.B. letzte Stunde, bestimmtes Datum) Sie interessiert sind.",
+    "missing_fields": [
+      "Specific object (e.g., line, transformer, bus)",
+      "Time reference or snapshot",
+      "Type of power (active/reactive/apparent)"
+    ],
+    "partial": {
+      "user_input": "Wie hoch ist die Leistung in CIM?"
+    }
+  }
+}

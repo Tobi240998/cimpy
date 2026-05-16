@@ -1,0 +1,43 @@
+{
+  "run_id": 147,
+  "timestamp": "2026-05-15T11:20:13.614117",
+  "user_input": "Wie groß ist P gerade in CIM?",
+  "duration_seconds": 18.579,
+  "token_usage": {
+    "prompt_tokens": 778,
+    "completion_tokens": 1807,
+    "total_tokens": 2585,
+    "details": {
+      "qwen3:30b": {
+        "input_tokens": 778,
+        "output_tokens": 1807,
+        "total_tokens": 2585
+      }
+    }
+  },
+  "decision_trace": {
+    "domain": "ASK_USER",
+    "planning_mode": "",
+    "workflow": "",
+    "confidence": "",
+    "safe_to_execute": "",
+    "num_steps": 0,
+    "steps": "",
+    "planner_reasoning": "",
+    "resolved_object": "",
+    "resolved_object_confidence": "",
+    "selected_attributes": "",
+    "attribute_confidence": "",
+    "num_tool_calls": 0,
+    "executed_tools": "",
+    "failed_tool": ""
+  },
+  "router_output": {
+    "route": "ASK_USER",
+    "question": "Bitte geben Sie den genauen Zeitraum an, für den Sie die Wirkleistung in CIM benötigen (z.B. '2023-10-01', 'letzte Stunde', 'heute').",
+    "missing_fields": [
+      "time_range"
+    ],
+    "partial": {}
+  }
+}

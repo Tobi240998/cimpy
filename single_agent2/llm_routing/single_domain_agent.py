@@ -1,4 +1,5 @@
 from typing import Any, Dict, Optional
+from langchain_core.prompts import ChatPromptTemplate
 
 from cimpy.single_agent2.llm_routing.unified_executor import UnifiedExecutor
 from cimpy.single_agent2.llm_routing.unified_planner import UnifiedPlanner
@@ -10,12 +11,7 @@ from cimpy.single_agent2.pf.powerfactory_tool_registry import PowerFactoryToolRe
 from cimpy.single_agent2.cim.cim_tool_registry import CIMToolRegistry
 
 class SingleDomainAgent:
-    """
-    Phase-1 Single Agent:
-    - entscheidet intern zwischen CIM und PowerFactory
-    - nutzt vorerst die bestehenden DomainAgents weiter
-    - hält pending clarification state selbst
-    """
+
 
     def __init__(
         self,
@@ -104,12 +100,29 @@ class SingleDomainAgent:
             plan.model_dump() if hasattr(plan, "model_dump") else plan.dict()
         )
         result = self.executor.execute(plan)
+
+        final_answer = build_final_answer_with_llm(
+            llm=self.planner.llm,
+            user_input=user_input,
+            route=plan.domain,
+            execution_result=result,
+        )
+
+        if not isinstance(result, dict):
+            result = {"answer": str(result)}
+
+        result["raw_answer"] = result.get("answer")
+
+        if hasattr(final_answer, "content"):
+            result["answer"] = final_answer.content
+        else:
+            result["answer"] = str(final_answer)
+
         trace = []
-        if isinstance(result, dict):
-            trace = result.get("debug_trace", [])
-            if not trace:
-                debug = result.get("debug", {})
-                trace = debug.get("trace", []) if isinstance(debug, dict) else []
+        trace = result.get("debug_trace", [])
+        if not trace:
+            debug = result.get("debug", {})
+            trace = debug.get("trace", []) if isinstance(debug, dict) else []
 
         self._debug("EXECUTED_STEPS", [
             {
@@ -228,13 +241,60 @@ class SingleDomainAgent:
 
         result = out.get("result", {})
         if isinstance(result, dict):
-            answer = result.get("answer")
+            answer = result.get("raw_answer") or result.get("answer")
             if isinstance(answer, str):
                 return answer
 
         return ""
 
 
+def build_final_answer_with_llm(
+    llm,
+    user_input: str,
+    route: str,
+    execution_result: dict,
+) -> str:
+    prompt = ChatPromptTemplate.from_messages([
+        (
+            "system",
+            """
+You are the final answer formatter of an energy-grid analysis agent.
 
+Your task:
+- convert the provided execution result into a natural user-facing answer
+- use only information explicitly present in the execution result
+- preserve all numeric values, object names, timestamps, units, and statuses exactly
+- do not infer missing values
+- do not perform calculations
+- do not add explanations that are not present in the execution result
+- do not diagnose the system unless the execution result contains an error
+- if execution failed, state the error reason clearly and briefly
+- if the execution result already contains an answer, prefer that answer and only improve wording minimally
+- return only the final answer text
+"""
+        ),
+        (
+            "user",
+            """
+Original user request:
+{user_input}
+
+Route/domain:
+{route}
+
+Execution result:
+{execution_result}
+"""
+        )
+    ])
+
+    chain = prompt | llm
+    result = chain.invoke({
+        "user_input": user_input,
+        "route": route,
+        "execution_result": execution_result,
+    })
+
+    return result.content if hasattr(result, "content") else str(result)
 
     

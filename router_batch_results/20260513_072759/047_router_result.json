@@ -1,0 +1,53 @@
+{
+  "run_id": 47,
+  "timestamp": "2026-05-13T08:35:35.163591",
+  "user_input": "Gib mir die Basisdaten-Nennspannung von Bus 1 aus Powerfactory.",
+  "duration_seconds": 50.847,
+  "token_usage": {
+    "prompt_tokens": 4485,
+    "completion_tokens": 5029,
+    "total_tokens": 9514,
+    "details": {
+      "qwen3:30b": {
+        "input_tokens": 4485,
+        "output_tokens": 5029,
+        "total_tokens": 9514
+      }
+    }
+  },
+  "decision_trace": {
+    "domain": "powerfactory",
+    "planning_mode": "standard_workflow",
+    "workflow": "powerfactory",
+    "confidence": "",
+    "safe_to_execute": "True",
+    "num_steps": 0,
+    "steps": "",
+    "planner_reasoning": "The user explicitly requested data from PowerFactory ('aus Powerfactory') for a static base attribute (Nennspannung = rated voltage). This matches PowerFactory's standard workflow for querying element attributes, as rated voltage is a base parameter stored in the PowerFactory project, not historical CIM data. The standard_workflow 'powerfactory' correctly identifies the domain and intent.",
+    "resolved_object": "",
+    "resolved_object_confidence": "",
+    "selected_attributes": "",
+    "attribute_confidence": "",
+    "num_tool_calls": 0,
+    "executed_tools": "",
+    "failed_tool": ""
+  },
+  "router_output": {
+    "route": "ERROR",
+    "status": "error",
+    "result": {
+      "status": "error",
+      "answer": "Unbekannter Standard-Workflow: powerfactory",
+      "planner_decision": {
+        "domain": "powerfactory",
+        "planning_mode": "standard_workflow",
+        "workflow": "powerfactory",
+        "custom_steps": [],
+        "safe_to_execute": true,
+        "missing_context": [],
+        "clarification_question": "",
+        "reasoning": "The user explicitly requested data from PowerFactory ('aus Powerfactory') for a static base attribute (Nennspannung = rated voltage). This matches PowerFactory's standard workflow for querying element attributes, as rated voltage is a base parameter stored in the PowerFactory project, not historical CIM data. The standard_workflow 'powerfactory' correctly identifies the domain and intent."
+      }
+    }
+  }
+}
