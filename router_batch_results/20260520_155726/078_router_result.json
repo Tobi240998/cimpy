@@ -1,0 +1,47 @@
+{
+  "run_id": 78,
+  "timestamp": "2026-05-20T16:41:31.698438",
+  "user_input": "Wie is die spannung von bus 1 nachm lastfluss im Simulationsprogramm?",
+  "duration_seconds": 0.667,
+  "token_usage": {
+    "prompt_tokens": 833,
+    "completion_tokens": 103,
+    "total_tokens": 936,
+    "details": {
+      "phi3:mini": {
+        "input_tokens": 833,
+        "output_tokens": 103,
+        "total_tokens": 936
+      }
+    }
+  },
+  "decision_trace": {
+    "domain": "ASK_USER",
+    "planning_mode": "",
+    "workflow": "",
+    "confidence": "",
+    "safe_to_execute": "",
+    "num_steps": 0,
+    "steps": "",
+    "planner_reasoning": "",
+    "resolved_object": "<omitted:str>",
+    "resolved_object_confidence": "",
+    "selected_attributes": "",
+    "attribute_confidence": "",
+    "num_tool_calls": 0,
+    "executed_tools": "",
+    "failed_tool": "",
+    "equipment_resolution_mode": "",
+    "attribute_resolution_mode": "",
+    "comparison_resolution_mode": ""
+  },
+  "router_output": {
+    "route": "ASK_USER",
+    "question": "Könnten Sie bitte spezifizieren, welches Simulationsprogramm Sie meinen und ob es sich um einen historischen Lastfluss oder ein zukünftiges Szenario handeln soll? Zusätzlich benötigen wir den Zeitraum für die Analyse.",
+    "missing_fields": [
+      "simulation_tool",
+      "time_range"
+    ],
+    "partial": {}
+  }
+}

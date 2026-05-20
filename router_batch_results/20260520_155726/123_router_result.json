@@ -1,0 +1,117 @@
+{
+  "run_id": 123,
+  "timestamp": "2026-05-20T17:11:25.976585",
+  "user_input": "Was is die nennspannung von bus 19 aus den historischen daten?",
+  "duration_seconds": 3.762,
+  "token_usage": {
+    "prompt_tokens": 4441,
+    "completion_tokens": 566,
+    "total_tokens": 5007,
+    "details": {
+      "phi3:mini": {
+        "input_tokens": 4441,
+        "output_tokens": 566,
+        "total_tokens": 5007
+      }
+    }
+  },
+  "decision_trace": {
+    "domain": "HISTORICAL",
+    "planning_mode": "",
+    "workflow": "",
+    "confidence": "high",
+    "safe_to_execute": "False",
+    "num_steps": 0,
+    "steps": "",
+    "planner_reasoning": "The request requires a specific point in history to provide an accurate answer. Without this context, it's not safe to execute.",
+    "resolved_object": "<omitted:str>",
+    "resolved_object_confidence": "",
+    "selected_attributes": "",
+    "attribute_confidence": "",
+    "num_tool_calls": 1,
+    "executed_tools": "unsupported_request",
+    "failed_tool": "unsupported_request",
+    "equipment_resolution_mode": "",
+    "attribute_resolution_mode": "",
+    "comparison_resolution_mode": ""
+  },
+  "router_output": {
+    "route": "HISTORICAL",
+    "result": {
+      "status": "error",
+      "tool": "cim_agent",
+      "agent": "CIMDomainAgent",
+      "error": "unsupported_cim_request",
+      "answer": "Die Anfrage zur Nennspannung von Bus 19 in den historischen Daten ist derzeit nicht ausführbar, da die CIM-Anfrage noch nicht unterstützt oder sicher implementiert wurde. Bitte geben Sie einen spezifischen Zeitraum für die gewünschten historischen Daten an.",
+      "classification": {
+        "intent": "historical_analysis",
+        "confidence": "high",
+        "target_kind": "metric",
+        "request_mode": "standard_sv",
+        "safe_to_execute": false,
+        "missing_context": [
+          "Specific date or time range for the historical data"
+        ],
+        "required_steps": [],
+        "reasoning": "The request requires a specific point in history to provide an accurate answer. Without this context, it's not safe to execute.",
+        "status": "ok",
+        "classification_mode": "primary_llm_classifier"
+      },
+      "user_input": "Was is die nennspannung von bus 19 aus den historischen daten?",
+      "debug": {
+        "trace": [
+          {
+            "step": "unsupported_request",
+            "effective_user_input": "Was is die nennspannung von bus 19 aus den historischen daten?",
+            "source_subrequest": null,
+            "result": "<circular_reference>"
+          }
+        ],
+        "classification": {
+          "intent": "historical_analysis",
+          "confidence": "high",
+          "target_kind": "metric",
+          "request_mode": "standard_sv",
+          "safe_to_execute": false,
+          "missing_context": [
+            "Specific date or time range for the historical data"
+          ],
+          "required_steps": [],
+          "reasoning": "The request requires a specific point in history to provide an accurate answer. Without this context, it's not safe to execute.",
+          "status": "ok",
+          "classification_mode": "primary_llm_classifier"
+        },
+        "plan": [
+          {
+            "step": "unsupported_request",
+            "description": "Return a controlled unsupported-workflow message"
+          }
+        ],
+        "run_summary": {
+          "user_input": "Was is die nennspannung von bus 19 aus den historischen daten?",
+          "classification_summary": {
+            "intent": "historical_analysis",
+            "request_mode": "standard_sv",
+            "safe_to_execute": false,
+            "target_kind": "metric",
+            "confidence": "high",
+            "classification_mode": "primary_llm_classifier",
+            "missing_context": [
+              "Specific date or time range for the historical data"
+            ]
+          },
+          "planned_steps": [
+            "unsupported_request"
+          ],
+          "selected_type": null,
+          "selected_equipment_id": null,
+          "selected_equipment_name": null,
+          "parsed_query_summary": null,
+          "final_status": "error",
+          "final_answer": "Die Anfrage wurde zur CIM-Seite geroutet, ist aktuell aber noch nicht sicher oder unterstützt ausführbar. Fehlender Kontext: Specific date or time range for the historical data."
+        }
+      },
+      "raw_answer": "Die Anfrage wurde zur CIM-Seite geroutet, ist aktuell aber noch nicht sicher oder unterstützt ausführbar. Fehlender Kontext: Specific date or time range for the historical data."
+    }
+  }
+}

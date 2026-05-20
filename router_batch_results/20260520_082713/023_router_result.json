@@ -1,0 +1,1092 @@
+{
+  "run_id": 23,
+  "timestamp": "2026-05-20T08:33:00.183194",
+  "user_input": "Schalte den Schalter Schalter 1 um.",
+  "duration_seconds": 8.578,
+  "token_usage": {
+    "prompt_tokens": 6251,
+    "completion_tokens": 284,
+    "total_tokens": 6535,
+    "details": {
+      "phi3:mini": {
+        "input_tokens": 6251,
+        "output_tokens": 284,
+        "total_tokens": 6535
+      }
+    }
+  },
+  "decision_trace": {
+    "domain": "powerfactory",
+    "planning_mode": "standard_workflow",
+    "workflow": "pf.change_switch_state",
+    "confidence": "",
+    "safe_to_execute": "True",
+    "num_steps": 5,
+    "steps": "powerfactory.interpret_switch_instruction | powerfactory.build_unified_inventory | powerfactory.resolve_objects_from_inventory_llm | powerfactory.execute_switch_operation | powerfactory.summarize_switch_result",
+    "planner_reasoning": "",
+    "resolved_object": "<omitted:str>",
+    "resolved_object_confidence": "",
+    "selected_attributes": "",
+    "attribute_confidence": "",
+    "num_tool_calls": 5,
+    "executed_tools": "interpret_switch_instruction | build_unified_inventory | resolve_objects_from_inventory_llm | execute_switch_operation | summarize_switch_result",
+    "failed_tool": ""
+  },
+  "router_output": {
+    "route": "POWERFACTORY",
+    "domain": "powerfactory",
+    "plan": {
+      "domain": "powerfactory",
+      "user_input": "Schalte den Schalter Schalter 1 um.",
+      "steps": [
+        {
+          "domain": "powerfactory",
+          "tool": "interpret_switch_instruction",
+          "args": {},
+          "save_as": null,
+          "description": "standard_workflow: pf.change_switch_state",
+          "mutating": false
+        },
+        {
+          "domain": "powerfactory",
+          "tool": "build_unified_inventory",
+          "args": {},
+          "save_as": null,
+          "description": "standard_workflow: pf.change_switch_state",
+          "mutating": false
+        },
+        {
+          "domain": "powerfactory",
+          "tool": "resolve_objects_from_inventory_llm",
+          "args": {},
+          "save_as": null,
+          "description": "standard_workflow: pf.change_switch_state",
+          "mutating": false
+        },
+        {
+          "domain": "powerfactory",
+          "tool": "execute_switch_operation",
+          "args": {},
+          "save_as": null,
+          "description": "standard_workflow: pf.change_switch_state",
+          "mutating": false
+        },
+        {
+          "domain": "powerfactory",
+          "tool": "summarize_switch_result",
+          "args": {},
+          "save_as": null,
+          "description": "standard_workflow: pf.change_switch_state",
+          "mutating": false
+        }
+      ],
+      "classification": {
+        "domain": "powerfactory",
+        "planning_mode": "standard_workflow",
+        "workflow": "pf.change_switch_state",
+        "custom_steps": [],
+        "safe_to_execute": true,
+        "missing_context": [],
+        "clarification_question": "",
+        "reasoning": ""
+      },
+      "reasoning": ""
+    },
+    "planner_decision": {
+      "domain": "powerfactory",
+      "planning_mode": "standard_workflow",
+      "workflow": "pf.change_switch_state",
+      "custom_steps": [],
+      "safe_to_execute": true,
+      "missing_context": [],
+      "clarification_question": "",
+      "reasoning": ""
+    },
+    "result": {
+      "status": "ok",
+      "tool": "powerfactory",
+      "agent": "SingleAgent",
+      "project": "<omitted:str>",
+      "studycase": "<omitted:str>",
+      "user_input": "Schalte den Schalter Schalter 1 um.",
+      "classification": {
+        "domain": "powerfactory",
+        "planning_mode": "standard_workflow",
+        "workflow": "pf.change_switch_state",
+        "custom_steps": [],
+        "safe_to_execute": true,
+        "missing_context": [],
+        "clarification_question": "",
+        "reasoning": ""
+      },
+      "plan": [
+        {
+          "step": "interpret_switch_instruction",
+          "description": "standard_workflow: pf.change_switch_state"
+        },
+        {
+          "step": "build_unified_inventory",
+          "description": "standard_workflow: pf.change_switch_state"
+        },
+        {
+          "step": "resolve_objects_from_inventory_llm",
+          "description": "standard_workflow: pf.change_switch_state"
+        },
+        {
+          "step": "execute_switch_operation",
+          "description": "standard_workflow: pf.change_switch_state"
+        },
+        {
+          "step": "summarize_switch_result",
+          "description": "standard_workflow: pf.change_switch_state"
+        }
+      ],
+      "available_tools": [
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>"
+      ],
+      "instruction": null,
+      "resolved_load": null,
+      "data": {},
+      "catalog": [],
+      "messages": [
+        "Die Schalteroperation 'toggle' wurde für 'Switch 1' (StaSwitch) ausgeführt. Zustand vorher: closed. Zustand nachher: open. Anschließend wurde ein Lastfluss gerechnet."
+      ],
+      "answer": "Der Schalter Schalter 1 wurde umgeschaltet. Der Zustand vor der Operation war geschlossen (closed), und jetzt ist er geöffnet (open). Nach dem Umlegen des Schalters wurde ein Lastfluss gerechnet.",
+      "summary": {
+        "status": "ok",
+        "tool": "merged_powerfactory_summary",
+        "answer": "Die Schalteroperation 'toggle' wurde für 'Switch 1' (StaSwitch) ausgeführt. Zustand vorher: closed. Zustand nachher: open. Anschließend wurde ein Lastfluss gerechnet.",
+        "messages": [
+          "Die Schalteroperation 'toggle' wurde für 'Switch 1' (StaSwitch) ausgeführt. Zustand vorher: closed. Zustand nachher: open. Anschließend wurde ein Lastfluss gerechnet."
+        ],
+        "summary_count": 1,
+        "plan_steps": [
+          "interpret_switch_instruction",
+          "build_unified_inventory",
+          "resolve_objects_from_inventory_llm",
+          "execute_switch_operation",
+          "summarize_switch_result"
+        ]
+      },
+      "summary_parts": [
+        {
+          "status": "ok",
+          "tool": "summarize_switch_result",
+          "project": "<omitted:str>",
+          "answer": "Die Schalteroperation 'toggle' wurde für 'Switch 1' (StaSwitch) ausgeführt. Zustand vorher: closed. Zustand nachher: open. Anschließend wurde ein Lastfluss gerechnet.",
+          "messages": []
+        }
+      ],
+      "topology": {
+        "graph_mode": null,
+        "graph_summary": {},
+        "build_debug": {},
+        "inventory": {},
+        "instruction": null,
+        "resolution": null,
+        "selected_node": null,
+        "neighbor_count": 0,
+        "neighbors": [],
+        "matches": []
+      },
+      "switch": {
+        "instruction": {
+          "query_type": "switch_operation",
+          "operation": "toggle",
+          "entity_type": "switch",
+          "entity_name_raw": "Schalte den Schalter Schalter 1 um.",
+          "entity_name_candidates": [
+            "Schalter 1"
+          ],
+          "available_types": [
+            "switch"
+          ],
+          "debug_switch_decision": {
+            "operation": "toggle",
+            "should_execute": true,
+            "confidence": "medium",
+            "rationale": "The user requested to switch 'Schalter 1', but the exact operation (open, close) is not specified. Therefore, toggling is a reasonable default action."
+          }
+        },
+        "resolution": {
+          "status": "ok",
+          "tool": "resolve_objects_from_inventory_llm",
+          "project": "<omitted:str>",
+          "instruction": {
+            "query_type": "switch_operation",
+            "operation": "toggle",
+            "entity_type": "switch",
+            "entity_name_raw": "Schalte den Schalter Schalter 1 um.",
+            "entity_name_candidates": [
+              "Schalter 1"
+            ],
+            "available_types": [
+              "switch"
+            ],
+            "debug_switch_decision": {
+              "operation": "toggle",
+              "should_execute": true,
+              "confidence": "medium",
+              "rationale": "The user requested to switch 'Schalter 1', but the exact operation (open, close) is not specified. Therefore, toggling is a reasonable default action."
+            }
+          },
+          "asset_query": "Switch 1",
+          "selected_match": {
+            "node_id": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 7.ElmTerm\\Cub_1.StaCubic\\Switch 1.StaSwitch",
+            "name": "Switch 1",
+            "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 7.ElmTerm\\Cub_1.StaCubic\\Switch 1.StaSwitch",
+            "pf_class": "StaSwitch",
+            "kind": "sta",
+            "degree": 0,
+            "inventory_type": "switch"
+          },
+          "selected_matches": [
+            {
+              "node_id": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 7.ElmTerm\\Cub_1.StaCubic\\Switch 1.StaSwitch",
+              "name": "Switch 1",
+              "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 7.ElmTerm\\Cub_1.StaCubic\\Switch 1.StaSwitch",
+              "pf_class": "StaSwitch",
+              "kind": "sta",
+              "degree": 0,
+              "inventory_type": "switch"
+            }
+          ],
+          "selected_object_names": [
+            "Switch 1"
+          ],
+          "selection_mode": "one",
+          "matches": [
+            {
+              "node_id": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 7.ElmTerm\\Cub_1.StaCubic\\Switch 1.StaSwitch",
+              "name": "Switch 1",
+              "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 7.ElmTerm\\Cub_1.StaCubic\\Switch 1.StaSwitch",
+              "pf_class": "StaSwitch",
+              "kind": "sta",
+              "degree": 0,
+              "inventory_type": "switch"
+            }
+          ],
+          "llm_decision": {
+            "selected_object_name": "Switch 1",
+            "selected_object_names": [],
+            "selection_mode": "one",
+            "confidence": "high",
+            "rationale": "The user requested to switch 'Schalter 1' which matches exactly with the available candidate 'Switch 1'.",
+            "alternatives": [],
+            "should_execute": true
+          },
+          "entity_type": "switch"
+        },
+        "execution": {
+          "status": "ok",
+          "tool": "execute_switch_operation",
+          "project": "<omitted:str>",
+          "studycase": "<omitted:str>",
+          "instruction": {
+            "query_type": "switch_operation",
+            "operation": "toggle",
+            "entity_type": "switch",
+            "entity_name_raw": "Schalte den Schalter Schalter 1 um.",
+            "entity_name_candidates": [
+              "Schalter 1"
+            ],
+            "available_types": [
+              "switch"
+            ],
+            "debug_switch_decision": {
+              "operation": "toggle",
+              "should_execute": true,
+              "confidence": "medium",
+              "rationale": "The user requested to switch 'Schalter 1', but the exact operation (open, close) is not specified. Therefore, toggling is a reasonable default action."
+            }
+          },
+          "resolution": {
+            "status": "ok",
+            "tool": "resolve_objects_from_inventory_llm",
+            "project": "<omitted:str>",
+            "instruction": {
+              "query_type": "switch_operation",
+              "operation": "toggle",
+              "entity_type": "switch",
+              "entity_name_raw": "Schalte den Schalter Schalter 1 um.",
+              "entity_name_candidates": [
+                "Schalter 1"
+              ],
+              "available_types": [
+                "switch"
+              ],
+              "debug_switch_decision": {
+                "operation": "toggle",
+                "should_execute": true,
+                "confidence": "medium",
+                "rationale": "The user requested to switch 'Schalter 1', but the exact operation (open, close) is not specified. Therefore, toggling is a reasonable default action."
+              }
+            },
+            "asset_query": "Switch 1",
+            "selected_match": {
+              "node_id": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 7.ElmTerm\\Cub_1.StaCubic\\Switch 1.StaSwitch",
+              "name": "Switch 1",
+              "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 7.ElmTerm\\Cub_1.StaCubic\\Switch 1.StaSwitch",
+              "pf_class": "StaSwitch",
+              "kind": "sta",
+              "degree": 0,
+              "inventory_type": "switch"
+            },
+            "selected_matches": [
+              {
+                "node_id": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 7.ElmTerm\\Cub_1.StaCubic\\Switch 1.StaSwitch",
+                "name": "Switch 1",
+                "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 7.ElmTerm\\Cub_1.StaCubic\\Switch 1.StaSwitch",
+                "pf_class": "StaSwitch",
+                "kind": "sta",
+                "degree": 0,
+                "inventory_type": "switch"
+              }
+            ],
+            "selected_object_names": [
+              "Switch 1"
+            ],
+            "selection_mode": "one",
+            "matches": [
+              {
+                "node_id": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 7.ElmTerm\\Cub_1.StaCubic\\Switch 1.StaSwitch",
+                "name": "Switch 1",
+                "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 7.ElmTerm\\Cub_1.StaCubic\\Switch 1.StaSwitch",
+                "pf_class": "StaSwitch",
+                "kind": "sta",
+                "degree": 0,
+                "inventory_type": "switch"
+              }
+            ],
+            "llm_decision": {
+              "selected_object_name": "Switch 1",
+              "selected_object_names": [],
+              "selection_mode": "one",
+              "confidence": "high",
+              "rationale": "The user requested to switch 'Schalter 1' which matches exactly with the available candidate 'Switch 1'.",
+              "alternatives": [],
+              "should_execute": true
+            },
+            "entity_type": "switch"
+          },
+          "switch": {
+            "name": "Switch 1",
+            "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 7.ElmTerm\\Cub_1.StaCubic\\Switch 1.StaSwitch",
+            "pf_class": "StaSwitch"
+          },
+          "state_before": "closed",
+          "state_after": "open",
+          "state_before_raw": {
+            "status": "ok",
+            "state_source": "on_off",
+            "raw_value": 1
+          },
+          "state_after_raw": {
+            "status": "ok",
+            "state_source": "on_off",
+            "raw_value": 0
+          },
+          "apply_result": {
+            "status": "ok",
+            "apply_mode": "method",
+            "apply_target": "Open",
+            "method_result": 0
+          },
+          "loadflow": {
+            "executed": true,
+            "loadflow_command": "Load Flow Calculation"
+          }
+        },
+        "summary": {
+          "status": "ok",
+          "tool": "summarize_switch_result",
+          "project": "<omitted:str>",
+          "answer": "Die Schalteroperation 'toggle' wurde für 'Switch 1' (StaSwitch) ausgeführt. Zustand vorher: closed. Zustand nachher: open. Anschließend wurde ein Lastfluss gerechnet.",
+          "messages": []
+        }
+      },
+      "data_query": {
+        "inventory": null,
+        "instruction": null,
+        "resolution": {
+          "status": "ok",
+          "tool": "resolve_objects_from_inventory_llm",
+          "project": "<omitted:str>",
+          "instruction": {
+            "query_type": "switch_operation",
+            "operation": "toggle",
+            "entity_type": "switch",
+            "entity_name_raw": "Schalte den Schalter Schalter 1 um.",
+            "entity_name_candidates": [
+              "Schalter 1"
+            ],
+            "available_types": [
+              "switch"
+            ],
+            "debug_switch_decision": {
+              "operation": "toggle",
+              "should_execute": true,
+              "confidence": "medium",
+              "rationale": "The user requested to switch 'Schalter 1', but the exact operation (open, close) is not specified. Therefore, toggling is a reasonable default action."
+            }
+          },
+          "asset_query": "Switch 1",
+          "selected_match": {
+            "node_id": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 7.ElmTerm\\Cub_1.StaCubic\\Switch 1.StaSwitch",
+            "name": "Switch 1",
+            "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 7.ElmTerm\\Cub_1.StaCubic\\Switch 1.StaSwitch",
+            "pf_class": "StaSwitch",
+            "kind": "sta",
+            "degree": 0,
+            "inventory_type": "switch"
+          },
+          "selected_matches": [
+            {
+              "node_id": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 7.ElmTerm\\Cub_1.StaCubic\\Switch 1.StaSwitch",
+              "name": "Switch 1",
+              "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 7.ElmTerm\\Cub_1.StaCubic\\Switch 1.StaSwitch",
+              "pf_class": "StaSwitch",
+              "kind": "sta",
+              "degree": 0,
+              "inventory_type": "switch"
+            }
+          ],
+          "selected_object_names": [
+            "Switch 1"
+          ],
+          "selection_mode": "one",
+          "matches": [
+            {
+              "node_id": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 7.ElmTerm\\Cub_1.StaCubic\\Switch 1.StaSwitch",
+              "name": "Switch 1",
+              "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 7.ElmTerm\\Cub_1.StaCubic\\Switch 1.StaSwitch",
+              "pf_class": "StaSwitch",
+              "kind": "sta",
+              "degree": 0,
+              "inventory_type": "switch"
+            }
+          ],
+          "llm_decision": {
+            "selected_object_name": "Switch 1",
+            "selected_object_names": [],
+            "selection_mode": "one",
+            "confidence": "high",
+            "rationale": "The user requested to switch 'Schalter 1' which matches exactly with the available candidate 'Switch 1'.",
+            "alternatives": [],
+            "should_execute": true
+          },
+          "entity_type": "switch"
+        },
+        "attribute_listing": null,
+        "attribute_selection": null,
+        "execution": null,
+        "summary": null
+      },
+      "debug": {
+        "planning": {},
+        "selected_equipment": {
+          "resolved_load": null,
+          "entity_resolution": null,
+          "object_resolution": {
+            "status": "ok",
+            "tool": "resolve_objects_from_inventory_llm",
+            "project": "<omitted:str>",
+            "instruction": {
+              "query_type": "switch_operation",
+              "operation": "toggle",
+              "entity_type": "switch",
+              "entity_name_raw": "Schalte den Schalter Schalter 1 um.",
+              "entity_name_candidates": [
+                "Schalter 1"
+              ],
+              "available_types": [
+                "switch"
+              ],
+              "debug_switch_decision": {
+                "operation": "toggle",
+                "should_execute": true,
+                "confidence": "medium",
+                "rationale": "The user requested to switch 'Schalter 1', but the exact operation (open, close) is not specified. Therefore, toggling is a reasonable default action."
+              }
+            },
+            "asset_query": "Switch 1",
+            "selected_match": {
+              "node_id": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 7.ElmTerm\\Cub_1.StaCubic\\Switch 1.StaSwitch",
+              "name": "Switch 1",
+              "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 7.ElmTerm\\Cub_1.StaCubic\\Switch 1.StaSwitch",
+              "pf_class": "StaSwitch",
+              "kind": "sta",
+              "degree": 0,
+              "inventory_type": "switch"
+            },
+            "selected_matches": [
+              {
+                "node_id": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 7.ElmTerm\\Cub_1.StaCubic\\Switch 1.StaSwitch",
+                "name": "Switch 1",
+                "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 7.ElmTerm\\Cub_1.StaCubic\\Switch 1.StaSwitch",
+                "pf_class": "StaSwitch",
+                "kind": "sta",
+                "degree": 0,
+                "inventory_type": "switch"
+              }
+            ],
+            "selected_object_names": [
+              "Switch 1"
+            ],
+            "selection_mode": "one",
+            "matches": [
+              {
+                "node_id": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 7.ElmTerm\\Cub_1.StaCubic\\Switch 1.StaSwitch",
+                "name": "Switch 1",
+                "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 7.ElmTerm\\Cub_1.StaCubic\\Switch 1.StaSwitch",
+                "pf_class": "StaSwitch",
+                "kind": "sta",
+                "degree": 0,
+                "inventory_type": "switch"
+              }
+            ],
+            "llm_decision": {
+              "selected_object_name": "Switch 1",
+              "selected_object_names": [],
+              "selection_mode": "one",
+              "confidence": "high",
+              "rationale": "The user requested to switch 'Schalter 1' which matches exactly with the available candidate 'Switch 1'.",
+              "alternatives": [],
+              "should_execute": true
+            },
+            "entity_type": "switch"
+          }
+        },
+        "trace": [
+          {
+            "step": "interpret_switch_instruction",
+            "effective_user_input": "Schalte den Schalter Schalter 1 um.",
+            "source_subrequest": null,
+            "tool_spec": {
+              "name": "interpret_switch_instruction",
+              "description": "Interpret a natural-language switch request into a structured switch operation instruction.",
+              "capability_tags": [],
+              "mutating": false
+            },
+            "tool_kwargs": {
+              "services": "<omitted:dict>",
+              "user_input": "Schalte den Schalter Schalter 1 um.",
+              "inventory": {}
+            },
+            "result": {
+              "status": "ok",
+              "tool": "interpret_switch_instruction",
+              "user_input": "Schalte den Schalter Schalter 1 um.",
+              "project": "<omitted:str>",
+              "instruction": {
+                "query_type": "switch_operation",
+                "operation": "toggle",
+                "entity_type": "switch",
+                "entity_name_raw": "Schalte den Schalter Schalter 1 um.",
+                "entity_name_candidates": [
+                  "<max_depth>"
+                ],
+                "available_types": [
+                  "<max_depth>"
+                ],
+                "debug_switch_decision": {
+                  "operation": "<max_depth>",
+                  "should_execute": "<max_depth>",
+                  "confidence": "<max_depth>",
+                  "rationale": "<max_depth>"
+                }
+              }
+            }
+          },
+          {
+            "step": "build_unified_inventory",
+            "effective_user_input": "Schalte den Schalter Schalter 1 um.",
+            "source_subrequest": null,
+            "tool_spec": {
+              "name": "build_unified_inventory",
+              "description": "Build a unified non-topology PowerFactory inventory for supported object types.",
+              "capability_tags": [],
+              "mutating": false
+            },
+            "tool_kwargs": {
+              "services": "<omitted:dict>",
+              "allowed_types": [
+                "bus",
+                "load",
+                "line",
+                "transformer",
+                "generator",
+                "switch"
+              ]
+            },
+            "result": {
+              "status": "ok",
+              "tool": "build_unified_inventory",
+              "project": "<omitted:str>",
+              "inventory": {
+                "available_types": [
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>"
+                ],
+                "counts_by_type": {
+                  "bus": "<max_depth>",
+                  "load": "<max_depth>",
+                  "line": "<max_depth>",
+                  "transformer": "<max_depth>",
+                  "generator": "<max_depth>",
+                  "switch": "<max_depth>"
+                },
+                "items_by_type": {
+                  "bus": "<max_depth>",
+                  "load": "<max_depth>",
+                  "line": "<max_depth>",
+                  "transformer": "<max_depth>",
+                  "generator": "<max_depth>",
+                  "switch": "<max_depth>"
+                },
+                "samples_by_type": {
+                  "bus": "<max_depth>",
+                  "load": "<max_depth>",
+                  "line": "<max_depth>",
+                  "transformer": "<max_depth>",
+                  "generator": "<max_depth>",
+                  "switch": "<max_depth>"
+                }
+              },
+              "allowed_types": [
+                "bus",
+                "load",
+                "line",
+                "transformer",
+                "generator",
+                "switch"
+              ]
+            }
+          },
+          {
+            "step": "resolve_objects_from_inventory_llm",
+            "effective_user_input": "Schalte den Schalter Schalter 1 um.",
+            "source_subrequest": null,
+            "tool_spec": {
+              "name": "resolve_objects_from_inventory_llm",
+              "description": "Resolve PowerFactory objects by LLM-based exact candidate selection from a unified non-topology inventory.",
+              "capability_tags": [],
+              "mutating": false
+            },
+            "tool_kwargs": {
+              "services": "<omitted:dict>",
+              "instruction": {
+                "query_type": "switch_operation",
+                "operation": "toggle",
+                "entity_type": "switch",
+                "entity_name_raw": "Schalte den Schalter Schalter 1 um.",
+                "entity_name_candidates": [
+                  "<max_depth>"
+                ],
+                "available_types": [
+                  "<max_depth>"
+                ],
+                "debug_switch_decision": {
+                  "operation": "<max_depth>",
+                  "should_execute": "<max_depth>",
+                  "confidence": "<max_depth>",
+                  "rationale": "<max_depth>"
+                }
+              },
+              "inventory": {
+                "available_types": [
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>"
+                ],
+                "counts_by_type": {
+                  "bus": "<max_depth>",
+                  "load": "<max_depth>",
+                  "line": "<max_depth>",
+                  "transformer": "<max_depth>",
+                  "generator": "<max_depth>",
+                  "switch": "<max_depth>"
+                },
+                "items_by_type": {
+                  "bus": "<max_depth>",
+                  "load": "<max_depth>",
+                  "line": "<max_depth>",
+                  "transformer": "<max_depth>",
+                  "generator": "<max_depth>",
+                  "switch": "<max_depth>"
+                },
+                "samples_by_type": {
+                  "bus": "<max_depth>",
+                  "load": "<max_depth>",
+                  "line": "<max_depth>",
+                  "transformer": "<max_depth>",
+                  "generator": "<max_depth>",
+                  "switch": "<max_depth>"
+                }
+              }
+            },
+            "result": {
+              "status": "ok",
+              "tool": "resolve_objects_from_inventory_llm",
+              "project": "<omitted:str>",
+              "instruction": {
+                "query_type": "switch_operation",
+                "operation": "toggle",
+                "entity_type": "switch",
+                "entity_name_raw": "Schalte den Schalter Schalter 1 um.",
+                "entity_name_candidates": [
+                  "<max_depth>"
+                ],
+                "available_types": [
+                  "<max_depth>"
+                ],
+                "debug_switch_decision": {
+                  "operation": "<max_depth>",
+                  "should_execute": "<max_depth>",
+                  "confidence": "<max_depth>",
+                  "rationale": "<max_depth>"
+                }
+              },
+              "asset_query": "Switch 1",
+              "selected_match": {
+                "node_id": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 7.ElmTerm\\Cub_1.StaCubic\\Switch 1.StaSwitch",
+                "name": "Switch 1",
+                "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 7.ElmTerm\\Cub_1.StaCubic\\Switch 1.StaSwitch",
+                "pf_class": "StaSwitch",
+                "kind": "sta",
+                "degree": 0,
+                "inventory_type": "switch"
+              },
+              "selected_matches": [
+                {
+                  "node_id": "<max_depth>",
+                  "name": "<max_depth>",
+                  "full_name": "<max_depth>",
+                  "pf_class": "<max_depth>",
+                  "kind": "<max_depth>",
+                  "degree": "<max_depth>",
+                  "inventory_type": "<max_depth>"
+                }
+              ],
+              "selected_object_names": [
+                "Switch 1"
+              ],
+              "selection_mode": "one",
+              "matches": [
+                {
+                  "node_id": "<max_depth>",
+                  "name": "<max_depth>",
+                  "full_name": "<max_depth>",
+                  "pf_class": "<max_depth>",
+                  "kind": "<max_depth>",
+                  "degree": "<max_depth>",
+                  "inventory_type": "<max_depth>"
+                }
+              ],
+              "llm_decision": {
+                "selected_object_name": "Switch 1",
+                "selected_object_names": [],
+                "selection_mode": "one",
+                "confidence": "high",
+                "rationale": "The user requested to switch 'Schalter 1' which matches exactly with the available candidate 'Switch 1'.",
+                "alternatives": [],
+                "should_execute": true
+              },
+              "entity_type": "switch"
+            }
+          },
+          {
+            "step": "execute_switch_operation",
+            "effective_user_input": "Schalte den Schalter Schalter 1 um.",
+            "source_subrequest": null,
+            "tool_spec": {
+              "name": "execute_switch_operation",
+              "description": "Execute an open/close/toggle operation on a resolved switch object in PowerFactory.",
+              "capability_tags": [],
+              "mutating": true
+            },
+            "tool_kwargs": {
+              "services": "<omitted:dict>",
+              "instruction": {
+                "query_type": "switch_operation",
+                "operation": "toggle",
+                "entity_type": "switch",
+                "entity_name_raw": "Schalte den Schalter Schalter 1 um.",
+                "entity_name_candidates": [
+                  "<max_depth>"
+                ],
+                "available_types": [
+                  "<max_depth>"
+                ],
+                "debug_switch_decision": {
+                  "operation": "<max_depth>",
+                  "should_execute": "<max_depth>",
+                  "confidence": "<max_depth>",
+                  "rationale": "<max_depth>"
+                }
+              },
+              "resolution": {
+                "status": "ok",
+                "tool": "resolve_objects_from_inventory_llm",
+                "project": "<omitted:str>",
+                "instruction": {
+                  "query_type": "<max_depth>",
+                  "operation": "<max_depth>",
+                  "entity_type": "<max_depth>",
+                  "entity_name_raw": "<max_depth>",
+                  "entity_name_candidates": "<max_depth>",
+                  "available_types": "<max_depth>",
+                  "debug_switch_decision": "<max_depth>"
+                },
+                "asset_query": "Switch 1",
+                "selected_match": {
+                  "node_id": "<max_depth>",
+                  "name": "<max_depth>",
+                  "full_name": "<max_depth>",
+                  "pf_class": "<max_depth>",
+                  "kind": "<max_depth>",
+                  "degree": "<max_depth>",
+                  "inventory_type": "<max_depth>"
+                },
+                "selected_matches": [
+                  "<max_depth>"
+                ],
+                "selected_object_names": [
+                  "<max_depth>"
+                ],
+                "selection_mode": "one",
+                "matches": [
+                  "<max_depth>"
+                ],
+                "llm_decision": {
+                  "selected_object_name": "<max_depth>",
+                  "selected_object_names": "<max_depth>",
+                  "selection_mode": "<max_depth>",
+                  "confidence": "<max_depth>",
+                  "rationale": "<max_depth>",
+                  "alternatives": "<max_depth>",
+                  "should_execute": "<max_depth>"
+                },
+                "entity_type": "switch"
+              },
+              "run_loadflow_after": true
+            },
+            "result": {
+              "status": "ok",
+              "tool": "execute_switch_operation",
+              "project": "<omitted:str>",
+              "studycase": "<omitted:str>",
+              "instruction": {
+                "query_type": "switch_operation",
+                "operation": "toggle",
+                "entity_type": "switch",
+                "entity_name_raw": "Schalte den Schalter Schalter 1 um.",
+                "entity_name_candidates": [
+                  "<max_depth>"
+                ],
+                "available_types": [
+                  "<max_depth>"
+                ],
+                "debug_switch_decision": {
+                  "operation": "<max_depth>",
+                  "should_execute": "<max_depth>",
+                  "confidence": "<max_depth>",
+                  "rationale": "<max_depth>"
+                }
+              },
+              "resolution": {
+                "status": "ok",
+                "tool": "resolve_objects_from_inventory_llm",
+                "project": "<omitted:str>",
+                "instruction": {
+                  "query_type": "<max_depth>",
+                  "operation": "<max_depth>",
+                  "entity_type": "<max_depth>",
+                  "entity_name_raw": "<max_depth>",
+                  "entity_name_candidates": "<max_depth>",
+                  "available_types": "<max_depth>",
+                  "debug_switch_decision": "<max_depth>"
+                },
+                "asset_query": "Switch 1",
+                "selected_match": {
+                  "node_id": "<max_depth>",
+                  "name": "<max_depth>",
+                  "full_name": "<max_depth>",
+                  "pf_class": "<max_depth>",
+                  "kind": "<max_depth>",
+                  "degree": "<max_depth>",
+                  "inventory_type": "<max_depth>"
+                },
+                "selected_matches": [
+                  "<max_depth>"
+                ],
+                "selected_object_names": [
+                  "<max_depth>"
+                ],
+                "selection_mode": "one",
+                "matches": [
+                  "<max_depth>"
+                ],
+                "llm_decision": {
+                  "selected_object_name": "<max_depth>",
+                  "selected_object_names": "<max_depth>",
+                  "selection_mode": "<max_depth>",
+                  "confidence": "<max_depth>",
+                  "rationale": "<max_depth>",
+                  "alternatives": "<max_depth>",
+                  "should_execute": "<max_depth>"
+                },
+                "entity_type": "switch"
+              },
+              "switch": {
+                "name": "Switch 1",
+                "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 7.ElmTerm\\Cub_1.StaCubic\\Switch 1.StaSwitch",
+                "pf_class": "StaSwitch"
+              },
+              "state_before": "closed",
+              "state_after": "open",
+              "state_before_raw": {
+                "status": "ok",
+                "state_source": "on_off",
+                "raw_value": 1
+              },
+              "state_after_raw": {
+                "status": "ok",
+                "state_source": "on_off",
+                "raw_value": 0
+              },
+              "apply_result": {
+                "status": "ok",
+                "apply_mode": "method",
+                "apply_target": "Open",
+                "method_result": 0
+              },
+              "loadflow": {
+                "executed": true,
+                "loadflow_command": "Load Flow Calculation"
+              }
+            }
+          },
+          {
+            "step": "summarize_switch_result",
+            "effective_user_input": "Schalte den Schalter Schalter 1 um.",
+            "source_subrequest": null,
+            "tool_spec": {
+              "name": "summarize_switch_result",
+              "description": "Summarize the result of a switch state change for the end user.",
+              "capability_tags": [],
+              "mutating": false
+            },
+            "tool_kwargs": {
+              "services": "<omitted:dict>",
+              "result_payload": {
+                "status": "ok",
+                "tool": "execute_switch_operation",
+                "project": "<omitted:str>",
+                "studycase": "<omitted:str>",
+                "instruction": {
+                  "query_type": "<max_depth>",
+                  "operation": "<max_depth>",
+                  "entity_type": "<max_depth>",
+                  "entity_name_raw": "<max_depth>",
+                  "entity_name_candidates": "<max_depth>",
+                  "available_types": "<max_depth>",
+                  "debug_switch_decision": "<max_depth>"
+                },
+                "resolution": {
+                  "status": "<max_depth>",
+                  "tool": "<max_depth>",
+                  "project": "<omitted:str>",
+                  "instruction": "<max_depth>",
+                  "asset_query": "<max_depth>",
+                  "selected_match": "<max_depth>",
+                  "selected_matches": "<max_depth>",
+                  "selected_object_names": "<max_depth>",
+                  "selection_mode": "<max_depth>",
+                  "matches": "<max_depth>",
+                  "llm_decision": "<max_depth>",
+                  "entity_type": "<max_depth>"
+                },
+                "switch": {
+                  "name": "<max_depth>",
+                  "full_name": "<max_depth>",
+                  "pf_class": "<max_depth>"
+                },
+                "state_before": "closed",
+                "state_after": "open",
+                "state_before_raw": {
+                  "status": "<max_depth>",
+                  "state_source": "<max_depth>",
+                  "raw_value": "<max_depth>"
+                },
+                "state_after_raw": {
+                  "status": "<max_depth>",
+                  "state_source": "<max_depth>",
+                  "raw_value": "<max_depth>"
+                },
+                "apply_result": {
+                  "status": "<max_depth>",
+                  "apply_mode": "<max_depth>",
+                  "apply_target": "<max_depth>",
+                  "method_result": "<max_depth>"
+                },
+                "loadflow": {
+                  "executed": "<max_depth>",
+                  "loadflow_command": "<max_depth>"
+                }
+              },
+              "user_input": "Schalte den Schalter Schalter 1 um."
+            },
+            "result": {
+              "status": "ok",
+              "tool": "summarize_switch_result",
+              "project": "<omitted:str>",
+              "answer": "Die Schalteroperation 'toggle' wurde für 'Switch 1' (StaSwitch) ausgeführt. Zustand vorher: closed. Zustand nachher: open. Anschließend wurde ein Lastfluss gerechnet.",
+              "messages": []
+            }
+          }
+        ]
+      },
+      "raw_answer": "Die Schalteroperation 'toggle' wurde für 'Switch 1' (StaSwitch) ausgeführt. Zustand vorher: closed. Zustand nachher: open. Anschließend wurde ein Lastfluss gerechnet."
+    }
+  }
+}

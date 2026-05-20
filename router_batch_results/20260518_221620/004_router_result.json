@@ -1,0 +1,48 @@
+{
+  "run_id": 4,
+  "timestamp": "2026-05-18T22:17:00.848543",
+  "user_input": "Welche Verbraucher sind im PF-Modell vorhanden?",
+  "duration_seconds": 1.759,
+  "token_usage": {
+    "prompt_tokens": 709,
+    "completion_tokens": 88,
+    "total_tokens": 797,
+    "details": {
+      "phi3:mini": {
+        "input_tokens": 709,
+        "output_tokens": 88,
+        "total_tokens": 797
+      }
+    }
+  },
+  "decision_trace": {
+    "domain": "ASK_USER",
+    "planning_mode": "",
+    "workflow": "",
+    "confidence": "",
+    "safe_to_execute": "",
+    "num_steps": 0,
+    "steps": "",
+    "planner_reasoning": "",
+    "resolved_object": "<omitted:str>",
+    "resolved_object_confidence": "",
+    "selected_attributes": "",
+    "attribute_confidence": "",
+    "num_tool_calls": 0,
+    "executed_tools": "",
+    "failed_tool": "",
+    "equipment_resolution_mode": "",
+    "attribute_resolution_mode": "",
+    "comparison_resolution_mode": ""
+  },
+  "router_output": {
+    "route": "ASK_USER",
+    "question": "Möchten Sie wissen, welche Verbraucher im aktuellen PowerFactory-Projekt vorhanden sind oder ob es sich um eine Frage zu den historischen CIM-Daten handelt?",
+    "missing_fields": [
+      "data_source"
+    ],
+    "partial": {
+      "user_input": "Welche Verbraucher sind im PF-Modell vorhanden?"
+    }
+  }
+}

@@ -1,0 +1,44 @@
+{
+  "run_id": 120,
+  "timestamp": "2026-05-18T21:48:23.090797",
+  "user_input": "Wie groß ist die aktuelle Einspeisung von Generator 3?",
+  "duration_seconds": 49.146,
+  "token_usage": {
+    "prompt_tokens": 4477,
+    "completion_tokens": 4984,
+    "total_tokens": 9461,
+    "details": {
+      "phi3:mini": {
+        "total_tokens": 9461,
+        "output_tokens": 4984,
+        "input_tokens": 4477
+      }
+    }
+  },
+  "decision_trace": {
+    "domain": "ERROR",
+    "planning_mode": "",
+    "workflow": "",
+    "confidence": "",
+    "safe_to_execute": "",
+    "num_steps": 0,
+    "steps": "",
+    "planner_reasoning": "",
+    "resolved_object": "<omitted:str>",
+    "resolved_object_confidence": "",
+    "selected_attributes": "",
+    "attribute_confidence": "",
+    "num_tool_calls": 0,
+    "executed_tools": "",
+    "failed_tool": ""
+  },
+  "router_output": {
+    "route": "ERROR",
+    "status": "error",
+    "result": {
+      "status": "error",
+      "answer": "Der UnifiedPlanner hat keine gültige strukturierte Ausgabe erzeugt.",
+      "planner_error": "Invalid json output: \nFor troubleshooting, visit: https://docs.langchain.com/oss/python/langchain/errors/OUTPUT_PARSING_FAILURE "
+    }
+  }
+}

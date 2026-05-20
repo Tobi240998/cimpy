@@ -1,0 +1,44 @@
+{
+  "run_id": 84,
+  "timestamp": "2026-05-20T17:17:54.459335",
+  "user_input": "Schalte Schalter B an.",
+  "duration_seconds": 1.524,
+  "token_usage": {
+    "prompt_tokens": 883,
+    "completion_tokens": 275,
+    "total_tokens": 1158,
+    "details": {
+      "phi3:mini": {
+        "input_tokens": 883,
+        "output_tokens": 275,
+        "total_tokens": 1158
+      }
+    }
+  },
+  "decision_trace": {
+    "domain": "ERROR",
+    "planning_mode": "",
+    "workflow": "",
+    "confidence": "",
+    "safe_to_execute": "",
+    "num_steps": 0,
+    "steps": "",
+    "planner_reasoning": "",
+    "resolved_object": "<omitted:str>",
+    "resolved_object_confidence": "",
+    "selected_attributes": "",
+    "attribute_confidence": "",
+    "num_tool_calls": 0,
+    "executed_tools": "",
+    "failed_tool": ""
+  },
+  "router_output": {
+    "route": "ERROR",
+    "status": "error",
+    "result": {
+      "status": "error",
+      "answer": "Der UnifiedPlanner hat keine gültige strukturierte Ausgabe erzeugt.",
+      "planner_error": "Invalid json output: Um den Schalter B einzuschalten, folge diesen Schritten:\n\n1. Stelle sicher, dass du die erforderlichen Sicherheitsmaßnahmen getroffen hast und bereit bist, mit elektrischen Geräten zu arbeiten. Wenn nicht, bitte um Hilfe von jemandem qualifiziert in Elektriken.\n2. Finde den Schalter B im Raum oder Gebäude, wo er installiert ist. Er sollte sich normalerdependentig an der Wand befinden und mit einem Schalterknopf ausgestattet sein.\n3. Gehe zu dem Schalter B hinüber und drücke ihn nach unten. Der Schalter sollte nun in die \"Ein\"-Position gehen, was bedeutet, dass er eingeschaltet ist.\n4. Überprüfe den Zustand des Geräts oder der Lichter/Leuchten, an denen sich der Schalter B befindet. Wenn sie nicht funktionieren, könnte ein professioneller Elektriker Hilfe benötigen.\nFor troubleshooting, visit: https://docs.langchain.com/oss/python/langchain/errors/OUTPUT_PARSING_FAILURE "
+    }
+  }
+}

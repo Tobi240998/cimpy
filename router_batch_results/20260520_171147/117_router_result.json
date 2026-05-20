@@ -1,0 +1,44 @@
+{
+  "run_id": 117,
+  "timestamp": "2026-05-20T17:20:43.687211",
+  "user_input": "Wie groß ist P gerade in CIM?",
+  "duration_seconds": 3.468,
+  "token_usage": {
+    "prompt_tokens": 889,
+    "completion_tokens": 684,
+    "total_tokens": 1573,
+    "details": {
+      "phi3:mini": {
+        "input_tokens": 889,
+        "output_tokens": 684,
+        "total_tokens": 1573
+      }
+    }
+  },
+  "decision_trace": {
+    "domain": "ERROR",
+    "planning_mode": "",
+    "workflow": "",
+    "confidence": "",
+    "safe_to_execute": "",
+    "num_steps": 0,
+    "steps": "",
+    "planner_reasoning": "",
+    "resolved_object": "<omitted:str>",
+    "resolved_object_confidence": "",
+    "selected_attributes": "",
+    "attribute_confidence": "",
+    "num_tool_calls": 0,
+    "executed_tools": "",
+    "failed_tool": ""
+  },
+  "router_output": {
+    "route": "ERROR",
+    "status": "error",
+    "result": {
+      "status": "error",
+      "answer": "Der UnifiedPlanner hat keine gültige strukturierte Ausgabe erzeugt.",
+      "planner_error": "Invalid json output: Um die Größe des Variablen `P` im Common Intermediate Language (CIL) zu bestimmen, müssten Sie eine Methode zur Inspektion der ausführbaren Datei verwenden. Hier sind einige Schritte und Tools, um dies zu erreichen:\n\n1. Erstellen Sie ein C#-Projekt mit dem Code, in dem `P` definiert ist.\n2. Kompilieren Sie das Projekt mithilfe des Befehls \"csc\" (C# Compiler) zum Ausführbaren Programm (.exe). Zum Beispiel:\n   ```shell\n   csc /out:Program.exe /target:exe YourCodeFile.cs\n   ```\n3. Verwenden Sie einen Tool, das die ausführbare Datei analysieren kann und Informationen über ihre Inhalte liefert. Ein solches Tool ist `ildasm`, ein Befehlszeilentool für .NET-Anwendungen:\n   ```shellterminal\n   ilasm /verbose Program.exe\n   ```\n4. Das Ausführbare Programm wird in eine Datei namens \"Program.IL\" umgewandelt, die Sie öffnen können. In dieser Datei finden Sie den CIL-Code des ausführbaren Programms.\n5. Suchen Sie im Code nach dem Variablendeklarationen für `P`. Die Größe von `P` wird durch das Feld in der Deklaration angegeben, z.B.:\n   ```cil\n   .field public static int32 P = int32 0x14 | cil_valueTypeSizeOf(int32) // Beispiel für eine Integer-Variable mit einer Größe von 4 Bytes (zur Vereinfachung).\n   ```\n6. Die Größe der Variablen `P` kann direkt aus dem Feld in diesem Deklarationsblock abgeleitet werden, vorausgesetzt, dass keine anderen Felder oder Eigenschaften im Zusammenhang mit dieser Variable hinzugefügt wurden. In diesem Beispiel wäre die Größe von `P` 4 Bytes (32-Bit Integer).\n\nBitte beachten Sie jedoch, dass diese Methode nur eine grobe Schätzung der Größe liefert und davon ausgeht, dass keine zusätzlichen Felder oder Eigenschaften im Zusammenhang mit dem Variablen `P` hinzugefügt wurden. Um die genaue Größe zu bestimmen, müssten Sie den CIL-Code analysieren und alle relevanten Informationen berücksichtigen.\nFor troubleshooting, visit: https://docs.langchain.com/oss/python/langchain/errors/OUTPUT_PARSING_FAILURE "
+    }
+  }
+}

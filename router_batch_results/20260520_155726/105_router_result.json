@@ -1,0 +1,46 @@
+{
+  "run_id": 105,
+  "timestamp": "2026-05-20T16:58:54.093555",
+  "user_input": "Zeig mir die Auslastung von Transformator 19/20 im Zeitverlauf vom 09.01.2026.",
+  "duration_seconds": 0.579,
+  "token_usage": {
+    "prompt_tokens": 846,
+    "completion_tokens": 85,
+    "total_tokens": 931,
+    "details": {
+      "phi3:mini": {
+        "input_tokens": 846,
+        "output_tokens": 85,
+        "total_tokens": 931
+      }
+    }
+  },
+  "decision_trace": {
+    "domain": "ASK_USER",
+    "planning_mode": "",
+    "workflow": "",
+    "confidence": "",
+    "safe_to_execute": "",
+    "num_steps": 0,
+    "steps": "",
+    "planner_reasoning": "",
+    "resolved_object": "<omitted:str>",
+    "resolved_object_confidence": "",
+    "selected_attributes": "",
+    "attribute_confidence": "",
+    "num_tool_calls": 0,
+    "executed_tools": "",
+    "failed_tool": "",
+    "equipment_resolution_mode": "",
+    "attribute_resolution_mode": "",
+    "comparison_resolution_mode": ""
+  },
+  "router_output": {
+    "route": "ASK_USER",
+    "question": "Könnten Sie angeben, welcher Datenquelle Sie für den Ausfall der Auslastung von Transformator 19/20 im Zeitverlauf vom 09.01.2026 verwenden möchten?",
+    "missing_fields": [
+      "data_source"
+    ],
+    "partial": {}
+  }
+}

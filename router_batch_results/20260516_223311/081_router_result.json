@@ -1,0 +1,46 @@
+{
+  "run_id": 81,
+  "timestamp": "2026-05-17T09:55:40.362469",
+  "user_input": "Wie ist die Auslastung von Line in PF?",
+  "duration_seconds": 17.619,
+  "token_usage": {
+    "prompt_tokens": 4469,
+    "completion_tokens": 1628,
+    "total_tokens": 6097,
+    "details": {
+      "phi3:mini": {
+        "input_tokens": 4469,
+        "output_tokens": 1628,
+        "total_tokens": 6097
+      }
+    }
+  },
+  "decision_trace": {
+    "domain": "ASK_USER",
+    "planning_mode": "",
+    "workflow": "",
+    "confidence": "",
+    "safe_to_execute": "",
+    "num_steps": 0,
+    "steps": "",
+    "planner_reasoning": "",
+    "resolved_object": "",
+    "resolved_object_confidence": "",
+    "selected_attributes": "",
+    "attribute_confidence": "",
+    "num_tool_calls": 0,
+    "executed_tools": "",
+    "failed_tool": ""
+  },
+  "router_output": {
+    "route": "ASK_USER",
+    "status": "needs_clarification",
+    "question": "Which specific line (e.g., Line123) are you referring to?",
+    "missing_fields": [
+      "specific line identifier"
+    ],
+    "partial": {
+      "user_input": "Wie ist die Auslastung von Line in PF?"
+    }
+  }
+}

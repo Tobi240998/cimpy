@@ -1,0 +1,1000 @@
+{
+  "run_id": 124,
+  "timestamp": "2026-05-16T22:32:30.973063",
+  "user_input": "Was war los bei Verbraucher 27 am 9. Januar zwischen 14 und 15 uhr?",
+  "duration_seconds": 2903.325,
+  "token_usage": {
+    "prompt_tokens": 8093,
+    "completion_tokens": 10014,
+    "total_tokens": 18107,
+    "details": {
+      "phi3:mini": {
+        "output_tokens": 10014,
+        "input_tokens": 8093,
+        "total_tokens": 18107
+      }
+    }
+  },
+  "decision_trace": {
+    "domain": "HISTORICAL",
+    "planning_mode": "",
+    "workflow": "",
+    "confidence": "high",
+    "safe_to_execute": "True",
+    "num_steps": 5,
+    "steps": "scan_snapshot_inventory | resolve_cim_object | load_snapshot_cache | query_cim | summarize_cim_result",
+    "planner_reasoning": "The request asks for historical state information (e.g., power consumption) of a specific consumer (Verbraucher 27) at a defined time window, matching standard_sv semantics for dynamic state values. No missing context or ambiguity requires clarification.",
+    "resolved_object": "<omitted:str>",
+    "resolved_object_confidence": "",
+    "selected_attributes": "",
+    "attribute_confidence": "",
+    "num_tool_calls": 5,
+    "executed_tools": "scan_snapshot_inventory | resolve_cim_object | load_snapshot_cache | query_cim | summarize_cim_result",
+    "failed_tool": "",
+    "equipment_resolution_mode": "",
+    "attribute_resolution_mode": "",
+    "comparison_resolution_mode": ""
+  },
+  "router_output": {
+    "route": "HISTORICAL",
+    "result": {
+      "status": "ok",
+      "tool": "cim_agent",
+      "agent": "CIMDomainAgent",
+      "classification": {
+        "intent": "historical_analysis",
+        "confidence": "high",
+        "target_kind": "metric",
+        "request_mode": "standard_sv",
+        "safe_to_execute": true,
+        "missing_context": [],
+        "required_steps": [],
+        "reasoning": "The request asks for historical state information (e.g., power consumption) of a specific consumer (Verbraucher 27) at a defined time window, matching standard_sv semantics for dynamic state values. No missing context or ambiguity requires clarification.",
+        "status": "ok",
+        "classification_mode": "primary_llm_classifier"
+      },
+      "plan": [
+        {
+          "step": "scan_snapshot_inventory",
+          "description": "Scan snapshot inventory and build base network index",
+          "capability_tags": [
+            "inventory",
+            "network_index",
+            "equipment_catalog",
+            "read_only"
+          ],
+          "mutating": false
+        },
+        {
+          "step": "resolve_cim_object",
+          "description": "Resolve asset or equipment from user query and parse time/state intent",
+          "capability_tags": [
+            "object_resolution",
+            "query_parsing",
+            "equipment_catalog",
+            "llm_match",
+            "read_only"
+          ],
+          "mutating": false
+        },
+        {
+          "step": "load_snapshot_cache",
+          "description": "Load relevant snapshots for the parsed time window and build snapshot cache",
+          "capability_tags": [
+            "snapshot_loading",
+            "state_cache",
+            "read_only"
+          ],
+          "mutating": false
+        },
+        {
+          "step": "query_cim",
+          "description": "Run CIM analysis query using parsed query, network index and snapshot cache",
+          "capability_tags": [
+            "analysis",
+            "read_only"
+          ],
+          "mutating": false
+        },
+        {
+          "step": "summarize_cim_result",
+          "description": "Return final CIM result with debug information",
+          "capability_tags": [
+            "result",
+            "read_only"
+          ],
+          "mutating": false
+        }
+      ],
+      "available_tools": [
+        {
+          "name": "scan_snapshot_inventory",
+          "description": "Scan snapshot inventory and build base network index",
+          "input_schema": {
+            "type": "object",
+            "properties": {
+              "cim_root": {
+                "type": "string"
+              }
+            },
+            "required": []
+          },
+          "output_schema_hint": {
+            "status": "ok|error",
+            "tool": "scan_snapshot_inventory",
+            "snapshot_inventory": "dict",
+            "base_snapshot": "<omitted:str>",
+            "network_index": "<omitted:str>",
+            "equipment_catalog_summary": "dict"
+          },
+          "capability_tags": [
+            "inventory",
+            "network_index",
+            "equipment_catalog",
+            "read_only"
+          ],
+          "mutating": false,
+          "requires_state": [],
+          "produces_state": [
+            "snapshot_inventory",
+            "base_snapshot",
+            "network_index",
+            "equipment_catalog_summary"
+          ],
+          "is_summary": false,
+          "domain_notes": [
+            "Builds and merges a deterministic equipment catalog from the base snapshot."
+          ]
+        },
+        {
+          "name": "resolve_cim_object",
+          "description": "Resolve asset or equipment from user query and parse time/state intent",
+          "input_schema": {
+            "type": "object",
+            "properties": {
+              "cim_root": {
+                "type": "string"
+              },
+              "user_input": {
+                "type": "string"
+              },
+              "network_index": "<omitted:dict>"
+            },
+            "required": [
+              "user_input",
+              "network_index"
+            ]
+          },
+          "output_schema_hint": {
+            "status": "ok|error",
+            "tool": "resolve_cim_object",
+            "parsed_query": "dict",
+            "resolved_object": "<omitted:str>",
+            "resolution_mode": "string",
+            "equipment_resolution_debug": "dict"
+          },
+          "capability_tags": [
+            "object_resolution",
+            "query_parsing",
+            "equipment_catalog",
+            "llm_match",
+            "read_only"
+          ],
+          "mutating": false,
+          "requires_state": [
+            "network_index"
+          ],
+          "produces_state": [
+            "parsed_query",
+            "resolved_object",
+            "resolution_mode",
+            "equipment_resolution_debug"
+          ],
+          "is_summary": false,
+          "domain_notes": [
+            "Falls back to two-stage catalog resolution: equipment type first, equipment instance second."
+          ]
+        },
+        {
+          "name": "list_equipment_of_type",
+          "description": "List all concrete CIM objects of a resolved equipment type from the deterministic equipment catalog",
+          "input_schema": {
+            "type": "object",
+            "properties": {
+              "cim_root": {
+                "type": "string"
+              },
+              "user_input": {
+                "type": "string"
+              },
+              "network_index": "<omitted:dict>"
+            },
+            "required": [
+              "user_input",
+              "network_index"
+            ]
+          },
+          "output_schema_hint": {
+            "status": "ok|error",
+            "tool": "list_equipment_of_type",
+            "selected_type": "string",
+            "equipment_items": "list[dict]",
+            "equipment_count": "integer",
+            "answer": "string"
+          },
+          "capability_tags": [
+            "equipment_catalog",
+            "asset_lookup",
+            "read_only"
+          ],
+          "mutating": false,
+          "requires_state": [
+            "network_index"
+          ],
+          "produces_state": [
+            "selected_type",
+            "equipment_items",
+            "equipment_count",
+            "answer"
+          ],
+          "is_summary": false,
+          "domain_notes": [
+            "Uses the same type-resolution stage as equipment resolution, but returns all objects of the selected type."
+          ]
+        },
+        {
+          "name": "read_cim_base_values",
+          "description": "Read static CIM base or nameplate attributes from a resolved equipment object",
+          "input_schema": {
+            "type": "object",
+            "properties": {
+              "cim_root": {
+                "type": "string"
+              },
+              "user_input": {
+                "type": "string"
+              },
+              "resolved_object": "<omitted:dict>"
+            },
+            "required": [
+              "user_input",
+              "resolved_object"
+            ]
+          },
+          "output_schema_hint": {
+            "status": "ok|error",
+            "tool": "read_cim_base_values",
+            "selected_attributes": "list[str]",
+            "base_values": "dict[str, Any]",
+            "answer": "string"
+          },
+          "capability_tags": [
+            "base_values",
+            "nameplate_data",
+            "read_only"
+          ],
+          "mutating": false,
+          "requires_state": [
+            "resolved_object"
+          ],
+          "produces_state": [
+            "selected_attributes",
+            "base_values",
+            "answer",
+            "base_attribute_debug"
+          ],
+          "is_summary": false,
+          "domain_notes": [
+            "Supports direct technical attribute matching and controlled semantic LLM mapping."
+          ]
+        },
+        {
+          "name": "resolve_cim_comparison",
+          "description": "Resolve a supported CIM comparison intent into required SV metric and base attributes",
+          "input_schema": {
+            "type": "object",
+            "properties": {
+              "cim_root": {
+                "type": "string"
+              },
+              "user_input": {
+                "type": "string"
+              },
+              "resolved_object": "<omitted:dict>",
+              "parsed_query": {
+                "type": "object"
+              }
+            },
+            "required": [
+              "user_input",
+              "resolved_object"
+            ]
+          },
+          "output_schema_hint": {
+            "status": "ok|error",
+            "tool": "resolve_cim_comparison",
+            "comparison_resolution": "dict",
+            "requested_base_attributes": "list[str]",
+            "parsed_query": "dict"
+          },
+          "capability_tags": [
+            "comparison_resolution",
+            "read_only"
+          ],
+          "mutating": false,
+          "requires_state": [
+            "resolved_object",
+            "parsed_query"
+          ],
+          "produces_state": [
+            "comparison_resolution",
+            "requested_base_attributes",
+            "parsed_query"
+          ],
+          "is_summary": false,
+          "domain_notes": [
+            "Determines which standard comparison should be executed before reading SV and base values."
+          ]
+        },
+        {
+          "name": "load_snapshot_cache",
+          "description": "Load relevant snapshots for the parsed time window and build snapshot cache",
+          "input_schema": {
+            "type": "object",
+            "properties": {
+              "cim_root": {
+                "type": "string"
+              },
+              "parsed_query": {
+                "type": "object"
+              },
+              "snapshot_inventory": {
+                "type": "object"
+              }
+            },
+            "required": [
+              "parsed_query",
+              "snapshot_inventory"
+            ]
+          },
+          "output_schema_hint": {
+            "status": "ok|error",
+            "tool": "load_snapshot_cache",
+            "cim_snapshots": "<omitted:str>",
+            "required_state_types": "list[str]",
+            "snapshot_cache": "<omitted:str>",
+            "snapshot_cache_summary": "dict"
+          },
+          "capability_tags": [
+            "snapshot_loading",
+            "state_cache",
+            "read_only"
+          ],
+          "mutating": false,
+          "requires_state": [
+            "parsed_query",
+            "snapshot_inventory"
+          ],
+          "produces_state": [
+            "cim_snapshots",
+            "required_state_types",
+            "snapshot_cache",
+            "snapshot_cache_summary"
+          ],
+          "is_summary": false,
+          "domain_notes": []
+        },
+        {
+          "name": "query_cim",
+          "description": "Run CIM analysis query using parsed query, network index and snapshot cache",
+          "input_schema": {
+            "type": "object",
+            "properties": {
+              "cim_root": {
+                "type": "string"
+              },
+              "user_input": {
+                "type": "string"
+              },
+              "snapshot_cache": "<omitted:dict>",
+              "network_index": "<omitted:dict>",
+              "parsed_query": {
+                "type": "object"
+              },
+              "classification": {
+                "type": "object"
+              }
+            },
+            "required": [
+              "user_input",
+              "network_index"
+            ]
+          },
+          "output_schema_hint": {
+            "status": "ok|error",
+            "tool": "query_cim",
+            "answer": "string"
+          },
+          "capability_tags": [
+            "analysis",
+            "read_only"
+          ],
+          "mutating": false,
+          "requires_state": [
+            "network_index",
+            "parsed_query"
+          ],
+          "produces_state": [
+            "answer"
+          ],
+          "is_summary": false,
+          "domain_notes": []
+        },
+        {
+          "name": "compare_cim_values",
+          "description": "Compare resolved SV results against resolved CIM base values using a standard comparison definition",
+          "input_schema": {
+            "type": "object",
+            "properties": {
+              "cim_root": {
+                "type": "string"
+              },
+              "resolved_object": "<omitted:dict>",
+              "comparison_resolution": {
+                "type": "object"
+              },
+              "query_result_data": {
+                "type": "object"
+              },
+              "base_values": {
+                "type": "object"
+              }
+            },
+            "required": [
+              "resolved_object",
+              "comparison_resolution",
+              "query_result_data",
+              "base_values"
+            ]
+          },
+          "output_schema_hint": {
+            "status": "ok|error",
+            "tool": "compare_cim_values",
+            "comparison_result": "dict",
+            "answer": "string"
+          },
+          "capability_tags": [
+            "comparison",
+            "read_only"
+          ],
+          "mutating": false,
+          "requires_state": [
+            "resolved_object",
+            "comparison_resolution",
+            "query_result_data",
+            "base_values"
+          ],
+          "produces_state": [
+            "comparison_result",
+            "answer"
+          ],
+          "is_summary": false,
+          "domain_notes": []
+        },
+        {
+          "name": "summarize_cim_result",
+          "description": "Return final CIM result with debug information",
+          "input_schema": {
+            "type": "object",
+            "properties": {
+              "cim_root": {
+                "type": "string"
+              },
+              "result_payload": {
+                "type": "object"
+              },
+              "user_input": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "user_input"
+            ]
+          },
+          "output_schema_hint": {
+            "status": "ok|error",
+            "tool": "summarize_cim_result",
+            "answer": "string",
+            "debug": "dict"
+          },
+          "capability_tags": [
+            "result",
+            "read_only"
+          ],
+          "mutating": false,
+          "requires_state": [
+            "answer"
+          ],
+          "produces_state": [
+            "summary"
+          ],
+          "is_summary": true,
+          "domain_notes": []
+        }
+      ],
+      "answer": "Bei Verbraucher 27 wurde zwischen 14:00 und 15:00 Uhr ein Mindestwert von 250.96 MW um 14:15 Uhr und ein Höchstwert von 293.123 MW um 14:30 Uhr gemessen.",
+      "summary_parts": [
+        {
+          "status": "ok",
+          "tool": "summarize_cim_result",
+          "cim_root": "C:\\Users\\STELLER\\Documents\\Masterarbeit\\CIM-Dateien\\tobias_CIM_daten\\data\\extracted",
+          "user_input": "Was war los bei Verbraucher 27 am 9. Januar zwischen 14 und 15 uhr?",
+          "answer": "Bei Verbraucher 27 wurde zwischen 14:00 und 15:00 Uhr ein Mindestwert von 250.96 MW um 14:15 Uhr und ein Höchstwert von 293.123 MW um 14:30 Uhr gemessen.",
+          "debug": {
+            "num_inventory_snapshots": 3,
+            "index_source_snapshot": "CIM_GridAssist_1",
+            "index_source_time_str": "2026-01-09T14:15:00+00:00",
+            "required_state_types": [
+              "SvPowerFlow"
+            ],
+            "num_loaded_snapshots": 3,
+            "loaded_snapshot_names": [
+              "CIM_GridAssist_1",
+              "CIM_GridAssist_2",
+              "CIM_GridAssist_3"
+            ],
+            "snapshot_cache_summary": {
+              "num_snapshots": 3,
+              "requested_state_types": [
+                "SvPowerFlow"
+              ],
+              "snapshot_names": [
+                "CIM_GridAssist_1",
+                "CIM_GridAssist_2",
+                "CIM_GridAssist_3"
+              ],
+              "total_state_counts": {
+                "SvPowerFlow": 363,
+                "SvVoltage": 0
+              }
+            },
+            "parsed_query": {
+              "equipment_detected": [
+                "ConformLoad"
+              ],
+              "state_detected": [
+                "SvPowerFlow"
+              ],
+              "metric": null,
+              "equipment_selection": [
+                {
+                  "equipment_type": "<max_depth>",
+                  "equipment_key": "<max_depth>",
+                  "equipment_name": "<max_depth>",
+                  "equipment_id": "<max_depth>"
+                }
+              ],
+              "time_start": "2026-01-09T14:00:00+00:00",
+              "time_end": "2026-01-09T15:00:00+00:00",
+              "time_label": "09.01.2026 14:00-15:00",
+              "intent": "historical_analysis",
+              "request_mode": "standard_sv",
+              "is_topology_query": false
+            },
+            "resolved_object": "<omitted:ConformLoad>",
+            "resolution_mode": "interpret_user_query",
+            "equipment_resolution_debug": {
+              "parsed_query_equipment_selection": [
+                {
+                  "equipment_type": "<max_depth>",
+                  "equipment_key": "<max_depth>",
+                  "equipment_name": "<max_depth>",
+                  "equipment_id": "<max_depth>"
+                }
+              ]
+            },
+            "equipment_catalog_summary": {
+              "equipment_types": [
+                "ACLineSegment",
+                "BusbarSection",
+                "ConformLoad",
+                "ConformLoadGroup",
+                "CurrentLimit",
+                "FossilFuel",
+                "GeneratingUnit",
+                "HydroGeneratingUnit",
+                "LoadAggregate",
+                "LoadArea",
+                "LoadResponseCharacteristic",
+                "LoadStatic",
+                "NuclearGeneratingUnit",
+                "OperationalLimitSet",
+                "OperationalLimitType",
+                "PowerTransformer",
+                "PowerTransformerEnd",
+                "RatioTapChanger",
+                "RegulatingControl",
+                "SubLoadArea",
+                "SynchronousMachine",
+                "SynchronousMachineTimeConstantReactance",
+                "ThermalGeneratingUnit",
+                "TopologicalIsland",
+                "VoltageLimit"
+              ],
+              "equipment_type_counts": {
+                "SynchronousMachineTimeConstantReactance": 10,
+                "LoadAggregate": 1,
+                "LoadStatic": 1,
+                "TopologicalIsland": 1,
+                "BusbarSection": 39,
+                "VoltageLimit": 39,
+                "OperationalLimitSet": 131,
+                "ACLineSegment": 34,
+                "CurrentLimit": 92,
+                "OperationalLimitType": 2,
+                "ConformLoad": 19,
+                "ConformLoadGroup": 1,
+                "SubLoadArea": 1,
+                "LoadArea": 1,
+                "LoadResponseCharacteristic": 1,
+                "PowerTransformerEnd": 24,
+                "SynchronousMachine": 10,
+                "PowerTransformer": 12,
+                "RatioTapChanger": 11,
+                "RegulatingControl": 10,
+                "HydroGeneratingUnit": 1,
+                "NuclearGeneratingUnit": 5,
+                "FossilFuel": 3,
+                "ThermalGeneratingUnit": 3,
+                "GeneratingUnit": 1
+              },
+              "num_equipment_objects": 453
+            },
+            "comparison_resolution": {},
+            "comparison_result": {},
+            "requested_base_attributes": []
+          }
+        }
+      ],
+      "debug": {
+        "trace": [
+          {
+            "step": "scan_snapshot_inventory",
+            "effective_user_input": "Was war los bei Verbraucher 27 am 9. Januar zwischen 14 und 15 uhr?",
+            "effective_context_user_input": "Was war los bei Verbraucher 27 am 9. Januar zwischen 14 und 15 uhr?",
+            "previous_context": null,
+            "source_subrequest": null,
+            "tool_spec": {
+              "name": "scan_snapshot_inventory",
+              "description": "Scan snapshot inventory and build base network index",
+              "capability_tags": [
+                "inventory",
+                "network_index",
+                "equipment_catalog",
+                "read_only"
+              ],
+              "mutating": false
+            },
+            "result": {
+              "status": "ok",
+              "tool": "scan_snapshot_inventory",
+              "cim_root": "C:\\Users\\STELLER\\Documents\\Masterarbeit\\CIM-Dateien\\tobias_CIM_daten\\data\\extracted",
+              "snapshot_inventory": {
+                "root_folder": "C:\\Users\\STELLER\\Documents\\Masterarbeit\\CIM-Dateien\\tobias_CIM_daten\\data\\extracted",
+                "snapshots": [
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>"
+                ]
+              },
+              "base_snapshot": "<omitted:dict>",
+              "network_index": "<omitted:dict>",
+              "equipment_catalog_summary": {
+                "equipment_types": [
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>"
+                ],
+                "equipment_type_counts": {
+                  "SynchronousMachineTimeConstantReactance": "<max_depth>",
+                  "LoadAggregate": "<max_depth>",
+                  "LoadStatic": "<max_depth>",
+                  "TopologicalIsland": "<max_depth>",
+                  "BusbarSection": "<max_depth>",
+                  "VoltageLimit": "<max_depth>",
+                  "OperationalLimitSet": "<max_depth>",
+                  "ACLineSegment": "<max_depth>",
+                  "CurrentLimit": "<max_depth>",
+                  "OperationalLimitType": "<max_depth>",
+                  "ConformLoad": "<max_depth>",
+                  "ConformLoadGroup": "<max_depth>",
+                  "SubLoadArea": "<max_depth>",
+                  "LoadArea": "<max_depth>",
+                  "LoadResponseCharacteristic": "<max_depth>",
+                  "PowerTransformerEnd": "<max_depth>",
+                  "SynchronousMachine": "<max_depth>",
+                  "PowerTransformer": "<max_depth>",
+                  "RatioTapChanger": "<max_depth>",
+                  "RegulatingControl": "<max_depth>",
+                  "HydroGeneratingUnit": "<max_depth>",
+                  "NuclearGeneratingUnit": "<max_depth>",
+                  "FossilFuel": "<max_depth>",
+                  "ThermalGeneratingUnit": "<max_depth>",
+                  "GeneratingUnit": "<max_depth>"
+                },
+                "num_equipment_objects": 453
+              }
+            }
+          },
+          {
+            "step": "resolve_cim_object",
+            "effective_user_input": "Was war los bei Verbraucher 27 am 9. Januar zwischen 14 und 15 uhr?",
+            "effective_context_user_input": "Was war los bei Verbraucher 27 am 9. Januar zwischen 14 und 15 uhr?",
+            "previous_context": null,
+            "source_subrequest": null,
+            "tool_spec": {
+              "name": "resolve_cim_object",
+              "description": "Resolve asset or equipment from user query and parse time/state intent",
+              "capability_tags": [
+                "object_resolution",
+                "query_parsing",
+                "equipment_catalog",
+                "llm_match",
+                "read_only"
+              ],
+              "mutating": false
+            },
+            "result": {
+              "status": "ok",
+              "tool": "resolve_cim_object",
+              "cim_root": "C:\\Users\\STELLER\\Documents\\Masterarbeit\\CIM-Dateien\\tobias_CIM_daten\\data\\extracted",
+              "user_input": "Was war los bei Verbraucher 27 am 9. Januar zwischen 14 und 15 uhr?",
+              "parsed_query": {
+                "equipment_detected": [
+                  "<max_depth>"
+                ],
+                "state_detected": [
+                  "<max_depth>"
+                ],
+                "metric": null,
+                "equipment_selection": [
+                  "<max_depth>"
+                ],
+                "time_start": "2026-01-09T14:00:00+00:00",
+                "time_end": "2026-01-09T15:00:00+00:00",
+                "time_label": "09.01.2026 14:00-15:00",
+                "intent": "historical_analysis",
+                "request_mode": "standard_sv",
+                "is_topology_query": false
+              },
+              "resolved_object": "<omitted:ConformLoad>",
+              "equipment_obj": "<non_serializable:ConformLoad>",
+              "resolution_mode": "interpret_user_query",
+              "equipment_resolution_debug": {
+                "parsed_query_equipment_selection": [
+                  "<max_depth>"
+                ]
+              }
+            }
+          },
+          {
+            "step": "load_snapshot_cache",
+            "effective_user_input": "Was war los bei Verbraucher 27 am 9. Januar zwischen 14 und 15 uhr?",
+            "effective_context_user_input": "Was war los bei Verbraucher 27 am 9. Januar zwischen 14 und 15 uhr?",
+            "previous_context": null,
+            "source_subrequest": null,
+            "tool_spec": {
+              "name": "load_snapshot_cache",
+              "description": "Load relevant snapshots for the parsed time window and build snapshot cache",
+              "capability_tags": [
+                "snapshot_loading",
+                "state_cache",
+                "read_only"
+              ],
+              "mutating": false
+            },
+            "result": {
+              "status": "ok",
+              "tool": "load_snapshot_cache",
+              "cim_root": "C:\\Users\\STELLER\\Documents\\Masterarbeit\\CIM-Dateien\\tobias_CIM_daten\\data\\extracted",
+              "cim_snapshots": "<omitted:dict>",
+              "required_state_types": [
+                "SvPowerFlow"
+              ],
+              "snapshot_cache": "<omitted:dict>",
+              "snapshot_cache_summary": {
+                "num_snapshots": 3,
+                "requested_state_types": [
+                  "<max_depth>"
+                ],
+                "snapshot_names": [
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>"
+                ],
+                "total_state_counts": {
+                  "SvPowerFlow": "<max_depth>",
+                  "SvVoltage": "<max_depth>"
+                }
+              }
+            }
+          },
+          {
+            "step": "query_cim",
+            "effective_user_input": "Was war los bei Verbraucher 27 am 9. Januar zwischen 14 und 15 uhr?",
+            "effective_context_user_input": "Was war los bei Verbraucher 27 am 9. Januar zwischen 14 und 15 uhr?",
+            "previous_context": null,
+            "source_subrequest": null,
+            "tool_spec": {
+              "name": "query_cim",
+              "description": "Run CIM analysis query using parsed query, network index and snapshot cache",
+              "capability_tags": [
+                "analysis",
+                "read_only"
+              ],
+              "mutating": false
+            },
+            "result": {
+              "status": "ok",
+              "tool": "query_cim",
+              "cim_root": "C:\\Users\\STELLER\\Documents\\Masterarbeit\\CIM-Dateien\\tobias_CIM_daten\\data\\extracted",
+              "parsed_query": {
+                "equipment_detected": [
+                  "<max_depth>"
+                ],
+                "state_detected": [
+                  "<max_depth>"
+                ],
+                "metric": null,
+                "equipment_selection": [
+                  "<max_depth>"
+                ],
+                "time_start": "2026-01-09T14:00:00+00:00",
+                "time_end": "2026-01-09T15:00:00+00:00",
+                "time_label": "09.01.2026 14:00-15:00",
+                "intent": "historical_analysis",
+                "request_mode": "standard_sv",
+                "is_topology_query": false
+              },
+              "answer": "Bei Verbraucher 27 wurde zwischen 14:00 und 15:00 Uhr ein Mindestwert von 250.96 MW um 14:15 Uhr und ein Höchstwert von 293.123 MW um 14:30 Uhr gemessen.",
+              "query_result_data": {}
+            }
+          },
+          {
+            "step": "summarize_cim_result",
+            "effective_user_input": "Was war los bei Verbraucher 27 am 9. Januar zwischen 14 und 15 uhr?",
+            "effective_context_user_input": "Was war los bei Verbraucher 27 am 9. Januar zwischen 14 und 15 uhr?",
+            "previous_context": null,
+            "source_subrequest": null,
+            "tool_spec": {
+              "name": "summarize_cim_result",
+              "description": "Return final CIM result with debug information",
+              "capability_tags": [
+                "result",
+                "read_only"
+              ],
+              "mutating": false
+            },
+            "result": {
+              "status": "ok",
+              "tool": "summarize_cim_result",
+              "cim_root": "C:\\Users\\STELLER\\Documents\\Masterarbeit\\CIM-Dateien\\tobias_CIM_daten\\data\\extracted",
+              "user_input": "Was war los bei Verbraucher 27 am 9. Januar zwischen 14 und 15 uhr?",
+              "answer": "Bei Verbraucher 27 wurde zwischen 14:00 und 15:00 Uhr ein Mindestwert von 250.96 MW um 14:15 Uhr und ein Höchstwert von 293.123 MW um 14:30 Uhr gemessen.",
+              "debug": {
+                "num_inventory_snapshots": 3,
+                "index_source_snapshot": "CIM_GridAssist_1",
+                "index_source_time_str": "2026-01-09T14:15:00+00:00",
+                "required_state_types": [
+                  "<max_depth>"
+                ],
+                "num_loaded_snapshots": 3,
+                "loaded_snapshot_names": [
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>"
+                ],
+                "snapshot_cache_summary": {
+                  "num_snapshots": "<max_depth>",
+                  "requested_state_types": "<max_depth>",
+                  "snapshot_names": "<max_depth>",
+                  "total_state_counts": "<max_depth>"
+                },
+                "parsed_query": {
+                  "equipment_detected": "<max_depth>",
+                  "state_detected": "<max_depth>",
+                  "metric": "<max_depth>",
+                  "equipment_selection": "<max_depth>",
+                  "time_start": "<max_depth>",
+                  "time_end": "<max_depth>",
+                  "time_label": "<max_depth>",
+                  "intent": "<max_depth>",
+                  "request_mode": "<max_depth>",
+                  "is_topology_query": "<max_depth>"
+                },
+                "resolved_object": "<omitted:ConformLoad>",
+                "resolution_mode": "interpret_user_query",
+                "equipment_resolution_debug": {
+                  "parsed_query_equipment_selection": "<max_depth>"
+                },
+                "equipment_catalog_summary": {
+                  "equipment_types": "<max_depth>",
+                  "equipment_type_counts": "<max_depth>",
+                  "num_equipment_objects": "<max_depth>"
+                },
+                "comparison_resolution": {},
+                "comparison_result": {},
+                "requested_base_attributes": []
+              }
+            }
+          }
+        ],
+        "run_summary": {
+          "user_input": "Was war los bei Verbraucher 27 am 9. Januar zwischen 14 und 15 uhr?",
+          "classification_summary": {
+            "intent": "historical_analysis",
+            "request_mode": "standard_sv",
+            "safe_to_execute": true,
+            "target_kind": "metric",
+            "confidence": "high",
+            "classification_mode": "primary_llm_classifier",
+            "missing_context": []
+          },
+          "planned_steps": [
+            "scan_snapshot_inventory",
+            "resolve_cim_object",
+            "load_snapshot_cache",
+            "query_cim",
+            "summarize_cim_result"
+          ],
+          "selected_type": null,
+          "selected_equipment_id": null,
+          "selected_equipment_name": "Load 27",
+          "parsed_query_summary": {
+            "equipment_detected": [
+              "ConformLoad"
+            ],
+            "state_detected": [
+              "SvPowerFlow"
+            ],
+            "metric": null,
+            "time_label": "09.01.2026 14:00-15:00",
+            "equipment_selection": [
+              {
+                "equipment_type": "ConformLoad",
+                "equipment_key": "load27",
+                "equipment_name": "Load 27",
+                "equipment_id": "_42bf2e85-cdac-4959-9ed1-9f89e7740e96"
+              }
+            ]
+          },
+          "final_status": "ok",
+          "final_answer": "Bei Verbraucher 27 wurde zwischen 14:00 und 15:00 Uhr ein Mindestwert von 250.96 MW um 14:15 Uhr und ein Höchstwert von 293.123 MW um 14:30 Uhr gemessen."
+        }
+      },
+      "raw_answer": "Bei Verbraucher 27 wurde zwischen 14:00 und 15:00 Uhr ein Mindestwert von 250.96 MW um 14:15 Uhr und ein Höchstwert von 293.123 MW um 14:30 Uhr gemessen."
+    }
+  }
+}

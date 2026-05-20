@@ -1,0 +1,47 @@
+{
+  "run_id": 44,
+  "timestamp": "2026-05-20T16:20:52.325239",
+  "user_input": "Gib mir die Spannungen aller Busse in PF.",
+  "duration_seconds": 0.582,
+  "token_usage": {
+    "prompt_tokens": 826,
+    "completion_tokens": 75,
+    "total_tokens": 901,
+    "details": {
+      "phi3:mini": {
+        "input_tokens": 826,
+        "output_tokens": 75,
+        "total_tokens": 901
+      }
+    }
+  },
+  "decision_trace": {
+    "domain": "ASK_USER",
+    "planning_mode": "",
+    "workflow": "",
+    "confidence": "",
+    "safe_to_execute": "",
+    "num_steps": 0,
+    "steps": "",
+    "planner_reasoning": "",
+    "resolved_object": "<omitted:str>",
+    "resolved_object_confidence": "",
+    "selected_attributes": "",
+    "attribute_confidence": "",
+    "num_tool_calls": 0,
+    "executed_tools": "",
+    "failed_tool": "",
+    "equipment_resolution_mode": "",
+    "attribute_resolution_mode": "",
+    "comparison_resolution_mode": ""
+  },
+  "router_output": {
+    "route": "ASK_USER",
+    "question": "Können Sie angeben, welches PowerFactory-Projekt oder welche historischen CIM-Daten Sie benötigen?",
+    "missing_fields": [
+      "project_name",
+      "time_range"
+    ],
+    "partial": {}
+  }
+}

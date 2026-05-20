@@ -8,7 +8,7 @@
     "completion_tokens": 6219,
     "total_tokens": 11807,
     "details": {
-      "qwen3:30b": {
+      "phi3:mini": {
         "input_tokens": 5588,
         "total_tokens": 11807,
         "output_tokens": 6219
@@ -188,7 +188,7 @@
         "attribute_cardinality_rationale": ""
       },
       "error": "llm_object_match_failed",
-      "details": "model 'qwen3:30b' not found (status code: 404)",
+      "details": "model 'phi3:mini' not found (status code: 404)",
       "agent": "SingleAgent",
       "available_tools": [
         "UnifiedToolSpec(full_name='cim.scan_snapshot_inventory', name='scan_snapshot_inventory', domain='cim', description='Scan snapshot inventory and build base network index', input_schema={'type': 'object', 'properties': {'cim_root': {'type': 'string'}}, 'required': []}, output_schema_hint={'status': 'ok|error', 'tool': 'scan_snapshot_inventory', 'snapshot_inventory': 'dict', 'base_snapshot': 'dict', 'network_index': 'dict', 'equipment_catalog_summary': 'dict'}, capability_tags=['inventory', 'network_index', 'equipment_catalog', 'read_only'], mutating=False, requires_state=[], produces_state=['snapshot_inventory', 'base_snapshot', 'network_index', 'equipment_catalog_summary'], is_summary=False, domain_notes=['Builds and merges a deterministic equipment catalog from the base snapshot.'])",
@@ -225,7 +225,7 @@
         "UnifiedToolSpec(full_name='pf.read_pf_object_attributes', name='read_pf_object_attributes', domain='pf', description='Read selected attributes from a resolved PowerFactory object with dynamic loadflow fallback.', input_schema={}, output_schema_hint={}, capability_tags=[], mutating=False, requires_state=['data_query_instruction', 'object_resolution', 'data_attribute_selection'], produces_state=['data_query_execution'], is_summary=False, domain_notes=['Do not use this step before attribute selection is available.'])",
         "UnifiedToolSpec(full_name='pf.summarize_pf_object_data_result', name='summarize_pf_object_data_result', domain='pf', description='Summarize queried PowerFactory object data for the end user.', input_schema={}, output_schema_hint={}, capability_tags=[], mutating=False, requires_state=['data_query_execution'], produces_state=['data_query_summary', 'summary'], is_summary=True, domain_notes=[])"
       ],
-      "answer": "Die Anfrage konnte nicht sauber ausgeführt werden (llm_object_match_failed). Details: model 'qwen3:30b' not found (status code: 404)",
+      "answer": "Die Anfrage konnte nicht sauber ausgeführt werden (llm_object_match_failed). Details: model 'phi3:mini' not found (status code: 404)",
       "debug": {
         "planning": {},
         "trace": [
@@ -2237,7 +2237,7 @@
                 "attribute_cardinality_rationale": ""
               },
               "error": "llm_object_match_failed",
-              "details": "model 'qwen3:30b' not found (status code: 404)"
+              "details": "model 'phi3:mini' not found (status code: 404)"
             }
           }
         ]

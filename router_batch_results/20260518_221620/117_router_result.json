@@ -1,0 +1,48 @@
+{
+  "run_id": 117,
+  "timestamp": "2026-05-20T08:09:12.689982",
+  "user_input": "Wie groß ist P gerade in CIM?",
+  "duration_seconds": 1.271,
+  "token_usage": {
+    "prompt_tokens": 742,
+    "completion_tokens": 67,
+    "total_tokens": 809,
+    "details": {
+      "phi3:mini": {
+        "input_tokens": 742,
+        "output_tokens": 67,
+        "total_tokens": 809
+      }
+    }
+  },
+  "decision_trace": {
+    "domain": "ASK_USER",
+    "planning_mode": "",
+    "workflow": "",
+    "confidence": "",
+    "safe_to_execute": "",
+    "num_steps": 0,
+    "steps": "",
+    "planner_reasoning": "",
+    "resolved_object": "<omitted:str>",
+    "resolved_object_confidence": "",
+    "selected_attributes": "",
+    "attribute_confidence": "",
+    "num_tool_calls": 0,
+    "executed_tools": "",
+    "failed_tool": "",
+    "equipment_resolution_mode": "",
+    "attribute_resolution_mode": "",
+    "comparison_resolution_mode": ""
+  },
+  "router_output": {
+    "route": "ASK_USER",
+    "question": "Können Sie bitte angeben, ob 'P gerade' auf historische Daten oder das aktuelle PowerFactory-Projekt bezogen ist?",
+    "missing_fields": [
+      "data_source"
+    ],
+    "partial": {
+      "user_input": "Wie groß ist P gerade in CIM?"
+    }
+  }
+}

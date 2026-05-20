@@ -1,0 +1,44 @@
+{
+  "run_id": 13,
+  "timestamp": "2026-05-16T22:45:22.497663",
+  "user_input": "Last B 3 MW rauf, danach bitte die Belastung von Line 4-5.",
+  "duration_seconds": 47.236,
+  "token_usage": {
+    "prompt_tokens": 4491,
+    "completion_tokens": 4690,
+    "total_tokens": 9181,
+    "details": {
+      "phi3:mini": {
+        "output_tokens": 4690,
+        "input_tokens": 4491,
+        "total_tokens": 9181
+      }
+    }
+  },
+  "decision_trace": {
+    "domain": "ERROR",
+    "planning_mode": "",
+    "workflow": "",
+    "confidence": "",
+    "safe_to_execute": "",
+    "num_steps": 0,
+    "steps": "",
+    "planner_reasoning": "",
+    "resolved_object": "<omitted:str>",
+    "resolved_object_confidence": "",
+    "selected_attributes": "",
+    "attribute_confidence": "",
+    "num_tool_calls": 0,
+    "executed_tools": "",
+    "failed_tool": ""
+  },
+  "router_output": {
+    "route": "ERROR",
+    "status": "error",
+    "result": {
+      "status": "error",
+      "answer": "Der UnifiedPlanner hat keine gültige strukturierte Ausgabe erzeugt.",
+      "planner_error": "Invalid json output: \nFor troubleshooting, visit: https://docs.langchain.com/oss/python/langchain/errors/OUTPUT_PARSING_FAILURE "
+    }
+  }
+}

@@ -1,0 +1,53 @@
+{
+  "run_id": 35,
+  "timestamp": "2026-05-20T11:02:52.932809",
+  "user_input": "Was ist die rated voltage von Bus 1 bei Powerfactory?",
+  "duration_seconds": 16.922,
+  "token_usage": {
+    "prompt_tokens": 4473,
+    "completion_tokens": 1559,
+    "total_tokens": 6032,
+    "details": {
+      "phi3:mini": {
+        "input_tokens": 4473,
+        "total_tokens": 6032,
+        "output_tokens": 1559
+      }
+    }
+  },
+  "decision_trace": {
+    "domain": "cim",
+    "planning_mode": "standard_workflow",
+    "workflow": "standard_base",
+    "confidence": "",
+    "safe_to_execute": "True",
+    "num_steps": 0,
+    "steps": "",
+    "planner_reasoning": "The user asks for the 'rated voltage' of Bus 1, which is a static base attribute (not a dynamic load-flow result). According to domain guidelines, base attributes like rated voltage are handled by CIM's standard_base workflow, regardless of the user mentioning 'Powerfactory' (which refers to the tool but not the data type).",
+    "resolved_object": "<omitted:str>",
+    "resolved_object_confidence": "",
+    "selected_attributes": "",
+    "attribute_confidence": "",
+    "num_tool_calls": 0,
+    "executed_tools": "",
+    "failed_tool": ""
+  },
+  "router_output": {
+    "route": "ERROR",
+    "status": "error",
+    "result": {
+      "status": "error",
+      "answer": "Unbekannter Standard-Workflow: standard_base",
+      "planner_decision": {
+        "domain": "cim",
+        "planning_mode": "standard_workflow",
+        "workflow": "standard_base",
+        "custom_steps": [],
+        "safe_to_execute": true,
+        "missing_context": [],
+        "clarification_question": "",
+        "reasoning": "The user asks for the 'rated voltage' of Bus 1, which is a static base attribute (not a dynamic load-flow result). According to domain guidelines, base attributes like rated voltage are handled by CIM's standard_base workflow, regardless of the user mentioning 'Powerfactory' (which refers to the tool but not the data type)."
+      }
+    }
+  }
+}

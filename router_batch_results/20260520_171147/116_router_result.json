@@ -1,0 +1,44 @@
+{
+  "run_id": 116,
+  "timestamp": "2026-05-20T17:20:40.216996",
+  "user_input": "Wie ist die Spannung in den CIM-Daten?",
+  "duration_seconds": 2.031,
+  "token_usage": {
+    "prompt_tokens": 897,
+    "completion_tokens": 374,
+    "total_tokens": 1271,
+    "details": {
+      "phi3:mini": {
+        "input_tokens": 897,
+        "output_tokens": 374,
+        "total_tokens": 1271
+      }
+    }
+  },
+  "decision_trace": {
+    "domain": "ERROR",
+    "planning_mode": "",
+    "workflow": "",
+    "confidence": "",
+    "safe_to_execute": "",
+    "num_steps": 0,
+    "steps": "",
+    "planner_reasoning": "",
+    "resolved_object": "<omitted:str>",
+    "resolved_object_confidence": "",
+    "selected_attributes": "",
+    "attribute_confidence": "",
+    "num_tool_calls": 0,
+    "executed_tools": "",
+    "failed_tool": ""
+  },
+  "router_output": {
+    "route": "ERROR",
+    "status": "error",
+    "result": {
+      "status": "error",
+      "answer": "Der UnifiedPlanner hat keine gültige strukturierte Ausgabe erzeugt.",
+      "planner_error": "Invalid json output: Die Anfrage \"Wie ist die Spannung in den CIM-Daten?\" scheint eine Verwechslung von Begriffen zu sein. Es gibt keine standardmäßigen Informationen über \"Spannung\" im Zusammenhang mit dem Common Information Model (CIM) für industrielle Automation, da der CIM ein Datenmodell ist und nicht physische elektrische Spannungen darstellt.\n\nWenn Sie nach den Eigenschaften oder Parametern in einem Szenario fragen, das sowohl die Verwendung des Common Information Model als auch elektrotechnische Aspekte umfasst (zum Beispiel ein industrielles System mit Steuerung und Automatisierung), könnten wir über elektrische Spannungen sprechen. In solch einem Fall würde man typischernerweise Daten wie den Stromfluss, die Last oder andere relevante elektrische Eigenschaften diskutieren, nicht jedoch \"Spannung\" im Sinne des CIM-Datenmodells selbst.\n\nWenn Sie Informationen über elektrotechnische Aspekte in einem industriellen Kontext benötigen, könnten wir uns auf das IEC 61850 Standard beziehen oder andere spezifische Dokumente und Standards für die elektrischen Spannungen im Zusammenhang mit der Automatisierung.\nFor troubleshooting, visit: https://docs.langchain.com/oss/python/langchain/errors/OUTPUT_PARSING_FAILURE "
+    }
+  }
+}

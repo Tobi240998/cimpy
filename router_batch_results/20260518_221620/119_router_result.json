@@ -1,0 +1,358 @@
+{
+  "run_id": 119,
+  "timestamp": "2026-05-20T08:18:21.773491",
+  "user_input": "Wie war die Auslastung von Leitung 128 am 09.01.26?",
+  "duration_seconds": 52.926,
+  "token_usage": {
+    "prompt_tokens": 10359,
+    "completion_tokens": 669,
+    "total_tokens": 11028,
+    "details": {
+      "phi3:mini": {
+        "output_tokens": 669,
+        "input_tokens": 10359,
+        "total_tokens": 11028
+      }
+    }
+  },
+  "decision_trace": {
+    "domain": "HISTORICAL",
+    "planning_mode": "",
+    "workflow": "",
+    "confidence": "",
+    "safe_to_execute": "",
+    "num_steps": 0,
+    "steps": "",
+    "planner_reasoning": "",
+    "resolved_object": "<omitted:str>",
+    "resolved_object_confidence": "",
+    "selected_attributes": "",
+    "attribute_confidence": "",
+    "num_tool_calls": 3,
+    "executed_tools": "scan_snapshot_inventory | resolve_cim_object | resolve_cim_comparison",
+    "failed_tool": "resolve_cim_comparison",
+    "equipment_resolution_mode": "",
+    "attribute_resolution_mode": "",
+    "comparison_resolution_mode": ""
+  },
+  "router_output": {
+    "route": "HISTORICAL",
+    "result": {
+      "status": "error",
+      "tool": "resolve_cim_comparison",
+      "cim_root": "C:\\Users\\STELLER\\Documents\\Masterarbeit\\CIM-Dateien\\tobias_CIM_daten\\data\\extracted",
+      "error": "comparison_resolution_failed",
+      "answer": "Die gewünschte Vergleichslogik konnte nicht sicher aufgelöst werden.",
+      "comparison_resolution_debug": {
+        "status": "error",
+        "error": "comparison_resolution_failed",
+        "details": "comparison_not_safely_resolved",
+        "allowed_comparison_types": [
+          "voltage_vs_rated_voltage"
+        ]
+      },
+      "agent": "CIMDomainAgent",
+      "debug": {
+        "trace": [
+          {
+            "step": "scan_snapshot_inventory",
+            "effective_user_input": "Wie war die Auslastung von Leitung 128 am 09.01.26?",
+            "effective_context_user_input": "Wie war die Auslastung von Leitung 128 am 09.01.26?",
+            "previous_context": null,
+            "source_subrequest": null,
+            "tool_spec": {
+              "name": "scan_snapshot_inventory",
+              "description": "Scan snapshot inventory and build base network index",
+              "capability_tags": [
+                "inventory",
+                "network_index",
+                "equipment_catalog",
+                "read_only"
+              ],
+              "mutating": false
+            },
+            "result": {
+              "status": "ok",
+              "tool": "scan_snapshot_inventory",
+              "cim_root": "C:\\Users\\STELLER\\Documents\\Masterarbeit\\CIM-Dateien\\tobias_CIM_daten\\data\\extracted",
+              "snapshot_inventory": {
+                "root_folder": "C:\\Users\\STELLER\\Documents\\Masterarbeit\\CIM-Dateien\\tobias_CIM_daten\\data\\extracted",
+                "snapshots": [
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>"
+                ]
+              },
+              "base_snapshot": "<omitted:dict>",
+              "network_index": "<omitted:dict>",
+              "equipment_catalog_summary": {
+                "equipment_types": [
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>"
+                ],
+                "equipment_type_counts": {
+                  "SynchronousMachineTimeConstantReactance": "<max_depth>",
+                  "LoadAggregate": "<max_depth>",
+                  "LoadStatic": "<max_depth>",
+                  "TopologicalIsland": "<max_depth>",
+                  "BusbarSection": "<max_depth>",
+                  "VoltageLimit": "<max_depth>",
+                  "OperationalLimitSet": "<max_depth>",
+                  "ACLineSegment": "<max_depth>",
+                  "CurrentLimit": "<max_depth>",
+                  "OperationalLimitType": "<max_depth>",
+                  "ConformLoad": "<max_depth>",
+                  "ConformLoadGroup": "<max_depth>",
+                  "SubLoadArea": "<max_depth>",
+                  "LoadArea": "<max_depth>",
+                  "LoadResponseCharacteristic": "<max_depth>",
+                  "PowerTransformerEnd": "<max_depth>",
+                  "SynchronousMachine": "<max_depth>",
+                  "PowerTransformer": "<max_depth>",
+                  "RatioTapChanger": "<max_depth>",
+                  "RegulatingControl": "<max_depth>",
+                  "HydroGeneratingUnit": "<max_depth>",
+                  "NuclearGeneratingUnit": "<max_depth>",
+                  "FossilFuel": "<max_depth>",
+                  "ThermalGeneratingUnit": "<max_depth>",
+                  "GeneratingUnit": "<max_depth>"
+                },
+                "num_equipment_objects": 453
+              }
+            }
+          },
+          {
+            "step": "resolve_cim_object",
+            "effective_user_input": "Wie war die Auslastung von Leitung 128 am 09.01.26?",
+            "effective_context_user_input": "Wie war die Auslastung von Leitung 128 am 09.01.26?",
+            "previous_context": null,
+            "source_subrequest": null,
+            "tool_spec": {
+              "name": "resolve_cim_object",
+              "description": "Resolve asset or equipment from user query and parse time/state intent",
+              "capability_tags": [
+                "object_resolution",
+                "query_parsing",
+                "equipment_catalog",
+                "llm_match",
+                "read_only"
+              ],
+              "mutating": false
+            },
+            "result": {
+              "status": "ok",
+              "tool": "resolve_cim_object",
+              "cim_root": "C:\\Users\\STELLER\\Documents\\Masterarbeit\\CIM-Dateien\\tobias_CIM_daten\\data\\extracted",
+              "user_input": "Wie war die Auslastung von Leitung 128 am 09.01.26?",
+              "parsed_query": {
+                "equipment_detected": [
+                  "<max_depth>"
+                ],
+                "state_detected": [
+                  "<max_depth>"
+                ],
+                "metric": "S",
+                "equipment_selection": [
+                  "<max_depth>"
+                ],
+                "time_start": "2026-01-09T00:00:00+00:00",
+                "time_end": "2026-01-10T00:00:00+00:00",
+                "time_label": "am 2026-01-09",
+                "intent": "historical_analysis",
+                "request_mode": "standard_comparison",
+                "is_topology_query": false
+              },
+              "resolved_object": "<omitted:ACLineSegment>",
+              "equipment_obj": "<non_serializable:ACLineSegment>",
+              "resolution_mode": "interpret_user_query",
+              "equipment_resolution_debug": {
+                "parsed_query_equipment_selection": [
+                  "<max_depth>"
+                ]
+              }
+            }
+          },
+          {
+            "step": "resolve_cim_comparison",
+            "effective_user_input": "Wie war die Auslastung von Leitung 128 am 09.01.26?",
+            "effective_context_user_input": "Wie war die Auslastung von Leitung 128 am 09.01.26?",
+            "previous_context": null,
+            "source_subrequest": null,
+            "tool_spec": {
+              "name": "resolve_cim_comparison",
+              "description": "Resolve a supported CIM comparison intent into required SV metric and base attributes",
+              "capability_tags": [
+                "comparison_resolution",
+                "read_only"
+              ],
+              "mutating": false
+            },
+            "result": "<circular_reference>"
+          }
+        ],
+        "classification": {
+          "intent": "historical_analysis",
+          "confidence": "medium",
+          "target_kind": "metric",
+          "request_mode": "standard_comparison",
+          "safe_to_execute": true,
+          "missing_context": [],
+          "required_steps": [],
+          "reasoning": "The user is asking for the loading of a specific line on a given date, which implies a comparison with base values or limits.",
+          "status": "ok",
+          "classification_mode": "primary_llm_classifier"
+        },
+        "plan": [
+          {
+            "step": "scan_snapshot_inventory",
+            "description": "Scan snapshot inventory and build base network index",
+            "capability_tags": [
+              "inventory",
+              "network_index",
+              "equipment_catalog",
+              "read_only"
+            ],
+            "mutating": false
+          },
+          {
+            "step": "resolve_cim_object",
+            "description": "Resolve asset or equipment from user query and parse time/state intent",
+            "capability_tags": [
+              "object_resolution",
+              "query_parsing",
+              "equipment_catalog",
+              "llm_match",
+              "read_only"
+            ],
+            "mutating": false
+          },
+          {
+            "step": "resolve_cim_comparison",
+            "description": "Resolve a supported CIM comparison intent into required SV metric and base attributes",
+            "capability_tags": [
+              "comparison_resolution",
+              "read_only"
+            ],
+            "mutating": false
+          },
+          {
+            "step": "load_snapshot_cache",
+            "description": "Load relevant snapshots for the parsed time window and build snapshot cache",
+            "capability_tags": [
+              "snapshot_loading",
+              "state_cache",
+              "read_only"
+            ],
+            "mutating": false
+          },
+          {
+            "step": "query_cim",
+            "description": "Run CIM analysis query using parsed query, network index and snapshot cache",
+            "capability_tags": [
+              "analysis",
+              "read_only"
+            ],
+            "mutating": false
+          },
+          {
+            "step": "read_cim_base_values",
+            "description": "Read static CIM base or nameplate attributes from a resolved equipment object",
+            "capability_tags": [
+              "base_values",
+              "nameplate_data",
+              "read_only"
+            ],
+            "mutating": false
+          },
+          {
+            "step": "compare_cim_values",
+            "description": "Compare resolved SV results against resolved CIM base values using a standard comparison definition",
+            "capability_tags": [
+              "comparison",
+              "read_only"
+            ],
+            "mutating": false
+          },
+          {
+            "step": "summarize_cim_result",
+            "description": "Return final CIM result with debug information",
+            "capability_tags": [
+              "result",
+              "read_only"
+            ],
+            "mutating": false
+          }
+        ],
+        "run_summary": {
+          "user_input": "Wie war die Auslastung von Leitung 128 am 09.01.26?",
+          "classification_summary": {
+            "intent": "historical_analysis",
+            "request_mode": "standard_comparison",
+            "safe_to_execute": true,
+            "target_kind": "metric",
+            "confidence": "medium",
+            "classification_mode": "primary_llm_classifier",
+            "missing_context": []
+          },
+          "planned_steps": [
+            "scan_snapshot_inventory",
+            "resolve_cim_object",
+            "resolve_cim_comparison",
+            "load_snapshot_cache",
+            "query_cim",
+            "read_cim_base_values",
+            "compare_cim_values",
+            "summarize_cim_result"
+          ],
+          "selected_type": null,
+          "selected_equipment_id": null,
+          "selected_equipment_name": "Line 26 - 27",
+          "parsed_query_summary": {
+            "equipment_detected": [
+              "ACLineSegment"
+            ],
+            "state_detected": [
+              "SvPowerFlow"
+            ],
+            "metric": "S",
+            "time_label": "am 2026-01-09",
+            "equipment_selection": [
+              {
+                "equipment_type": "ACLineSegment",
+                "equipment_key": "line26-27",
+                "equipment_name": "Line 26 - 27",
+                "equipment_id": "_ff248e9b-3300-47c8-94cc-ea79db76023b"
+              }
+            ]
+          },
+          "final_status": "error",
+          "final_answer": "Die gewünschte Vergleichslogik konnte nicht sicher aufgelöst werden."
+        }
+      },
+      "raw_answer": "Die gewünschte Vergleichslogik konnte nicht sicher aufgelöst werden."
+    }
+  }
+}

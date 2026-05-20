@@ -1,0 +1,44 @@
+{
+  "run_id": 19,
+  "timestamp": "2026-05-16T22:52:22.105041",
+  "user_input": "Trenne Switch 1.",
+  "duration_seconds": 46.606,
+  "token_usage": {
+    "prompt_tokens": 4461,
+    "completion_tokens": 4543,
+    "total_tokens": 9004,
+    "details": {
+      "phi3:mini": {
+        "output_tokens": 4543,
+        "input_tokens": 4461,
+        "total_tokens": 9004
+      }
+    }
+  },
+  "decision_trace": {
+    "domain": "ERROR",
+    "planning_mode": "",
+    "workflow": "",
+    "confidence": "",
+    "safe_to_execute": "",
+    "num_steps": 0,
+    "steps": "",
+    "planner_reasoning": "",
+    "resolved_object": "<omitted:str>",
+    "resolved_object_confidence": "",
+    "selected_attributes": "",
+    "attribute_confidence": "",
+    "num_tool_calls": 0,
+    "executed_tools": "",
+    "failed_tool": ""
+  },
+  "router_output": {
+    "route": "ERROR",
+    "status": "error",
+    "result": {
+      "status": "error",
+      "answer": "Der UnifiedPlanner hat keine gültige strukturierte Ausgabe erzeugt.",
+      "planner_error": "Invalid json output: \nFor troubleshooting, visit: https://docs.langchain.com/oss/python/langchain/errors/OUTPUT_PARSING_FAILURE "
+    }
+  }
+}

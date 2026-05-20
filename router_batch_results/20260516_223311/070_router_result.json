@@ -1,0 +1,44 @@
+{
+  "run_id": 70,
+  "timestamp": "2026-05-17T09:25:56.727193",
+  "user_input": "Nenne mir die Nennspannung sämtlicher Busse in Powerfactory.",
+  "duration_seconds": 42.477,
+  "token_usage": {
+    "prompt_tokens": 4481,
+    "completion_tokens": 4159,
+    "total_tokens": 8640,
+    "details": {
+      "phi3:mini": {
+        "input_tokens": 4481,
+        "output_tokens": 4159,
+        "total_tokens": 8640
+      }
+    }
+  },
+  "decision_trace": {
+    "domain": "ERROR",
+    "planning_mode": "",
+    "workflow": "",
+    "confidence": "",
+    "safe_to_execute": "",
+    "num_steps": 0,
+    "steps": "",
+    "planner_reasoning": "",
+    "resolved_object": "",
+    "resolved_object_confidence": "",
+    "selected_attributes": "",
+    "attribute_confidence": "",
+    "num_tool_calls": 0,
+    "executed_tools": "",
+    "failed_tool": ""
+  },
+  "router_output": {
+    "route": "ERROR",
+    "status": "error",
+    "result": {
+      "status": "error",
+      "answer": "Der UnifiedPlanner hat keine gültige strukturierte Ausgabe erzeugt.",
+      "planner_error": "Invalid json output: \nFor troubleshooting, visit: https://docs.langchain.com/oss/python/langchain/errors/OUTPUT_PARSING_FAILURE "
+    }
+  }
+}

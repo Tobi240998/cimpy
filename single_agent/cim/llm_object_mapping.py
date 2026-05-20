@@ -27,7 +27,7 @@ from cimpy.cimpy_time_analysis.schemas import (
 
 def get_llm():
     return ChatOllama(
-        model="qwen3:30b",
+        model="phi3:mini",
         base_url="http://localhost:11434",
         temperature=0.0,
         streaming=False,

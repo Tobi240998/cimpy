@@ -1,0 +1,46 @@
+{
+  "run_id": 94,
+  "timestamp": "2026-05-20T16:49:04.666830",
+  "user_input": "Welche Spannung liegt im Zeitverlauf am 09.01.2026 an Trf 19 20 an?",
+  "duration_seconds": 0.619,
+  "token_usage": {
+    "prompt_tokens": 845,
+    "completion_tokens": 91,
+    "total_tokens": 936,
+    "details": {
+      "phi3:mini": {
+        "input_tokens": 845,
+        "output_tokens": 91,
+        "total_tokens": 936
+      }
+    }
+  },
+  "decision_trace": {
+    "domain": "ASK_USER",
+    "planning_mode": "",
+    "workflow": "",
+    "confidence": "",
+    "safe_to_execute": "",
+    "num_steps": 0,
+    "steps": "",
+    "planner_reasoning": "",
+    "resolved_object": "<omitted:str>",
+    "resolved_object_confidence": "",
+    "selected_attributes": "",
+    "attribute_confidence": "",
+    "num_tool_calls": 0,
+    "executed_tools": "",
+    "failed_tool": "",
+    "equipment_resolution_mode": "",
+    "attribute_resolution_mode": "",
+    "comparison_resolution_mode": ""
+  },
+  "router_output": {
+    "route": "ASK_USER",
+    "question": "Könnten Sie angeben, welcher Datensatz oder welche Quelle ich benötige, um die Spannungswerte für Transformatoren TF-19 und -20 am 09.01.2026 zu erhalten?",
+    "missing_fields": [
+      "data_source"
+    ],
+    "partial": {}
+  }
+}

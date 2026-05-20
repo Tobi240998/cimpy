@@ -270,8 +270,34 @@ def extract_answer(out: Dict[str, Any]) -> str:
         return str(out.get("question", ""))
 
     result = out.get("result", {})
-    if isinstance(result, dict):
-        return str(result.get("answer", ""))
+    if not isinstance(result, dict):
+        return ""
+
+    candidates = [
+        result.get("answer"),
+        result.get("final_answer"),
+        result.get("llm_answer"),
+        _get_nested(result, ["summary", "answer"]),
+        result.get("raw_answer"),
+    ]
+
+    messages = result.get("messages")
+    if isinstance(messages, list) and messages:
+        candidates.append(" ".join(str(m) for m in messages if m))
+
+    summary_parts = result.get("summary_parts")
+    if isinstance(summary_parts, list):
+        part_answers = []
+        for part in summary_parts:
+            if isinstance(part, dict) and part.get("answer"):
+                part_answers.append(str(part.get("answer")))
+        if part_answers:
+            candidates.append("\n\n".join(part_answers))
+
+    for candidate in candidates:
+        if isinstance(candidate, str) and candidate.strip():
+            return candidate.strip()
+
     return ""
 
 

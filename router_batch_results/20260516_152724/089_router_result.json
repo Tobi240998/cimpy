@@ -1,0 +1,1543 @@
+{
+  "run_id": 89,
+  "timestamp": "2026-05-16T18:49:26.637250",
+  "user_input": "Zu welcher zusammenhängenden Komponente gehört Trafo 19-20 bei den CIM-Daten?",
+  "duration_seconds": 55.817,
+  "token_usage": {
+    "prompt_tokens": 5707,
+    "completion_tokens": 5357,
+    "total_tokens": 11064,
+    "details": {
+      "phi3:mini": {
+        "output_tokens": 5357,
+        "input_tokens": 5707,
+        "total_tokens": 11064
+      }
+    }
+  },
+  "decision_trace": {
+    "domain": "POWERFACTORY",
+    "planning_mode": "",
+    "workflow": "",
+    "confidence": "",
+    "safe_to_execute": "",
+    "num_steps": 0,
+    "steps": "",
+    "planner_reasoning": "",
+    "resolved_object": "<omitted:str>",
+    "resolved_object_confidence": "",
+    "selected_attributes": "",
+    "attribute_confidence": "",
+    "num_tool_calls": 4,
+    "executed_tools": "build_topology_graph | build_topology_inventory | interpret_entity_instruction | resolve_entity_from_inventory",
+    "failed_tool": "resolve_entity_from_inventory",
+    "equipment_resolution_mode": "",
+    "attribute_resolution_mode": "",
+    "comparison_resolution_mode": ""
+  },
+  "router_output": {
+    "route": "POWERFACTORY",
+    "result": {
+      "status": "error",
+      "tool": "resolve_entity_from_inventory",
+      "project": "<omitted:str>",
+      "instruction": {
+        "query_type": "neighbors",
+        "entity_type": "transformer",
+        "entity_name_raw": "Zu welcher zusammenhängenden Komponente gehört Trafo 19-20 bei den CIM-Daten?",
+        "entity_name_candidates": [
+          "Trafo 19-20",
+          "19-20"
+        ],
+        "available_types": [
+          "bus",
+          "generator",
+          "line",
+          "load",
+          "transformer"
+        ],
+        "debug_entity_name_candidates": [
+          "Trafo 19-20",
+          "19-20"
+        ]
+      },
+      "error": "no_matching_asset",
+      "details": "Kein passendes Asset aus der Entity-Instruction konnte im Inventar gematcht werden.",
+      "entity_name_candidates": [
+        "Trafo 19-20",
+        "19-20"
+      ],
+      "attempted_queries": [
+        {
+          "asset_query": "Trafo 19-20",
+          "entity_type": "transformer",
+          "match_count": 0,
+          "top_matches": []
+        }
+      ],
+      "agent": "PowerFactoryDomainAgent",
+      "available_tools": [
+        {
+          "name": "build_topology_graph",
+          "description": "Build a topology graph from the active PowerFactory project.",
+          "input_schema": {
+            "type": "object",
+            "properties": {
+              "services": "<omitted:dict>",
+              "contract_cubicles": {
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "services"
+            ]
+          },
+          "output_schema_hint": {
+            "status": "ok|error",
+            "tool": "build_topology_graph",
+            "graph_mode": "contracted|wiring",
+            "graph_summary": "dict",
+            "inventory": "dict",
+            "build_debug": "dict"
+          },
+          "capability_tags": [
+            "powerfactory",
+            "topology",
+            "graph",
+            "read_only"
+          ],
+          "mutating": false,
+          "requires_state": [],
+          "produces_state": [
+            "graph_result"
+          ],
+          "is_summary": false,
+          "domain_notes": []
+        },
+        {
+          "name": "build_topology_inventory",
+          "description": "Build a typed inventory from the current PowerFactory topology graph.",
+          "input_schema": {
+            "type": "object",
+            "properties": {
+              "services": "<omitted:dict>",
+              "topology_graph_result": {
+                "type": "object"
+              }
+            },
+            "required": [
+              "services",
+              "topology_graph_result"
+            ]
+          },
+          "output_schema_hint": {
+            "status": "ok|error",
+            "tool": "build_topology_inventory",
+            "inventory": "dict"
+          },
+          "capability_tags": [
+            "powerfactory",
+            "topology",
+            "inventory",
+            "read_only"
+          ],
+          "mutating": false,
+          "requires_state": [
+            "graph_result"
+          ],
+          "produces_state": [
+            "inventory_result"
+          ],
+          "is_summary": false,
+          "domain_notes": []
+        },
+        {
+          "name": "build_unified_inventory",
+          "description": "Build a unified non-topology PowerFactory inventory for supported object types.",
+          "input_schema": {
+            "type": "object",
+            "properties": {
+              "services": "<omitted:dict>",
+              "allowed_types": {
+                "type": "array"
+              }
+            },
+            "required": [
+              "services"
+            ]
+          },
+          "output_schema_hint": {
+            "status": "ok|error",
+            "tool": "build_unified_inventory",
+            "inventory": "dict"
+          },
+          "capability_tags": [
+            "powerfactory",
+            "inventory",
+            "read_only"
+          ],
+          "mutating": false,
+          "requires_state": [],
+          "produces_state": [
+            "unified_inventory_result",
+            "inventory_result"
+          ],
+          "is_summary": false,
+          "domain_notes": []
+        },
+        {
+          "name": "classify_data_source",
+          "description": "Classify whether the data query should use base data or load-flow result data.",
+          "input_schema": {
+            "type": "object",
+            "properties": {
+              "services": "<omitted:dict>",
+              "instruction": {
+                "type": "object"
+              }
+            },
+            "required": [
+              "services",
+              "instruction"
+            ]
+          },
+          "output_schema_hint": {
+            "status": "ok|error",
+            "tool": "classify_data_source",
+            "instruction": "dict",
+            "effective_data_source": "base|result"
+          },
+          "capability_tags": [
+            "powerfactory",
+            "data_query",
+            "classification",
+            "llm"
+          ],
+          "mutating": false,
+          "requires_state": [
+            "data_query_instruction"
+          ],
+          "produces_state": [
+            "data_query_instruction",
+            "data_source_decision"
+          ],
+          "is_summary": false,
+          "domain_notes": []
+        },
+        {
+          "name": "execute_change_load",
+          "description": "Apply a load change in PowerFactory and run load flow before/after.",
+          "input_schema": {
+            "type": "object",
+            "properties": {
+              "services": "<omitted:dict>",
+              "instruction": {
+                "type": "object"
+              }
+            },
+            "required": [
+              "services",
+              "instruction"
+            ]
+          },
+          "output_schema_hint": {
+            "status": "ok|error",
+            "tool": "execute_change_load",
+            "data": {
+              "u_before": "dict[str, float]",
+              "u_after": "dict[str, float]",
+              "delta_u": "dict[str, float]"
+            }
+          },
+          "capability_tags": [
+            "powerfactory",
+            "execution",
+            "loadflow",
+            "load"
+          ],
+          "mutating": true,
+          "requires_state": [
+            "instruction"
+          ],
+          "produces_state": [
+            "execution"
+          ],
+          "is_summary": false,
+          "domain_notes": []
+        },
+        {
+          "name": "execute_switch_operation",
+          "description": "Execute an open/close/toggle operation on a resolved switch object in PowerFactory.",
+          "input_schema": {
+            "type": "object",
+            "properties": {
+              "services": "<omitted:dict>",
+              "instruction": {
+                "type": "object"
+              },
+              "resolution": {
+                "type": "object"
+              },
+              "run_loadflow_after": {
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "services",
+              "instruction",
+              "resolution"
+            ]
+          },
+          "output_schema_hint": {
+            "status": "ok|error",
+            "tool": "execute_switch_operation",
+            "switch": "dict",
+            "state_before": "string|None",
+            "state_after": "string|None",
+            "loadflow": "dict"
+          },
+          "capability_tags": [
+            "powerfactory",
+            "execution",
+            "switch",
+            "topology"
+          ],
+          "mutating": true,
+          "requires_state": [
+            "switch_instruction",
+            "object_resolution"
+          ],
+          "produces_state": [
+            "switch_execution"
+          ],
+          "is_summary": false,
+          "domain_notes": []
+        },
+        {
+          "name": "get_load_catalog",
+          "description": "Read the available catalog of PowerFactory objects of the requested type from the active project.",
+          "input_schema": {
+            "type": "object",
+            "properties": {
+              "services": "<omitted:dict>",
+              "user_input": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "services"
+            ]
+          },
+          "output_schema_hint": {
+            "status": "ok|error",
+            "tool": "get_load_catalog",
+            "requested_type": "load|transformer|line|bus|switch|generator",
+            "loads": "list[object-metadata]"
+          },
+          "capability_tags": [
+            "powerfactory",
+            "read",
+            "catalog",
+            "inventory"
+          ],
+          "mutating": false,
+          "requires_state": [],
+          "produces_state": [
+            "catalog_result"
+          ],
+          "is_summary": false,
+          "domain_notes": []
+        },
+        {
+          "name": "interpret_data_query_instruction",
+          "description": "Interpret a natural-language data query into a structured PowerFactory data-query instruction.",
+          "input_schema": {
+            "type": "object",
+            "properties": {
+              "services": "<omitted:dict>",
+              "user_input": {
+                "type": "string"
+              },
+              "inventory": {
+                "type": "object"
+              }
+            },
+            "required": [
+              "services",
+              "user_input",
+              "inventory"
+            ]
+          },
+          "output_schema_hint": {
+            "status": "ok|error",
+            "tool": "interpret_data_query_instruction",
+            "instruction": "dict"
+          },
+          "capability_tags": [
+            "powerfactory",
+            "data_query",
+            "planning",
+            "llm"
+          ],
+          "mutating": false,
+          "requires_state": [
+            "unified_inventory_result"
+          ],
+          "produces_state": [
+            "data_query_instruction"
+          ],
+          "is_summary": false,
+          "domain_notes": []
+        },
+        {
+          "name": "interpret_entity_instruction",
+          "description": "Interpret a natural-language topology request into a structured generic PowerFactory entity instruction.",
+          "input_schema": {
+            "type": "object",
+            "properties": {
+              "services": "<omitted:dict>",
+              "user_input": {
+                "type": "string"
+              },
+              "inventory": {
+                "type": "object"
+              }
+            },
+            "required": [
+              "services",
+              "user_input",
+              "inventory"
+            ]
+          },
+          "output_schema_hint": {
+            "status": "ok|error",
+            "tool": "interpret_entity_instruction",
+            "instruction": "dict"
+          },
+          "capability_tags": [
+            "powerfactory",
+            "planning",
+            "nlp",
+            "topology",
+            "entity"
+          ],
+          "mutating": false,
+          "requires_state": [
+            "inventory_result"
+          ],
+          "produces_state": [
+            "entity_instruction"
+          ],
+          "is_summary": false,
+          "domain_notes": []
+        },
+        {
+          "name": "interpret_instruction",
+          "description": "Interpret a natural-language user request into a structured load-change instruction.",
+          "input_schema": {
+            "type": "object",
+            "properties": {
+              "services": "<omitted:dict>",
+              "user_input": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "services",
+              "user_input"
+            ]
+          },
+          "output_schema_hint": {
+            "status": "ok|error",
+            "tool": "interpret_instruction",
+            "instruction": "dict"
+          },
+          "capability_tags": [
+            "powerfactory",
+            "planning",
+            "nlp",
+            "load"
+          ],
+          "mutating": false,
+          "requires_state": [],
+          "produces_state": [
+            "instruction"
+          ],
+          "is_summary": false,
+          "domain_notes": []
+        },
+        {
+          "name": "interpret_switch_instruction",
+          "description": "Interpret a natural-language switch request into a structured switch operation instruction.",
+          "input_schema": {
+            "type": "object",
+            "properties": {
+              "services": "<omitted:dict>",
+              "user_input": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "services",
+              "user_input"
+            ]
+          },
+          "output_schema_hint": {
+            "status": "ok|error",
+            "tool": "interpret_switch_instruction",
+            "instruction": "dict"
+          },
+          "capability_tags": [
+            "powerfactory",
+            "planning",
+            "nlp",
+            "switch"
+          ],
+          "mutating": false,
+          "requires_state": [],
+          "produces_state": [
+            "switch_instruction"
+          ],
+          "is_summary": false,
+          "domain_notes": []
+        },
+        {
+          "name": "list_available_object_attributes",
+          "description": "List semantic and raw attribute options for the selected PowerFactory object.",
+          "input_schema": {
+            "type": "object",
+            "properties": {
+              "services": "<omitted:dict>",
+              "instruction": {
+                "type": "object"
+              },
+              "resolution": {
+                "type": "object"
+              }
+            },
+            "required": [
+              "services",
+              "instruction",
+              "resolution"
+            ]
+          },
+          "output_schema_hint": {
+            "status": "ok|error",
+            "tool": "list_available_object_attributes",
+            "attribute_options": "list"
+          },
+          "capability_tags": [
+            "powerfactory",
+            "data_query",
+            "attributes",
+            "read_only"
+          ],
+          "mutating": false,
+          "requires_state": [
+            "data_query_instruction",
+            "object_resolution"
+          ],
+          "produces_state": [
+            "data_attribute_listing"
+          ],
+          "is_summary": false,
+          "domain_notes": []
+        },
+        {
+          "name": "query_topology_neighbors",
+          "description": "Query the direct neighbors of an asset in the PowerFactory topology graph.",
+          "input_schema": {
+            "type": "object",
+            "properties": {
+              "services": "<omitted:dict>",
+              "topology_graph": "<omitted:dict>",
+              "asset_query": {
+                "type": "string"
+              },
+              "selected_node_id": {
+                "type": "string"
+              },
+              "matches": {
+                "type": "array"
+              },
+              "max_matches": {
+                "type": "integer"
+              }
+            },
+            "required": [
+              "services",
+              "topology_graph"
+            ]
+          },
+          "output_schema_hint": {
+            "status": "ok|error",
+            "tool": "query_topology_neighbors",
+            "selected_node": "dict",
+            "neighbors": "list[dict]"
+          },
+          "capability_tags": [
+            "powerfactory",
+            "topology",
+            "neighbors",
+            "read_only"
+          ],
+          "mutating": false,
+          "requires_state": [
+            "graph_result",
+            "entity_resolution"
+          ],
+          "produces_state": [
+            "topology_result"
+          ],
+          "is_summary": false,
+          "domain_notes": []
+        },
+        {
+          "name": "read_pf_object_attributes",
+          "description": "Read selected attributes from a resolved PowerFactory object with dynamic loadflow fallback.",
+          "input_schema": {
+            "type": "object",
+            "properties": {
+              "services": "<omitted:dict>",
+              "instruction": {
+                "type": "object"
+              },
+              "resolution": {
+                "type": "object"
+              }
+            },
+            "required": [
+              "services",
+              "instruction",
+              "resolution"
+            ]
+          },
+          "output_schema_hint": {
+            "status": "ok|error",
+            "tool": "read_pf_object_attributes",
+            "data": "dict"
+          },
+          "capability_tags": [
+            "powerfactory",
+            "data_query",
+            "read_only"
+          ],
+          "mutating": false,
+          "requires_state": [
+            "data_query_instruction",
+            "object_resolution",
+            "data_attribute_selection"
+          ],
+          "produces_state": [
+            "data_query_execution"
+          ],
+          "is_summary": false,
+          "domain_notes": [
+            "Do not use this step before attribute selection is available."
+          ]
+        },
+        {
+          "name": "resolve_entity_from_inventory",
+          "description": "Resolve the requested generic asset from a typed topology inventory.",
+          "input_schema": {
+            "type": "object",
+            "properties": {
+              "services": "<omitted:dict>",
+              "instruction": {
+                "type": "object"
+              },
+              "inventory": {
+                "type": "object"
+              },
+              "topology_graph": "<omitted:dict>",
+              "max_matches": {
+                "type": "integer"
+              }
+            },
+            "required": [
+              "services",
+              "instruction",
+              "inventory",
+              "topology_graph"
+            ]
+          },
+          "output_schema_hint": {
+            "status": "ok|error",
+            "tool": "resolve_entity_from_inventory",
+            "asset_query": "string",
+            "selected_match": "dict",
+            "matches": "list[dict]"
+          },
+          "capability_tags": [
+            "powerfactory",
+            "topology",
+            "entity",
+            "inventory",
+            "resolution",
+            "read_only"
+          ],
+          "mutating": false,
+          "requires_state": [
+            "entity_instruction",
+            "inventory_result",
+            "graph_result"
+          ],
+          "produces_state": [
+            "entity_resolution"
+          ],
+          "is_summary": false,
+          "domain_notes": []
+        },
+        {
+          "name": "resolve_load",
+          "description": "Resolve the target load object inside the active PowerFactory project.",
+          "input_schema": {
+            "type": "object",
+            "properties": {
+              "services": "<omitted:dict>",
+              "instruction": {
+                "type": "object"
+              }
+            },
+            "required": [
+              "services",
+              "instruction"
+            ]
+          },
+          "output_schema_hint": {
+            "status": "ok|error",
+            "tool": "resolve_load",
+            "resolution": "dict"
+          },
+          "capability_tags": [
+            "powerfactory",
+            "resolution",
+            "load"
+          ],
+          "mutating": false,
+          "requires_state": [
+            "instruction"
+          ],
+          "produces_state": [
+            "resolution"
+          ],
+          "is_summary": false,
+          "domain_notes": []
+        },
+        {
+          "name": "resolve_objects_from_inventory_llm",
+          "description": "Resolve PowerFactory objects by LLM-based exact candidate selection from a unified non-topology inventory.",
+          "input_schema": {
+            "type": "object",
+            "properties": {
+              "services": "<omitted:dict>",
+              "instruction": {
+                "type": "object"
+              },
+              "inventory": {
+                "type": "object"
+              }
+            },
+            "required": [
+              "services",
+              "instruction",
+              "inventory"
+            ]
+          },
+          "output_schema_hint": {
+            "status": "ok|error",
+            "tool": "resolve_objects_from_inventory_llm",
+            "selected_match": "dict",
+            "selected_matches": "list[dict]",
+            "selection_mode": "one|all"
+          },
+          "capability_tags": [
+            "powerfactory",
+            "resolution",
+            "llm_match",
+            "read_only"
+          ],
+          "mutating": false,
+          "requires_state": [
+            "unified_inventory_result"
+          ],
+          "produces_state": [
+            "object_resolution"
+          ],
+          "is_summary": false,
+          "domain_notes": []
+        },
+        {
+          "name": "select_pf_object_attributes_llm",
+          "description": "Select the best matching attribute handles from the available option list.",
+          "input_schema": {
+            "type": "object",
+            "properties": {
+              "services": "<omitted:dict>",
+              "instruction": {
+                "type": "object"
+              },
+              "resolution": {
+                "type": "object"
+              },
+              "attribute_listing": {
+                "type": "object"
+              }
+            },
+            "required": [
+              "services",
+              "instruction",
+              "resolution",
+              "attribute_listing"
+            ]
+          },
+          "output_schema_hint": {
+            "status": "ok|error",
+            "tool": "select_pf_object_attributes_llm",
+            "selected_attribute_handles": "list"
+          },
+          "capability_tags": [
+            "powerfactory",
+            "data_query",
+            "attributes",
+            "llm_match",
+            "read_only"
+          ],
+          "mutating": false,
+          "requires_state": [
+            "data_query_instruction",
+            "object_resolution",
+            "data_attribute_listing"
+          ],
+          "produces_state": [
+            "data_attribute_selection"
+          ],
+          "is_summary": false,
+          "domain_notes": []
+        },
+        {
+          "name": "summarize_load_catalog",
+          "description": "Build a concise user-facing catalog answer.",
+          "input_schema": {
+            "type": "object",
+            "properties": {
+              "services": "<omitted:dict>",
+              "catalog_result": {
+                "type": "object"
+              }
+            },
+            "required": [
+              "services",
+              "catalog_result"
+            ]
+          },
+          "output_schema_hint": {
+            "status": "ok|error",
+            "tool": "summarize_load_catalog",
+            "answer": "string"
+          },
+          "capability_tags": [
+            "powerfactory",
+            "summary",
+            "catalog"
+          ],
+          "mutating": false,
+          "requires_state": [
+            "catalog_result"
+          ],
+          "produces_state": [
+            "summary"
+          ],
+          "is_summary": true,
+          "domain_notes": []
+        },
+        {
+          "name": "summarize_pf_object_data_result",
+          "description": "Summarize queried PowerFactory object data for the end user.",
+          "input_schema": {
+            "type": "object",
+            "properties": {
+              "services": "<omitted:dict>",
+              "result_payload": {
+                "type": "object"
+              },
+              "user_input": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "services",
+              "result_payload",
+              "user_input"
+            ]
+          },
+          "output_schema_hint": {
+            "status": "ok|error",
+            "tool": "summarize_pf_object_data_result",
+            "answer": "string"
+          },
+          "capability_tags": [
+            "powerfactory",
+            "data_query",
+            "summary"
+          ],
+          "mutating": false,
+          "requires_state": [
+            "data_query_execution"
+          ],
+          "produces_state": [
+            "data_query_summary",
+            "summary"
+          ],
+          "is_summary": true,
+          "domain_notes": []
+        },
+        {
+          "name": "summarize_powerfactory_result",
+          "description": "Summarize result data from a PowerFactory load workflow for the end user.",
+          "input_schema": {
+            "type": "object",
+            "properties": {
+              "services": "<omitted:dict>",
+              "result_payload": {
+                "type": "object"
+              },
+              "user_input": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "services",
+              "result_payload",
+              "user_input"
+            ]
+          },
+          "output_schema_hint": {
+            "status": "ok|error",
+            "tool": "summarize_powerfactory_result",
+            "answer": "string"
+          },
+          "capability_tags": [
+            "powerfactory",
+            "summary",
+            "result"
+          ],
+          "mutating": false,
+          "requires_state": [
+            "execution"
+          ],
+          "produces_state": [
+            "summary"
+          ],
+          "is_summary": true,
+          "domain_notes": []
+        },
+        {
+          "name": "summarize_switch_result",
+          "description": "Summarize the result of a switch state change for the end user.",
+          "input_schema": {
+            "type": "object",
+            "properties": {
+              "services": "<omitted:dict>",
+              "result_payload": {
+                "type": "object"
+              },
+              "user_input": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "services",
+              "result_payload",
+              "user_input"
+            ]
+          },
+          "output_schema_hint": {
+            "status": "ok|error",
+            "tool": "summarize_switch_result",
+            "answer": "string"
+          },
+          "capability_tags": [
+            "powerfactory",
+            "summary",
+            "switch"
+          ],
+          "mutating": false,
+          "requires_state": [
+            "switch_execution"
+          ],
+          "produces_state": [
+            "switch_summary",
+            "summary"
+          ],
+          "is_summary": true,
+          "domain_notes": []
+        },
+        {
+          "name": "summarize_topology_result",
+          "description": "Build a concise user-facing topology answer.",
+          "input_schema": {
+            "type": "object",
+            "properties": {
+              "services": "<omitted:dict>",
+              "topology_result": {
+                "type": "object"
+              },
+              "graph_result": {
+                "type": "object"
+              },
+              "inventory_result": {
+                "type": "object"
+              },
+              "entity_instruction": {
+                "type": "object"
+              },
+              "entity_resolution": {
+                "type": "object"
+              }
+            },
+            "required": [
+              "services",
+              "topology_result"
+            ]
+          },
+          "output_schema_hint": {
+            "status": "ok|error",
+            "tool": "summarize_topology_result",
+            "answer": "string"
+          },
+          "capability_tags": [
+            "powerfactory",
+            "summary",
+            "topology"
+          ],
+          "mutating": false,
+          "requires_state": [
+            "topology_result"
+          ],
+          "produces_state": [
+            "summary"
+          ],
+          "is_summary": true,
+          "domain_notes": []
+        },
+        {
+          "name": "unsupported_request",
+          "description": "Return a controlled message for unsupported PowerFactory intent.",
+          "input_schema": {
+            "type": "object",
+            "properties": {
+              "services": "<omitted:dict>",
+              "user_input": {
+                "type": "string"
+              },
+              "classification": {
+                "type": "object"
+              }
+            },
+            "required": [
+              "services",
+              "user_input",
+              "classification"
+            ]
+          },
+          "output_schema_hint": {
+            "status": "error",
+            "tool": "powerfactory",
+            "answer": "string"
+          },
+          "capability_tags": [
+            "powerfactory",
+            "control"
+          ],
+          "mutating": false,
+          "requires_state": [],
+          "produces_state": [],
+          "is_summary": false,
+          "domain_notes": []
+        }
+      ],
+      "answer": "Die Anfrage konnte nicht sauber ausgeführt werden (no_matching_asset). Details: Kein passendes Asset aus der Entity-Instruction konnte im Inventar gematcht werden.",
+      "debug": {
+        "planning": {
+          "debug_mode": true,
+          "project_name": "Nine-bus System(2)",
+          "initial_classification": {
+            "status": "ok",
+            "classification_mode": "llm",
+            "intent": "topology_query",
+            "confidence": "high",
+            "target_kind": "topology_asset",
+            "safe_to_execute": true,
+            "missing_context": [],
+            "required_steps": [
+              "build_topology_graph",
+              "query_topology_neighbors"
+            ],
+            "reasoning": "The user asks about the connected component of a transformer (Trafo 19-20) in CIM data, which directly relates to network topology connectivity. This matches the 'topology_query' intent, as it seeks information about connected elements (not data values or catalog listings). The request is a read-only query, so it is safe to execute with standard topology processing steps."
+          },
+          "decomposition": {
+            "status": "ok",
+            "is_composite": false,
+            "subrequests": [],
+            "reasoning": "The request asks for a single topology-related query about the connected component of a specific transformer (Trafo 19-20) in CIM data. It does not contain multiple distinct tasks, sequential actions, or references requiring prior results. The classification confirms it's a single topology_query intent with no need for decomposition."
+          },
+          "subrequests": [],
+          "plan_source": "standard",
+          "final_plan_steps": [
+            "build_topology_graph",
+            "build_topology_inventory",
+            "interpret_entity_instruction",
+            "resolve_entity_from_inventory",
+            "query_topology_neighbors",
+            "summarize_topology_result"
+          ],
+          "standard_plan_steps": [
+            "build_topology_graph",
+            "build_topology_inventory",
+            "interpret_entity_instruction",
+            "resolve_entity_from_inventory",
+            "query_topology_neighbors",
+            "summarize_topology_result"
+          ],
+          "classification_plan_steps": [
+            "build_topology_graph",
+            "build_unified_inventory",
+            "interpret_entity_instruction",
+            "resolve_entity_from_inventory",
+            "query_topology_neighbors"
+          ]
+        },
+        "trace": [
+          {
+            "step": "build_topology_graph",
+            "effective_user_input": "Zu welcher zusammenhängenden Komponente gehört Trafo 19-20 bei den CIM-Daten?",
+            "effective_classification": {
+              "status": "ok",
+              "classification_mode": "llm",
+              "intent": "topology_query",
+              "confidence": "high",
+              "target_kind": "topology_asset",
+              "safe_to_execute": true,
+              "missing_context": [],
+              "required_steps": [
+                "build_topology_graph",
+                "query_topology_neighbors"
+              ],
+              "reasoning": "The user asks about the connected component of a transformer (Trafo 19-20) in CIM data, which directly relates to network topology connectivity. This matches the 'topology_query' intent, as it seeks information about connected elements (not data values or catalog listings). The request is a read-only query, so it is safe to execute with standard topology processing steps."
+            },
+            "source_subrequest": null,
+            "tool_spec": {
+              "name": "build_topology_graph",
+              "description": "Build a topology graph from the active PowerFactory project.",
+              "capability_tags": [
+                "powerfactory",
+                "topology",
+                "graph",
+                "read_only"
+              ],
+              "mutating": false
+            },
+            "tool_kwargs": {
+              "services": "<omitted:dict>",
+              "contract_cubicles": true
+            },
+            "result": {
+              "status": "ok",
+              "tool": "build_topology_graph",
+              "project": "<omitted:str>",
+              "graph_mode": "contracted",
+              "wiring_graph": "<non_serializable:MultiGraph>",
+              "topology_graph": "<omitted:MultiGraph>",
+              "graph_summary": {
+                "num_nodes": 24,
+                "num_edges": 24,
+                "num_connected_components": 1,
+                "largest_component_sizes": [
+                  "<max_depth>"
+                ],
+                "degree_distribution_top10": [
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>"
+                ],
+                "node_classes_top20": [
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>"
+                ]
+              },
+              "inventory": {
+                "available_types": [
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>"
+                ],
+                "counts_by_type": {
+                  "bus": "<max_depth>",
+                  "generator": "<max_depth>",
+                  "line": "<max_depth>",
+                  "load": "<max_depth>",
+                  "transformer": "<max_depth>"
+                },
+                "items_by_type": {
+                  "bus": "<max_depth>",
+                  "generator": "<max_depth>",
+                  "transformer": "<max_depth>",
+                  "line": "<max_depth>",
+                  "load": "<max_depth>"
+                },
+                "samples_by_type": {
+                  "bus": "<max_depth>",
+                  "generator": "<max_depth>",
+                  "transformer": "<max_depth>",
+                  "line": "<max_depth>",
+                  "load": "<max_depth>"
+                }
+              },
+              "build_debug": {
+                "counts": {
+                  "cubics_total": "<max_depth>",
+                  "cubics_with_terminal": "<max_depth>",
+                  "stas_total": "<max_depth>",
+                  "stas_with_obj_id": "<max_depth>",
+                  "elms_total": "<max_depth>",
+                  "elms_line_like": "<max_depth>",
+                  "elms_transformer_like": "<max_depth>"
+                },
+                "samples": {
+                  "cubic_names": "<max_depth>",
+                  "sta_names": "<max_depth>",
+                  "elm_names": "<max_depth>",
+                  "node_name_samples": "<max_depth>"
+                },
+                "analysis_graph": {
+                  "graph_mode": "<max_depth>",
+                  "num_nodes": "<max_depth>",
+                  "num_edges": "<max_depth>"
+                }
+              }
+            }
+          },
+          {
+            "step": "build_topology_inventory",
+            "effective_user_input": "Zu welcher zusammenhängenden Komponente gehört Trafo 19-20 bei den CIM-Daten?",
+            "effective_classification": {
+              "status": "ok",
+              "classification_mode": "llm",
+              "intent": "topology_query",
+              "confidence": "high",
+              "target_kind": "topology_asset",
+              "safe_to_execute": true,
+              "missing_context": [],
+              "required_steps": [
+                "build_topology_graph",
+                "query_topology_neighbors"
+              ],
+              "reasoning": "The user asks about the connected component of a transformer (Trafo 19-20) in CIM data, which directly relates to network topology connectivity. This matches the 'topology_query' intent, as it seeks information about connected elements (not data values or catalog listings). The request is a read-only query, so it is safe to execute with standard topology processing steps."
+            },
+            "source_subrequest": null,
+            "tool_spec": {
+              "name": "build_topology_inventory",
+              "description": "Build a typed inventory from the current PowerFactory topology graph.",
+              "capability_tags": [
+                "powerfactory",
+                "topology",
+                "inventory",
+                "read_only"
+              ],
+              "mutating": false
+            },
+            "tool_kwargs": {
+              "services": "<omitted:dict>",
+              "topology_graph_result": {
+                "status": "ok",
+                "tool": "build_topology_graph",
+                "project": "<omitted:str>",
+                "graph_mode": "contracted",
+                "wiring_graph": "<networkx.classes.multigraph.MultiGraph object at 0x000002B6E90A8F40>",
+                "topology_graph": "<omitted:str>",
+                "graph_summary": {
+                  "num_nodes": "<max_depth>",
+                  "num_edges": "<max_depth>",
+                  "num_connected_components": "<max_depth>",
+                  "largest_component_sizes": "<max_depth>",
+                  "degree_distribution_top10": "<max_depth>",
+                  "node_classes_top20": "<max_depth>"
+                },
+                "inventory": {
+                  "available_types": "<max_depth>",
+                  "counts_by_type": "<max_depth>",
+                  "items_by_type": "<max_depth>",
+                  "samples_by_type": "<max_depth>"
+                },
+                "build_debug": {
+                  "counts": "<max_depth>",
+                  "samples": "<max_depth>",
+                  "analysis_graph": "<max_depth>"
+                }
+              }
+            },
+            "result": {
+              "status": "ok",
+              "tool": "build_topology_inventory",
+              "project": "<omitted:str>",
+              "inventory": {
+                "available_types": [
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>"
+                ],
+                "counts_by_type": {
+                  "bus": "<max_depth>",
+                  "generator": "<max_depth>",
+                  "line": "<max_depth>",
+                  "load": "<max_depth>",
+                  "transformer": "<max_depth>"
+                },
+                "items_by_type": {
+                  "bus": "<max_depth>",
+                  "generator": "<max_depth>",
+                  "transformer": "<max_depth>",
+                  "line": "<max_depth>",
+                  "load": "<max_depth>"
+                },
+                "samples_by_type": {
+                  "bus": "<max_depth>",
+                  "generator": "<max_depth>",
+                  "transformer": "<max_depth>",
+                  "line": "<max_depth>",
+                  "load": "<max_depth>"
+                }
+              }
+            }
+          },
+          {
+            "step": "interpret_entity_instruction",
+            "effective_user_input": "Zu welcher zusammenhängenden Komponente gehört Trafo 19-20 bei den CIM-Daten?",
+            "effective_classification": {
+              "status": "ok",
+              "classification_mode": "llm",
+              "intent": "topology_query",
+              "confidence": "high",
+              "target_kind": "topology_asset",
+              "safe_to_execute": true,
+              "missing_context": [],
+              "required_steps": [
+                "build_topology_graph",
+                "query_topology_neighbors"
+              ],
+              "reasoning": "The user asks about the connected component of a transformer (Trafo 19-20) in CIM data, which directly relates to network topology connectivity. This matches the 'topology_query' intent, as it seeks information about connected elements (not data values or catalog listings). The request is a read-only query, so it is safe to execute with standard topology processing steps."
+            },
+            "source_subrequest": null,
+            "tool_spec": {
+              "name": "interpret_entity_instruction",
+              "description": "Interpret a natural-language topology request into a structured generic PowerFactory entity instruction.",
+              "capability_tags": [
+                "powerfactory",
+                "planning",
+                "nlp",
+                "topology",
+                "entity"
+              ],
+              "mutating": false
+            },
+            "tool_kwargs": {
+              "services": "<omitted:dict>",
+              "user_input": "Zu welcher zusammenhängenden Komponente gehört Trafo 19-20 bei den CIM-Daten?",
+              "inventory": {
+                "available_types": [
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>"
+                ],
+                "counts_by_type": {
+                  "bus": "<max_depth>",
+                  "generator": "<max_depth>",
+                  "line": "<max_depth>",
+                  "load": "<max_depth>",
+                  "transformer": "<max_depth>"
+                },
+                "items_by_type": {
+                  "bus": "<max_depth>",
+                  "generator": "<max_depth>",
+                  "transformer": "<max_depth>",
+                  "line": "<max_depth>",
+                  "load": "<max_depth>"
+                },
+                "samples_by_type": {
+                  "bus": "<max_depth>",
+                  "generator": "<max_depth>",
+                  "transformer": "<max_depth>",
+                  "line": "<max_depth>",
+                  "load": "<max_depth>"
+                }
+              }
+            },
+            "result": {
+              "status": "ok",
+              "tool": "interpret_entity_instruction",
+              "user_input": "Zu welcher zusammenhängenden Komponente gehört Trafo 19-20 bei den CIM-Daten?",
+              "project": "<omitted:str>",
+              "instruction": {
+                "query_type": "neighbors",
+                "entity_type": "transformer",
+                "entity_name_raw": "Zu welcher zusammenhängenden Komponente gehört Trafo 19-20 bei den CIM-Daten?",
+                "entity_name_candidates": [
+                  "<max_depth>",
+                  "<max_depth>"
+                ],
+                "available_types": [
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>"
+                ],
+                "debug_entity_name_candidates": [
+                  "<max_depth>",
+                  "<max_depth>"
+                ]
+              }
+            }
+          },
+          {
+            "step": "resolve_entity_from_inventory",
+            "effective_user_input": "Zu welcher zusammenhängenden Komponente gehört Trafo 19-20 bei den CIM-Daten?",
+            "effective_classification": {
+              "status": "ok",
+              "classification_mode": "llm",
+              "intent": "topology_query",
+              "confidence": "high",
+              "target_kind": "topology_asset",
+              "safe_to_execute": true,
+              "missing_context": [],
+              "required_steps": [
+                "build_topology_graph",
+                "query_topology_neighbors"
+              ],
+              "reasoning": "The user asks about the connected component of a transformer (Trafo 19-20) in CIM data, which directly relates to network topology connectivity. This matches the 'topology_query' intent, as it seeks information about connected elements (not data values or catalog listings). The request is a read-only query, so it is safe to execute with standard topology processing steps."
+            },
+            "source_subrequest": null,
+            "tool_spec": {
+              "name": "resolve_entity_from_inventory",
+              "description": "Resolve the requested generic asset from a typed topology inventory.",
+              "capability_tags": [
+                "powerfactory",
+                "topology",
+                "entity",
+                "inventory",
+                "resolution",
+                "read_only"
+              ],
+              "mutating": false
+            },
+            "tool_kwargs": {
+              "services": "<omitted:dict>",
+              "instruction": {
+                "query_type": "neighbors",
+                "entity_type": "transformer",
+                "entity_name_raw": "Zu welcher zusammenhängenden Komponente gehört Trafo 19-20 bei den CIM-Daten?",
+                "entity_name_candidates": [
+                  "<max_depth>",
+                  "<max_depth>"
+                ],
+                "available_types": [
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>"
+                ],
+                "debug_entity_name_candidates": [
+                  "<max_depth>",
+                  "<max_depth>"
+                ]
+              },
+              "inventory": {
+                "available_types": [
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>"
+                ],
+                "counts_by_type": {
+                  "bus": "<max_depth>",
+                  "generator": "<max_depth>",
+                  "line": "<max_depth>",
+                  "load": "<max_depth>",
+                  "transformer": "<max_depth>"
+                },
+                "items_by_type": {
+                  "bus": "<max_depth>",
+                  "generator": "<max_depth>",
+                  "transformer": "<max_depth>",
+                  "line": "<max_depth>",
+                  "load": "<max_depth>"
+                },
+                "samples_by_type": {
+                  "bus": "<max_depth>",
+                  "generator": "<max_depth>",
+                  "transformer": "<max_depth>",
+                  "line": "<max_depth>",
+                  "load": "<max_depth>"
+                }
+              },
+              "topology_graph": "<omitted:str>",
+              "max_matches": 10
+            },
+            "result": {
+              "status": "error",
+              "tool": "resolve_entity_from_inventory",
+              "project": "<omitted:str>",
+              "instruction": {
+                "query_type": "neighbors",
+                "entity_type": "transformer",
+                "entity_name_raw": "Zu welcher zusammenhängenden Komponente gehört Trafo 19-20 bei den CIM-Daten?",
+                "entity_name_candidates": [
+                  "<max_depth>",
+                  "<max_depth>"
+                ],
+                "available_types": [
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>"
+                ],
+                "debug_entity_name_candidates": [
+                  "<max_depth>",
+                  "<max_depth>"
+                ]
+              },
+              "error": "no_matching_asset",
+              "details": "Kein passendes Asset aus der Entity-Instruction konnte im Inventar gematcht werden.",
+              "entity_name_candidates": [
+                "Trafo 19-20",
+                "19-20"
+              ],
+              "attempted_queries": [
+                {
+                  "asset_query": "<max_depth>",
+                  "entity_type": "<max_depth>",
+                  "match_count": "<max_depth>",
+                  "top_matches": "<max_depth>"
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "raw_answer": "Die Anfrage konnte nicht sauber ausgeführt werden (no_matching_asset). Details: Kein passendes Asset aus der Entity-Instruction konnte im Inventar gematcht werden."
+    }
+  }
+}

@@ -1,0 +1,48 @@
+{
+  "run_id": 89,
+  "timestamp": "2026-05-20T07:49:54.260261",
+  "user_input": "Zu welcher zusammenhängenden Komponente gehört Trafo 19-20 bei den CIM-Daten?",
+  "duration_seconds": 1.675,
+  "token_usage": {
+    "prompt_tokens": 797,
+    "completion_tokens": 93,
+    "total_tokens": 890,
+    "details": {
+      "phi3:mini": {
+        "input_tokens": 797,
+        "output_tokens": 93,
+        "total_tokens": 890
+      }
+    }
+  },
+  "decision_trace": {
+    "domain": "ASK_USER",
+    "planning_mode": "",
+    "workflow": "",
+    "confidence": "",
+    "safe_to_execute": "",
+    "num_steps": 0,
+    "steps": "",
+    "planner_reasoning": "",
+    "resolved_object": "<omitted:str>",
+    "resolved_object_confidence": "",
+    "selected_attributes": "",
+    "attribute_confidence": "",
+    "num_tool_calls": 0,
+    "executed_tools": "",
+    "failed_tool": "",
+    "equipment_resolution_mode": "",
+    "attribute_resolution_mode": "",
+    "comparison_resolution_mode": ""
+  },
+  "router_output": {
+    "route": "ASK_USER",
+    "question": "Sind Sie an der historischen Zusammengehörigkeit oder dem aktuellen Zustand von 'Trafo 19-20' in PowerFactory-Projekten interessiert?",
+    "missing_fields": [
+      "data_source"
+    ],
+    "partial": {
+      "user_input": "Zu welcher zusammenhängenden Komponente gehört Trafo 19-20 bei den CIM-Daten?"
+    }
+  }
+}

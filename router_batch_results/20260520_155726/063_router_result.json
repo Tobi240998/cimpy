@@ -1,0 +1,117 @@
+{
+  "run_id": 63,
+  "timestamp": "2026-05-20T16:30:22.512005",
+  "user_input": "Welche Länge hat Line 4-5 in Powerfactory?",
+  "duration_seconds": 3.965,
+  "token_usage": {
+    "prompt_tokens": 4392,
+    "completion_tokens": 612,
+    "total_tokens": 5004,
+    "details": {
+      "phi3:mini": {
+        "input_tokens": 4392,
+        "output_tokens": 612,
+        "total_tokens": 5004
+      }
+    }
+  },
+  "decision_trace": {
+    "domain": "HISTORICAL",
+    "planning_mode": "",
+    "workflow": "",
+    "confidence": "medium",
+    "safe_to_execute": "False",
+    "num_steps": 0,
+    "steps": "",
+    "planner_reasoning": "The request is about a specific line length which cannot be directly obtained from CIM data. Additional information outside of the provided scope would be required.",
+    "resolved_object": "<omitted:str>",
+    "resolved_object_confidence": "",
+    "selected_attributes": "",
+    "attribute_confidence": "",
+    "num_tool_calls": 1,
+    "executed_tools": "unsupported_request",
+    "failed_tool": "unsupported_request",
+    "equipment_resolution_mode": "",
+    "attribute_resolution_mode": "",
+    "comparison_resolution_mode": ""
+  },
+  "router_output": {
+    "route": "HISTORICAL",
+    "result": {
+      "status": "error",
+      "tool": "cim_agent",
+      "agent": "CIMDomainAgent",
+      "error": "unsupported_cim_request",
+      "answer": "Die Anfrage zur Länge von Linie 4-5 in der historischen CIM wurde nicht ausführbar, da sie noch nicht unterstützt oder sicher ist. Es fehlt ein Kontext für PowerFactory Software oder physische Messwerkzeuge. Bitte geben Sie weitere Informationen an oder wählen Sie eine andere Route/Domain.",
+      "classification": {
+        "intent": "unsupported_cim_request",
+        "confidence": "medium",
+        "target_kind": "unknown",
+        "request_mode": "custom_plan",
+        "safe_to_execute": false,
+        "missing_context": [
+          "PowerFactory software or physical measurement tools"
+        ],
+        "required_steps": [],
+        "reasoning": "The request is about a specific line length which cannot be directly obtained from CIM data. Additional information outside of the provided scope would be required.",
+        "status": "ok",
+        "classification_mode": "primary_llm_classifier"
+      },
+      "user_input": "Welche Länge hat Line 4-5 in Powerfactory?",
+      "debug": {
+        "trace": [
+          {
+            "step": "unsupported_request",
+            "effective_user_input": "Welche Länge hat Line 4-5 in Powerfactory?",
+            "source_subrequest": null,
+            "result": "<circular_reference>"
+          }
+        ],
+        "classification": {
+          "intent": "unsupported_cim_request",
+          "confidence": "medium",
+          "target_kind": "unknown",
+          "request_mode": "custom_plan",
+          "safe_to_execute": false,
+          "missing_context": [
+            "PowerFactory software or physical measurement tools"
+          ],
+          "required_steps": [],
+          "reasoning": "The request is about a specific line length which cannot be directly obtained from CIM data. Additional information outside of the provided scope would be required.",
+          "status": "ok",
+          "classification_mode": "primary_llm_classifier"
+        },
+        "plan": [
+          {
+            "step": "unsupported_request",
+            "description": "Return a controlled unsupported-workflow message"
+          }
+        ],
+        "run_summary": {
+          "user_input": "Welche Länge hat Line 4-5 in Powerfactory?",
+          "classification_summary": {
+            "intent": "unsupported_cim_request",
+            "request_mode": "custom_plan",
+            "safe_to_execute": false,
+            "target_kind": "unknown",
+            "confidence": "medium",
+            "classification_mode": "primary_llm_classifier",
+            "missing_context": [
+              "PowerFactory software or physical measurement tools"
+            ]
+          },
+          "planned_steps": [
+            "unsupported_request"
+          ],
+          "selected_type": null,
+          "selected_equipment_id": null,
+          "selected_equipment_name": null,
+          "parsed_query_summary": null,
+          "final_status": "error",
+          "final_answer": "Die Anfrage wurde zur CIM-Seite geroutet, ist aktuell aber noch nicht sicher oder unterstützt ausführbar. Fehlender Kontext: PowerFactory software or physical measurement tools."
+        }
+      },
+      "raw_answer": "Die Anfrage wurde zur CIM-Seite geroutet, ist aktuell aber noch nicht sicher oder unterstützt ausführbar. Fehlender Kontext: PowerFactory software or physical measurement tools."
+    }
+  }
+}

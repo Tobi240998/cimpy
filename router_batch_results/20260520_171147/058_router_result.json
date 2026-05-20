@@ -1,0 +1,44 @@
+{
+  "run_id": 58,
+  "timestamp": "2026-05-20T17:16:31.036231",
+  "user_input": "Lies in PF bei Bus 1 das Attribut vmin aus.",
+  "duration_seconds": 1.244,
+  "token_usage": {
+    "prompt_tokens": 901,
+    "completion_tokens": 212,
+    "total_tokens": 1113,
+    "details": {
+      "phi3:mini": {
+        "input_tokens": 901,
+        "output_tokens": 212,
+        "total_tokens": 1113
+      }
+    }
+  },
+  "decision_trace": {
+    "domain": "ERROR",
+    "planning_mode": "",
+    "workflow": "",
+    "confidence": "",
+    "safe_to_execute": "",
+    "num_steps": 0,
+    "steps": "",
+    "planner_reasoning": "",
+    "resolved_object": "<omitted:str>",
+    "resolved_object_confidence": "",
+    "selected_attributes": "",
+    "attribute_confidence": "",
+    "num_tool_calls": 0,
+    "executed_tools": "",
+    "failed_tool": ""
+  },
+  "router_output": {
+    "route": "ERROR",
+    "status": "error",
+    "result": {
+      "status": "error",
+      "answer": "Der UnifiedPlanner hat keine gültige strukturierte Ausgabe erzeugt.",
+      "planner_error": "Invalid json output: To address the user's request, which seems to be a command or instruction related to modifying attributes of an entity (possibly within a simulation environment) using Processing Functional Language (PF), and specifically removing the `vmin` attribute from Bus 1 while keeping all other context intact, here is how you might write that in PF:\n\n```pf\nmodifyBus(1, removeAttribute('vmin'));\n```\nThis command assumes a function called `modifyBus` exists within your environment which takes the bus number and an attribute name as arguments to modify attributes of specific busses. If such functions do not exist or if you are working in another context where PF is used differently, please provide additional details for more accurate assistance.\nFor troubleshooting, visit: https://docs.langchain.com/oss/python/langchain/errors/OUTPUT_PARSING_FAILURE "
+    }
+  }
+}

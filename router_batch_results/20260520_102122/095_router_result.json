@@ -1,0 +1,53 @@
+{
+  "run_id": 95,
+  "timestamp": "2026-05-20T13:16:55.605780",
+  "user_input": "Gib mir Min, Max und Mittelwert der Spannung von Trafo 19-20 aus den CIM-Daten am 09.01.2026.",
+  "duration_seconds": 16.314,
+  "token_usage": {
+    "prompt_tokens": 4527,
+    "completion_tokens": 1468,
+    "total_tokens": 5995,
+    "details": {
+      "phi3:mini": {
+        "input_tokens": 4527,
+        "total_tokens": 5995,
+        "output_tokens": 1468
+      }
+    }
+  },
+  "decision_trace": {
+    "domain": "cim",
+    "planning_mode": "standard_workflow",
+    "workflow": "standard_comparison",
+    "confidence": "",
+    "safe_to_execute": "True",
+    "num_steps": 0,
+    "steps": "",
+    "planner_reasoning": "The request specifies CIM data for a specific date (09.01.2026) and asks for statistical values (min, max, mean) of voltage for transformer 19-20. The 'standard_comparison' workflow is designed for retrieving such statistical comparisons across snapshots or against limits, making it the appropriate choice.",
+    "resolved_object": "<omitted:str>",
+    "resolved_object_confidence": "",
+    "selected_attributes": "",
+    "attribute_confidence": "",
+    "num_tool_calls": 0,
+    "executed_tools": "",
+    "failed_tool": ""
+  },
+  "router_output": {
+    "route": "ERROR",
+    "status": "error",
+    "result": {
+      "status": "error",
+      "answer": "Unbekannter Standard-Workflow: standard_comparison",
+      "planner_decision": {
+        "domain": "cim",
+        "planning_mode": "standard_workflow",
+        "workflow": "standard_comparison",
+        "custom_steps": [],
+        "safe_to_execute": true,
+        "missing_context": [],
+        "clarification_question": "",
+        "reasoning": "The request specifies CIM data for a specific date (09.01.2026) and asks for statistical values (min, max, mean) of voltage for transformer 19-20. The 'standard_comparison' workflow is designed for retrieving such statistical comparisons across snapshots or against limits, making it the appropriate choice."
+      }
+    }
+  }
+}

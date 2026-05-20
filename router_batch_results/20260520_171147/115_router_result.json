@@ -1,0 +1,44 @@
+{
+  "run_id": 115,
+  "timestamp": "2026-05-20T17:20:38.184039",
+  "user_input": "Welche Betriebsmittel sind mit Bus 19 verbunden? Wie hoch war die Spannung an Bus 19 am 09.01.2026?",
+  "duration_seconds": 1.606,
+  "token_usage": {
+    "prompt_tokens": 945,
+    "completion_tokens": 287,
+    "total_tokens": 1232,
+    "details": {
+      "phi3:mini": {
+        "input_tokens": 945,
+        "output_tokens": 287,
+        "total_tokens": 1232
+      }
+    }
+  },
+  "decision_trace": {
+    "domain": "ERROR",
+    "planning_mode": "",
+    "workflow": "",
+    "confidence": "",
+    "safe_to_execute": "",
+    "num_steps": 0,
+    "steps": "",
+    "planner_reasoning": "",
+    "resolved_object": "<omitted:str>",
+    "resolved_object_confidence": "",
+    "selected_attributes": "",
+    "attribute_confidence": "",
+    "num_tool_calls": 0,
+    "executed_tools": "",
+    "failed_tool": ""
+  },
+  "router_output": {
+    "route": "ERROR",
+    "status": "error",
+    "result": {
+      "status": "error",
+      "answer": "Der UnifiedPlanner hat keine gültige strukturierte Ausgabe erzeugt.",
+      "planner_error": "Invalid json output: Um diese Frage zu beantworten, müsste ich Zugang zu spezifischen Betriebsmitteldatenbanken oder elektrischen Systemdaten haben, die Informationen über den Busbetrieb und Spannungen in einem bestimmten Zeitraum enthalten. Da dies jedoch eine hypothetische Situation ist und ohne tatsächliche Daten nicht möglich, kann ich nur ein Beispiel geben:\n\nAm 09.01.2026 war die Betriebsmittel an Bus 19 der Typ \"Elektrobus\" mit dem Spulenmodul \"Siemens-Integral\". Die Spannung betrug in diesem Fall 750 Volt, was für moderne Straßenbahnsysteme üblich ist.\n\nBitte beachten Sie, dass dies eine fiktive Antwort ist und die tatsächlichen Daten variieren können.\nFor troubleshooting, visit: https://docs.langchain.com/oss/python/langchain/errors/OUTPUT_PARSING_FAILURE "
+    }
+  }
+}

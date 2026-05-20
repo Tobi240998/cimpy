@@ -15,16 +15,145 @@ from cimpy.llm_routing.orchestrator import Orchestrator
 
 
 USER_INPUTS: List[str] = [
-    "Was ist die rated voltage von Bus 1 bei PowerFactory?",
+   "Welche Lasten gibt es in PowerFactory?",
+    "Zeig mir alle verfügbaren Lasten im aktiven PowerFactory-Projekt.",
+    "Liste die vorhandenen Loads in Powerfactory auf.",
+    "Welche Verbraucher sind im PF-Modell vorhanden?",
+    "Erhöhe Last A um 2 MW.",
+    "Füge 2 MW bei Load A hinzu.",
+    "Erhöhe Verbraucher A um 2 MW.",
+    "Reduziere Last B um 3 MW.",
+    "Ziehe 3 MW von Last B ab.",
+    "Mache Load B um 3 MW kleiner.",
+    "Erhöhe Last B um 3 MW. Wie ist die Auslastung von Line 4-5?",
+    "Erhöhe Last B um 3 MW und gib die Auslastung der Leitung 4-5 aus.",
+    "Last B 3 MW rauf, danach bitte die Belastung von Line 4-5.",
+    "Reduziere Last A um 2 MW und gib danach die Auslastungen aller Leitungen zurück.",
+    "Senke Last A um 2 MW. Wie hoch sind anschließend die Leitungsauslastungen?",
+    "Last A minus 2 MW; bitte danach alle Leitungsbelastungen ausgeben.",
+    "Öffne den Schalter Schalter 1.",
+    "Schalte Schalter 1 aus.",
+    "Trenne Switch 1.",
+    "Schließe den Schalter Schalter 1.",
+    "Schalte Schalter 1 ein.",
+    "Zuschalten: Switch 1.",
+    "Schalte den Schalter Schalter 1 um.",
+    "Toggle Schalter 1.",
+    "Welche direkten Nachbarn hat Last A in Powerfactory?",
+    "Wer ist in PF direkt mit Load A verbunden?",
+    "Zeig mir die unmittelbaren Nachbarn von Verbraucher A in Powerfactory.",
+    "An welche Assets grenzt Last A in Powerfactory direkt?",
+    "Welche direkten Nachbarn hat Bus 5 in PF?",
+    "Was ist bei Powerfactory direkt mit Bus 5 verbunden?",
+    "Zeig mir die unmittelbaren Nachbarn von Bus 5 in Powerfactory.",
+    "Welche Assets hängen direkt an Bus 5 in Powerfactory?",
+    "Wie ist die Nennspannung von Bus 1 in PowerFactory?",
+    "Gib mir die Basisdaten-Nennspannung von Bus 1 aus Powerfactory.",
+    "Was ist die rated voltage von Bus 1 bei Powerfactory?",
+    "Was ist die obere Spannungsgrenze von Bus 1 in PowerFactory?",
+    "Wie hoch ist die untere Spannungsgrenze von Bus 1 in Powerfactory?",
+    "Nenne mir die Spannungsgrenzen von Bus 1 in Powerfactory.",
+    "Welche Umin- und Umax-Grenzen sind bei Bus 1 in Powerfactory hinterlegt?",
+    "Wie ist die Spannung von Bus 1 nach dem Lastfluss in PF?",
+    "Gib mir die aktuelle Busspannung von Bus 1 als Lastflussergebnis aus PF.",
+    "Was ist die Leiter-Leiter-Spannung von Bus 1 nach dem Loadflow in Powerfactory?",
+    "Wie sind die Spannungen der Busse in PowerFactory?",
+    "Gib mir die Spannungen aller Busse in PF.",
+    "Welche Busspannungen gibt es nach dem Lastfluss in PF?",
+    "Wie ist die Auslastung von Line 4-5 in PowerFactory?",
+    "Wie hoch ist die Belastung von Line 4-5 nach dem Lastfluss in PF?",
+    "Was ist die loading von Line 4-5 in PF?",
+    "Wie sind die Auslastungen der Leitungen in PowerFactory?",
+    "Welche Leitungsauslastungen liegen nach dem Lastfluss in PF vor?",
+    "Zeige die Belastung für alle Lines in PF.",
+    "Welche Attribute sind für Bus 1 in PowerFactory verfügbar?",
+    "Welche Datenfelder gibt es bei Bus 1 in Powerfactory?",
+    "Liste alle verfügbaren Attribute von Bus 1 in Powerfactory auf.",
+    "Welche Attribute sind für Line 4-5 in Powerfactory verfügbar?",
+    "Liste die verfügbaren Attribute von Leitung 4-5 in Powerfactory auf.",
+    "Welche Datenfelder gibt es bei der Leitung 4-5 in Powerfactory?",
+    "Lies in PF bei Bus 1 das Attribut vmin aus.",
+    "Gib für Bus 1 in Powerfactory den Wert von vmax zurück.",
+    "Lies in PF bei Line 4-5 das Attribut loading aus.",
+    "Zeige für Bus 1 den Wert von uknom in Powerfactory.",
+    "Was ist der Bemessungsfaktor von Trafo T1 in Powerfactory?",
+    "Welche Länge hat Line 4-5 in Powerfactory?",
+    "Gib mir den Widerstand von Line 4-5 in PF.",
+    "Wie lang ist Leitung 4-5 in PF?",
+    "Was ist die Reaktanz von Line 4-5 in PF?",
+    "Gib mir die Nennspannungen aller Busse in Powerfactory.",
+    "Welche rated voltages haben die Busse in Powerfactory?",
+    "Zeige die Basisdaten-Nennspannung für alle Busse in Powerfactory.",
+    "Nenne mir die Nennspannung sämtlicher Busse in Powerfactory.",
+    "Welche Spannungsgrenzen haben die Busse in PF?",
+    "Gib Umin und Umax für alle Busse in PF zurück.",
+    "Zeige die oberen und unteren Spannungsgrenzen aller Busse in PF.",
+    "Welche Voltage Limits sind für die Busse in Powerfactory hinterlegt?",
+    "Öffne den Schalter Schalter 1 und gib danach die Busspannungen zurück.",
+    "Schalte Schalter 1 aus. Wie sind anschließend die Busspannungen?",
+    "Schließe den Schalter Schalter 1 und nenne danach die Netzspannungen.",
+    "Wie is die spannung von bus 1 nachm lastfluss im Simulationsprogramm?",
+    "Gib mir mal bitte die busspannungen nachm LF in PF.",
+    "Mach load a 5 mw hoeher und sag busspannungen.",
+    "Wie ist die Auslastung von Line in PF?",
+    "Welche Farbe hat Bus 1 in Powerfactory?",
+    "Wie ist die Spannung in PF?",
+    "Schalte Schalter B an.",
+    "Erhöhe Last 3 um 20 MW.",
+    "Welche direkten topologischen Nachbarn hat Trafo 19-20 in den CIM-Daten?",
+    "Was hängt direkt an Transformator 19/20 in den CIM-Daten?",
+    "Welche Betriebsmittel sind in den CIM-Daten unmittelbar mit Trf 19 20 verbunden?",
+    "Zu welcher zusammenhängenden Komponente gehört Trafo 19-20 bei den CIM-Daten?",
+    "Zeig mir die Komponenten in den CIM-Daten rund um Transformator 19/20.",
+    "Welche Betriebsmittel liegen in der topologischen Komponente von Trf 19 20 in den CIM-Daten?",
+    "Wie hat sich am 09.01.2026 in den CIM-Daten die Spannung an Trafo 19-20 über die Zeit entwickelt?",
+    "Zeig mir den Spannungsverlauf am 09.01.2026 von Transformator 19/20 aus den historischen Daten.",
+    "Welche Spannung liegt im Zeitverlauf am 09.01.2026 an Trf 19 20 an?",
+    "Gib mir Min, Max und Mittelwert der Spannung von Trafo 19-20 aus den CIM-Daten am 09.01.2026.",
+    "Wie sind minimale, maximale und mittlere Spannung an Transformator 19/20 in den historischen Daten vom 09.01.2026?",
+    "Nenne für Trf 19 20 den minimalen, maximalen und mittleren Spannungswert in den CIM-Daten am 09.01.2026.",
     "Wie hat sich in CIM die Wirkleistung von Load 27 am 09.01.2026 über die Zeit entwickelt?",
+    "Zeig mir den historischen Verlauf der aktiven Leistung von Verbraucher 27 am 09.01.2026.",
+    "Welche P-Werte hat Last 27 im Zeitverlauf vom 09.01.2026?",
+    "Wie hoch ist die Blindleistung von Load 27 im Verlauf vom 09.01.2026?",
+    "Zeig mir den Q-Verlauf von Verbraucher 27 am 09.01.2026.",
+    "Welche reaktive Leistung hat Last 27 über die Zeit am 09.01.2026?",
+    "Wie hoch war die Scheinleistung von Trafo 19-20 über die Zeit am 09.01.2026?",
+    "Zeig mir die Auslastung von Transformator 19/20 im Zeitverlauf vom 09.01.2026.",
+    "Wie stark war Trf 19 20 am 09.01.2026 ausgelastet?",
+    "Wann hatte Trafo 19-20 am 09.01.2026 seine höchste und niedrigste Auslastung?",
     "Zu welchen Zeitpunkten war Transformator 19/20 am 09.01.26 am stärksten bzw. am schwächsten ausgelastet?",
-    "Wie ist die Spannung in den CIM-Daten?"
+    "Nenne mir Peak- und Minimum-Zeitpunkt der Auslastung von Trf 19 20 am 09.01.26.",
+    "Wie hoch war die Wirkleistung von Load 27 am 09.01.26 zwischen 14:00 und 15:00 Uhr?",
+    "Zeig mir den P-Verlauf von Verbraucher 27 im Zeitfenster 2026-01-09T14:00 bis 2026-01-09T15:00.",
+    "Welche aktive Leistung hatte Last 27 am 09.01.26 zwischen 14 und 15 Uhr?",
+    "Welche direkten Nachbarn hat Trafo 19-20 in den CIM-Daten? Wie hoch ist die Spannung von Trafo 19-20 am 09.01.2026?",
+    "Zu welcher topologischen Komponente gehört Load 27? Wie hoch war die Wirkleistung von Load 27 am 09.01.2026?",
+    "Welche Betriebsmittel sind mit Bus 19 verbunden? Wie hoch war die Spannung an Bus 19 am 09.01.2026?",
+    "Wie ist die Spannung in den CIM-Daten?",
+    "Wie groß ist P gerade in CIM?",
+    "Wie war die durchschnittliche Auslastung von Trafo A am 09.01.2026?",
     "Wie war die Auslastung von Leitung 128 am 09.01.26?",
-
-
+    "Wie groß ist die aktuelle Einspeisung von Generator 3?",
+    "Wie hoch war die Lastaufnahme von Verbraucher 27?",
+    "Was kam bei trafo 19-20 am 09.01.26 an wirkleistung raus?",
+    "Was is die nennspannung von bus 19 aus den historischen daten?",
+    "Was war los bei Verbraucher 27 am 9. Januar zwischen 14 und 15 uhr?"
 ]
 
-OUTPUT_DIR = Path("router_batch_results") / datetime.now().strftime("%Y%m%d_%H%M%S")
+# -----------------------------------------------------------------------------
+# Resume configuration
+# -----------------------------------------------------------------------------
+# False = new timestamped run folder
+# True  = continue an existing run folder and skip already existing JSON files
+RESUME_EXISTING_RUN = False
+EXISTING_OUTPUT_DIR = Path(r"C:\\Users\\STELLER\\Documents\\Masterarbeit\\Test CIM\\cimpy fork\\cimpy\\router_batch_results\\YYYYMMDD_HHMMSS")
+
+OUTPUT_DIR = (
+    EXISTING_OUTPUT_DIR
+    if RESUME_EXISTING_RUN
+    else Path("router_batch_results") / datetime.now().strftime("%Y%m%d_%H%M%S")
+)
 
 
 @dataclass
@@ -63,6 +192,11 @@ class SummaryRow:
     num_tool_calls: int
     executed_tools: str
     failed_tool: str
+
+    # Resolution / fallback trace
+    equipment_resolution_mode: str
+    attribute_resolution_mode: str
+    comparison_resolution_mode: str
 
 
 def json_default(obj: Any) -> str:
@@ -189,6 +323,9 @@ def save_csv(path: Path, rows: List[SummaryRow]) -> None:
         "num_tool_calls",
         "executed_tools",
         "failed_tool",
+        "equipment_resolution_mode",
+        "attribute_resolution_mode",
+        "comparison_resolution_mode",
     ]
 
     with path.open("w", encoding="utf-8-sig", newline="") as f:
@@ -236,10 +373,35 @@ def extract_answer(out: Dict[str, Any]) -> str:
         return str(out.get("question", ""))
 
     result = out.get("result", {})
-    if isinstance(result, dict):
-        return str(result.get("answer", ""))
-    return ""
+    if not isinstance(result, dict):
+        return ""
 
+    candidates = [
+        result.get("answer"),
+        result.get("final_answer"),
+        result.get("llm_answer"),
+        _get_nested(result, ["summary", "answer"]),
+        result.get("raw_answer"),
+    ]
+
+    messages = result.get("messages")
+    if isinstance(messages, list) and messages:
+        candidates.append(" ".join(str(m) for m in messages if m))
+
+    summary_parts = result.get("summary_parts")
+    if isinstance(summary_parts, list):
+        part_answers = []
+        for part in summary_parts:
+            if isinstance(part, dict) and part.get("answer"):
+                part_answers.append(str(part.get("answer")))
+        if part_answers:
+            candidates.append("\n\n".join(part_answers))
+
+    for candidate in candidates:
+        if isinstance(candidate, str) and candidate.strip():
+            return candidate.strip()
+
+    return ""
 
 def extract_status(out: Dict[str, Any]) -> str:
     if not isinstance(out, dict):
@@ -470,6 +632,9 @@ def extract_decision_trace(out: Dict[str, Any]) -> Dict[str, Any]:
         "num_tool_calls": 0,
         "executed_tools": "",
         "failed_tool": "",
+        "equipment_resolution_mode": "",
+        "attribute_resolution_mode": "",
+        "comparison_resolution_mode": "",
     }
 
     if not isinstance(out, dict):
@@ -619,20 +784,200 @@ def extract_decision_trace(out: Dict[str, Any]) -> Dict[str, Any]:
             if isinstance(llm_decision, dict):
                 trace["attribute_confidence"] = str(llm_decision.get("confidence", ""))
 
+    # ------------------------------------------------------------------
+    # Resolution / fallback modes
+    # ------------------------------------------------------------------
+
+    # CIM object/equipment resolution modes may be stored either top-level
+    # or inside individual debug trace results. Keep the first meaningful one.
+    equipment_resolution_candidates = [
+        result.get("resolution"),
+        result.get("equipment_resolution_debug"),
+        _get_nested(result, ["debug", "selected_equipment"], None),
+    ]
+
+    if isinstance(debug_trace, list):
+        for item in debug_trace:
+            if not isinstance(item, dict):
+                continue
+            tool_result = item.get("result", {})
+            if isinstance(tool_result, dict):
+                equipment_resolution_candidates.extend([
+                    tool_result.get("resolution"),
+                    tool_result.get("equipment_resolution_debug"),
+                ])
+
+    for candidate in equipment_resolution_candidates:
+        if isinstance(candidate, dict):
+            mode = (
+                candidate.get("resolution_mode")
+                or candidate.get("equipment_resolution_strategy")
+                or candidate.get("resolution_strategy")
+                or ""
+            )
+            if mode:
+                trace["equipment_resolution_mode"] = str(mode)
+                break
+
+    # CIM base-attribute resolution mode, including whether generic semantic
+    # matching or a preselected/fallback path was used.
+    attribute_resolution_candidates = [
+        result.get("base_attribute_debug"),
+    ]
+
+    if isinstance(debug_trace, list):
+        for item in debug_trace:
+            if not isinstance(item, dict):
+                continue
+            tool_result = item.get("result", {})
+            if isinstance(tool_result, dict):
+                attribute_resolution_candidates.append(tool_result.get("base_attribute_debug"))
+
+    for candidate in attribute_resolution_candidates:
+        if isinstance(candidate, dict):
+            mode = candidate.get("resolution_mode") or candidate.get("attribute_search_mode") or ""
+            if mode:
+                trace["attribute_resolution_mode"] = str(mode)
+                break
+
+    # CIM comparison resolution mode, especially semantic_llm_match vs.
+    # heuristic_fallback. This can be nested differently depending on the tool.
+    comparison_resolution_candidates = [
+        result.get("comparison_resolution"),
+        result.get("comparison_resolution_debug"),
+        result.get("comparison_definition"),
+    ]
+
+    if isinstance(debug_trace, list):
+        for item in debug_trace:
+            if not isinstance(item, dict):
+                continue
+            tool_result = item.get("result", {})
+            if isinstance(tool_result, dict):
+                comparison_resolution_candidates.extend([
+                    tool_result.get("comparison_resolution"),
+                    tool_result.get("comparison_resolution_debug"),
+                    tool_result.get("comparison_definition"),
+                    tool_result.get("comparison"),
+                ])
+
+    for candidate in comparison_resolution_candidates:
+        if isinstance(candidate, dict):
+            mode = candidate.get("resolution_mode") or ""
+            if mode:
+                trace["comparison_resolution_mode"] = str(mode)
+                break
+
     return trace
 
+
+
+def _summary_row_from_payload(payload: Dict[str, Any], json_path: Path) -> SummaryRow:
+    run_id = int(payload.get("run_id", 0) or 0)
+    user_input = str(payload.get("user_input", ""))
+    duration_seconds = float(payload.get("duration_seconds", 0.0) or 0.0)
+
+    token_usage = payload.get("token_usage", {}) or {}
+    prompt_tokens = int(token_usage.get("prompt_tokens", 0) or 0)
+    completion_tokens = int(token_usage.get("completion_tokens", 0) or 0)
+    total_tokens = int(token_usage.get("total_tokens", 0) or 0)
+    token_details = _stringify(token_usage.get("details", {}))
+
+    out = payload.get("router_output", {}) or {}
+    if not isinstance(out, dict):
+        out = {}
+
+    decision_trace = payload.get("decision_trace") or extract_decision_trace(out)
+    if not isinstance(decision_trace, dict):
+        decision_trace = extract_decision_trace(out)
+
+    route = str(out.get("route", "")) if isinstance(out, dict) else ""
+    answer = extract_answer(out)
+    status = extract_status(out)
+    error = extract_error(out)
+    details = extract_details(out)
+
+    return SummaryRow(
+        run_id=run_id,
+        user_input=user_input,
+        route=route,
+        answer=answer,
+        status=status,
+        error=error,
+        details=details,
+        duration_seconds=duration_seconds,
+        prompt_tokens=prompt_tokens,
+        completion_tokens=completion_tokens,
+        total_tokens=total_tokens,
+        token_details=token_details,
+        json_path=str(json_path),
+        domain=str(decision_trace.get("domain", "")),
+        planning_mode=str(decision_trace.get("planning_mode", "")),
+        workflow=str(decision_trace.get("workflow", "")),
+        confidence=str(decision_trace.get("confidence", "")),
+        safe_to_execute=str(decision_trace.get("safe_to_execute", "")),
+        num_steps=int(decision_trace.get("num_steps", 0) or 0),
+        steps=str(decision_trace.get("steps", "")),
+        planner_reasoning=str(decision_trace.get("planner_reasoning", "")),
+        resolved_object=str(decision_trace.get("resolved_object", "")),
+        resolved_object_confidence=str(decision_trace.get("resolved_object_confidence", "")),
+        selected_attributes=str(decision_trace.get("selected_attributes", "")),
+        attribute_confidence=str(decision_trace.get("attribute_confidence", "")),
+        num_tool_calls=int(decision_trace.get("num_tool_calls", 0) or 0),
+        executed_tools=str(decision_trace.get("executed_tools", "")),
+        failed_tool=str(decision_trace.get("failed_tool", "")),
+        equipment_resolution_mode=str(decision_trace.get("equipment_resolution_mode", "")),
+        attribute_resolution_mode=str(decision_trace.get("attribute_resolution_mode", "")),
+        comparison_resolution_mode=str(decision_trace.get("comparison_resolution_mode", "")),
+    )
+
+
+def load_existing_summary_rows(output_dir: Path) -> tuple[List[SummaryRow], set[int]]:
+    rows: List[SummaryRow] = []
+    completed_run_ids: set[int] = set()
+
+    if not output_dir.exists():
+        return rows, completed_run_ids
+
+    for json_path in sorted(output_dir.glob("*_router_result.json")):
+        try:
+            with json_path.open("r", encoding="utf-8") as f:
+                payload = json.load(f)
+
+            row = _summary_row_from_payload(payload, json_path)
+            if row.run_id <= 0:
+                continue
+
+            rows.append(row)
+            completed_run_ids.add(row.run_id)
+        except Exception as exc:
+            print(f"WARNUNG: Vorhandene JSON konnte nicht geladen werden: {json_path} ({exc})")
+
+    rows.sort(key=lambda row: row.run_id)
+    return rows, completed_run_ids
 
 def main() -> None:
     OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
 
     orch = Orchestrator()
-    rows: List[SummaryRow] = []
+
+    if RESUME_EXISTING_RUN:
+        rows, completed_run_ids = load_existing_summary_rows(OUTPUT_DIR)
+        print(f"Resume-Modus aktiv. Vorhandene Läufe: {len(completed_run_ids)}")
+        if completed_run_ids:
+            print(f"Fortsetzung ab erstem fehlenden Lauf nach Run {max(completed_run_ids)}.")
+    else:
+        rows = []
+        completed_run_ids = set()
 
     metadata = {
         "started_at": datetime.now().isoformat(),
         "entrypoint": "cimpy.llm_routing.orchestrator.Orchestrator.handle",
         "equivalent_cli": r"python -m cimpy.llm_routing.run_router",
         "user_inputs": USER_INPUTS,
+        "resume_mode": RESUME_EXISTING_RUN,
+        "existing_output_dir": str(EXISTING_OUTPUT_DIR) if RESUME_EXISTING_RUN else "",
+        "existing_completed_run_ids": sorted(completed_run_ids),
         "trace_columns": [
             "domain",
             "planning_mode",
@@ -649,6 +994,9 @@ def main() -> None:
             "num_tool_calls",
             "executed_tools",
             "failed_tool",
+            "equipment_resolution_mode",
+            "attribute_resolution_mode",
+            "comparison_resolution_mode",
         ],
     }
     save_json(OUTPUT_DIR / "run_metadata.json", metadata)
@@ -656,6 +1004,10 @@ def main() -> None:
     total_start = time.perf_counter()
 
     for idx, user_input in enumerate(USER_INPUTS, start=1):
+        if idx in completed_run_ids:
+            print(f"\n=== RUN {idx}/{len(USER_INPUTS)} bereits vorhanden - übersprungen ===")
+            continue
+
         print(f"\n=== RUN {idx}/{len(USER_INPUTS)} ===")
         print("INPUT:", user_input)
 
@@ -723,6 +1075,9 @@ def main() -> None:
                     num_tool_calls=decision_trace["num_tool_calls"],
                     executed_tools=decision_trace["executed_tools"],
                     failed_tool=decision_trace["failed_tool"],
+                    equipment_resolution_mode=decision_trace["equipment_resolution_mode"],
+                    attribute_resolution_mode=decision_trace["attribute_resolution_mode"],
+                    comparison_resolution_mode=decision_trace["comparison_resolution_mode"],
                 )
             )
 
@@ -795,6 +1150,9 @@ def main() -> None:
                     num_tool_calls=decision_trace["num_tool_calls"],
                     executed_tools=decision_trace["executed_tools"],
                     failed_tool=decision_trace["failed_tool"],
+                    equipment_resolution_mode=decision_trace["equipment_resolution_mode"],
+                    attribute_resolution_mode=decision_trace["attribute_resolution_mode"],
+                    comparison_resolution_mode=decision_trace["comparison_resolution_mode"],
                 )
             )
 
@@ -802,6 +1160,7 @@ def main() -> None:
             print("DAUER (s):", duration_seconds)
             print("ERROR:", type(e).__name__, str(e))
 
+    rows.sort(key=lambda row: row.run_id)
     save_csv(OUTPUT_DIR / "summary.csv", rows)
 
     total_duration_seconds = round(time.perf_counter() - total_start, 3)
@@ -811,6 +1170,7 @@ def main() -> None:
         "finished_at": datetime.now().isoformat(),
         "output_dir": str(OUTPUT_DIR),
         "num_runs": len(rows),
+        "num_existing_runs_loaded": len(completed_run_ids),
         "num_errors": sum(1 for row in rows if row.route == "ERROR" or row.status == "error"),
         "total_duration_seconds": total_duration_seconds,
         "average_duration_seconds": round(

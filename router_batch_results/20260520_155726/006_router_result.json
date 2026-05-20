@@ -1,0 +1,47 @@
+{
+  "run_id": 6,
+  "timestamp": "2026-05-20T15:57:50.292090",
+  "user_input": "Füge 2 MW bei Load A hinzu.",
+  "duration_seconds": 0.659,
+  "token_usage": {
+    "prompt_tokens": 824,
+    "completion_tokens": 100,
+    "total_tokens": 924,
+    "details": {
+      "phi3:mini": {
+        "input_tokens": 824,
+        "output_tokens": 100,
+        "total_tokens": 924
+      }
+    }
+  },
+  "decision_trace": {
+    "domain": "ASK_USER",
+    "planning_mode": "",
+    "workflow": "",
+    "confidence": "",
+    "safe_to_execute": "",
+    "num_steps": 0,
+    "steps": "",
+    "planner_reasoning": "",
+    "resolved_object": "<omitted:str>",
+    "resolved_object_confidence": "",
+    "selected_attributes": "",
+    "attribute_confidence": "",
+    "num_tool_calls": 0,
+    "executed_tools": "",
+    "failed_tool": "",
+    "equipment_resolution_mode": "",
+    "attribute_resolution_mode": "",
+    "comparison_resolution_mode": ""
+  },
+  "router_output": {
+    "route": "ASK_USER",
+    "question": "Sollte die Änderung zur Lastflussberechnung für das aktuelle PowerFactory-Projekt erfolgen oder sind historische CIM-Daten erforderlich? Bitte geben Sie an, ob der Zeitraum des Eingangs relevant ist.",
+    "missing_fields": [
+      "data_source",
+      "time_range"
+    ],
+    "partial": {}
+  }
+}

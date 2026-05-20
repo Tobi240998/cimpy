@@ -1,0 +1,46 @@
+{
+  "run_id": 65,
+  "timestamp": "2026-05-20T07:40:08.589340",
+  "user_input": "Wie lang ist Leitung 4-5 in PF?",
+  "duration_seconds": 1.44,
+  "token_usage": {
+    "prompt_tokens": 707,
+    "completion_tokens": 63,
+    "total_tokens": 770,
+    "details": {
+      "phi3:mini": {
+        "input_tokens": 707,
+        "output_tokens": 63,
+        "total_tokens": 770
+      }
+    }
+  },
+  "decision_trace": {
+    "domain": "ASK_USER",
+    "planning_mode": "",
+    "workflow": "",
+    "confidence": "",
+    "safe_to_execute": "",
+    "num_steps": 0,
+    "steps": "",
+    "planner_reasoning": "",
+    "resolved_object": "<omitted:str>",
+    "resolved_object_confidence": "",
+    "selected_attributes": "",
+    "attribute_confidence": "",
+    "num_tool_calls": 0,
+    "executed_tools": "",
+    "failed_tool": "",
+    "equipment_resolution_mode": "",
+    "attribute_resolution_mode": "",
+    "comparison_resolution_mode": ""
+  },
+  "router_output": {
+    "route": "ASK_USER",
+    "question": "Bist du an der Länge von Leitung 4-5 im aktuellen PowerFactory-Projekt oder in den historischen CIM-Daten interessiert?",
+    "missing_fields": [
+      "data_source"
+    ],
+    "partial": {}
+  }
+}

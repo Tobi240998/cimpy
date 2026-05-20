@@ -1,0 +1,56 @@
+{
+  "run_id": 113,
+  "timestamp": "2026-05-17T11:23:03.865913",
+  "user_input": "Welche direkten Nachbarn hat Trafo 19-20 in den CIM-Daten? Wie hoch ist die Spannung von Trafo 19-20 am 09.01.2026?",
+  "duration_seconds": 25.035,
+  "token_usage": {
+    "prompt_tokens": 4549,
+    "completion_tokens": 2399,
+    "total_tokens": 6948,
+    "details": {
+      "phi3:mini": {
+        "input_tokens": 4549,
+        "output_tokens": 2399,
+        "total_tokens": 6948
+      }
+    }
+  },
+  "decision_trace": {
+    "domain": "cim",
+    "planning_mode": "custom_plan",
+    "workflow": "None",
+    "confidence": "",
+    "safe_to_execute": "True",
+    "num_steps": 0,
+    "steps": "",
+    "planner_reasoning": "The user asks two distinct questions requiring different CIM workflows: 'direct neighbors' matches cim.topology_query, and 'voltage on a specific date' matches cim.standard_sv. Since these require separate workflows and cannot be handled by a single standard workflow, a custom_plan with both steps is necessary.",
+    "resolved_object": "",
+    "resolved_object_confidence": "",
+    "selected_attributes": "",
+    "attribute_confidence": "",
+    "num_tool_calls": 0,
+    "executed_tools": "",
+    "failed_tool": ""
+  },
+  "router_output": {
+    "route": "ERROR",
+    "status": "error",
+    "result": {
+      "status": "error",
+      "answer": "Tool existiert nicht in der UnifiedToolRegistry: cim.topology_query",
+      "planner_decision": {
+        "domain": "cim",
+        "planning_mode": "custom_plan",
+        "workflow": null,
+        "custom_steps": [
+          "cim.topology_query",
+          "cim.standard_sv"
+        ],
+        "safe_to_execute": true,
+        "missing_context": [],
+        "clarification_question": "",
+        "reasoning": "The user asks two distinct questions requiring different CIM workflows: 'direct neighbors' matches cim.topology_query, and 'voltage on a specific date' matches cim.standard_sv. Since these require separate workflows and cannot be handled by a single standard workflow, a custom_plan with both steps is necessary."
+      }
+    }
+  }
+}

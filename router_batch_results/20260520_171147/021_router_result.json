@@ -1,0 +1,44 @@
+{
+  "run_id": 21,
+  "timestamp": "2026-05-20T17:13:21.129509",
+  "user_input": "Schalte Schalter 1 ein.",
+  "duration_seconds": 1.594,
+  "token_usage": {
+    "prompt_tokens": 885,
+    "completion_tokens": 285,
+    "total_tokens": 1170,
+    "details": {
+      "phi3:mini": {
+        "input_tokens": 885,
+        "output_tokens": 285,
+        "total_tokens": 1170
+      }
+    }
+  },
+  "decision_trace": {
+    "domain": "ERROR",
+    "planning_mode": "",
+    "workflow": "",
+    "confidence": "",
+    "safe_to_execute": "",
+    "num_steps": 0,
+    "steps": "",
+    "planner_reasoning": "",
+    "resolved_object": "<omitted:str>",
+    "resolved_object_confidence": "",
+    "selected_attributes": "",
+    "attribute_confidence": "",
+    "num_tool_calls": 0,
+    "executed_tools": "",
+    "failed_tool": ""
+  },
+  "router_output": {
+    "route": "ERROR",
+    "status": "error",
+    "result": {
+      "status": "error",
+      "answer": "Der UnifiedPlanner hat keine gültige strukturierte Ausgabe erzeugt.",
+      "planner_error": "Invalid json output: Um den Schalter einzuschalten, befolgen Sie diese Schritte:\n\n1. Stellen Sie sicher, dass der Raum sicher ist und keine Gefahr für elektrische Geräte oder Personen besteht (keine nassen Füße).\n\n2. Suchen Sie den Schalter in Ihrem Zugriffsmöglichkeit finden. Normalerenergiequellen wie Steckdosen sind nicht erforderlich, um einen Schalter einzuschalten.\n\n3. Greifen Sie auf den Schalter und drehen Sie ihn im Uhrzeigersinn bis er vollständig eingeschaltet ist (normalerweise von der Position \"aus\" zur Position \"ein\").\n\n4. Überprüfen Sie, ob das Gerät nun funktioniert. Wenn nicht, überprüfen Sie die Steuerleitungen und den Stromkreis auf Fehlerquellen oder unterbrechen Sie den Schalter wieder, um ihn auszuschalten.\nFor troubleshooting, visit: https://docs.langchain.com/oss/python/langchain/errors/OUTPUT_PARSING_FAILURE "
+    }
+  }
+}

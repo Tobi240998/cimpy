@@ -27,7 +27,7 @@ from cimpy.cimpy_time_analysis.schemas import (
 
 def get_llm():
     return ChatOllama(
-        model="qwen3:30b",
+        model="phi3:mini",
         base_url="http://localhost:11434",
         temperature=0.0,
         streaming=False,
@@ -1405,7 +1405,11 @@ def interpret_user_query(
             context_lines += [f"Assistant: {q}", f"User: {a}"]
             continue
 
-        if effective_allowed_state_types and not parsed.state_detected:
+        if (
+            not is_topology_query
+            and effective_allowed_state_types
+            and not parsed.state_detected
+        ):
             q = llm.invoke(make_clarify_prompt(context, "state")).content.strip()
             a = (ask_user(q) or "").strip() or "Ich bin mir nicht sicher."
             context_lines += [f"Assistant: {q}", f"User: {a}"]

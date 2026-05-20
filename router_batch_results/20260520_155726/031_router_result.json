@@ -1,0 +1,48 @@
+{
+  "run_id": 31,
+  "timestamp": "2026-05-20T16:17:38.393609",
+  "user_input": "Zeig mir die unmittelbaren Nachbarn von Bus 5 in Powerfactory.",
+  "duration_seconds": 0.488,
+  "token_usage": {
+    "prompt_tokens": 831,
+    "completion_tokens": 62,
+    "total_tokens": 893,
+    "details": {
+      "phi3:mini": {
+        "input_tokens": 831,
+        "output_tokens": 62,
+        "total_tokens": 893
+      }
+    }
+  },
+  "decision_trace": {
+    "domain": "ASK_USER",
+    "planning_mode": "",
+    "workflow": "",
+    "confidence": "",
+    "safe_to_execute": "",
+    "num_steps": 0,
+    "steps": "",
+    "planner_reasoning": "",
+    "resolved_object": "<omitted:str>",
+    "resolved_object_confidence": "",
+    "selected_attributes": "",
+    "attribute_confidence": "",
+    "num_tool_calls": 0,
+    "executed_tools": "",
+    "failed_tool": "",
+    "equipment_resolution_mode": "",
+    "attribute_resolution_mode": "",
+    "comparison_resolution_mode": ""
+  },
+  "router_output": {
+    "route": "ASK_USER",
+    "question": "Können Sie angeben, welches Projekt oder welche Simulation im PowerFactory-System Sie meinen?",
+    "missing_fields": [
+      "project_name"
+    ],
+    "partial": {
+      "bus_id": "5"
+    }
+  }
+}

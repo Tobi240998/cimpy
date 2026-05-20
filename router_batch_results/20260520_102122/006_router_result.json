@@ -1,0 +1,732 @@
+{
+  "run_id": 6,
+  "timestamp": "2026-05-20T10:26:31.050094",
+  "user_input": "Füge 2 MW bei Load A hinzu.",
+  "duration_seconds": 120.682,
+  "token_usage": {
+    "prompt_tokens": 8755,
+    "completion_tokens": 11959,
+    "total_tokens": 20714,
+    "details": {
+      "phi3:mini": {
+        "input_tokens": 8755,
+        "total_tokens": 20714,
+        "output_tokens": 11959
+      }
+    }
+  },
+  "decision_trace": {
+    "domain": "pf",
+    "planning_mode": "standard_workflow",
+    "workflow": "pf.change_load",
+    "confidence": "",
+    "safe_to_execute": "True",
+    "num_steps": 4,
+    "steps": "powerfactory.interpret_instruction | powerfactory.resolve_load | powerfactory.execute_change_load | powerfactory.summarize_powerfactory_result",
+    "planner_reasoning": "",
+    "resolved_object": "<omitted:str>",
+    "resolved_object_confidence": "",
+    "selected_attributes": "",
+    "attribute_confidence": "",
+    "num_tool_calls": 4,
+    "executed_tools": "interpret_instruction | resolve_load | execute_change_load | summarize_powerfactory_result",
+    "failed_tool": ""
+  },
+  "router_output": {
+    "route": "POWERFACTORY",
+    "domain": "powerfactory",
+    "plan": {
+      "domain": "powerfactory",
+      "user_input": "Füge 2 MW bei Load A hinzu.",
+      "steps": [
+        {
+          "domain": "powerfactory",
+          "tool": "interpret_instruction",
+          "args": {},
+          "save_as": null,
+          "description": "standard_workflow: pf.change_load",
+          "mutating": false
+        },
+        {
+          "domain": "powerfactory",
+          "tool": "resolve_load",
+          "args": {},
+          "save_as": null,
+          "description": "standard_workflow: pf.change_load",
+          "mutating": false
+        },
+        {
+          "domain": "powerfactory",
+          "tool": "execute_change_load",
+          "args": {},
+          "save_as": null,
+          "description": "standard_workflow: pf.change_load",
+          "mutating": false
+        },
+        {
+          "domain": "powerfactory",
+          "tool": "summarize_powerfactory_result",
+          "args": {},
+          "save_as": null,
+          "description": "standard_workflow: pf.change_load",
+          "mutating": false
+        }
+      ],
+      "classification": {
+        "domain": "pf",
+        "planning_mode": "standard_workflow",
+        "workflow": "pf.change_load",
+        "custom_steps": [],
+        "safe_to_execute": true,
+        "missing_context": [],
+        "clarification_question": "",
+        "reasoning": ""
+      },
+      "reasoning": ""
+    },
+    "planner_decision": {
+      "domain": "pf",
+      "planning_mode": "standard_workflow",
+      "workflow": "pf.change_load",
+      "custom_steps": [],
+      "safe_to_execute": true,
+      "missing_context": [],
+      "clarification_question": "",
+      "reasoning": ""
+    },
+    "result": {
+      "status": "ok",
+      "tool": "powerfactory",
+      "agent": "SingleAgent",
+      "project": "<omitted:str>",
+      "studycase": "<omitted:str>",
+      "user_input": "Füge 2 MW bei Load A hinzu.",
+      "classification": {
+        "domain": "pf",
+        "planning_mode": "standard_workflow",
+        "workflow": "pf.change_load",
+        "custom_steps": [],
+        "safe_to_execute": true,
+        "missing_context": [],
+        "clarification_question": "",
+        "reasoning": ""
+      },
+      "plan": [
+        {
+          "step": "interpret_instruction",
+          "description": "standard_workflow: pf.change_load"
+        },
+        {
+          "step": "resolve_load",
+          "description": "standard_workflow: pf.change_load"
+        },
+        {
+          "step": "execute_change_load",
+          "description": "standard_workflow: pf.change_load"
+        },
+        {
+          "step": "summarize_powerfactory_result",
+          "description": "standard_workflow: pf.change_load"
+        }
+      ],
+      "available_tools": [
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>"
+      ],
+      "instruction": {
+        "action": "change_load",
+        "load_name": "Load A",
+        "delta_p_mw": 2.0,
+        "result_requests": [
+          "bus_voltage"
+        ],
+        "result_request_mode": "default_voltage",
+        "result_query_text": "",
+        "result_request_rationale": "User requested a load change (2 MW at Load A) without explicitly asking for any result metric. The action magnitude (2 MW) is part of the instruction, not a requested result.",
+        "result_request_confidence": "medium"
+      },
+      "resolved_load": "Load A",
+      "data": {
+        "requested_metrics": [
+          "bus_voltage"
+        ],
+        "metric_metadata": {
+          "bus_voltage": {
+            "label": "Bus-Spannung",
+            "unit": "p.u."
+          }
+        },
+        "before": {
+          "bus_voltage": {
+            "Bus 1": 1.0399999618530273,
+            "Bus 2": 1.0249999824730238,
+            "Bus 3": 1.0249999953831554,
+            "Bus 4": 1.0280510281861164,
+            "Bus 5": 0.9985492223174186,
+            "Bus 6": 1.0151141838323858,
+            "Bus 7": 1.0233886567089663,
+            "Bus 8": 1.0091768886520371,
+            "Bus 9": 1.0301374978599835
+          }
+        },
+        "after": {
+          "bus_voltage": {
+            "Bus 1": 1.0399999618530273,
+            "Bus 2": 1.0249999833999688,
+            "Bus 3": 1.0249999971288983,
+            "Bus 4": 1.027917456106957,
+            "Bus 5": 0.9982007632189618,
+            "Bus 6": 1.0150130958393533,
+            "Bus 7": 1.0233076099333769,
+            "Bus 8": 1.0091103139231667,
+            "Bus 9": 1.0300908640145299
+          }
+        },
+        "delta": {
+          "bus_voltage": {
+            "Bus 1": 0.0,
+            "Bus 2": 9.269449652293815e-10,
+            "Bus 3": 1.7457428835854216e-09,
+            "Bus 4": -0.00013357207915931646,
+            "Bus 5": -0.00034845909845682144,
+            "Bus 6": -0.00010108799303254479,
+            "Bus 7": -8.104677558939954e-05,
+            "Bus 8": -6.65747288703944e-05,
+            "Bus 9": -4.6633845453669664e-05
+          }
+        },
+        "voltage_limits": {
+          "Bus 1": {
+            "umin": 0.949999988079071,
+            "umax": 1.0499999523162842
+          },
+          "Bus 2": {
+            "umin": 0.949999988079071,
+            "umax": 1.0499999523162842
+          },
+          "Bus 3": {
+            "umin": 0.949999988079071,
+            "umax": 1.0499999523162842
+          },
+          "Bus 4": {
+            "umin": 0.949999988079071,
+            "umax": 1.0499999523162842
+          },
+          "Bus 5": {
+            "umin": 0.949999988079071,
+            "umax": 1.0499999523162842
+          },
+          "Bus 6": {
+            "umin": 0.949999988079071,
+            "umax": 1.0499999523162842
+          },
+          "Bus 7": {
+            "umin": 0.949999988079071,
+            "umax": 1.0499999523162842
+          },
+          "Bus 8": {
+            "umin": 0.949999988079071,
+            "umax": 1.0499999523162842
+          },
+          "Bus 9": {
+            "umin": 0.949999988079071,
+            "umax": 1.0499999523162842
+          }
+        },
+        "u_before": {
+          "Bus 1": 1.0399999618530273,
+          "Bus 2": 1.0249999824730238,
+          "Bus 3": 1.0249999953831554,
+          "Bus 4": 1.0280510281861164,
+          "Bus 5": 0.9985492223174186,
+          "Bus 6": 1.0151141838323858,
+          "Bus 7": 1.0233886567089663,
+          "Bus 8": 1.0091768886520371,
+          "Bus 9": 1.0301374978599835
+        },
+        "u_after": {
+          "Bus 1": 1.0399999618530273,
+          "Bus 2": 1.0249999833999688,
+          "Bus 3": 1.0249999971288983,
+          "Bus 4": 1.027917456106957,
+          "Bus 5": 0.9982007632189618,
+          "Bus 6": 1.0150130958393533,
+          "Bus 7": 1.0233076099333769,
+          "Bus 8": 1.0091103139231667,
+          "Bus 9": 1.0300908640145299
+        },
+        "delta_u": {
+          "Bus 1": 0.0,
+          "Bus 2": 9.269449652293815e-10,
+          "Bus 3": 1.7457428835854216e-09,
+          "Bus 4": -0.00013357207915931646,
+          "Bus 5": -0.00034845909845682144,
+          "Bus 6": -0.00010108799303254479,
+          "Bus 7": -8.104677558939954e-05,
+          "Bus 8": -6.65747288703944e-05,
+          "Bus 9": -4.6633845453669664e-05
+        }
+      },
+      "catalog": [],
+      "messages": [
+        "Adding 2 MW at Load A resulted in negligible voltage changes (max. -0.0003 p.u. at Bus 5), with all bus voltages remaining within the 0.95–1.05 p.u. limits.",
+        "Bus 'Bus 1': Spannung nicht verändert um 0.0000 p.u. (alt: 1.0400 p.u., neu: 1.0400 p.u.). Grenzwerte: Umin=0.9500 p.u., Umax=1.0500 p.u.. Spannung innerhalb der in PowerFactory hinterlegten Grenzen.",
+        "Bus 'Bus 2': Spannung erhöht um 0.0000 p.u. (alt: 1.0250 p.u., neu: 1.0250 p.u.). Grenzwerte: Umin=0.9500 p.u., Umax=1.0500 p.u.. Spannung innerhalb der in PowerFactory hinterlegten Grenzen.",
+        "Bus 'Bus 3': Spannung erhöht um 0.0000 p.u. (alt: 1.0250 p.u., neu: 1.0250 p.u.). Grenzwerte: Umin=0.9500 p.u., Umax=1.0500 p.u.. Spannung innerhalb der in PowerFactory hinterlegten Grenzen.",
+        "Bus 'Bus 4': Spannung verringert um -0.0001 p.u. (alt: 1.0281 p.u., neu: 1.0279 p.u.). Grenzwerte: Umin=0.9500 p.u., Umax=1.0500 p.u.. Spannung innerhalb der in PowerFactory hinterlegten Grenzen.",
+        "Bus 'Bus 5': Spannung verringert um -0.0003 p.u. (alt: 0.9985 p.u., neu: 0.9982 p.u.). Grenzwerte: Umin=0.9500 p.u., Umax=1.0500 p.u.. Spannung innerhalb der in PowerFactory hinterlegten Grenzen.",
+        "Bus 'Bus 6': Spannung verringert um -0.0001 p.u. (alt: 1.0151 p.u., neu: 1.0150 p.u.). Grenzwerte: Umin=0.9500 p.u., Umax=1.0500 p.u.. Spannung innerhalb der in PowerFactory hinterlegten Grenzen.",
+        "Bus 'Bus 7': Spannung verringert um -0.0001 p.u. (alt: 1.0234 p.u., neu: 1.0233 p.u.). Grenzwerte: Umin=0.9500 p.u., Umax=1.0500 p.u.. Spannung innerhalb der in PowerFactory hinterlegten Grenzen.",
+        "Bus 'Bus 8': Spannung verringert um -0.0001 p.u. (alt: 1.0092 p.u., neu: 1.0091 p.u.). Grenzwerte: Umin=0.9500 p.u., Umax=1.0500 p.u.. Spannung innerhalb der in PowerFactory hinterlegten Grenzen.",
+        "Bus 'Bus 9': Spannung verringert um -0.0000 p.u. (alt: 1.0301 p.u., neu: 1.0301 p.u.). Grenzwerte: Umin=0.9500 p.u., Umax=1.0500 p.u.. Spannung innerhalb der in PowerFactory hinterlegten Grenzen.",
+        "Alle betrachteten Busspannungen liegen innerhalb der zulässigen Spannungsgrenzen."
+      ],
+      "answer": "Adding 2 MW at Load A resulted in negligible voltage changes (max. -0.0003 p.u. at Bus 5), with all bus voltages remaining within the 0.95–1.05 p.u. limits.  \nBus 'Bus 1': Spannung nicht verändert um 0.0000 p.u. (alt: 1.0400 p.u., neu: 1.0400 p.u.). Grenzwerte: Umin=0.9500 p.u., Umax=1.0500 p.u.. Spannung innerhalb der in PowerFactory hinterlegten Grenzen.  \nBus 'Bus 2': Spannung erhöht um 0.0000 p.u. (alt: 1.0250 p.u., neu: 1.0250 p.u.). Grenzwerte: Umin=0.9500 p.u., Umax=1.0500 p.u.. Spannung innerhalb der in PowerFactory hinterlegten Grenzen.  \nBus 'Bus 3': Spannung erhöht um 0.0000 p.u. (alt: 1.0250 p.u., neu: 1.0250 p.u.). Grenzwerte: Umin=0.9500 p.u., Umax=1.0500 p.u.. Spannung innerhalb der in PowerFactory hinterlegten Grenzen.  \nBus 'Bus 4': Spannung verringert um -0.0001 p.u. (alt: 1.0281 p.u., neu: 1.0279 p.u.). Grenzwerte: Umin=0.9500 p.u., Umax=1.0500 p.u.. Spannung innerhalb der in PowerFactory hinterlegten Grenzen.  \nBus 'Bus 5': Spannung verringert um -0.0003 p.u. (alt: 0.9985 p.u., neu: 0.9982 p.u.). Grenzwerte: Umin=0.9500 p.u., Umax=1.0500 p.u.. Spannung innerhalb der in PowerFactory hinterlegten Grenzen.  \nBus 'Bus 6': Spannung verringert um -0.0001 p.u. (alt: 1.0151 p.u., neu: 1.0150 p.u.). Grenzwerte: Umin=0.9500 p.u., Umax=1.0500 p.u.. Spannung innerhalb der in PowerFactory hinterlegten Grenzen.  \nBus 'Bus 7': Spannung verringert um -0.0001 p.u. (alt: 1.0234 p.u., neu: 1.0233 p.u.). Grenzwerte: Umin=0.9500 p.u., Umax=1.0500 p.u.. Spannung innerhalb der in PowerFactory hinterlegten Grenzen.  \nBus 'Bus 8': Spannung verringert um -0.0001 p.u. (alt: 1.0092 p.u., neu: 1.0091 p.u.). Grenzwerte: Umin=0.9500 p.u., Umax=1.0500 p.u.. Spannung innerhalb der in PowerFactory hinterlegten Grenzen.  \nBus 'Bus 9': Spannung verringert um -0.0000 p.u. (alt: 1.0301 p.u., neu: 1.0301 p.u.). Grenzwerte: Umin=0.9500 p.u., Umax=1.0500 p.u.. Spannung innerhalb der in PowerFactory hinterlegten Grenzen.  \nAlle betrachteten Busspannungen liegen innerhalb der zulässigen Spannungsgrenzen.",
+      "summary": {
+        "status": "ok",
+        "tool": "merged_powerfactory_summary",
+        "answer": "Adding 2 MW at Load A resulted in negligible voltage changes (max. -0.0003 p.u. at Bus 5), with all bus voltages remaining within the 0.95–1.05 p.u. limits.\nBus 'Bus 1': Spannung nicht verändert um 0.0000 p.u. (alt: 1.0400 p.u., neu: 1.0400 p.u.). Grenzwerte: Umin=0.9500 p.u., Umax=1.0500 p.u.. Spannung innerhalb der in PowerFactory hinterlegten Grenzen.\nBus 'Bus 2': Spannung erhöht um 0.0000 p.u. (alt: 1.0250 p.u., neu: 1.0250 p.u.). Grenzwerte: Umin=0.9500 p.u., Umax=1.0500 p.u.. Spannung innerhalb der in PowerFactory hinterlegten Grenzen.\nBus 'Bus 3': Spannung erhöht um 0.0000 p.u. (alt: 1.0250 p.u., neu: 1.0250 p.u.). Grenzwerte: Umin=0.9500 p.u., Umax=1.0500 p.u.. Spannung innerhalb der in PowerFactory hinterlegten Grenzen.\nBus 'Bus 4': Spannung verringert um -0.0001 p.u. (alt: 1.0281 p.u., neu: 1.0279 p.u.). Grenzwerte: Umin=0.9500 p.u., Umax=1.0500 p.u.. Spannung innerhalb der in PowerFactory hinterlegten Grenzen.\nBus 'Bus 5': Spannung verringert um -0.0003 p.u. (alt: 0.9985 p.u., neu: 0.9982 p.u.). Grenzwerte: Umin=0.9500 p.u., Umax=1.0500 p.u.. Spannung innerhalb der in PowerFactory hinterlegten Grenzen.\nBus 'Bus 6': Spannung verringert um -0.0001 p.u. (alt: 1.0151 p.u., neu: 1.0150 p.u.). Grenzwerte: Umin=0.9500 p.u., Umax=1.0500 p.u.. Spannung innerhalb der in PowerFactory hinterlegten Grenzen.\nBus 'Bus 7': Spannung verringert um -0.0001 p.u. (alt: 1.0234 p.u., neu: 1.0233 p.u.). Grenzwerte: Umin=0.9500 p.u., Umax=1.0500 p.u.. Spannung innerhalb der in PowerFactory hinterlegten Grenzen.\nBus 'Bus 8': Spannung verringert um -0.0001 p.u. (alt: 1.0092 p.u., neu: 1.0091 p.u.). Grenzwerte: Umin=0.9500 p.u., Umax=1.0500 p.u.. Spannung innerhalb der in PowerFactory hinterlegten Grenzen.\nBus 'Bus 9': Spannung verringert um -0.0000 p.u. (alt: 1.0301 p.u., neu: 1.0301 p.u.). Grenzwerte: Umin=0.9500 p.u., Umax=1.0500 p.u.. Spannung innerhalb der in PowerFactory hinterlegten Grenzen.\nAlle betrachteten Busspannungen liegen innerhalb der zulässigen Spannungsgrenzen.",
+        "messages": [
+          "Adding 2 MW at Load A resulted in negligible voltage changes (max. -0.0003 p.u. at Bus 5), with all bus voltages remaining within the 0.95–1.05 p.u. limits.",
+          "Bus 'Bus 1': Spannung nicht verändert um 0.0000 p.u. (alt: 1.0400 p.u., neu: 1.0400 p.u.). Grenzwerte: Umin=0.9500 p.u., Umax=1.0500 p.u.. Spannung innerhalb der in PowerFactory hinterlegten Grenzen.",
+          "Bus 'Bus 2': Spannung erhöht um 0.0000 p.u. (alt: 1.0250 p.u., neu: 1.0250 p.u.). Grenzwerte: Umin=0.9500 p.u., Umax=1.0500 p.u.. Spannung innerhalb der in PowerFactory hinterlegten Grenzen.",
+          "Bus 'Bus 3': Spannung erhöht um 0.0000 p.u. (alt: 1.0250 p.u., neu: 1.0250 p.u.). Grenzwerte: Umin=0.9500 p.u., Umax=1.0500 p.u.. Spannung innerhalb der in PowerFactory hinterlegten Grenzen.",
+          "Bus 'Bus 4': Spannung verringert um -0.0001 p.u. (alt: 1.0281 p.u., neu: 1.0279 p.u.). Grenzwerte: Umin=0.9500 p.u., Umax=1.0500 p.u.. Spannung innerhalb der in PowerFactory hinterlegten Grenzen.",
+          "Bus 'Bus 5': Spannung verringert um -0.0003 p.u. (alt: 0.9985 p.u., neu: 0.9982 p.u.). Grenzwerte: Umin=0.9500 p.u., Umax=1.0500 p.u.. Spannung innerhalb der in PowerFactory hinterlegten Grenzen.",
+          "Bus 'Bus 6': Spannung verringert um -0.0001 p.u. (alt: 1.0151 p.u., neu: 1.0150 p.u.). Grenzwerte: Umin=0.9500 p.u., Umax=1.0500 p.u.. Spannung innerhalb der in PowerFactory hinterlegten Grenzen.",
+          "Bus 'Bus 7': Spannung verringert um -0.0001 p.u. (alt: 1.0234 p.u., neu: 1.0233 p.u.). Grenzwerte: Umin=0.9500 p.u., Umax=1.0500 p.u.. Spannung innerhalb der in PowerFactory hinterlegten Grenzen.",
+          "Bus 'Bus 8': Spannung verringert um -0.0001 p.u. (alt: 1.0092 p.u., neu: 1.0091 p.u.). Grenzwerte: Umin=0.9500 p.u., Umax=1.0500 p.u.. Spannung innerhalb der in PowerFactory hinterlegten Grenzen.",
+          "Bus 'Bus 9': Spannung verringert um -0.0000 p.u. (alt: 1.0301 p.u., neu: 1.0301 p.u.). Grenzwerte: Umin=0.9500 p.u., Umax=1.0500 p.u.. Spannung innerhalb der in PowerFactory hinterlegten Grenzen.",
+          "Alle betrachteten Busspannungen liegen innerhalb der zulässigen Spannungsgrenzen."
+        ],
+        "summary_count": 1,
+        "plan_steps": [
+          "interpret_instruction",
+          "resolve_load",
+          "execute_change_load",
+          "summarize_powerfactory_result"
+        ]
+      },
+      "summary_parts": [
+        {
+          "status": "ok",
+          "tool": "summarize_powerfactory_result",
+          "project": "<omitted:str>",
+          "messages": [
+            "Bus 'Bus 1': Spannung nicht verändert um 0.0000 p.u. (alt: 1.0400 p.u., neu: 1.0400 p.u.). Grenzwerte: Umin=0.9500 p.u., Umax=1.0500 p.u.. Spannung innerhalb der in PowerFactory hinterlegten Grenzen.",
+            "Bus 'Bus 2': Spannung erhöht um 0.0000 p.u. (alt: 1.0250 p.u., neu: 1.0250 p.u.). Grenzwerte: Umin=0.9500 p.u., Umax=1.0500 p.u.. Spannung innerhalb der in PowerFactory hinterlegten Grenzen.",
+            "Bus 'Bus 3': Spannung erhöht um 0.0000 p.u. (alt: 1.0250 p.u., neu: 1.0250 p.u.). Grenzwerte: Umin=0.9500 p.u., Umax=1.0500 p.u.. Spannung innerhalb der in PowerFactory hinterlegten Grenzen.",
+            "Bus 'Bus 4': Spannung verringert um -0.0001 p.u. (alt: 1.0281 p.u., neu: 1.0279 p.u.). Grenzwerte: Umin=0.9500 p.u., Umax=1.0500 p.u.. Spannung innerhalb der in PowerFactory hinterlegten Grenzen.",
+            "Bus 'Bus 5': Spannung verringert um -0.0003 p.u. (alt: 0.9985 p.u., neu: 0.9982 p.u.). Grenzwerte: Umin=0.9500 p.u., Umax=1.0500 p.u.. Spannung innerhalb der in PowerFactory hinterlegten Grenzen.",
+            "Bus 'Bus 6': Spannung verringert um -0.0001 p.u. (alt: 1.0151 p.u., neu: 1.0150 p.u.). Grenzwerte: Umin=0.9500 p.u., Umax=1.0500 p.u.. Spannung innerhalb der in PowerFactory hinterlegten Grenzen.",
+            "Bus 'Bus 7': Spannung verringert um -0.0001 p.u. (alt: 1.0234 p.u., neu: 1.0233 p.u.). Grenzwerte: Umin=0.9500 p.u., Umax=1.0500 p.u.. Spannung innerhalb der in PowerFactory hinterlegten Grenzen.",
+            "Bus 'Bus 8': Spannung verringert um -0.0001 p.u. (alt: 1.0092 p.u., neu: 1.0091 p.u.). Grenzwerte: Umin=0.9500 p.u., Umax=1.0500 p.u.. Spannung innerhalb der in PowerFactory hinterlegten Grenzen.",
+            "Bus 'Bus 9': Spannung verringert um -0.0000 p.u. (alt: 1.0301 p.u., neu: 1.0301 p.u.). Grenzwerte: Umin=0.9500 p.u., Umax=1.0500 p.u.. Spannung innerhalb der in PowerFactory hinterlegten Grenzen.",
+            "Alle betrachteten Busspannungen liegen innerhalb der zulässigen Spannungsgrenzen."
+          ],
+          "answer": "Adding 2 MW at Load A resulted in negligible voltage changes (max. -0.0003 p.u. at Bus 5), with all bus voltages remaining within the 0.95–1.05 p.u. limits.",
+          "requested_metrics": [
+            "bus_voltage"
+          ]
+        }
+      ],
+      "topology": {
+        "graph_mode": null,
+        "graph_summary": {},
+        "build_debug": {},
+        "inventory": {},
+        "instruction": null,
+        "resolution": null,
+        "selected_node": null,
+        "neighbor_count": 0,
+        "neighbors": [],
+        "matches": []
+      },
+      "switch": {
+        "instruction": null,
+        "resolution": null,
+        "execution": null,
+        "summary": null
+      },
+      "data_query": {
+        "inventory": null,
+        "instruction": null,
+        "resolution": null,
+        "attribute_listing": null,
+        "attribute_selection": null,
+        "execution": null,
+        "summary": null
+      },
+      "debug": {
+        "planning": {},
+        "selected_equipment": {
+          "resolved_load": "Load A",
+          "entity_resolution": null,
+          "object_resolution": null
+        },
+        "trace": [
+          {
+            "step": "interpret_instruction",
+            "effective_user_input": "Füge 2 MW bei Load A hinzu.",
+            "source_subrequest": null,
+            "tool_spec": {
+              "name": "interpret_instruction",
+              "description": "Interpret a natural-language user request into a structured load-change instruction.",
+              "capability_tags": [],
+              "mutating": false
+            },
+            "tool_kwargs": {
+              "services": "<omitted:dict>",
+              "user_input": "Füge 2 MW bei Load A hinzu."
+            },
+            "result": {
+              "status": "ok",
+              "tool": "interpret_instruction",
+              "user_input": "Füge 2 MW bei Load A hinzu.",
+              "project": "<omitted:str>",
+              "instruction": {
+                "action": "change_load",
+                "load_name": "Load A",
+                "delta_p_mw": 2.0,
+                "result_requests": [
+                  "<max_depth>"
+                ],
+                "result_request_mode": "default_voltage",
+                "result_query_text": "",
+                "result_request_rationale": "User requested a load change (2 MW at Load A) without explicitly asking for any result metric. The action magnitude (2 MW) is part of the instruction, not a requested result.",
+                "result_request_confidence": "medium"
+              }
+            }
+          },
+          {
+            "step": "resolve_load",
+            "effective_user_input": "Füge 2 MW bei Load A hinzu.",
+            "source_subrequest": null,
+            "tool_spec": {
+              "name": "resolve_load",
+              "description": "Resolve the target load object inside the active PowerFactory project.",
+              "capability_tags": [],
+              "mutating": false
+            },
+            "tool_kwargs": {
+              "services": "<omitted:dict>",
+              "instruction": {
+                "action": "change_load",
+                "load_name": "Load A",
+                "delta_p_mw": 2.0,
+                "result_requests": [
+                  "<max_depth>"
+                ],
+                "result_request_mode": "default_voltage",
+                "result_query_text": "",
+                "result_request_rationale": "User requested a load change (2 MW at Load A) without explicitly asking for any result metric. The action magnitude (2 MW) is part of the instruction, not a requested result.",
+                "result_request_confidence": "medium"
+              }
+            },
+            "result": {
+              "status": "ok",
+              "tool": "resolve_load",
+              "project": "<omitted:str>",
+              "instruction": {
+                "action": "change_load",
+                "load_name": "Load A",
+                "delta_p_mw": 2.0,
+                "result_requests": [
+                  "<max_depth>"
+                ],
+                "result_request_mode": "default_voltage",
+                "result_query_text": "",
+                "result_request_rationale": "User requested a load change (2 MW at Load A) without explicitly asking for any result metric. The action magnitude (2 MW) is part of the instruction, not a requested result.",
+                "result_request_confidence": "medium"
+              },
+              "resolution": {
+                "status": "ok",
+                "requested_load_name": "Load A",
+                "matches": [
+                  "<max_depth>"
+                ],
+                "selected": {
+                  "loc_name": "<max_depth>",
+                  "full_name": "<max_depth>",
+                  "tokens": "<max_depth>",
+                  "pf_object": "<max_depth>"
+                }
+              }
+            }
+          },
+          {
+            "step": "execute_change_load",
+            "effective_user_input": "Füge 2 MW bei Load A hinzu.",
+            "source_subrequest": null,
+            "tool_spec": {
+              "name": "execute_change_load",
+              "description": "Apply a load change in PowerFactory and run load flow before/after.",
+              "capability_tags": [],
+              "mutating": true
+            },
+            "tool_kwargs": {
+              "services": "<omitted:dict>",
+              "instruction": {
+                "action": "change_load",
+                "load_name": "Load A",
+                "delta_p_mw": 2.0,
+                "result_requests": [
+                  "<max_depth>"
+                ],
+                "result_request_mode": "default_voltage",
+                "result_query_text": "",
+                "result_request_rationale": "User requested a load change (2 MW at Load A) without explicitly asking for any result metric. The action magnitude (2 MW) is part of the instruction, not a requested result.",
+                "result_request_confidence": "medium"
+              }
+            },
+            "result": {
+              "status": "ok",
+              "tool": "execute_change_load",
+              "project": "<omitted:str>",
+              "studycase": "<omitted:str>",
+              "instruction": {
+                "action": "change_load",
+                "load_name": "Load A",
+                "delta_p_mw": 2.0,
+                "result_requests": [
+                  "<max_depth>"
+                ],
+                "result_request_mode": "default_voltage",
+                "result_query_text": "",
+                "result_request_rationale": "Empty user input, falling back to default voltage.",
+                "result_request_confidence": "high"
+              },
+              "resolved_load": "Load A",
+              "execution": {
+                "status": "ok",
+                "tool": "powerfactory",
+                "instruction": {
+                  "action": "<max_depth>",
+                  "load_name": "<max_depth>",
+                  "delta_p_mw": "<max_depth>",
+                  "result_requests": "<max_depth>",
+                  "result_request_mode": "<max_depth>",
+                  "result_query_text": "<max_depth>",
+                  "result_request_rationale": "<max_depth>",
+                  "result_request_confidence": "<max_depth>"
+                },
+                "execution": {
+                  "action": "<max_depth>",
+                  "load_name": "<max_depth>",
+                  "full_name": "<max_depth>",
+                  "delta_p_mw": "<max_depth>",
+                  "p_old_mw": "<max_depth>",
+                  "p_new_mw": "<max_depth>",
+                  "state_before": "<max_depth>",
+                  "state_after": "<max_depth>"
+                }
+              },
+              "loadflow_debug": {
+                "before_execute_result": 0,
+                "after_execute_result": 0,
+                "metric_snapshot_debug": {
+                  "before": "<max_depth>",
+                  "after": "<max_depth>"
+                },
+                "voltage_limits_debug": {
+                  "num_buses_total": "<max_depth>",
+                  "num_buses_with_limits": "<max_depth>",
+                  "num_buses_missing_limits": "<max_depth>",
+                  "missing_buses": "<max_depth>",
+                  "object_queries": "<max_depth>"
+                },
+                "before_snapshot_debug": {
+                  "num_buses_total": "<max_depth>",
+                  "num_buses_with_value": "<max_depth>",
+                  "num_buses_missing_value": "<max_depth>",
+                  "missing_buses": "<max_depth>",
+                  "attribute_usage": "<max_depth>",
+                  "object_queries": "<max_depth>"
+                },
+                "after_snapshot_debug": {
+                  "num_buses_total": "<max_depth>",
+                  "num_buses_with_value": "<max_depth>",
+                  "num_buses_missing_value": "<max_depth>",
+                  "missing_buses": "<max_depth>",
+                  "attribute_usage": "<max_depth>",
+                  "object_queries": "<max_depth>"
+                }
+              },
+              "data": {
+                "requested_metrics": [
+                  "<max_depth>"
+                ],
+                "metric_metadata": {
+                  "bus_voltage": "<max_depth>"
+                },
+                "before": {
+                  "bus_voltage": "<max_depth>"
+                },
+                "after": {
+                  "bus_voltage": "<max_depth>"
+                },
+                "delta": {
+                  "bus_voltage": "<max_depth>"
+                },
+                "voltage_limits": {
+                  "Bus 1": "<max_depth>",
+                  "Bus 2": "<max_depth>",
+                  "Bus 3": "<max_depth>",
+                  "Bus 4": "<max_depth>",
+                  "Bus 5": "<max_depth>",
+                  "Bus 6": "<max_depth>",
+                  "Bus 7": "<max_depth>",
+                  "Bus 8": "<max_depth>",
+                  "Bus 9": "<max_depth>"
+                },
+                "u_before": {
+                  "Bus 1": "<max_depth>",
+                  "Bus 2": "<max_depth>",
+                  "Bus 3": "<max_depth>",
+                  "Bus 4": "<max_depth>",
+                  "Bus 5": "<max_depth>",
+                  "Bus 6": "<max_depth>",
+                  "Bus 7": "<max_depth>",
+                  "Bus 8": "<max_depth>",
+                  "Bus 9": "<max_depth>"
+                },
+                "u_after": {
+                  "Bus 1": "<max_depth>",
+                  "Bus 2": "<max_depth>",
+                  "Bus 3": "<max_depth>",
+                  "Bus 4": "<max_depth>",
+                  "Bus 5": "<max_depth>",
+                  "Bus 6": "<max_depth>",
+                  "Bus 7": "<max_depth>",
+                  "Bus 8": "<max_depth>",
+                  "Bus 9": "<max_depth>"
+                },
+                "delta_u": {
+                  "Bus 1": "<max_depth>",
+                  "Bus 2": "<max_depth>",
+                  "Bus 3": "<max_depth>",
+                  "Bus 4": "<max_depth>",
+                  "Bus 5": "<max_depth>",
+                  "Bus 6": "<max_depth>",
+                  "Bus 7": "<max_depth>",
+                  "Bus 8": "<max_depth>",
+                  "Bus 9": "<max_depth>"
+                }
+              }
+            }
+          },
+          {
+            "step": "summarize_powerfactory_result",
+            "effective_user_input": "Füge 2 MW bei Load A hinzu.",
+            "source_subrequest": null,
+            "tool_spec": {
+              "name": "summarize_powerfactory_result",
+              "description": "Summarize result data from a PowerFactory load workflow for the end user.",
+              "capability_tags": [],
+              "mutating": false
+            },
+            "tool_kwargs": {
+              "services": "<omitted:dict>",
+              "result_payload": {
+                "status": "ok",
+                "tool": "execute_change_load",
+                "project": "<omitted:str>",
+                "studycase": "<omitted:str>",
+                "instruction": {
+                  "action": "<max_depth>",
+                  "load_name": "<max_depth>",
+                  "delta_p_mw": "<max_depth>",
+                  "result_requests": "<max_depth>",
+                  "result_request_mode": "<max_depth>",
+                  "result_query_text": "<max_depth>",
+                  "result_request_rationale": "<max_depth>",
+                  "result_request_confidence": "<max_depth>"
+                },
+                "resolved_load": "Load A",
+                "execution": {
+                  "status": "<max_depth>",
+                  "tool": "<max_depth>",
+                  "instruction": "<max_depth>",
+                  "execution": "<max_depth>"
+                },
+                "loadflow_debug": {
+                  "before_execute_result": "<max_depth>",
+                  "after_execute_result": "<max_depth>",
+                  "metric_snapshot_debug": "<max_depth>",
+                  "voltage_limits_debug": "<max_depth>",
+                  "before_snapshot_debug": "<max_depth>",
+                  "after_snapshot_debug": "<max_depth>"
+                },
+                "data": {
+                  "requested_metrics": "<max_depth>",
+                  "metric_metadata": "<max_depth>",
+                  "before": "<max_depth>",
+                  "after": "<max_depth>",
+                  "delta": "<max_depth>",
+                  "voltage_limits": "<max_depth>",
+                  "u_before": "<max_depth>",
+                  "u_after": "<max_depth>",
+                  "delta_u": "<max_depth>"
+                }
+              },
+              "user_input": "Füge 2 MW bei Load A hinzu."
+            },
+            "result": {
+              "status": "ok",
+              "tool": "summarize_powerfactory_result",
+              "project": "<omitted:str>",
+              "messages": [
+                "Bus 'Bus 1': Spannung nicht verändert um 0.0000 p.u. (alt: 1.0400 p.u., neu: 1.0400 p.u.). Grenzwerte: Umin=0.9500 p.u., Umax=1.0500 p.u.. Spannung innerhalb der in PowerFactory hinterlegten Grenzen.",
+                "Bus 'Bus 2': Spannung erhöht um 0.0000 p.u. (alt: 1.0250 p.u., neu: 1.0250 p.u.). Grenzwerte: Umin=0.9500 p.u., Umax=1.0500 p.u.. Spannung innerhalb der in PowerFactory hinterlegten Grenzen.",
+                "Bus 'Bus 3': Spannung erhöht um 0.0000 p.u. (alt: 1.0250 p.u., neu: 1.0250 p.u.). Grenzwerte: Umin=0.9500 p.u., Umax=1.0500 p.u.. Spannung innerhalb der in PowerFactory hinterlegten Grenzen.",
+                "Bus 'Bus 4': Spannung verringert um -0.0001 p.u. (alt: 1.0281 p.u., neu: 1.0279 p.u.). Grenzwerte: Umin=0.9500 p.u., Umax=1.0500 p.u.. Spannung innerhalb der in PowerFactory hinterlegten Grenzen.",
+                "Bus 'Bus 5': Spannung verringert um -0.0003 p.u. (alt: 0.9985 p.u., neu: 0.9982 p.u.). Grenzwerte: Umin=0.9500 p.u., Umax=1.0500 p.u.. Spannung innerhalb der in PowerFactory hinterlegten Grenzen.",
+                "Bus 'Bus 6': Spannung verringert um -0.0001 p.u. (alt: 1.0151 p.u., neu: 1.0150 p.u.). Grenzwerte: Umin=0.9500 p.u., Umax=1.0500 p.u.. Spannung innerhalb der in PowerFactory hinterlegten Grenzen.",
+                "Bus 'Bus 7': Spannung verringert um -0.0001 p.u. (alt: 1.0234 p.u., neu: 1.0233 p.u.). Grenzwerte: Umin=0.9500 p.u., Umax=1.0500 p.u.. Spannung innerhalb der in PowerFactory hinterlegten Grenzen.",
+                "Bus 'Bus 8': Spannung verringert um -0.0001 p.u. (alt: 1.0092 p.u., neu: 1.0091 p.u.). Grenzwerte: Umin=0.9500 p.u., Umax=1.0500 p.u.. Spannung innerhalb der in PowerFactory hinterlegten Grenzen.",
+                "Bus 'Bus 9': Spannung verringert um -0.0000 p.u. (alt: 1.0301 p.u., neu: 1.0301 p.u.). Grenzwerte: Umin=0.9500 p.u., Umax=1.0500 p.u.. Spannung innerhalb der in PowerFactory hinterlegten Grenzen.",
+                "Alle betrachteten Busspannungen liegen innerhalb der zulässigen Spannungsgrenzen."
+              ],
+              "answer": "Adding 2 MW at Load A resulted in negligible voltage changes (max. -0.0003 p.u. at Bus 5), with all bus voltages remaining within the 0.95–1.05 p.u. limits.",
+              "requested_metrics": [
+                "bus_voltage"
+              ]
+            }
+          }
+        ]
+      },
+      "raw_answer": "Adding 2 MW at Load A resulted in negligible voltage changes (max. -0.0003 p.u. at Bus 5), with all bus voltages remaining within the 0.95–1.05 p.u. limits.\nBus 'Bus 1': Spannung nicht verändert um 0.0000 p.u. (alt: 1.0400 p.u., neu: 1.0400 p.u.). Grenzwerte: Umin=0.9500 p.u., Umax=1.0500 p.u.. Spannung innerhalb der in PowerFactory hinterlegten Grenzen.\nBus 'Bus 2': Spannung erhöht um 0.0000 p.u. (alt: 1.0250 p.u., neu: 1.0250 p.u.). Grenzwerte: Umin=0.9500 p.u., Umax=1.0500 p.u.. Spannung innerhalb der in PowerFactory hinterlegten Grenzen.\nBus 'Bus 3': Spannung erhöht um 0.0000 p.u. (alt: 1.0250 p.u., neu: 1.0250 p.u.). Grenzwerte: Umin=0.9500 p.u., Umax=1.0500 p.u.. Spannung innerhalb der in PowerFactory hinterlegten Grenzen.\nBus 'Bus 4': Spannung verringert um -0.0001 p.u. (alt: 1.0281 p.u., neu: 1.0279 p.u.). Grenzwerte: Umin=0.9500 p.u., Umax=1.0500 p.u.. Spannung innerhalb der in PowerFactory hinterlegten Grenzen.\nBus 'Bus 5': Spannung verringert um -0.0003 p.u. (alt: 0.9985 p.u., neu: 0.9982 p.u.). Grenzwerte: Umin=0.9500 p.u., Umax=1.0500 p.u.. Spannung innerhalb der in PowerFactory hinterlegten Grenzen.\nBus 'Bus 6': Spannung verringert um -0.0001 p.u. (alt: 1.0151 p.u., neu: 1.0150 p.u.). Grenzwerte: Umin=0.9500 p.u., Umax=1.0500 p.u.. Spannung innerhalb der in PowerFactory hinterlegten Grenzen.\nBus 'Bus 7': Spannung verringert um -0.0001 p.u. (alt: 1.0234 p.u., neu: 1.0233 p.u.). Grenzwerte: Umin=0.9500 p.u., Umax=1.0500 p.u.. Spannung innerhalb der in PowerFactory hinterlegten Grenzen.\nBus 'Bus 8': Spannung verringert um -0.0001 p.u. (alt: 1.0092 p.u., neu: 1.0091 p.u.). Grenzwerte: Umin=0.9500 p.u., Umax=1.0500 p.u.. Spannung innerhalb der in PowerFactory hinterlegten Grenzen.\nBus 'Bus 9': Spannung verringert um -0.0000 p.u. (alt: 1.0301 p.u., neu: 1.0301 p.u.). Grenzwerte: Umin=0.9500 p.u., Umax=1.0500 p.u.. Spannung innerhalb der in PowerFactory hinterlegten Grenzen.\nAlle betrachteten Busspannungen liegen innerhalb der zulässigen Spannungsgrenzen."
+    }
+  }
+}

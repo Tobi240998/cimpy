@@ -1,0 +1,47 @@
+{
+  "run_id": 67,
+  "timestamp": "2026-05-20T16:32:42.112760",
+  "user_input": "Gib mir die Nennspannungen aller Busse in Powerfactory.",
+  "duration_seconds": 0.622,
+  "token_usage": {
+    "prompt_tokens": 906,
+    "completion_tokens": 106,
+    "total_tokens": 1012,
+    "details": {
+      "phi3:mini": {
+        "input_tokens": 906,
+        "output_tokens": 106,
+        "total_tokens": 1012
+      }
+    }
+  },
+  "decision_trace": {
+    "domain": "ASK_USER",
+    "planning_mode": "",
+    "workflow": "",
+    "confidence": "",
+    "safe_to_execute": "",
+    "num_steps": 0,
+    "steps": "",
+    "planner_reasoning": "",
+    "resolved_object": "<omitted:str>",
+    "resolved_object_confidence": "",
+    "selected_attributes": "",
+    "attribute_confidence": "",
+    "num_tool_calls": 0,
+    "executed_tools": "",
+    "failed_tool": "",
+    "equipment_resolution_mode": "",
+    "attribute_resolution_mode": "",
+    "comparison_resolution_mode": ""
+  },
+  "router_output": {
+    "route": "ASK_USER",
+    "question": "Können Sie angeben, welche CIM-Daten oder welches Projekt für Ihre Frage relevant sind? Die Informationen zur Nennspannung eines Busses können je nach Kontext variieren. In PowerFactory würde dies normalerweise mit einem Befehl wie 'Get Bus Parameters' erfolgen.",
+    "missing_fields": [
+      "bus_name",
+      "project"
+    ],
+    "partial": {}
+  }
+}

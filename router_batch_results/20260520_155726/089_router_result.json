@@ -1,0 +1,46 @@
+{
+  "run_id": 89,
+  "timestamp": "2026-05-20T16:46:16.638191",
+  "user_input": "Zu welcher zusammenhängenden Komponente gehört Trafo 19-20 bei den CIM-Daten?",
+  "duration_seconds": 0.635,
+  "token_usage": {
+    "prompt_tokens": 838,
+    "completion_tokens": 94,
+    "total_tokens": 932,
+    "details": {
+      "phi3:mini": {
+        "input_tokens": 838,
+        "output_tokens": 94,
+        "total_tokens": 932
+      }
+    }
+  },
+  "decision_trace": {
+    "domain": "ASK_USER",
+    "planning_mode": "",
+    "workflow": "",
+    "confidence": "",
+    "safe_to_execute": "",
+    "num_steps": 0,
+    "steps": "",
+    "planner_reasoning": "",
+    "resolved_object": "<omitted:str>",
+    "resolved_object_confidence": "",
+    "selected_attributes": "",
+    "attribute_confidence": "",
+    "num_tool_calls": 0,
+    "executed_tools": "",
+    "failed_tool": "",
+    "equipment_resolution_mode": "",
+    "attribute_resolution_mode": "",
+    "comparison_resolution_mode": ""
+  },
+  "router_output": {
+    "route": "ASK_USER",
+    "question": "Was ist die Beziehung zwischen der Transformatorkomponente 'Trafo' und dem Modul '19-20' in Ihren historischen CIM-Daten, oder gibt es einen spezifischeren Kontext? Bitte geben Sie zusätzliche Informationen an.",
+    "missing_fields": [
+      "context"
+    ],
+    "partial": {}
+  }
+}

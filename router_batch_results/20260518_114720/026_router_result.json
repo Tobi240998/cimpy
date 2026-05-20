@@ -1,0 +1,2634 @@
+{
+  "run_id": 26,
+  "timestamp": "2026-05-18T12:35:40.190746",
+  "user_input": "Wer ist in PF direkt mit Load A verbunden?",
+  "duration_seconds": 40.889,
+  "token_usage": {
+    "prompt_tokens": 5818,
+    "completion_tokens": 4003,
+    "total_tokens": 9821,
+    "details": {
+      "phi3:mini": {
+        "total_tokens": 9821,
+        "output_tokens": 4003,
+        "input_tokens": 5818
+      }
+    }
+  },
+  "decision_trace": {
+    "domain": "powerfactory",
+    "planning_mode": "standard_workflow",
+    "workflow": "pf.topology_query",
+    "confidence": "",
+    "safe_to_execute": "True",
+    "num_steps": 6,
+    "steps": "powerfactory.build_topology_graph | powerfactory.build_topology_inventory | powerfactory.interpret_entity_instruction | powerfactory.resolve_entity_from_inventory | powerfactory.query_topology_neighbors | powerfactory.summarize_topology_result",
+    "planner_reasoning": "The user explicitly mentions 'PF' (PowerFactory) and asks about direct connectivity to 'Load A', which matches the purpose of pf.topology_query for analyzing network neighbors in PowerFactory.",
+    "resolved_object": "<omitted:str>",
+    "resolved_object_confidence": "",
+    "selected_attributes": "",
+    "attribute_confidence": "",
+    "num_tool_calls": 6,
+    "executed_tools": "build_topology_graph | build_topology_inventory | interpret_entity_instruction | resolve_entity_from_inventory | query_topology_neighbors | summarize_topology_result",
+    "failed_tool": ""
+  },
+  "router_output": {
+    "route": "POWERFACTORY",
+    "domain": "powerfactory",
+    "plan": {
+      "domain": "powerfactory",
+      "user_input": "Wer ist in PF direkt mit Load A verbunden?",
+      "steps": [
+        {
+          "domain": "powerfactory",
+          "tool": "build_topology_graph",
+          "args": {},
+          "save_as": null,
+          "description": "standard_workflow: pf.topology_query",
+          "mutating": false
+        },
+        {
+          "domain": "powerfactory",
+          "tool": "build_topology_inventory",
+          "args": {},
+          "save_as": null,
+          "description": "standard_workflow: pf.topology_query",
+          "mutating": false
+        },
+        {
+          "domain": "powerfactory",
+          "tool": "interpret_entity_instruction",
+          "args": {},
+          "save_as": null,
+          "description": "standard_workflow: pf.topology_query",
+          "mutating": false
+        },
+        {
+          "domain": "powerfactory",
+          "tool": "resolve_entity_from_inventory",
+          "args": {},
+          "save_as": null,
+          "description": "standard_workflow: pf.topology_query",
+          "mutating": false
+        },
+        {
+          "domain": "powerfactory",
+          "tool": "query_topology_neighbors",
+          "args": {},
+          "save_as": null,
+          "description": "standard_workflow: pf.topology_query",
+          "mutating": false
+        },
+        {
+          "domain": "powerfactory",
+          "tool": "summarize_topology_result",
+          "args": {},
+          "save_as": null,
+          "description": "standard_workflow: pf.topology_query",
+          "mutating": false
+        }
+      ],
+      "classification": {
+        "domain": "powerfactory",
+        "planning_mode": "standard_workflow",
+        "workflow": "pf.topology_query",
+        "custom_steps": [],
+        "safe_to_execute": true,
+        "missing_context": [],
+        "clarification_question": "",
+        "reasoning": "The user explicitly mentions 'PF' (PowerFactory) and asks about direct connectivity to 'Load A', which matches the purpose of pf.topology_query for analyzing network neighbors in PowerFactory."
+      },
+      "reasoning": "The user explicitly mentions 'PF' (PowerFactory) and asks about direct connectivity to 'Load A', which matches the purpose of pf.topology_query for analyzing network neighbors in PowerFactory."
+    },
+    "planner_decision": {
+      "domain": "powerfactory",
+      "planning_mode": "standard_workflow",
+      "workflow": "pf.topology_query",
+      "custom_steps": [],
+      "safe_to_execute": true,
+      "missing_context": [],
+      "clarification_question": "",
+      "reasoning": "The user explicitly mentions 'PF' (PowerFactory) and asks about direct connectivity to 'Load A', which matches the purpose of pf.topology_query for analyzing network neighbors in PowerFactory."
+    },
+    "result": {
+      "status": "ok",
+      "tool": "powerfactory",
+      "agent": "SingleAgent",
+      "project": "<omitted:str>",
+      "studycase": "<omitted:NoneType>",
+      "user_input": "Wer ist in PF direkt mit Load A verbunden?",
+      "classification": {
+        "domain": "powerfactory",
+        "planning_mode": "standard_workflow",
+        "workflow": "pf.topology_query",
+        "custom_steps": [],
+        "safe_to_execute": true,
+        "missing_context": [],
+        "clarification_question": "",
+        "reasoning": "The user explicitly mentions 'PF' (PowerFactory) and asks about direct connectivity to 'Load A', which matches the purpose of pf.topology_query for analyzing network neighbors in PowerFactory."
+      },
+      "plan": [
+        {
+          "step": "build_topology_graph",
+          "description": "standard_workflow: pf.topology_query"
+        },
+        {
+          "step": "build_topology_inventory",
+          "description": "standard_workflow: pf.topology_query"
+        },
+        {
+          "step": "interpret_entity_instruction",
+          "description": "standard_workflow: pf.topology_query"
+        },
+        {
+          "step": "resolve_entity_from_inventory",
+          "description": "standard_workflow: pf.topology_query"
+        },
+        {
+          "step": "query_topology_neighbors",
+          "description": "standard_workflow: pf.topology_query"
+        },
+        {
+          "step": "summarize_topology_result",
+          "description": "standard_workflow: pf.topology_query"
+        }
+      ],
+      "available_tools": [
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>"
+      ],
+      "instruction": null,
+      "resolved_load": null,
+      "data": {},
+      "catalog": [],
+      "messages": [
+        "Direkte Nachbarn von 'Load A' (ElmLod, Typ load) im PowerFactory-Topologiegraphen: Bus 5 (ElmTerm)"
+      ],
+      "answer": "Bus 5 (ElmTerm) ist direkt mit Load A verbunden.",
+      "summary": {
+        "status": "ok",
+        "tool": "merged_powerfactory_summary",
+        "answer": "Direkte Nachbarn von 'Load A' (ElmLod, Typ load) im PowerFactory-Topologiegraphen: Bus 5 (ElmTerm)",
+        "messages": [
+          "Direkte Nachbarn von 'Load A' (ElmLod, Typ load) im PowerFactory-Topologiegraphen: Bus 5 (ElmTerm)"
+        ],
+        "summary_count": 1,
+        "plan_steps": [
+          "build_topology_graph",
+          "build_topology_inventory",
+          "interpret_entity_instruction",
+          "resolve_entity_from_inventory",
+          "query_topology_neighbors",
+          "summarize_topology_result"
+        ]
+      },
+      "summary_parts": [
+        {
+          "status": "ok",
+          "tool": "summarize_topology_result",
+          "answer": "Direkte Nachbarn von 'Load A' (ElmLod, Typ load) im PowerFactory-Topologiegraphen: Bus 5 (ElmTerm)",
+          "selected_node": {
+            "node_id": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Load A.ElmLod",
+            "name": "Load A",
+            "pf_class": "ElmLod",
+            "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Load A.ElmLod",
+            "kind": "equip",
+            "degree": 1,
+            "inventory_type": "load"
+          },
+          "neighbor_count": 1,
+          "neighbors": [
+            {
+              "node_id": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 5.ElmTerm",
+              "name": "Bus 5",
+              "pf_class": "ElmTerm",
+              "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 5.ElmTerm",
+              "kind": "terminal",
+              "degree": 3,
+              "inventory_type": "bus",
+              "edges": [
+                {
+                  "type": "<max_depth>",
+                  "edge_name": "<max_depth>",
+                  "edge_class": "<max_depth>",
+                  "edge_full_name": "<max_depth>",
+                  "cubic_name": "<max_depth>",
+                  "cubic_class": "<max_depth>",
+                  "cubic_full_name": "<max_depth>"
+                }
+              ]
+            }
+          ],
+          "graph_summary": {
+            "num_nodes": 24,
+            "num_edges": 24,
+            "num_connected_components": 1,
+            "largest_component_sizes": [
+              24
+            ],
+            "degree_distribution_top10": [
+              [
+                2,
+                12
+              ],
+              [
+                3,
+                6
+              ],
+              [
+                1,
+                6
+              ]
+            ],
+            "node_classes_top20": [
+              [
+                "ElmTerm",
+                9
+              ],
+              [
+                "ElmLne",
+                6
+              ],
+              [
+                "ElmSym",
+                3
+              ],
+              [
+                "ElmTr2",
+                3
+              ],
+              [
+                "ElmLod",
+                3
+              ]
+            ]
+          },
+          "inventory_types": [
+            "bus",
+            "generator",
+            "line",
+            "load",
+            "transformer"
+          ],
+          "instruction": {
+            "query_type": "neighbors",
+            "entity_type": "load",
+            "entity_name_raw": "Wer ist in PF direkt mit Load A verbunden?",
+            "entity_name_candidates": [
+              "Load A",
+              "A"
+            ],
+            "available_types": [
+              "bus",
+              "generator",
+              "line",
+              "load",
+              "transformer"
+            ],
+            "debug_entity_name_candidates": [
+              "Load A",
+              "A"
+            ]
+          },
+          "resolution": {
+            "status": "ok",
+            "tool": "resolve_entity_from_inventory",
+            "project": "<omitted:str>",
+            "instruction": {
+              "query_type": "neighbors",
+              "entity_type": "load",
+              "entity_name_raw": "Wer ist in PF direkt mit Load A verbunden?",
+              "entity_name_candidates": [
+                "Load A",
+                "A"
+              ],
+              "available_types": [
+                "bus",
+                "generator",
+                "line",
+                "load",
+                "transformer"
+              ],
+              "debug_entity_name_candidates": [
+                "Load A",
+                "A"
+              ]
+            },
+            "asset_query": "Load A",
+            "selected_query": "Load A",
+            "selected_match": {
+              "node_id": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Load A.ElmLod",
+              "name": "Load A",
+              "pf_class": "ElmLod",
+              "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Load A.ElmLod",
+              "kind": "equip",
+              "degree": 1,
+              "inventory_type": "load",
+              "score": 251,
+              "matched_query_variant": "Load A"
+            },
+            "matches": [
+              {
+                "node_id": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Load A.ElmLod",
+                "name": "Load A",
+                "pf_class": "ElmLod",
+                "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Load A.ElmLod",
+                "kind": "equip",
+                "degree": 1,
+                "inventory_type": "load",
+                "score": 251,
+                "matched_query_variant": "Load A"
+              },
+              {
+                "node_id": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Load B.ElmLod",
+                "name": "Load B",
+                "pf_class": "ElmLod",
+                "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Load B.ElmLod",
+                "kind": "equip",
+                "degree": 1,
+                "inventory_type": "load",
+                "score": 183,
+                "matched_query_variant": "load"
+              },
+              {
+                "node_id": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Load C.ElmLod",
+                "name": "Load C",
+                "pf_class": "ElmLod",
+                "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Load C.ElmLod",
+                "kind": "equip",
+                "degree": 1,
+                "inventory_type": "load",
+                "score": 183,
+                "matched_query_variant": "load"
+              }
+            ],
+            "graph_confirmation_matches": [
+              {
+                "node_id": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Load A.ElmLod",
+                "name": "Load A",
+                "pf_class": "ElmLod",
+                "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Load A.ElmLod",
+                "kind": "equip",
+                "score": 276,
+                "degree": 1,
+                "inventory_type": "load"
+              },
+              {
+                "node_id": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Load B.ElmLod",
+                "name": "Load B",
+                "pf_class": "ElmLod",
+                "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Load B.ElmLod",
+                "kind": "equip",
+                "score": 53,
+                "degree": 1,
+                "inventory_type": "load"
+              },
+              {
+                "node_id": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Load C.ElmLod",
+                "name": "Load C",
+                "pf_class": "ElmLod",
+                "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Load C.ElmLod",
+                "kind": "equip",
+                "score": 53,
+                "degree": 1,
+                "inventory_type": "load"
+              }
+            ],
+            "attempted_queries": [
+              {
+                "asset_query": "Load A",
+                "entity_type": "load",
+                "match_count": 3,
+                "top_matches": [
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>"
+                ]
+              }
+            ],
+            "entity_type": "load"
+          }
+        }
+      ],
+      "topology": {
+        "graph_mode": "contracted",
+        "graph_summary": {
+          "num_nodes": 24,
+          "num_edges": 24,
+          "num_connected_components": 1,
+          "largest_component_sizes": [
+            24
+          ],
+          "degree_distribution_top10": [
+            [
+              2,
+              12
+            ],
+            [
+              3,
+              6
+            ],
+            [
+              1,
+              6
+            ]
+          ],
+          "node_classes_top20": [
+            [
+              "ElmTerm",
+              9
+            ],
+            [
+              "ElmLne",
+              6
+            ],
+            [
+              "ElmSym",
+              3
+            ],
+            [
+              "ElmTr2",
+              3
+            ],
+            [
+              "ElmLod",
+              3
+            ]
+          ]
+        },
+        "build_debug": {
+          "counts": {
+            "cubics_total": 24,
+            "cubics_with_terminal": 24,
+            "stas_total": 42,
+            "stas_with_obj_id": 24,
+            "elms_total": 27,
+            "elms_line_like": 6,
+            "elms_transformer_like": 3
+          },
+          "samples": {
+            "cubic_names": [
+              "Cub_1",
+              "Cub_2",
+              "Cub_1",
+              "Cub_2",
+              "Cub_1",
+              "Cub_2",
+              "Cub_1",
+              "Cub_2",
+              "Cub_3",
+              "Cub_1"
+            ],
+            "sta_names": [
+              "Cub_1",
+              "Cub_2",
+              "Cub_1",
+              "Cub_2",
+              "Cub_1",
+              "Cub_2",
+              "Cub_1",
+              "Switch",
+              "Cub_2",
+              "Switch"
+            ],
+            "elm_names": [
+              "Plant_G2",
+              "Line 4-5",
+              "Line 4-6",
+              "Line 5-7",
+              "Line 6-9",
+              "Line 7-8",
+              "Line 8-9",
+              "Load A",
+              "Load B",
+              "Load C"
+            ],
+            "node_name_samples": [
+              {
+                "node_id": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 1.ElmTerm\\Cub_1.StaCubic",
+                "name": "Cub_1",
+                "pf_class": "StaCubic",
+                "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 1.ElmTerm\\Cub_1.StaCubic",
+                "kind": "cubic"
+              },
+              {
+                "node_id": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 1.ElmTerm",
+                "name": "Bus 1",
+                "pf_class": "ElmTerm",
+                "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 1.ElmTerm",
+                "kind": "terminal"
+              },
+              {
+                "node_id": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 1.ElmTerm\\Cub_2.StaCubic",
+                "name": "Cub_2",
+                "pf_class": "StaCubic",
+                "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 1.ElmTerm\\Cub_2.StaCubic",
+                "kind": "cubic"
+              },
+              {
+                "node_id": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 2.ElmTerm\\Cub_1.StaCubic",
+                "name": "Cub_1",
+                "pf_class": "StaCubic",
+                "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 2.ElmTerm\\Cub_1.StaCubic",
+                "kind": "cubic"
+              },
+              {
+                "node_id": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 2.ElmTerm",
+                "name": "Bus 2",
+                "pf_class": "ElmTerm",
+                "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 2.ElmTerm",
+                "kind": "terminal"
+              },
+              {
+                "node_id": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 2.ElmTerm\\Cub_2.StaCubic",
+                "name": "Cub_2",
+                "pf_class": "StaCubic",
+                "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 2.ElmTerm\\Cub_2.StaCubic",
+                "kind": "cubic"
+              },
+              {
+                "node_id": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 3.ElmTerm\\Cub_1.StaCubic",
+                "name": "Cub_1",
+                "pf_class": "StaCubic",
+                "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 3.ElmTerm\\Cub_1.StaCubic",
+                "kind": "cubic"
+              },
+              {
+                "node_id": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 3.ElmTerm",
+                "name": "Bus 3",
+                "pf_class": "ElmTerm",
+                "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 3.ElmTerm",
+                "kind": "terminal"
+              },
+              {
+                "node_id": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 3.ElmTerm\\Cub_2.StaCubic",
+                "name": "Cub_2",
+                "pf_class": "StaCubic",
+                "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 3.ElmTerm\\Cub_2.StaCubic",
+                "kind": "cubic"
+              },
+              {
+                "node_id": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 4.ElmTerm\\Cub_1.StaCubic",
+                "name": "Cub_1",
+                "pf_class": "StaCubic",
+                "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 4.ElmTerm\\Cub_1.StaCubic",
+                "kind": "cubic"
+              },
+              {
+                "node_id": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 4.ElmTerm",
+                "name": "Bus 4",
+                "pf_class": "ElmTerm",
+                "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 4.ElmTerm",
+                "kind": "terminal"
+              },
+              {
+                "node_id": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 4.ElmTerm\\Cub_2.StaCubic",
+                "name": "Cub_2",
+                "pf_class": "StaCubic",
+                "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 4.ElmTerm\\Cub_2.StaCubic",
+                "kind": "cubic"
+              },
+              {
+                "node_id": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 4.ElmTerm\\Cub_3.StaCubic",
+                "name": "Cub_3",
+                "pf_class": "StaCubic",
+                "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 4.ElmTerm\\Cub_3.StaCubic",
+                "kind": "cubic"
+              },
+              {
+                "node_id": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 5.ElmTerm\\Cub_1.StaCubic",
+                "name": "Cub_1",
+                "pf_class": "StaCubic",
+                "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 5.ElmTerm\\Cub_1.StaCubic",
+                "kind": "cubic"
+              },
+              {
+                "node_id": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 5.ElmTerm",
+                "name": "Bus 5",
+                "pf_class": "ElmTerm",
+                "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 5.ElmTerm",
+                "kind": "terminal"
+              },
+              {
+                "node_id": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 5.ElmTerm\\Cub_2.StaCubic",
+                "name": "Cub_2",
+                "pf_class": "StaCubic",
+                "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 5.ElmTerm\\Cub_2.StaCubic",
+                "kind": "cubic"
+              },
+              {
+                "node_id": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 5.ElmTerm\\Cub_3.StaCubic",
+                "name": "Cub_3",
+                "pf_class": "StaCubic",
+                "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 5.ElmTerm\\Cub_3.StaCubic",
+                "kind": "cubic"
+              },
+              {
+                "node_id": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 6.ElmTerm\\Cub_1.StaCubic",
+                "name": "Cub_1",
+                "pf_class": "StaCubic",
+                "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 6.ElmTerm\\Cub_1.StaCubic",
+                "kind": "cubic"
+              },
+              {
+                "node_id": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 6.ElmTerm",
+                "name": "Bus 6",
+                "pf_class": "ElmTerm",
+                "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 6.ElmTerm",
+                "kind": "terminal"
+              },
+              {
+                "node_id": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 6.ElmTerm\\Cub_2.StaCubic",
+                "name": "Cub_2",
+                "pf_class": "StaCubic",
+                "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 6.ElmTerm\\Cub_2.StaCubic",
+                "kind": "cubic"
+              },
+              {
+                "node_id": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 6.ElmTerm\\Cub_3.StaCubic",
+                "name": "Cub_3",
+                "pf_class": "StaCubic",
+                "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 6.ElmTerm\\Cub_3.StaCubic",
+                "kind": "cubic"
+              },
+              {
+                "node_id": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 7.ElmTerm\\Cub_1.StaCubic",
+                "name": "Cub_1",
+                "pf_class": "StaCubic",
+                "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 7.ElmTerm\\Cub_1.StaCubic",
+                "kind": "cubic"
+              },
+              {
+                "node_id": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 7.ElmTerm",
+                "name": "Bus 7",
+                "pf_class": "ElmTerm",
+                "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 7.ElmTerm",
+                "kind": "terminal"
+              },
+              {
+                "node_id": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 7.ElmTerm\\Cub_2.StaCubic",
+                "name": "Cub_2",
+                "pf_class": "StaCubic",
+                "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 7.ElmTerm\\Cub_2.StaCubic",
+                "kind": "cubic"
+              },
+              {
+                "node_id": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 7.ElmTerm\\Cub_3.StaCubic",
+                "name": "Cub_3",
+                "pf_class": "StaCubic",
+                "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 7.ElmTerm\\Cub_3.StaCubic",
+                "kind": "cubic"
+              }
+            ]
+          },
+          "analysis_graph": {
+            "graph_mode": "contracted",
+            "num_nodes": 24,
+            "num_edges": 24
+          }
+        },
+        "inventory": {
+          "available_types": [
+            "bus",
+            "generator",
+            "line",
+            "load",
+            "transformer"
+          ],
+          "counts_by_type": {
+            "bus": 9,
+            "generator": 3,
+            "line": 6,
+            "load": 3,
+            "transformer": 3
+          },
+          "items_by_type": {
+            "bus": [
+              {
+                "node_id": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 1.ElmTerm",
+                "name": "Bus 1",
+                "pf_class": "ElmTerm",
+                "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 1.ElmTerm",
+                "kind": "terminal",
+                "degree": 2,
+                "inventory_type": "bus"
+              },
+              {
+                "node_id": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 2.ElmTerm",
+                "name": "Bus 2",
+                "pf_class": "ElmTerm",
+                "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 2.ElmTerm",
+                "kind": "terminal",
+                "degree": 2,
+                "inventory_type": "bus"
+              },
+              {
+                "node_id": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 3.ElmTerm",
+                "name": "Bus 3",
+                "pf_class": "ElmTerm",
+                "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 3.ElmTerm",
+                "kind": "terminal",
+                "degree": 2,
+                "inventory_type": "bus"
+              },
+              {
+                "node_id": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 4.ElmTerm",
+                "name": "Bus 4",
+                "pf_class": "ElmTerm",
+                "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 4.ElmTerm",
+                "kind": "terminal",
+                "degree": 3,
+                "inventory_type": "bus"
+              },
+              {
+                "node_id": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 5.ElmTerm",
+                "name": "Bus 5",
+                "pf_class": "ElmTerm",
+                "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 5.ElmTerm",
+                "kind": "terminal",
+                "degree": 3,
+                "inventory_type": "bus"
+              },
+              {
+                "node_id": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 6.ElmTerm",
+                "name": "Bus 6",
+                "pf_class": "ElmTerm",
+                "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 6.ElmTerm",
+                "kind": "terminal",
+                "degree": 3,
+                "inventory_type": "bus"
+              },
+              {
+                "node_id": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 7.ElmTerm",
+                "name": "Bus 7",
+                "pf_class": "ElmTerm",
+                "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 7.ElmTerm",
+                "kind": "terminal",
+                "degree": 3,
+                "inventory_type": "bus"
+              },
+              {
+                "node_id": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 8.ElmTerm",
+                "name": "Bus 8",
+                "pf_class": "ElmTerm",
+                "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 8.ElmTerm",
+                "kind": "terminal",
+                "degree": 3,
+                "inventory_type": "bus"
+              },
+              {
+                "node_id": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 9.ElmTerm",
+                "name": "Bus 9",
+                "pf_class": "ElmTerm",
+                "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 9.ElmTerm",
+                "kind": "terminal",
+                "degree": 3,
+                "inventory_type": "bus"
+              }
+            ],
+            "generator": [
+              {
+                "node_id": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\G1.ElmSym",
+                "name": "G1",
+                "pf_class": "ElmSym",
+                "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\G1.ElmSym",
+                "kind": "equip",
+                "degree": 1,
+                "inventory_type": "generator"
+              },
+              {
+                "node_id": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\G2.ElmSym",
+                "name": "G2",
+                "pf_class": "ElmSym",
+                "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\G2.ElmSym",
+                "kind": "equip",
+                "degree": 1,
+                "inventory_type": "generator"
+              },
+              {
+                "node_id": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\G3.ElmSym",
+                "name": "G3",
+                "pf_class": "ElmSym",
+                "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\G3.ElmSym",
+                "kind": "equip",
+                "degree": 1,
+                "inventory_type": "generator"
+              }
+            ],
+            "transformer": [
+              {
+                "node_id": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\T1.ElmTr2",
+                "name": "T1",
+                "pf_class": "ElmTr2",
+                "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\T1.ElmTr2",
+                "kind": "equip",
+                "degree": 2,
+                "inventory_type": "transformer"
+              },
+              {
+                "node_id": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\T2.ElmTr2",
+                "name": "T2",
+                "pf_class": "ElmTr2",
+                "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\T2.ElmTr2",
+                "kind": "equip",
+                "degree": 2,
+                "inventory_type": "transformer"
+              },
+              {
+                "node_id": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\T3.ElmTr2",
+                "name": "T3",
+                "pf_class": "ElmTr2",
+                "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\T3.ElmTr2",
+                "kind": "equip",
+                "degree": 2,
+                "inventory_type": "transformer"
+              }
+            ],
+            "line": [
+              {
+                "node_id": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Line 4-5.ElmLne",
+                "name": "Line 4-5",
+                "pf_class": "ElmLne",
+                "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Line 4-5.ElmLne",
+                "kind": "equip",
+                "degree": 2,
+                "inventory_type": "line"
+              },
+              {
+                "node_id": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Line 4-6.ElmLne",
+                "name": "Line 4-6",
+                "pf_class": "ElmLne",
+                "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Line 4-6.ElmLne",
+                "kind": "equip",
+                "degree": 2,
+                "inventory_type": "line"
+              },
+              {
+                "node_id": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Line 5-7.ElmLne",
+                "name": "Line 5-7",
+                "pf_class": "ElmLne",
+                "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Line 5-7.ElmLne",
+                "kind": "equip",
+                "degree": 2,
+                "inventory_type": "line"
+              },
+              {
+                "node_id": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Line 6-9.ElmLne",
+                "name": "Line 6-9",
+                "pf_class": "ElmLne",
+                "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Line 6-9.ElmLne",
+                "kind": "equip",
+                "degree": 2,
+                "inventory_type": "line"
+              },
+              {
+                "node_id": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Line 7-8.ElmLne",
+                "name": "Line 7-8",
+                "pf_class": "ElmLne",
+                "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Line 7-8.ElmLne",
+                "kind": "equip",
+                "degree": 2,
+                "inventory_type": "line"
+              },
+              {
+                "node_id": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Line 8-9.ElmLne",
+                "name": "Line 8-9",
+                "pf_class": "ElmLne",
+                "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Line 8-9.ElmLne",
+                "kind": "equip",
+                "degree": 2,
+                "inventory_type": "line"
+              }
+            ],
+            "load": [
+              {
+                "node_id": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Load A.ElmLod",
+                "name": "Load A",
+                "pf_class": "ElmLod",
+                "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Load A.ElmLod",
+                "kind": "equip",
+                "degree": 1,
+                "inventory_type": "load"
+              },
+              {
+                "node_id": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Load B.ElmLod",
+                "name": "Load B",
+                "pf_class": "ElmLod",
+                "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Load B.ElmLod",
+                "kind": "equip",
+                "degree": 1,
+                "inventory_type": "load"
+              },
+              {
+                "node_id": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Load C.ElmLod",
+                "name": "Load C",
+                "pf_class": "ElmLod",
+                "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Load C.ElmLod",
+                "kind": "equip",
+                "degree": 1,
+                "inventory_type": "load"
+              }
+            ]
+          },
+          "samples_by_type": {
+            "bus": [
+              {
+                "name": "Bus 1",
+                "pf_class": "ElmTerm",
+                "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 1.ElmTerm"
+              },
+              {
+                "name": "Bus 2",
+                "pf_class": "ElmTerm",
+                "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 2.ElmTerm"
+              },
+              {
+                "name": "Bus 3",
+                "pf_class": "ElmTerm",
+                "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 3.ElmTerm"
+              },
+              {
+                "name": "Bus 4",
+                "pf_class": "ElmTerm",
+                "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 4.ElmTerm"
+              },
+              {
+                "name": "Bus 5",
+                "pf_class": "ElmTerm",
+                "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 5.ElmTerm"
+              },
+              {
+                "name": "Bus 6",
+                "pf_class": "ElmTerm",
+                "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 6.ElmTerm"
+              },
+              {
+                "name": "Bus 7",
+                "pf_class": "ElmTerm",
+                "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 7.ElmTerm"
+              },
+              {
+                "name": "Bus 8",
+                "pf_class": "ElmTerm",
+                "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 8.ElmTerm"
+              },
+              {
+                "name": "Bus 9",
+                "pf_class": "ElmTerm",
+                "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 9.ElmTerm"
+              }
+            ],
+            "generator": [
+              {
+                "name": "G1",
+                "pf_class": "ElmSym",
+                "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\G1.ElmSym"
+              },
+              {
+                "name": "G2",
+                "pf_class": "ElmSym",
+                "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\G2.ElmSym"
+              },
+              {
+                "name": "G3",
+                "pf_class": "ElmSym",
+                "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\G3.ElmSym"
+              }
+            ],
+            "transformer": [
+              {
+                "name": "T1",
+                "pf_class": "ElmTr2",
+                "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\T1.ElmTr2"
+              },
+              {
+                "name": "T2",
+                "pf_class": "ElmTr2",
+                "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\T2.ElmTr2"
+              },
+              {
+                "name": "T3",
+                "pf_class": "ElmTr2",
+                "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\T3.ElmTr2"
+              }
+            ],
+            "line": [
+              {
+                "name": "Line 4-5",
+                "pf_class": "ElmLne",
+                "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Line 4-5.ElmLne"
+              },
+              {
+                "name": "Line 4-6",
+                "pf_class": "ElmLne",
+                "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Line 4-6.ElmLne"
+              },
+              {
+                "name": "Line 5-7",
+                "pf_class": "ElmLne",
+                "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Line 5-7.ElmLne"
+              },
+              {
+                "name": "Line 6-9",
+                "pf_class": "ElmLne",
+                "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Line 6-9.ElmLne"
+              },
+              {
+                "name": "Line 7-8",
+                "pf_class": "ElmLne",
+                "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Line 7-8.ElmLne"
+              },
+              {
+                "name": "Line 8-9",
+                "pf_class": "ElmLne",
+                "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Line 8-9.ElmLne"
+              }
+            ],
+            "load": [
+              {
+                "name": "Load A",
+                "pf_class": "ElmLod",
+                "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Load A.ElmLod"
+              },
+              {
+                "name": "Load B",
+                "pf_class": "ElmLod",
+                "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Load B.ElmLod"
+              },
+              {
+                "name": "Load C",
+                "pf_class": "ElmLod",
+                "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Load C.ElmLod"
+              }
+            ]
+          }
+        },
+        "instruction": {
+          "query_type": "neighbors",
+          "entity_type": "load",
+          "entity_name_raw": "Wer ist in PF direkt mit Load A verbunden?",
+          "entity_name_candidates": [
+            "Load A",
+            "A"
+          ],
+          "available_types": [
+            "bus",
+            "generator",
+            "line",
+            "load",
+            "transformer"
+          ],
+          "debug_entity_name_candidates": [
+            "Load A",
+            "A"
+          ]
+        },
+        "resolution": {
+          "status": "ok",
+          "tool": "resolve_entity_from_inventory",
+          "project": "<omitted:str>",
+          "instruction": {
+            "query_type": "neighbors",
+            "entity_type": "load",
+            "entity_name_raw": "Wer ist in PF direkt mit Load A verbunden?",
+            "entity_name_candidates": [
+              "Load A",
+              "A"
+            ],
+            "available_types": [
+              "bus",
+              "generator",
+              "line",
+              "load",
+              "transformer"
+            ],
+            "debug_entity_name_candidates": [
+              "Load A",
+              "A"
+            ]
+          },
+          "asset_query": "Load A",
+          "selected_query": "Load A",
+          "selected_match": {
+            "node_id": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Load A.ElmLod",
+            "name": "Load A",
+            "pf_class": "ElmLod",
+            "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Load A.ElmLod",
+            "kind": "equip",
+            "degree": 1,
+            "inventory_type": "load",
+            "score": 251,
+            "matched_query_variant": "Load A"
+          },
+          "matches": [
+            {
+              "node_id": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Load A.ElmLod",
+              "name": "Load A",
+              "pf_class": "ElmLod",
+              "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Load A.ElmLod",
+              "kind": "equip",
+              "degree": 1,
+              "inventory_type": "load",
+              "score": 251,
+              "matched_query_variant": "Load A"
+            },
+            {
+              "node_id": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Load B.ElmLod",
+              "name": "Load B",
+              "pf_class": "ElmLod",
+              "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Load B.ElmLod",
+              "kind": "equip",
+              "degree": 1,
+              "inventory_type": "load",
+              "score": 183,
+              "matched_query_variant": "load"
+            },
+            {
+              "node_id": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Load C.ElmLod",
+              "name": "Load C",
+              "pf_class": "ElmLod",
+              "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Load C.ElmLod",
+              "kind": "equip",
+              "degree": 1,
+              "inventory_type": "load",
+              "score": 183,
+              "matched_query_variant": "load"
+            }
+          ],
+          "graph_confirmation_matches": [
+            {
+              "node_id": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Load A.ElmLod",
+              "name": "Load A",
+              "pf_class": "ElmLod",
+              "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Load A.ElmLod",
+              "kind": "equip",
+              "score": 276,
+              "degree": 1,
+              "inventory_type": "load"
+            },
+            {
+              "node_id": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Load B.ElmLod",
+              "name": "Load B",
+              "pf_class": "ElmLod",
+              "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Load B.ElmLod",
+              "kind": "equip",
+              "score": 53,
+              "degree": 1,
+              "inventory_type": "load"
+            },
+            {
+              "node_id": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Load C.ElmLod",
+              "name": "Load C",
+              "pf_class": "ElmLod",
+              "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Load C.ElmLod",
+              "kind": "equip",
+              "score": 53,
+              "degree": 1,
+              "inventory_type": "load"
+            }
+          ],
+          "attempted_queries": [
+            {
+              "asset_query": "Load A",
+              "entity_type": "load",
+              "match_count": 3,
+              "top_matches": [
+                {
+                  "name": "<max_depth>",
+                  "pf_class": "<max_depth>",
+                  "inventory_type": "<max_depth>",
+                  "score": "<max_depth>",
+                  "matched_query_variant": "<max_depth>"
+                },
+                {
+                  "name": "<max_depth>",
+                  "pf_class": "<max_depth>",
+                  "inventory_type": "<max_depth>",
+                  "score": "<max_depth>",
+                  "matched_query_variant": "<max_depth>"
+                },
+                {
+                  "name": "<max_depth>",
+                  "pf_class": "<max_depth>",
+                  "inventory_type": "<max_depth>",
+                  "score": "<max_depth>",
+                  "matched_query_variant": "<max_depth>"
+                }
+              ]
+            }
+          ],
+          "entity_type": "load"
+        },
+        "selected_node": {
+          "node_id": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Load A.ElmLod",
+          "name": "Load A",
+          "pf_class": "ElmLod",
+          "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Load A.ElmLod",
+          "kind": "equip",
+          "degree": 1,
+          "inventory_type": "load"
+        },
+        "neighbor_count": 1,
+        "neighbors": [
+          {
+            "node_id": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 5.ElmTerm",
+            "name": "Bus 5",
+            "pf_class": "ElmTerm",
+            "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 5.ElmTerm",
+            "kind": "terminal",
+            "degree": 3,
+            "inventory_type": "bus",
+            "edges": [
+              {
+                "type": "via_cubic",
+                "edge_name": null,
+                "edge_class": null,
+                "edge_full_name": null,
+                "cubic_name": "Cub_2",
+                "cubic_class": "StaCubic",
+                "cubic_full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Bus 5.ElmTerm\\Cub_2.StaCubic"
+              }
+            ]
+          }
+        ],
+        "matches": [
+          {
+            "node_id": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Load A.ElmLod",
+            "name": "Load A",
+            "pf_class": "ElmLod",
+            "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Load A.ElmLod",
+            "kind": "equip",
+            "degree": 1,
+            "inventory_type": "load",
+            "score": 251,
+            "matched_query_variant": "Load A"
+          },
+          {
+            "node_id": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Load B.ElmLod",
+            "name": "Load B",
+            "pf_class": "ElmLod",
+            "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Load B.ElmLod",
+            "kind": "equip",
+            "degree": 1,
+            "inventory_type": "load",
+            "score": 183,
+            "matched_query_variant": "load"
+          },
+          {
+            "node_id": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Load C.ElmLod",
+            "name": "Load C",
+            "pf_class": "ElmLod",
+            "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Load C.ElmLod",
+            "kind": "equip",
+            "degree": 1,
+            "inventory_type": "load",
+            "score": 183,
+            "matched_query_variant": "load"
+          }
+        ]
+      },
+      "switch": {
+        "instruction": null,
+        "resolution": null,
+        "execution": null,
+        "summary": null
+      },
+      "data_query": {
+        "inventory": {
+          "status": "ok",
+          "tool": "build_topology_inventory",
+          "project": "<omitted:str>",
+          "inventory": {
+            "available_types": [
+              "bus",
+              "generator",
+              "line",
+              "load",
+              "transformer"
+            ],
+            "counts_by_type": {
+              "bus": 9,
+              "generator": 3,
+              "line": 6,
+              "load": 3,
+              "transformer": 3
+            },
+            "items_by_type": {
+              "bus": [
+                {
+                  "node_id": "<max_depth>",
+                  "name": "<max_depth>",
+                  "pf_class": "<max_depth>",
+                  "full_name": "<max_depth>",
+                  "kind": "<max_depth>",
+                  "degree": "<max_depth>",
+                  "inventory_type": "<max_depth>"
+                },
+                {
+                  "node_id": "<max_depth>",
+                  "name": "<max_depth>",
+                  "pf_class": "<max_depth>",
+                  "full_name": "<max_depth>",
+                  "kind": "<max_depth>",
+                  "degree": "<max_depth>",
+                  "inventory_type": "<max_depth>"
+                },
+                {
+                  "node_id": "<max_depth>",
+                  "name": "<max_depth>",
+                  "pf_class": "<max_depth>",
+                  "full_name": "<max_depth>",
+                  "kind": "<max_depth>",
+                  "degree": "<max_depth>",
+                  "inventory_type": "<max_depth>"
+                },
+                {
+                  "node_id": "<max_depth>",
+                  "name": "<max_depth>",
+                  "pf_class": "<max_depth>",
+                  "full_name": "<max_depth>",
+                  "kind": "<max_depth>",
+                  "degree": "<max_depth>",
+                  "inventory_type": "<max_depth>"
+                },
+                {
+                  "node_id": "<max_depth>",
+                  "name": "<max_depth>",
+                  "pf_class": "<max_depth>",
+                  "full_name": "<max_depth>",
+                  "kind": "<max_depth>",
+                  "degree": "<max_depth>",
+                  "inventory_type": "<max_depth>"
+                },
+                {
+                  "node_id": "<max_depth>",
+                  "name": "<max_depth>",
+                  "pf_class": "<max_depth>",
+                  "full_name": "<max_depth>",
+                  "kind": "<max_depth>",
+                  "degree": "<max_depth>",
+                  "inventory_type": "<max_depth>"
+                },
+                {
+                  "node_id": "<max_depth>",
+                  "name": "<max_depth>",
+                  "pf_class": "<max_depth>",
+                  "full_name": "<max_depth>",
+                  "kind": "<max_depth>",
+                  "degree": "<max_depth>",
+                  "inventory_type": "<max_depth>"
+                },
+                {
+                  "node_id": "<max_depth>",
+                  "name": "<max_depth>",
+                  "pf_class": "<max_depth>",
+                  "full_name": "<max_depth>",
+                  "kind": "<max_depth>",
+                  "degree": "<max_depth>",
+                  "inventory_type": "<max_depth>"
+                },
+                {
+                  "node_id": "<max_depth>",
+                  "name": "<max_depth>",
+                  "pf_class": "<max_depth>",
+                  "full_name": "<max_depth>",
+                  "kind": "<max_depth>",
+                  "degree": "<max_depth>",
+                  "inventory_type": "<max_depth>"
+                }
+              ],
+              "generator": [
+                {
+                  "node_id": "<max_depth>",
+                  "name": "<max_depth>",
+                  "pf_class": "<max_depth>",
+                  "full_name": "<max_depth>",
+                  "kind": "<max_depth>",
+                  "degree": "<max_depth>",
+                  "inventory_type": "<max_depth>"
+                },
+                {
+                  "node_id": "<max_depth>",
+                  "name": "<max_depth>",
+                  "pf_class": "<max_depth>",
+                  "full_name": "<max_depth>",
+                  "kind": "<max_depth>",
+                  "degree": "<max_depth>",
+                  "inventory_type": "<max_depth>"
+                },
+                {
+                  "node_id": "<max_depth>",
+                  "name": "<max_depth>",
+                  "pf_class": "<max_depth>",
+                  "full_name": "<max_depth>",
+                  "kind": "<max_depth>",
+                  "degree": "<max_depth>",
+                  "inventory_type": "<max_depth>"
+                }
+              ],
+              "transformer": [
+                {
+                  "node_id": "<max_depth>",
+                  "name": "<max_depth>",
+                  "pf_class": "<max_depth>",
+                  "full_name": "<max_depth>",
+                  "kind": "<max_depth>",
+                  "degree": "<max_depth>",
+                  "inventory_type": "<max_depth>"
+                },
+                {
+                  "node_id": "<max_depth>",
+                  "name": "<max_depth>",
+                  "pf_class": "<max_depth>",
+                  "full_name": "<max_depth>",
+                  "kind": "<max_depth>",
+                  "degree": "<max_depth>",
+                  "inventory_type": "<max_depth>"
+                },
+                {
+                  "node_id": "<max_depth>",
+                  "name": "<max_depth>",
+                  "pf_class": "<max_depth>",
+                  "full_name": "<max_depth>",
+                  "kind": "<max_depth>",
+                  "degree": "<max_depth>",
+                  "inventory_type": "<max_depth>"
+                }
+              ],
+              "line": [
+                {
+                  "node_id": "<max_depth>",
+                  "name": "<max_depth>",
+                  "pf_class": "<max_depth>",
+                  "full_name": "<max_depth>",
+                  "kind": "<max_depth>",
+                  "degree": "<max_depth>",
+                  "inventory_type": "<max_depth>"
+                },
+                {
+                  "node_id": "<max_depth>",
+                  "name": "<max_depth>",
+                  "pf_class": "<max_depth>",
+                  "full_name": "<max_depth>",
+                  "kind": "<max_depth>",
+                  "degree": "<max_depth>",
+                  "inventory_type": "<max_depth>"
+                },
+                {
+                  "node_id": "<max_depth>",
+                  "name": "<max_depth>",
+                  "pf_class": "<max_depth>",
+                  "full_name": "<max_depth>",
+                  "kind": "<max_depth>",
+                  "degree": "<max_depth>",
+                  "inventory_type": "<max_depth>"
+                },
+                {
+                  "node_id": "<max_depth>",
+                  "name": "<max_depth>",
+                  "pf_class": "<max_depth>",
+                  "full_name": "<max_depth>",
+                  "kind": "<max_depth>",
+                  "degree": "<max_depth>",
+                  "inventory_type": "<max_depth>"
+                },
+                {
+                  "node_id": "<max_depth>",
+                  "name": "<max_depth>",
+                  "pf_class": "<max_depth>",
+                  "full_name": "<max_depth>",
+                  "kind": "<max_depth>",
+                  "degree": "<max_depth>",
+                  "inventory_type": "<max_depth>"
+                },
+                {
+                  "node_id": "<max_depth>",
+                  "name": "<max_depth>",
+                  "pf_class": "<max_depth>",
+                  "full_name": "<max_depth>",
+                  "kind": "<max_depth>",
+                  "degree": "<max_depth>",
+                  "inventory_type": "<max_depth>"
+                }
+              ],
+              "load": [
+                {
+                  "node_id": "<max_depth>",
+                  "name": "<max_depth>",
+                  "pf_class": "<max_depth>",
+                  "full_name": "<max_depth>",
+                  "kind": "<max_depth>",
+                  "degree": "<max_depth>",
+                  "inventory_type": "<max_depth>"
+                },
+                {
+                  "node_id": "<max_depth>",
+                  "name": "<max_depth>",
+                  "pf_class": "<max_depth>",
+                  "full_name": "<max_depth>",
+                  "kind": "<max_depth>",
+                  "degree": "<max_depth>",
+                  "inventory_type": "<max_depth>"
+                },
+                {
+                  "node_id": "<max_depth>",
+                  "name": "<max_depth>",
+                  "pf_class": "<max_depth>",
+                  "full_name": "<max_depth>",
+                  "kind": "<max_depth>",
+                  "degree": "<max_depth>",
+                  "inventory_type": "<max_depth>"
+                }
+              ]
+            },
+            "samples_by_type": {
+              "bus": [
+                {
+                  "name": "<max_depth>",
+                  "pf_class": "<max_depth>",
+                  "full_name": "<max_depth>"
+                },
+                {
+                  "name": "<max_depth>",
+                  "pf_class": "<max_depth>",
+                  "full_name": "<max_depth>"
+                },
+                {
+                  "name": "<max_depth>",
+                  "pf_class": "<max_depth>",
+                  "full_name": "<max_depth>"
+                },
+                {
+                  "name": "<max_depth>",
+                  "pf_class": "<max_depth>",
+                  "full_name": "<max_depth>"
+                },
+                {
+                  "name": "<max_depth>",
+                  "pf_class": "<max_depth>",
+                  "full_name": "<max_depth>"
+                },
+                {
+                  "name": "<max_depth>",
+                  "pf_class": "<max_depth>",
+                  "full_name": "<max_depth>"
+                },
+                {
+                  "name": "<max_depth>",
+                  "pf_class": "<max_depth>",
+                  "full_name": "<max_depth>"
+                },
+                {
+                  "name": "<max_depth>",
+                  "pf_class": "<max_depth>",
+                  "full_name": "<max_depth>"
+                },
+                {
+                  "name": "<max_depth>",
+                  "pf_class": "<max_depth>",
+                  "full_name": "<max_depth>"
+                }
+              ],
+              "generator": [
+                {
+                  "name": "<max_depth>",
+                  "pf_class": "<max_depth>",
+                  "full_name": "<max_depth>"
+                },
+                {
+                  "name": "<max_depth>",
+                  "pf_class": "<max_depth>",
+                  "full_name": "<max_depth>"
+                },
+                {
+                  "name": "<max_depth>",
+                  "pf_class": "<max_depth>",
+                  "full_name": "<max_depth>"
+                }
+              ],
+              "transformer": [
+                {
+                  "name": "<max_depth>",
+                  "pf_class": "<max_depth>",
+                  "full_name": "<max_depth>"
+                },
+                {
+                  "name": "<max_depth>",
+                  "pf_class": "<max_depth>",
+                  "full_name": "<max_depth>"
+                },
+                {
+                  "name": "<max_depth>",
+                  "pf_class": "<max_depth>",
+                  "full_name": "<max_depth>"
+                }
+              ],
+              "line": [
+                {
+                  "name": "<max_depth>",
+                  "pf_class": "<max_depth>",
+                  "full_name": "<max_depth>"
+                },
+                {
+                  "name": "<max_depth>",
+                  "pf_class": "<max_depth>",
+                  "full_name": "<max_depth>"
+                },
+                {
+                  "name": "<max_depth>",
+                  "pf_class": "<max_depth>",
+                  "full_name": "<max_depth>"
+                },
+                {
+                  "name": "<max_depth>",
+                  "pf_class": "<max_depth>",
+                  "full_name": "<max_depth>"
+                },
+                {
+                  "name": "<max_depth>",
+                  "pf_class": "<max_depth>",
+                  "full_name": "<max_depth>"
+                },
+                {
+                  "name": "<max_depth>",
+                  "pf_class": "<max_depth>",
+                  "full_name": "<max_depth>"
+                }
+              ],
+              "load": [
+                {
+                  "name": "<max_depth>",
+                  "pf_class": "<max_depth>",
+                  "full_name": "<max_depth>"
+                },
+                {
+                  "name": "<max_depth>",
+                  "pf_class": "<max_depth>",
+                  "full_name": "<max_depth>"
+                },
+                {
+                  "name": "<max_depth>",
+                  "pf_class": "<max_depth>",
+                  "full_name": "<max_depth>"
+                }
+              ]
+            }
+          }
+        },
+        "instruction": null,
+        "resolution": null,
+        "attribute_listing": null,
+        "attribute_selection": null,
+        "execution": null,
+        "summary": null
+      },
+      "debug": {
+        "planning": {},
+        "selected_equipment": {
+          "resolved_load": null,
+          "entity_resolution": {
+            "status": "ok",
+            "tool": "resolve_entity_from_inventory",
+            "project": "<omitted:str>",
+            "instruction": {
+              "query_type": "neighbors",
+              "entity_type": "load",
+              "entity_name_raw": "Wer ist in PF direkt mit Load A verbunden?",
+              "entity_name_candidates": [
+                "Load A",
+                "A"
+              ],
+              "available_types": [
+                "bus",
+                "generator",
+                "line",
+                "load",
+                "transformer"
+              ],
+              "debug_entity_name_candidates": [
+                "Load A",
+                "A"
+              ]
+            },
+            "asset_query": "Load A",
+            "selected_query": "Load A",
+            "selected_match": {
+              "node_id": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Load A.ElmLod",
+              "name": "Load A",
+              "pf_class": "ElmLod",
+              "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Load A.ElmLod",
+              "kind": "equip",
+              "degree": 1,
+              "inventory_type": "load",
+              "score": 251,
+              "matched_query_variant": "Load A"
+            },
+            "matches": [
+              {
+                "node_id": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Load A.ElmLod",
+                "name": "Load A",
+                "pf_class": "ElmLod",
+                "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Load A.ElmLod",
+                "kind": "equip",
+                "degree": 1,
+                "inventory_type": "load",
+                "score": 251,
+                "matched_query_variant": "Load A"
+              },
+              {
+                "node_id": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Load B.ElmLod",
+                "name": "Load B",
+                "pf_class": "ElmLod",
+                "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Load B.ElmLod",
+                "kind": "equip",
+                "degree": 1,
+                "inventory_type": "load",
+                "score": 183,
+                "matched_query_variant": "load"
+              },
+              {
+                "node_id": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Load C.ElmLod",
+                "name": "Load C",
+                "pf_class": "ElmLod",
+                "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Load C.ElmLod",
+                "kind": "equip",
+                "degree": 1,
+                "inventory_type": "load",
+                "score": 183,
+                "matched_query_variant": "load"
+              }
+            ],
+            "graph_confirmation_matches": [
+              {
+                "node_id": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Load A.ElmLod",
+                "name": "Load A",
+                "pf_class": "ElmLod",
+                "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Load A.ElmLod",
+                "kind": "equip",
+                "score": 276,
+                "degree": 1,
+                "inventory_type": "load"
+              },
+              {
+                "node_id": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Load B.ElmLod",
+                "name": "Load B",
+                "pf_class": "ElmLod",
+                "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Load B.ElmLod",
+                "kind": "equip",
+                "score": 53,
+                "degree": 1,
+                "inventory_type": "load"
+              },
+              {
+                "node_id": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Load C.ElmLod",
+                "name": "Load C",
+                "pf_class": "ElmLod",
+                "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Load C.ElmLod",
+                "kind": "equip",
+                "score": 53,
+                "degree": 1,
+                "inventory_type": "load"
+              }
+            ],
+            "attempted_queries": [
+              {
+                "asset_query": "Load A",
+                "entity_type": "load",
+                "match_count": 3,
+                "top_matches": [
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>"
+                ]
+              }
+            ],
+            "entity_type": "load"
+          },
+          "object_resolution": null
+        },
+        "trace": [
+          {
+            "step": "build_topology_graph",
+            "effective_user_input": "Wer ist in PF direkt mit Load A verbunden?",
+            "source_subrequest": null,
+            "tool_spec": {
+              "name": "build_topology_graph",
+              "description": "Build a topology graph from the active PowerFactory project.",
+              "capability_tags": [],
+              "mutating": false
+            },
+            "tool_kwargs": {
+              "services": "<omitted:dict>",
+              "contract_cubicles": true
+            },
+            "result": {
+              "status": "ok",
+              "tool": "build_topology_graph",
+              "project": "<omitted:str>",
+              "graph_mode": "contracted",
+              "wiring_graph": "<non_serializable:MultiGraph>",
+              "topology_graph": "<omitted:MultiGraph>",
+              "graph_summary": {
+                "num_nodes": 24,
+                "num_edges": 24,
+                "num_connected_components": 1,
+                "largest_component_sizes": [
+                  "<max_depth>"
+                ],
+                "degree_distribution_top10": [
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>"
+                ],
+                "node_classes_top20": [
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>"
+                ]
+              },
+              "inventory": {
+                "available_types": [
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>"
+                ],
+                "counts_by_type": {
+                  "bus": "<max_depth>",
+                  "generator": "<max_depth>",
+                  "line": "<max_depth>",
+                  "load": "<max_depth>",
+                  "transformer": "<max_depth>"
+                },
+                "items_by_type": {
+                  "bus": "<max_depth>",
+                  "generator": "<max_depth>",
+                  "transformer": "<max_depth>",
+                  "line": "<max_depth>",
+                  "load": "<max_depth>"
+                },
+                "samples_by_type": {
+                  "bus": "<max_depth>",
+                  "generator": "<max_depth>",
+                  "transformer": "<max_depth>",
+                  "line": "<max_depth>",
+                  "load": "<max_depth>"
+                }
+              },
+              "build_debug": {
+                "counts": {
+                  "cubics_total": "<max_depth>",
+                  "cubics_with_terminal": "<max_depth>",
+                  "stas_total": "<max_depth>",
+                  "stas_with_obj_id": "<max_depth>",
+                  "elms_total": "<max_depth>",
+                  "elms_line_like": "<max_depth>",
+                  "elms_transformer_like": "<max_depth>"
+                },
+                "samples": {
+                  "cubic_names": "<max_depth>",
+                  "sta_names": "<max_depth>",
+                  "elm_names": "<max_depth>",
+                  "node_name_samples": "<max_depth>"
+                },
+                "analysis_graph": {
+                  "graph_mode": "<max_depth>",
+                  "num_nodes": "<max_depth>",
+                  "num_edges": "<max_depth>"
+                }
+              }
+            }
+          },
+          {
+            "step": "build_topology_inventory",
+            "effective_user_input": "Wer ist in PF direkt mit Load A verbunden?",
+            "source_subrequest": null,
+            "tool_spec": {
+              "name": "build_topology_inventory",
+              "description": "Build a typed inventory from the current PowerFactory topology graph.",
+              "capability_tags": [],
+              "mutating": false
+            },
+            "tool_kwargs": {
+              "services": "<omitted:dict>",
+              "topology_graph_result": {
+                "status": "ok",
+                "tool": "build_topology_graph",
+                "project": "<omitted:str>",
+                "graph_mode": "contracted",
+                "wiring_graph": "<networkx.classes.multigraph.MultiGraph object at 0x0000027B4E63C9D0>",
+                "topology_graph": "<omitted:str>",
+                "graph_summary": {
+                  "num_nodes": "<max_depth>",
+                  "num_edges": "<max_depth>",
+                  "num_connected_components": "<max_depth>",
+                  "largest_component_sizes": "<max_depth>",
+                  "degree_distribution_top10": "<max_depth>",
+                  "node_classes_top20": "<max_depth>"
+                },
+                "inventory": {
+                  "available_types": "<max_depth>",
+                  "counts_by_type": "<max_depth>",
+                  "items_by_type": "<max_depth>",
+                  "samples_by_type": "<max_depth>"
+                },
+                "build_debug": {
+                  "counts": "<max_depth>",
+                  "samples": "<max_depth>",
+                  "analysis_graph": "<max_depth>"
+                }
+              }
+            },
+            "result": {
+              "status": "ok",
+              "tool": "build_topology_inventory",
+              "project": "<omitted:str>",
+              "inventory": {
+                "available_types": [
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>"
+                ],
+                "counts_by_type": {
+                  "bus": "<max_depth>",
+                  "generator": "<max_depth>",
+                  "line": "<max_depth>",
+                  "load": "<max_depth>",
+                  "transformer": "<max_depth>"
+                },
+                "items_by_type": {
+                  "bus": "<max_depth>",
+                  "generator": "<max_depth>",
+                  "transformer": "<max_depth>",
+                  "line": "<max_depth>",
+                  "load": "<max_depth>"
+                },
+                "samples_by_type": {
+                  "bus": "<max_depth>",
+                  "generator": "<max_depth>",
+                  "transformer": "<max_depth>",
+                  "line": "<max_depth>",
+                  "load": "<max_depth>"
+                }
+              }
+            }
+          },
+          {
+            "step": "interpret_entity_instruction",
+            "effective_user_input": "Wer ist in PF direkt mit Load A verbunden?",
+            "source_subrequest": null,
+            "tool_spec": {
+              "name": "interpret_entity_instruction",
+              "description": "Interpret a natural-language topology request into a structured generic PowerFactory entity instruction.",
+              "capability_tags": [],
+              "mutating": false
+            },
+            "tool_kwargs": {
+              "services": "<omitted:dict>",
+              "user_input": "Wer ist in PF direkt mit Load A verbunden?",
+              "inventory": {
+                "available_types": [
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>"
+                ],
+                "counts_by_type": {
+                  "bus": "<max_depth>",
+                  "generator": "<max_depth>",
+                  "line": "<max_depth>",
+                  "load": "<max_depth>",
+                  "transformer": "<max_depth>"
+                },
+                "items_by_type": {
+                  "bus": "<max_depth>",
+                  "generator": "<max_depth>",
+                  "transformer": "<max_depth>",
+                  "line": "<max_depth>",
+                  "load": "<max_depth>"
+                },
+                "samples_by_type": {
+                  "bus": "<max_depth>",
+                  "generator": "<max_depth>",
+                  "transformer": "<max_depth>",
+                  "line": "<max_depth>",
+                  "load": "<max_depth>"
+                }
+              }
+            },
+            "result": {
+              "status": "ok",
+              "tool": "interpret_entity_instruction",
+              "user_input": "Wer ist in PF direkt mit Load A verbunden?",
+              "project": "<omitted:str>",
+              "instruction": {
+                "query_type": "neighbors",
+                "entity_type": "load",
+                "entity_name_raw": "Wer ist in PF direkt mit Load A verbunden?",
+                "entity_name_candidates": [
+                  "<max_depth>",
+                  "<max_depth>"
+                ],
+                "available_types": [
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>"
+                ],
+                "debug_entity_name_candidates": [
+                  "<max_depth>",
+                  "<max_depth>"
+                ]
+              }
+            }
+          },
+          {
+            "step": "resolve_entity_from_inventory",
+            "effective_user_input": "Wer ist in PF direkt mit Load A verbunden?",
+            "source_subrequest": null,
+            "tool_spec": {
+              "name": "resolve_entity_from_inventory",
+              "description": "Resolve the requested generic asset from a typed topology inventory.",
+              "capability_tags": [],
+              "mutating": false
+            },
+            "tool_kwargs": {
+              "services": "<omitted:dict>",
+              "instruction": {
+                "query_type": "neighbors",
+                "entity_type": "load",
+                "entity_name_raw": "Wer ist in PF direkt mit Load A verbunden?",
+                "entity_name_candidates": [
+                  "<max_depth>",
+                  "<max_depth>"
+                ],
+                "available_types": [
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>"
+                ],
+                "debug_entity_name_candidates": [
+                  "<max_depth>",
+                  "<max_depth>"
+                ]
+              },
+              "inventory": {
+                "available_types": [
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>"
+                ],
+                "counts_by_type": {
+                  "bus": "<max_depth>",
+                  "generator": "<max_depth>",
+                  "line": "<max_depth>",
+                  "load": "<max_depth>",
+                  "transformer": "<max_depth>"
+                },
+                "items_by_type": {
+                  "bus": "<max_depth>",
+                  "generator": "<max_depth>",
+                  "transformer": "<max_depth>",
+                  "line": "<max_depth>",
+                  "load": "<max_depth>"
+                },
+                "samples_by_type": {
+                  "bus": "<max_depth>",
+                  "generator": "<max_depth>",
+                  "transformer": "<max_depth>",
+                  "line": "<max_depth>",
+                  "load": "<max_depth>"
+                }
+              },
+              "topology_graph": "<omitted:str>",
+              "max_matches": 10
+            },
+            "result": {
+              "status": "ok",
+              "tool": "resolve_entity_from_inventory",
+              "project": "<omitted:str>",
+              "instruction": {
+                "query_type": "neighbors",
+                "entity_type": "load",
+                "entity_name_raw": "Wer ist in PF direkt mit Load A verbunden?",
+                "entity_name_candidates": [
+                  "<max_depth>",
+                  "<max_depth>"
+                ],
+                "available_types": [
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>"
+                ],
+                "debug_entity_name_candidates": [
+                  "<max_depth>",
+                  "<max_depth>"
+                ]
+              },
+              "asset_query": "Load A",
+              "selected_query": "Load A",
+              "selected_match": {
+                "node_id": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Load A.ElmLod",
+                "name": "Load A",
+                "pf_class": "ElmLod",
+                "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Load A.ElmLod",
+                "kind": "equip",
+                "degree": 1,
+                "inventory_type": "load",
+                "score": 251,
+                "matched_query_variant": "Load A"
+              },
+              "matches": [
+                {
+                  "node_id": "<max_depth>",
+                  "name": "<max_depth>",
+                  "pf_class": "<max_depth>",
+                  "full_name": "<max_depth>",
+                  "kind": "<max_depth>",
+                  "degree": "<max_depth>",
+                  "inventory_type": "<max_depth>",
+                  "score": "<max_depth>",
+                  "matched_query_variant": "<max_depth>"
+                },
+                {
+                  "node_id": "<max_depth>",
+                  "name": "<max_depth>",
+                  "pf_class": "<max_depth>",
+                  "full_name": "<max_depth>",
+                  "kind": "<max_depth>",
+                  "degree": "<max_depth>",
+                  "inventory_type": "<max_depth>",
+                  "score": "<max_depth>",
+                  "matched_query_variant": "<max_depth>"
+                },
+                {
+                  "node_id": "<max_depth>",
+                  "name": "<max_depth>",
+                  "pf_class": "<max_depth>",
+                  "full_name": "<max_depth>",
+                  "kind": "<max_depth>",
+                  "degree": "<max_depth>",
+                  "inventory_type": "<max_depth>",
+                  "score": "<max_depth>",
+                  "matched_query_variant": "<max_depth>"
+                }
+              ],
+              "graph_confirmation_matches": [
+                {
+                  "node_id": "<max_depth>",
+                  "name": "<max_depth>",
+                  "pf_class": "<max_depth>",
+                  "full_name": "<max_depth>",
+                  "kind": "<max_depth>",
+                  "score": "<max_depth>",
+                  "degree": "<max_depth>",
+                  "inventory_type": "<max_depth>"
+                },
+                {
+                  "node_id": "<max_depth>",
+                  "name": "<max_depth>",
+                  "pf_class": "<max_depth>",
+                  "full_name": "<max_depth>",
+                  "kind": "<max_depth>",
+                  "score": "<max_depth>",
+                  "degree": "<max_depth>",
+                  "inventory_type": "<max_depth>"
+                },
+                {
+                  "node_id": "<max_depth>",
+                  "name": "<max_depth>",
+                  "pf_class": "<max_depth>",
+                  "full_name": "<max_depth>",
+                  "kind": "<max_depth>",
+                  "score": "<max_depth>",
+                  "degree": "<max_depth>",
+                  "inventory_type": "<max_depth>"
+                }
+              ],
+              "attempted_queries": [
+                {
+                  "asset_query": "<max_depth>",
+                  "entity_type": "<max_depth>",
+                  "match_count": "<max_depth>",
+                  "top_matches": "<max_depth>"
+                }
+              ],
+              "entity_type": "load"
+            }
+          },
+          {
+            "step": "query_topology_neighbors",
+            "effective_user_input": "Wer ist in PF direkt mit Load A verbunden?",
+            "source_subrequest": null,
+            "tool_spec": {
+              "name": "query_topology_neighbors",
+              "description": "Query the direct neighbors of an asset in the PowerFactory topology graph.",
+              "capability_tags": [],
+              "mutating": false
+            },
+            "tool_kwargs": {
+              "services": "<omitted:dict>",
+              "topology_graph": "<omitted:str>",
+              "asset_query": "Load A",
+              "selected_node_id": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Load A.ElmLod",
+              "matches": [
+                {
+                  "node_id": "<max_depth>",
+                  "name": "<max_depth>",
+                  "pf_class": "<max_depth>",
+                  "full_name": "<max_depth>",
+                  "kind": "<max_depth>",
+                  "degree": "<max_depth>",
+                  "inventory_type": "<max_depth>",
+                  "score": "<max_depth>",
+                  "matched_query_variant": "<max_depth>"
+                },
+                {
+                  "node_id": "<max_depth>",
+                  "name": "<max_depth>",
+                  "pf_class": "<max_depth>",
+                  "full_name": "<max_depth>",
+                  "kind": "<max_depth>",
+                  "degree": "<max_depth>",
+                  "inventory_type": "<max_depth>",
+                  "score": "<max_depth>",
+                  "matched_query_variant": "<max_depth>"
+                },
+                {
+                  "node_id": "<max_depth>",
+                  "name": "<max_depth>",
+                  "pf_class": "<max_depth>",
+                  "full_name": "<max_depth>",
+                  "kind": "<max_depth>",
+                  "degree": "<max_depth>",
+                  "inventory_type": "<max_depth>",
+                  "score": "<max_depth>",
+                  "matched_query_variant": "<max_depth>"
+                }
+              ],
+              "max_matches": 10
+            },
+            "result": {
+              "status": "ok",
+              "tool": "query_topology_neighbors",
+              "project": "<omitted:str>",
+              "asset_query": "Load A",
+              "matches": [
+                {
+                  "node_id": "<max_depth>",
+                  "name": "<max_depth>",
+                  "pf_class": "<max_depth>",
+                  "full_name": "<max_depth>",
+                  "kind": "<max_depth>",
+                  "degree": "<max_depth>",
+                  "inventory_type": "<max_depth>",
+                  "score": "<max_depth>",
+                  "matched_query_variant": "<max_depth>"
+                },
+                {
+                  "node_id": "<max_depth>",
+                  "name": "<max_depth>",
+                  "pf_class": "<max_depth>",
+                  "full_name": "<max_depth>",
+                  "kind": "<max_depth>",
+                  "degree": "<max_depth>",
+                  "inventory_type": "<max_depth>",
+                  "score": "<max_depth>",
+                  "matched_query_variant": "<max_depth>"
+                },
+                {
+                  "node_id": "<max_depth>",
+                  "name": "<max_depth>",
+                  "pf_class": "<max_depth>",
+                  "full_name": "<max_depth>",
+                  "kind": "<max_depth>",
+                  "degree": "<max_depth>",
+                  "inventory_type": "<max_depth>",
+                  "score": "<max_depth>",
+                  "matched_query_variant": "<max_depth>"
+                }
+              ],
+              "selected_node": {
+                "node_id": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Load A.ElmLod",
+                "name": "Load A",
+                "pf_class": "ElmLod",
+                "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Load A.ElmLod",
+                "kind": "equip",
+                "degree": 1,
+                "inventory_type": "load"
+              },
+              "neighbors": [
+                {
+                  "node_id": "<max_depth>",
+                  "name": "<max_depth>",
+                  "pf_class": "<max_depth>",
+                  "full_name": "<max_depth>",
+                  "kind": "<max_depth>",
+                  "degree": "<max_depth>",
+                  "inventory_type": "<max_depth>",
+                  "edges": "<max_depth>"
+                }
+              ],
+              "neighbor_count": 1
+            }
+          },
+          {
+            "step": "summarize_topology_result",
+            "effective_user_input": "Wer ist in PF direkt mit Load A verbunden?",
+            "source_subrequest": null,
+            "tool_spec": {
+              "name": "summarize_topology_result",
+              "description": "Build a concise user-facing topology answer.",
+              "capability_tags": [],
+              "mutating": false
+            },
+            "tool_kwargs": {
+              "services": "<omitted:dict>",
+              "topology_result": {
+                "status": "ok",
+                "tool": "query_topology_neighbors",
+                "project": "<omitted:str>",
+                "asset_query": "Load A",
+                "matches": [
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>"
+                ],
+                "selected_node": {
+                  "node_id": "<max_depth>",
+                  "name": "<max_depth>",
+                  "pf_class": "<max_depth>",
+                  "full_name": "<max_depth>",
+                  "kind": "<max_depth>",
+                  "degree": "<max_depth>",
+                  "inventory_type": "<max_depth>"
+                },
+                "neighbors": [
+                  "<max_depth>"
+                ],
+                "neighbor_count": 1
+              },
+              "graph_result": {
+                "status": "ok",
+                "tool": "build_topology_graph",
+                "project": "<omitted:str>",
+                "graph_mode": "contracted",
+                "wiring_graph": "<networkx.classes.multigraph.MultiGraph object at 0x0000027B4E63C9D0>",
+                "topology_graph": "<omitted:str>",
+                "graph_summary": {
+                  "num_nodes": "<max_depth>",
+                  "num_edges": "<max_depth>",
+                  "num_connected_components": "<max_depth>",
+                  "largest_component_sizes": "<max_depth>",
+                  "degree_distribution_top10": "<max_depth>",
+                  "node_classes_top20": "<max_depth>"
+                },
+                "inventory": {
+                  "available_types": "<max_depth>",
+                  "counts_by_type": "<max_depth>",
+                  "items_by_type": "<max_depth>",
+                  "samples_by_type": "<max_depth>"
+                },
+                "build_debug": {
+                  "counts": "<max_depth>",
+                  "samples": "<max_depth>",
+                  "analysis_graph": "<max_depth>"
+                }
+              },
+              "inventory_result": {
+                "status": "ok",
+                "tool": "build_topology_inventory",
+                "project": "<omitted:str>",
+                "inventory": {
+                  "available_types": "<max_depth>",
+                  "counts_by_type": "<max_depth>",
+                  "items_by_type": "<max_depth>",
+                  "samples_by_type": "<max_depth>"
+                }
+              },
+              "entity_instruction": {
+                "query_type": "neighbors",
+                "entity_type": "load",
+                "entity_name_raw": "Wer ist in PF direkt mit Load A verbunden?",
+                "entity_name_candidates": [
+                  "<max_depth>",
+                  "<max_depth>"
+                ],
+                "available_types": [
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>"
+                ],
+                "debug_entity_name_candidates": [
+                  "<max_depth>",
+                  "<max_depth>"
+                ]
+              },
+              "entity_resolution": {
+                "status": "ok",
+                "tool": "resolve_entity_from_inventory",
+                "project": "<omitted:str>",
+                "instruction": {
+                  "query_type": "<max_depth>",
+                  "entity_type": "<max_depth>",
+                  "entity_name_raw": "<max_depth>",
+                  "entity_name_candidates": "<max_depth>",
+                  "available_types": "<max_depth>",
+                  "debug_entity_name_candidates": "<max_depth>"
+                },
+                "asset_query": "Load A",
+                "selected_query": "Load A",
+                "selected_match": {
+                  "node_id": "<max_depth>",
+                  "name": "<max_depth>",
+                  "pf_class": "<max_depth>",
+                  "full_name": "<max_depth>",
+                  "kind": "<max_depth>",
+                  "degree": "<max_depth>",
+                  "inventory_type": "<max_depth>",
+                  "score": "<max_depth>",
+                  "matched_query_variant": "<max_depth>"
+                },
+                "matches": [
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>"
+                ],
+                "graph_confirmation_matches": [
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>"
+                ],
+                "attempted_queries": [
+                  "<max_depth>"
+                ],
+                "entity_type": "load"
+              }
+            },
+            "result": {
+              "status": "ok",
+              "tool": "summarize_topology_result",
+              "answer": "Direkte Nachbarn von 'Load A' (ElmLod, Typ load) im PowerFactory-Topologiegraphen: Bus 5 (ElmTerm)",
+              "selected_node": {
+                "node_id": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Load A.ElmLod",
+                "name": "Load A",
+                "pf_class": "ElmLod",
+                "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Load A.ElmLod",
+                "kind": "equip",
+                "degree": 1,
+                "inventory_type": "load"
+              },
+              "neighbor_count": 1,
+              "neighbors": [
+                {
+                  "node_id": "<max_depth>",
+                  "name": "<max_depth>",
+                  "pf_class": "<max_depth>",
+                  "full_name": "<max_depth>",
+                  "kind": "<max_depth>",
+                  "degree": "<max_depth>",
+                  "inventory_type": "<max_depth>",
+                  "edges": "<max_depth>"
+                }
+              ],
+              "graph_summary": {
+                "num_nodes": 24,
+                "num_edges": 24,
+                "num_connected_components": 1,
+                "largest_component_sizes": [
+                  "<max_depth>"
+                ],
+                "degree_distribution_top10": [
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>"
+                ],
+                "node_classes_top20": [
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>"
+                ]
+              },
+              "inventory_types": [
+                "bus",
+                "generator",
+                "line",
+                "load",
+                "transformer"
+              ],
+              "instruction": {
+                "query_type": "neighbors",
+                "entity_type": "load",
+                "entity_name_raw": "Wer ist in PF direkt mit Load A verbunden?",
+                "entity_name_candidates": [
+                  "<max_depth>",
+                  "<max_depth>"
+                ],
+                "available_types": [
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>"
+                ],
+                "debug_entity_name_candidates": [
+                  "<max_depth>",
+                  "<max_depth>"
+                ]
+              },
+              "resolution": {
+                "status": "ok",
+                "tool": "resolve_entity_from_inventory",
+                "project": "<omitted:str>",
+                "instruction": {
+                  "query_type": "<max_depth>",
+                  "entity_type": "<max_depth>",
+                  "entity_name_raw": "<max_depth>",
+                  "entity_name_candidates": "<max_depth>",
+                  "available_types": "<max_depth>",
+                  "debug_entity_name_candidates": "<max_depth>"
+                },
+                "asset_query": "Load A",
+                "selected_query": "Load A",
+                "selected_match": {
+                  "node_id": "<max_depth>",
+                  "name": "<max_depth>",
+                  "pf_class": "<max_depth>",
+                  "full_name": "<max_depth>",
+                  "kind": "<max_depth>",
+                  "degree": "<max_depth>",
+                  "inventory_type": "<max_depth>",
+                  "score": "<max_depth>",
+                  "matched_query_variant": "<max_depth>"
+                },
+                "matches": [
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>"
+                ],
+                "graph_confirmation_matches": [
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>"
+                ],
+                "attempted_queries": [
+                  "<max_depth>"
+                ],
+                "entity_type": "load"
+              }
+            }
+          }
+        ]
+      },
+      "raw_answer": "Direkte Nachbarn von 'Load A' (ElmLod, Typ load) im PowerFactory-Topologiegraphen: Bus 5 (ElmTerm)"
+    }
+  }
+}

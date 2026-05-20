@@ -1,0 +1,44 @@
+{
+  "run_id": 17,
+  "timestamp": "2026-05-20T17:13:14.856400",
+  "user_input": "Öffne den Schalter Schalter 1.",
+  "duration_seconds": 0.914,
+  "token_usage": {
+    "prompt_tokens": 889,
+    "completion_tokens": 122,
+    "total_tokens": 1011,
+    "details": {
+      "phi3:mini": {
+        "input_tokens": 889,
+        "output_tokens": 122,
+        "total_tokens": 1011
+      }
+    }
+  },
+  "decision_trace": {
+    "domain": "ERROR",
+    "planning_mode": "",
+    "workflow": "",
+    "confidence": "",
+    "safe_to_execute": "",
+    "num_steps": 0,
+    "steps": "",
+    "planner_reasoning": "",
+    "resolved_object": "<omitted:str>",
+    "resolved_object_confidence": "",
+    "selected_attributes": "",
+    "attribute_confidence": "",
+    "num_tool_calls": 0,
+    "executed_tools": "",
+    "failed_tool": ""
+  },
+  "router_output": {
+    "route": "ERROR",
+    "status": "error",
+    "result": {
+      "status": "error",
+      "answer": "Der UnifiedPlanner hat keine gültige strukturierte Ausgabe erzeugt.",
+      "planner_error": "Invalid json output: Um einen Schalter mit dem Namen \"Schalter 1\" zu öffnen, würde ich folgende Anweisungen geben:\n\n\"Bitte öffnen Sie bitte die Tür und schalten Sie dann den Schalter namens 'Schalter 1' ein.\"\nFor troubleshooting, visit: https://docs.langchain.com/oss/python/langchain/errors/OUTPUT_PARSING_FAILURE "
+    }
+  }
+}

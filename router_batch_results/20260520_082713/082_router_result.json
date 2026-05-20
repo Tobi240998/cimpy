@@ -1,0 +1,55 @@
+{
+  "run_id": 82,
+  "timestamp": "2026-05-20T08:59:25.587548",
+  "user_input": "Welche Farbe hat Bus 1 in Powerfactory?",
+  "duration_seconds": 4.075,
+  "token_usage": {
+    "prompt_tokens": 4464,
+    "completion_tokens": 114,
+    "total_tokens": 4578,
+    "details": {
+      "phi3:mini": {
+        "input_tokens": 4464,
+        "output_tokens": 114,
+        "total_tokens": 4578
+      }
+    }
+  },
+  "decision_trace": {
+    "domain": "powerfactory",
+    "planning_mode": "custom_plan",
+    "workflow": "None",
+    "confidence": "",
+    "safe_to_execute": "True",
+    "num_steps": 0,
+    "steps": "",
+    "planner_reasoning": "The user is asking for the color of Bus 1 in PowerFactory, which requires querying specific attributes of a PowerFactory object.",
+    "resolved_object": "<omitted:str>",
+    "resolved_object_confidence": "",
+    "selected_attributes": "",
+    "attribute_confidence": "",
+    "num_tool_calls": 0,
+    "executed_tools": "",
+    "failed_tool": ""
+  },
+  "router_output": {
+    "route": "ERROR",
+    "status": "error",
+    "result": {
+      "status": "error",
+      "answer": "Tool existiert nicht in der UnifiedToolRegistry: pf.query_element_data",
+      "planner_decision": {
+        "domain": "powerfactory",
+        "planning_mode": "custom_plan",
+        "workflow": null,
+        "custom_steps": [
+          "pf.query_element_data"
+        ],
+        "safe_to_execute": true,
+        "missing_context": [],
+        "clarification_question": "",
+        "reasoning": "The user is asking for the color of Bus 1 in PowerFactory, which requires querying specific attributes of a PowerFactory object."
+      }
+    }
+  }
+}

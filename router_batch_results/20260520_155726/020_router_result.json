@@ -1,0 +1,117 @@
+{
+  "run_id": 20,
+  "timestamp": "2026-05-20T16:15:18.995879",
+  "user_input": "Schließe den Schalter Schalter 1.",
+  "duration_seconds": 2.51,
+  "token_usage": {
+    "prompt_tokens": 4320,
+    "completion_tokens": 312,
+    "total_tokens": 4632,
+    "details": {
+      "phi3:mini": {
+        "input_tokens": 4320,
+        "output_tokens": 312,
+        "total_tokens": 4632
+      }
+    }
+  },
+  "decision_trace": {
+    "domain": "HISTORICAL",
+    "planning_mode": "",
+    "workflow": "",
+    "confidence": "high",
+    "safe_to_execute": "False",
+    "num_steps": 0,
+    "steps": "",
+    "planner_reasoning": "Der Benutzer hat einen spezifischen Schalter angegeben, aber keine weiteren Informationen über die Kontext oder den Sicherheitsstatus des Systems vorhanden sind. Daher kann der Plan nicht sicher ausgeführt werden.",
+    "resolved_object": "<omitted:str>",
+    "resolved_object_confidence": "",
+    "selected_attributes": "",
+    "attribute_confidence": "",
+    "num_tool_calls": 1,
+    "executed_tools": "unsupported_request",
+    "failed_tool": "unsupported_request",
+    "equipment_resolution_mode": "",
+    "attribute_resolution_mode": "",
+    "comparison_resolution_mode": ""
+  },
+  "router_output": {
+    "route": "HISTORICAL",
+    "result": {
+      "status": "error",
+      "tool": "cim_agent",
+      "agent": "CIMDomainAgent",
+      "error": "unsupported_cim_request",
+      "answer": "I'm sorry, but the request to close switch S1 has failed due to an unsupported CIM (Common Information Model) request because it lacks a necessary context: the Schalter-ID. Please provide this identifier for further assistance.",
+      "classification": {
+        "intent": "historical_analysis",
+        "confidence": "high",
+        "target_kind": "asset",
+        "request_mode": "standard_sv",
+        "safe_to_execute": false,
+        "missing_context": [
+          "Schalter-ID"
+        ],
+        "required_steps": [],
+        "reasoning": "Der Benutzer hat einen spezifischen Schalter angegeben, aber keine weiteren Informationen über die Kontext oder den Sicherheitsstatus des Systems vorhanden sind. Daher kann der Plan nicht sicher ausgeführt werden.",
+        "status": "ok",
+        "classification_mode": "primary_llm_classifier"
+      },
+      "user_input": "Schließe den Schalter Schalter 1.",
+      "debug": {
+        "trace": [
+          {
+            "step": "unsupported_request",
+            "effective_user_input": "Schließe den Schalter Schalter 1.",
+            "source_subrequest": null,
+            "result": "<circular_reference>"
+          }
+        ],
+        "classification": {
+          "intent": "historical_analysis",
+          "confidence": "high",
+          "target_kind": "asset",
+          "request_mode": "standard_sv",
+          "safe_to_execute": false,
+          "missing_context": [
+            "Schalter-ID"
+          ],
+          "required_steps": [],
+          "reasoning": "Der Benutzer hat einen spezifischen Schalter angegeben, aber keine weiteren Informationen über die Kontext oder den Sicherheitsstatus des Systems vorhanden sind. Daher kann der Plan nicht sicher ausgeführt werden.",
+          "status": "ok",
+          "classification_mode": "primary_llm_classifier"
+        },
+        "plan": [
+          {
+            "step": "unsupported_request",
+            "description": "Return a controlled unsupported-workflow message"
+          }
+        ],
+        "run_summary": {
+          "user_input": "Schließe den Schalter Schalter 1.",
+          "classification_summary": {
+            "intent": "historical_analysis",
+            "request_mode": "standard_sv",
+            "safe_to_execute": false,
+            "target_kind": "asset",
+            "confidence": "high",
+            "classification_mode": "primary_llm_classifier",
+            "missing_context": [
+              "Schalter-ID"
+            ]
+          },
+          "planned_steps": [
+            "unsupported_request"
+          ],
+          "selected_type": null,
+          "selected_equipment_id": null,
+          "selected_equipment_name": null,
+          "parsed_query_summary": null,
+          "final_status": "error",
+          "final_answer": "Die Anfrage wurde zur CIM-Seite geroutet, ist aktuell aber noch nicht sicher oder unterstützt ausführbar. Fehlender Kontext: Schalter-ID."
+        }
+      },
+      "raw_answer": "Die Anfrage wurde zur CIM-Seite geroutet, ist aktuell aber noch nicht sicher oder unterstützt ausführbar. Fehlender Kontext: Schalter-ID."
+    }
+  }
+}

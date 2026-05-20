@@ -1,0 +1,46 @@
+{
+  "run_id": 101,
+  "timestamp": "2026-05-16T19:10:33.642460",
+  "user_input": "Wie hoch ist die Blindleistung von Load 27 im Verlauf vom 09.01.2026?",
+  "duration_seconds": 9.486,
+  "token_usage": {
+    "prompt_tokens": 806,
+    "completion_tokens": 975,
+    "total_tokens": 1781,
+    "details": {
+      "phi3:mini": {
+        "input_tokens": 806,
+        "output_tokens": 975,
+        "total_tokens": 1781
+      }
+    }
+  },
+  "decision_trace": {
+    "domain": "ASK_USER",
+    "planning_mode": "",
+    "workflow": "",
+    "confidence": "",
+    "safe_to_execute": "",
+    "num_steps": 0,
+    "steps": "",
+    "planner_reasoning": "",
+    "resolved_object": "<omitted:str>",
+    "resolved_object_confidence": "",
+    "selected_attributes": "",
+    "attribute_confidence": "",
+    "num_tool_calls": 0,
+    "executed_tools": "",
+    "failed_tool": "",
+    "equipment_resolution_mode": "",
+    "attribute_resolution_mode": "",
+    "comparison_resolution_mode": ""
+  },
+  "router_output": {
+    "route": "ASK_USER",
+    "question": "Bitte geben Sie den vollständigen Zeitraum an (z.B. 'vom 09.01.2026 bis 10.01.2026').",
+    "missing_fields": [
+      "time_range"
+    ],
+    "partial": {}
+  }
+}

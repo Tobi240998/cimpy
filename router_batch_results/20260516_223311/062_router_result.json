@@ -1,0 +1,53 @@
+{
+  "run_id": 62,
+  "timestamp": "2026-05-17T00:36:38.392840",
+  "user_input": "Was ist der Bemessungsfaktor von Trafo T1 in Powerfactory?",
+  "duration_seconds": 23.475,
+  "token_usage": {
+    "prompt_tokens": 4485,
+    "completion_tokens": 2190,
+    "total_tokens": 6675,
+    "details": {
+      "phi3:mini": {
+        "output_tokens": 2190,
+        "input_tokens": 4485,
+        "total_tokens": 6675
+      }
+    }
+  },
+  "decision_trace": {
+    "domain": "powerfactory",
+    "planning_mode": "standard_workflow",
+    "workflow": "powerfactory.query_element_data",
+    "confidence": "",
+    "safe_to_execute": "True",
+    "num_steps": 0,
+    "steps": "",
+    "planner_reasoning": "The user explicitly asks for a transformer attribute ('Bemessungsfaktor') within PowerFactory, indicating a static base value query. The 'powerfactory.query_element_data' workflow is designed to retrieve specific attribute values from PowerFactory objects, making it the appropriate standard workflow for this request.",
+    "resolved_object": "<omitted:str>",
+    "resolved_object_confidence": "",
+    "selected_attributes": "",
+    "attribute_confidence": "",
+    "num_tool_calls": 0,
+    "executed_tools": "",
+    "failed_tool": ""
+  },
+  "router_output": {
+    "route": "ERROR",
+    "status": "error",
+    "result": {
+      "status": "error",
+      "answer": "Unbekannter Standard-Workflow: powerfactory.query_element_data",
+      "planner_decision": {
+        "domain": "powerfactory",
+        "planning_mode": "standard_workflow",
+        "workflow": "powerfactory.query_element_data",
+        "custom_steps": [],
+        "safe_to_execute": true,
+        "missing_context": [],
+        "clarification_question": "",
+        "reasoning": "The user explicitly asks for a transformer attribute ('Bemessungsfaktor') within PowerFactory, indicating a static base value query. The 'powerfactory.query_element_data' workflow is designed to retrieve specific attribute values from PowerFactory objects, making it the appropriate standard workflow for this request."
+      }
+    }
+  }
+}

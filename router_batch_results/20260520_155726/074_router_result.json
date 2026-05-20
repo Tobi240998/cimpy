@@ -1,0 +1,46 @@
+{
+  "run_id": 74,
+  "timestamp": "2026-05-20T16:41:22.586085",
+  "user_input": "Welche Voltage Limits sind für die Busse in Powerfactory hinterlegt?",
+  "duration_seconds": 0.453,
+  "token_usage": {
+    "prompt_tokens": 830,
+    "completion_tokens": 59,
+    "total_tokens": 889,
+    "details": {
+      "phi3:mini": {
+        "input_tokens": 830,
+        "output_tokens": 59,
+        "total_tokens": 889
+      }
+    }
+  },
+  "decision_trace": {
+    "domain": "ASK_USER",
+    "planning_mode": "",
+    "workflow": "",
+    "confidence": "",
+    "safe_to_execute": "",
+    "num_steps": 0,
+    "steps": "",
+    "planner_reasoning": "",
+    "resolved_object": "<omitted:str>",
+    "resolved_object_confidence": "",
+    "selected_attributes": "",
+    "attribute_confidence": "",
+    "num_tool_calls": 0,
+    "executed_tools": "",
+    "failed_tool": "",
+    "equipment_resolution_mode": "",
+    "attribute_resolution_mode": "",
+    "comparison_resolution_mode": ""
+  },
+  "router_output": {
+    "route": "ASK_USER",
+    "question": "Bitte geben Sie den Namen des Busses an, nach dem Sie das Spannungslimit wissen möchten.",
+    "missing_fields": [
+      "bus_name"
+    ],
+    "partial": {}
+  }
+}

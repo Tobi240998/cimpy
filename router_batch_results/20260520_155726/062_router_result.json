@@ -1,0 +1,46 @@
+{
+  "run_id": 62,
+  "timestamp": "2026-05-20T16:30:18.545105",
+  "user_input": "Was ist der Bemessungsfaktor von Trafo T1 in Powerfactory?",
+  "duration_seconds": 0.556,
+  "token_usage": {
+    "prompt_tokens": 832,
+    "completion_tokens": 74,
+    "total_tokens": 906,
+    "details": {
+      "phi3:mini": {
+        "input_tokens": 832,
+        "output_tokens": 74,
+        "total_tokens": 906
+      }
+    }
+  },
+  "decision_trace": {
+    "domain": "ASK_USER",
+    "planning_mode": "",
+    "workflow": "",
+    "confidence": "",
+    "safe_to_execute": "",
+    "num_steps": 0,
+    "steps": "",
+    "planner_reasoning": "",
+    "resolved_object": "<omitted:str>",
+    "resolved_object_confidence": "",
+    "selected_attributes": "",
+    "attribute_confidence": "",
+    "num_tool_calls": 0,
+    "executed_tools": "",
+    "failed_tool": "",
+    "equipment_resolution_mode": "",
+    "attribute_resolution_mode": "",
+    "comparison_resolution_mode": ""
+  },
+  "router_output": {
+    "route": "ASK_USER",
+    "question": "Könnten Sie bitte den Namen des Datensatzes oder die spezifischen Projektdetails für Trafo T1 angeben, um Ihre Anfrage zu beantworten?",
+    "missing_fields": [
+      "data_source"
+    ],
+    "partial": {}
+  }
+}

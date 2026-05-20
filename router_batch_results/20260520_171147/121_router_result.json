@@ -1,0 +1,44 @@
+{
+  "run_id": 121,
+  "timestamp": "2026-05-20T17:20:54.076417",
+  "user_input": "Wie hoch war die Lastaufnahme von Verbraucher 27?",
+  "duration_seconds": 1.58,
+  "token_usage": {
+    "prompt_tokens": 901,
+    "completion_tokens": 274,
+    "total_tokens": 1175,
+    "details": {
+      "phi3:mini": {
+        "input_tokens": 901,
+        "output_tokens": 274,
+        "total_tokens": 1175
+      }
+    }
+  },
+  "decision_trace": {
+    "domain": "ERROR",
+    "planning_mode": "",
+    "workflow": "",
+    "confidence": "",
+    "safe_to_execute": "",
+    "num_steps": 0,
+    "steps": "",
+    "planner_reasoning": "",
+    "resolved_object": "<omitted:str>",
+    "resolved_object_confidence": "",
+    "selected_attributes": "",
+    "attribute_confidence": "",
+    "num_tool_calls": 0,
+    "executed_tools": "",
+    "failed_tool": ""
+  },
+  "router_output": {
+    "route": "ERROR",
+    "status": "error",
+    "result": {
+      "status": "error",
+      "answer": "Der UnifiedPlanner hat keine gültige strukturierte Ausgabe erzeugt.",
+      "planner_error": "Invalid json output: Um Ihnen mitzuteilen, wie hoch die Lastaufnahme des Verbrauchers 27 ist, müssten wir zunächst Zugang zu den relevanten Daten haben. Typischerweise würde dies in einem Energieverteilungsnetzwerk oder einer elektrischen Messsystemeinheit gespeichert sein. Wenn Sie Teil eines solchen Netzwerks sind und Zugriff auf die Systemdaten habe, könnten wir diese Informationen extrahieren. Andernfalls müssten wir spezialisiertere Dienste in Anspruch nehmen oder Experten konsultieren, um Ihnen eine genaue Antwort zu geben.\nFor troubleshooting, visit: https://docs.langchain.com/oss/python/langchain/errors/OUTPUT_PARSING_FAILURE "
+    }
+  }
+}

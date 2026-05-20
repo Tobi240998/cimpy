@@ -1,0 +1,117 @@
+{
+  "run_id": 18,
+  "timestamp": "2026-05-20T16:14:29.265288",
+  "user_input": "Schalte Schalter 1 aus.",
+  "duration_seconds": 3.856,
+  "token_usage": {
+    "prompt_tokens": 6580,
+    "completion_tokens": 490,
+    "total_tokens": 7070,
+    "details": {
+      "phi3:mini": {
+        "input_tokens": 6580,
+        "output_tokens": 490,
+        "total_tokens": 7070
+      }
+    }
+  },
+  "decision_trace": {
+    "domain": "HISTORICAL",
+    "planning_mode": "",
+    "workflow": "",
+    "confidence": "high",
+    "safe_to_execute": "False",
+    "num_steps": 0,
+    "steps": "",
+    "planner_reasoning": "The request is unclear as it does not specify which switch to operate or the context in which this action should be taken.",
+    "resolved_object": "<omitted:str>",
+    "resolved_object_confidence": "",
+    "selected_attributes": "",
+    "attribute_confidence": "",
+    "num_tool_calls": 1,
+    "executed_tools": "unsupported_request",
+    "failed_tool": "unsupported_request",
+    "equipment_resolution_mode": "",
+    "attribute_resolution_mode": "",
+    "comparison_resolution_mode": ""
+  },
+  "router_output": {
+    "route": "HISTORICAL",
+    "result": {
+      "status": "error",
+      "tool": "cim_agent",
+      "agent": "CIMDomainAgent",
+      "error": "unsupported_cim_request",
+      "answer": "I'm sorry, but I couldn't execute your request to turn off Schalter 1 at this time as it seems the action is currently unsupported or unclear due to missing context about switch number and location. Please provide more details for further assistance.",
+      "classification": {
+        "intent": "historical_analysis",
+        "confidence": "high",
+        "target_kind": "asset",
+        "request_mode": "standard_sv",
+        "safe_to_execute": false,
+        "missing_context": [
+          "Switch number and location not specified"
+        ],
+        "required_steps": [],
+        "reasoning": "The request is unclear as it does not specify which switch to operate or the context in which this action should be taken.",
+        "status": "ok",
+        "classification_mode": "primary_llm_classifier"
+      },
+      "user_input": "Schalte Schalter 1 aus.",
+      "debug": {
+        "trace": [
+          {
+            "step": "unsupported_request",
+            "effective_user_input": "Schalte Schalter 1 aus.",
+            "source_subrequest": null,
+            "result": "<circular_reference>"
+          }
+        ],
+        "classification": {
+          "intent": "historical_analysis",
+          "confidence": "high",
+          "target_kind": "asset",
+          "request_mode": "standard_sv",
+          "safe_to_execute": false,
+          "missing_context": [
+            "Switch number and location not specified"
+          ],
+          "required_steps": [],
+          "reasoning": "The request is unclear as it does not specify which switch to operate or the context in which this action should be taken.",
+          "status": "ok",
+          "classification_mode": "primary_llm_classifier"
+        },
+        "plan": [
+          {
+            "step": "unsupported_request",
+            "description": "Return a controlled unsupported-workflow message"
+          }
+        ],
+        "run_summary": {
+          "user_input": "Schalte Schalter 1 aus.",
+          "classification_summary": {
+            "intent": "historical_analysis",
+            "request_mode": "standard_sv",
+            "safe_to_execute": false,
+            "target_kind": "asset",
+            "confidence": "high",
+            "classification_mode": "primary_llm_classifier",
+            "missing_context": [
+              "Switch number and location not specified"
+            ]
+          },
+          "planned_steps": [
+            "unsupported_request"
+          ],
+          "selected_type": null,
+          "selected_equipment_id": null,
+          "selected_equipment_name": null,
+          "parsed_query_summary": null,
+          "final_status": "error",
+          "final_answer": "Die Anfrage wurde zur CIM-Seite geroutet, ist aktuell aber noch nicht sicher oder unterstützt ausführbar. Fehlender Kontext: Switch number and location not specified."
+        }
+      },
+      "raw_answer": "Die Anfrage wurde zur CIM-Seite geroutet, ist aktuell aber noch nicht sicher oder unterstützt ausführbar. Fehlender Kontext: Switch number and location not specified."
+    }
+  }
+}

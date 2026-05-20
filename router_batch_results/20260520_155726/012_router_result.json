@@ -1,0 +1,46 @@
+{
+  "run_id": 12,
+  "timestamp": "2026-05-20T15:58:03.554307",
+  "user_input": "Erhöhe Last B um 3 MW und gib die Auslastung der Leitung 4-5 aus.",
+  "duration_seconds": 0.485,
+  "token_usage": {
+    "prompt_tokens": 928,
+    "completion_tokens": 79,
+    "total_tokens": 1007,
+    "details": {
+      "phi3:mini": {
+        "input_tokens": 928,
+        "output_tokens": 79,
+        "total_tokens": 1007
+      }
+    }
+  },
+  "decision_trace": {
+    "domain": "ASK_USER",
+    "planning_mode": "",
+    "workflow": "",
+    "confidence": "",
+    "safe_to_execute": "",
+    "num_steps": 0,
+    "steps": "",
+    "planner_reasoning": "",
+    "resolved_object": "<omitted:str>",
+    "resolved_object_confidence": "",
+    "selected_attributes": "",
+    "attribute_confidence": "",
+    "num_tool_calls": 0,
+    "executed_tools": "",
+    "failed_tool": "",
+    "equipment_resolution_mode": "",
+    "attribute_resolution_mode": "",
+    "comparison_resolution_mode": ""
+  },
+  "router_output": {
+    "route": "ASK_USER",
+    "question": "Ist Ihr Ziel, den Stromfluss in der Übertragungsleitung zwischen Bus 4 und 5 zu erhöhen? Wenn ja, geben Sie an, ob es sich um einen Lastanstau handelt.",
+    "missing_fields": [
+      "action"
+    ],
+    "partial": {}
+  }
+}

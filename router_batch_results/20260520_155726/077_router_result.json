@@ -1,0 +1,117 @@
+{
+  "run_id": 77,
+  "timestamp": "2026-05-20T16:41:31.029035",
+  "user_input": "Schließe den Schalter Schalter 1 und nenne danach die Netzspannungen.",
+  "duration_seconds": 4.661,
+  "token_usage": {
+    "prompt_tokens": 6676,
+    "completion_tokens": 622,
+    "total_tokens": 7298,
+    "details": {
+      "phi3:mini": {
+        "input_tokens": 6676,
+        "output_tokens": 622,
+        "total_tokens": 7298
+      }
+    }
+  },
+  "decision_trace": {
+    "domain": "HISTORICAL",
+    "planning_mode": "",
+    "workflow": "",
+    "confidence": "low",
+    "safe_to_execute": "False",
+    "num_steps": 0,
+    "steps": "",
+    "planner_reasoning": "The request lacks specific context about which switches control power flow or how they interact with other components in a CIM model. Without this information, it's not possible to safely execute these actions as requested by the user.",
+    "resolved_object": "<omitted:str>",
+    "resolved_object_confidence": "",
+    "selected_attributes": "",
+    "attribute_confidence": "",
+    "num_tool_calls": 1,
+    "executed_tools": "unsupported_request",
+    "failed_tool": "unsupported_request",
+    "equipment_resolution_mode": "",
+    "attribute_resolution_mode": "",
+    "comparison_resolution_mode": ""
+  },
+  "router_output": {
+    "route": "HISTORICAL",
+    "result": {
+      "status": "error",
+      "tool": "cim_agent",
+      "agent": "CIMDomainAgent",
+      "error": "unsupported_cim_request",
+      "answer": "I'm sorry, but I couldn't complete your request at this time due to an unsupported CIM-based network topology detail. Please provide more specific details about the affected nodes and their connections for accurate voltage measurements.",
+      "classification": {
+        "intent": "unsupported_cim_request",
+        "confidence": "low",
+        "target_kind": "unknown",
+        "request_mode": "custom_plan",
+        "safe_to_execute": false,
+        "missing_context": [
+          "Specific network topology details are required to identify the affected nodes and measure voltages."
+        ],
+        "required_steps": [],
+        "reasoning": "The request lacks specific context about which switches control power flow or how they interact with other components in a CIM model. Without this information, it's not possible to safely execute these actions as requested by the user.",
+        "status": "ok",
+        "classification_mode": "primary_llm_classifier"
+      },
+      "user_input": "Schließe den Schalter Schalter 1 und nenne danach die Netzspannungen.",
+      "debug": {
+        "trace": [
+          {
+            "step": "unsupported_request",
+            "effective_user_input": "Schließe den Schalter Schalter 1 und nenne danach die Netzspannungen.",
+            "source_subrequest": null,
+            "result": "<circular_reference>"
+          }
+        ],
+        "classification": {
+          "intent": "unsupported_cim_request",
+          "confidence": "low",
+          "target_kind": "unknown",
+          "request_mode": "custom_plan",
+          "safe_to_execute": false,
+          "missing_context": [
+            "Specific network topology details are required to identify the affected nodes and measure voltages."
+          ],
+          "required_steps": [],
+          "reasoning": "The request lacks specific context about which switches control power flow or how they interact with other components in a CIM model. Without this information, it's not possible to safely execute these actions as requested by the user.",
+          "status": "ok",
+          "classification_mode": "primary_llm_classifier"
+        },
+        "plan": [
+          {
+            "step": "unsupported_request",
+            "description": "Return a controlled unsupported-workflow message"
+          }
+        ],
+        "run_summary": {
+          "user_input": "Schließe den Schalter Schalter 1 und nenne danach die Netzspannungen.",
+          "classification_summary": {
+            "intent": "unsupported_cim_request",
+            "request_mode": "custom_plan",
+            "safe_to_execute": false,
+            "target_kind": "unknown",
+            "confidence": "low",
+            "classification_mode": "primary_llm_classifier",
+            "missing_context": [
+              "Specific network topology details are required to identify the affected nodes and measure voltages."
+            ]
+          },
+          "planned_steps": [
+            "unsupported_request"
+          ],
+          "selected_type": null,
+          "selected_equipment_id": null,
+          "selected_equipment_name": null,
+          "parsed_query_summary": null,
+          "final_status": "error",
+          "final_answer": "Die Anfrage wurde zur CIM-Seite geroutet, ist aktuell aber noch nicht sicher oder unterstützt ausführbar. Fehlender Kontext: Specific network topology details are required to identify the affected nodes and measure voltages.."
+        }
+      },
+      "raw_answer": "Die Anfrage wurde zur CIM-Seite geroutet, ist aktuell aber noch nicht sicher oder unterstützt ausführbar. Fehlender Kontext: Specific network topology details are required to identify the affected nodes and measure voltages.."
+    }
+  }
+}

@@ -1,0 +1,75 @@
+{
+  "run_id": 77,
+  "timestamp": "2026-05-17T09:51:34.826896",
+  "user_input": "Schließe den Schalter Schalter 1 und nenne danach die Netzspannungen.",
+  "duration_seconds": 413.331,
+  "token_usage": {
+    "prompt_tokens": 4478,
+    "completion_tokens": 41874,
+    "total_tokens": 46352,
+    "details": {
+      "phi3:mini": {
+        "input_tokens": 4478,
+        "output_tokens": 41874,
+        "total_tokens": 46352
+      }
+    }
+  },
+  "decision_trace": {
+    "domain": "ERROR",
+    "planning_mode": "",
+    "workflow": "",
+    "confidence": "",
+    "safe_to_execute": "",
+    "num_steps": 0,
+    "steps": "",
+    "planner_reasoning": "",
+    "resolved_object": "",
+    "resolved_object_confidence": "",
+    "selected_attributes": "",
+    "attribute_confidence": "",
+    "num_tool_calls": 0,
+    "executed_tools": "",
+    "failed_tool": ""
+  },
+  "router_output": {
+    "route": "ERROR",
+    "status": "error",
+    "result": {
+      "status": "error",
+      "answer": "Die zusammengesetzte Anfrage konnte nicht vollständig ausgeführt werden.",
+      "composite": {
+        "status": "ok",
+        "is_composite": true,
+        "subrequests": [
+          {
+            "user_input": "Schließe den Schalter Schalter 1",
+            "depends_on_previous": false
+          },
+          {
+            "user_input": "nenne danach die Netzspannungen",
+            "depends_on_previous": true
+          }
+        ],
+        "reasoning": "The request contains two sequential actions: first closing the switch (Schalter 1), then querying the network voltages after this change. The word 'danach' explicitly indicates dependency of the second part on the result of the first action."
+      },
+      "subresults": [
+        {
+          "index": 1,
+          "user_input": "Schließe den Schalter Schalter 1",
+          "effective_input": "Schließe den Schalter Schalter 1",
+          "depends_on_previous": false,
+          "output": {
+            "route": "ERROR",
+            "status": "error",
+            "result": {
+              "status": "error",
+              "answer": "Der UnifiedPlanner hat keine gültige strukturierte Ausgabe erzeugt.",
+              "planner_error": "Invalid json output: \nFor troubleshooting, visit: https://docs.langchain.com/oss/python/langchain/errors/OUTPUT_PARSING_FAILURE "
+            }
+          }
+        }
+      ]
+    }
+  }
+}

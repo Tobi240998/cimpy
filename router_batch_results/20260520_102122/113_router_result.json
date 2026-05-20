@@ -1,0 +1,56 @@
+{
+  "run_id": 113,
+  "timestamp": "2026-05-20T14:19:06.403473",
+  "user_input": "Welche direkten Nachbarn hat Trafo 19-20 in den CIM-Daten? Wie hoch ist die Spannung von Trafo 19-20 am 09.01.2026?",
+  "duration_seconds": 26.761,
+  "token_usage": {
+    "prompt_tokens": 4549,
+    "completion_tokens": 2608,
+    "total_tokens": 7157,
+    "details": {
+      "phi3:mini": {
+        "input_tokens": 4549,
+        "total_tokens": 7157,
+        "output_tokens": 2608
+      }
+    }
+  },
+  "decision_trace": {
+    "domain": "cim",
+    "planning_mode": "custom_plan",
+    "workflow": "None",
+    "confidence": "",
+    "safe_to_execute": "True",
+    "num_steps": 0,
+    "steps": "",
+    "planner_reasoning": "The first part of the query asks for direct neighbors of Transformer 19-20, which requires a topology query (cim.topology_query). The second part asks for voltage at a specific date, which requires a dynamic state variable query (cim.standard_sv). Since two distinct CIM workflows are needed, custom_plan is used with both steps.",
+    "resolved_object": "<omitted:str>",
+    "resolved_object_confidence": "",
+    "selected_attributes": "",
+    "attribute_confidence": "",
+    "num_tool_calls": 0,
+    "executed_tools": "",
+    "failed_tool": ""
+  },
+  "router_output": {
+    "route": "ERROR",
+    "status": "error",
+    "result": {
+      "status": "error",
+      "answer": "Tool existiert nicht in der UnifiedToolRegistry: cim.topology_query",
+      "planner_decision": {
+        "domain": "cim",
+        "planning_mode": "custom_plan",
+        "workflow": null,
+        "custom_steps": [
+          "cim.topology_query",
+          "cim.standard_sv"
+        ],
+        "safe_to_execute": true,
+        "missing_context": [],
+        "clarification_question": "",
+        "reasoning": "The first part of the query asks for direct neighbors of Transformer 19-20, which requires a topology query (cim.topology_query). The second part asks for voltage at a specific date, which requires a dynamic state variable query (cim.standard_sv). Since two distinct CIM workflows are needed, custom_plan is used with both steps."
+      }
+    }
+  }
+}

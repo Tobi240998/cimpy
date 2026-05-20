@@ -1,0 +1,444 @@
+{
+  "run_id": 84,
+  "timestamp": "2026-05-20T08:59:47.428825",
+  "user_input": "Schalte Schalter B an.",
+  "duration_seconds": 8.906,
+  "token_usage": {
+    "prompt_tokens": 6242,
+    "completion_tokens": 306,
+    "total_tokens": 6548,
+    "details": {
+      "phi3:mini": {
+        "input_tokens": 6242,
+        "output_tokens": 306,
+        "total_tokens": 6548
+      }
+    }
+  },
+  "decision_trace": {
+    "domain": "powerfactory",
+    "planning_mode": "standard_workflow",
+    "workflow": "pf.change_switch_state",
+    "confidence": "",
+    "safe_to_execute": "True",
+    "num_steps": 5,
+    "steps": "powerfactory.interpret_switch_instruction | powerfactory.build_unified_inventory | powerfactory.resolve_objects_from_inventory_llm | powerfactory.execute_switch_operation | powerfactory.summarize_switch_result",
+    "planner_reasoning": "",
+    "resolved_object": "<omitted:str>",
+    "resolved_object_confidence": "",
+    "selected_attributes": "",
+    "attribute_confidence": "",
+    "num_tool_calls": 3,
+    "executed_tools": "interpret_switch_instruction | build_unified_inventory | resolve_objects_from_inventory_llm",
+    "failed_tool": "resolve_objects_from_inventory_llm"
+  },
+  "router_output": {
+    "route": "POWERFACTORY",
+    "domain": "powerfactory",
+    "plan": {
+      "domain": "powerfactory",
+      "user_input": "Schalte Schalter B an.",
+      "steps": [
+        {
+          "domain": "powerfactory",
+          "tool": "interpret_switch_instruction",
+          "args": {},
+          "save_as": null,
+          "description": "standard_workflow: pf.change_switch_state",
+          "mutating": false
+        },
+        {
+          "domain": "powerfactory",
+          "tool": "build_unified_inventory",
+          "args": {},
+          "save_as": null,
+          "description": "standard_workflow: pf.change_switch_state",
+          "mutating": false
+        },
+        {
+          "domain": "powerfactory",
+          "tool": "resolve_objects_from_inventory_llm",
+          "args": {},
+          "save_as": null,
+          "description": "standard_workflow: pf.change_switch_state",
+          "mutating": false
+        },
+        {
+          "domain": "powerfactory",
+          "tool": "execute_switch_operation",
+          "args": {},
+          "save_as": null,
+          "description": "standard_workflow: pf.change_switch_state",
+          "mutating": false
+        },
+        {
+          "domain": "powerfactory",
+          "tool": "summarize_switch_result",
+          "args": {},
+          "save_as": null,
+          "description": "standard_workflow: pf.change_switch_state",
+          "mutating": false
+        }
+      ],
+      "classification": {
+        "domain": "powerfactory",
+        "planning_mode": "standard_workflow",
+        "workflow": "pf.change_switch_state",
+        "custom_steps": [],
+        "safe_to_execute": true,
+        "missing_context": [],
+        "clarification_question": "",
+        "reasoning": ""
+      },
+      "reasoning": ""
+    },
+    "planner_decision": {
+      "domain": "powerfactory",
+      "planning_mode": "standard_workflow",
+      "workflow": "pf.change_switch_state",
+      "custom_steps": [],
+      "safe_to_execute": true,
+      "missing_context": [],
+      "clarification_question": "",
+      "reasoning": ""
+    },
+    "result": {
+      "status": "error",
+      "tool": "resolve_objects_from_inventory_llm",
+      "project": "<omitted:str>",
+      "instruction": {
+        "query_type": "switch_operation",
+        "operation": "close",
+        "entity_type": "switch",
+        "entity_name_raw": "Schalte Schalter B an.",
+        "entity_name_candidates": [
+          "Schalter B",
+          "B"
+        ],
+        "available_types": [
+          "switch"
+        ],
+        "debug_switch_decision": {
+          "operation": "close",
+          "should_execute": true,
+          "confidence": "high",
+          "rationale": "The user requested to 'schalten' (switch) the switch B, which implies closing it."
+        }
+      },
+      "error": "invalid_object_selection",
+      "details": "Das LLM hat keinen gültigen exakten Namen aus der Kandidatenliste zurückgegeben.",
+      "llm_decision": {
+        "selected_object_name": null,
+        "selected_object_names": [],
+        "selection_mode": null,
+        "confidence": "high",
+        "rationale": "The user requested to switch 'B' but there is no exact match for a switch named 'B'. The candidates list does not contain any object with the name 'Switch B', and without further context, it's impossible to determine which specific switch is referred to as 'B'.",
+        "alternatives": [
+          "__ALL__",
+          "Switch 1",
+          "Switch 2"
+        ],
+        "should_execute": false
+      },
+      "candidate_names": [
+        "Switch",
+        "Switch",
+        "Switch",
+        "Switch",
+        "Switch",
+        "Switch",
+        "Switch",
+        "Switch",
+        "Switch",
+        "Switch",
+        "Switch",
+        "Switch",
+        "Switch",
+        "Switch",
+        "Switch",
+        "Switch",
+        "Switch 1",
+        "Switch 2"
+      ],
+      "agent": "SingleAgent",
+      "available_tools": [
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>"
+      ],
+      "answer": "Die Anfrage konnte nicht sauber ausgeführt werden (invalid_object_selection). Details: Das LLM hat keinen gültigen exakten Namen aus der Kandidatenliste zurückgegeben.",
+      "debug": {
+        "planning": {},
+        "trace": [
+          {
+            "step": "interpret_switch_instruction",
+            "effective_user_input": "Schalte Schalter B an.",
+            "source_subrequest": null,
+            "tool_spec": {
+              "name": "interpret_switch_instruction",
+              "description": "Interpret a natural-language switch request into a structured switch operation instruction.",
+              "capability_tags": [],
+              "mutating": false
+            },
+            "tool_kwargs": {
+              "services": "<omitted:dict>",
+              "user_input": "Schalte Schalter B an.",
+              "inventory": {}
+            },
+            "result": {
+              "status": "ok",
+              "tool": "interpret_switch_instruction",
+              "user_input": "Schalte Schalter B an.",
+              "project": "<omitted:str>",
+              "instruction": {
+                "query_type": "switch_operation",
+                "operation": "close",
+                "entity_type": "switch",
+                "entity_name_raw": "Schalte Schalter B an.",
+                "entity_name_candidates": [
+                  "<max_depth>",
+                  "<max_depth>"
+                ],
+                "available_types": [
+                  "<max_depth>"
+                ],
+                "debug_switch_decision": {
+                  "operation": "<max_depth>",
+                  "should_execute": "<max_depth>",
+                  "confidence": "<max_depth>",
+                  "rationale": "<max_depth>"
+                }
+              }
+            }
+          },
+          {
+            "step": "build_unified_inventory",
+            "effective_user_input": "Schalte Schalter B an.",
+            "source_subrequest": null,
+            "tool_spec": {
+              "name": "build_unified_inventory",
+              "description": "Build a unified non-topology PowerFactory inventory for supported object types.",
+              "capability_tags": [],
+              "mutating": false
+            },
+            "tool_kwargs": {
+              "services": "<omitted:dict>",
+              "allowed_types": [
+                "bus",
+                "load",
+                "line",
+                "transformer",
+                "generator",
+                "switch"
+              ]
+            },
+            "result": {
+              "status": "ok",
+              "tool": "build_unified_inventory",
+              "project": "<omitted:str>",
+              "inventory": {
+                "available_types": [
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>"
+                ],
+                "counts_by_type": {
+                  "bus": "<max_depth>",
+                  "load": "<max_depth>",
+                  "line": "<max_depth>",
+                  "transformer": "<max_depth>",
+                  "generator": "<max_depth>",
+                  "switch": "<max_depth>"
+                },
+                "items_by_type": {
+                  "bus": "<max_depth>",
+                  "load": "<max_depth>",
+                  "line": "<max_depth>",
+                  "transformer": "<max_depth>",
+                  "generator": "<max_depth>",
+                  "switch": "<max_depth>"
+                },
+                "samples_by_type": {
+                  "bus": "<max_depth>",
+                  "load": "<max_depth>",
+                  "line": "<max_depth>",
+                  "transformer": "<max_depth>",
+                  "generator": "<max_depth>",
+                  "switch": "<max_depth>"
+                }
+              },
+              "allowed_types": [
+                "bus",
+                "load",
+                "line",
+                "transformer",
+                "generator",
+                "switch"
+              ]
+            }
+          },
+          {
+            "step": "resolve_objects_from_inventory_llm",
+            "effective_user_input": "Schalte Schalter B an.",
+            "source_subrequest": null,
+            "tool_spec": {
+              "name": "resolve_objects_from_inventory_llm",
+              "description": "Resolve PowerFactory objects by LLM-based exact candidate selection from a unified non-topology inventory.",
+              "capability_tags": [],
+              "mutating": false
+            },
+            "tool_kwargs": {
+              "services": "<omitted:dict>",
+              "instruction": {
+                "query_type": "switch_operation",
+                "operation": "close",
+                "entity_type": "switch",
+                "entity_name_raw": "Schalte Schalter B an.",
+                "entity_name_candidates": [
+                  "<max_depth>",
+                  "<max_depth>"
+                ],
+                "available_types": [
+                  "<max_depth>"
+                ],
+                "debug_switch_decision": {
+                  "operation": "<max_depth>",
+                  "should_execute": "<max_depth>",
+                  "confidence": "<max_depth>",
+                  "rationale": "<max_depth>"
+                }
+              },
+              "inventory": {
+                "available_types": [
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>"
+                ],
+                "counts_by_type": {
+                  "bus": "<max_depth>",
+                  "load": "<max_depth>",
+                  "line": "<max_depth>",
+                  "transformer": "<max_depth>",
+                  "generator": "<max_depth>",
+                  "switch": "<max_depth>"
+                },
+                "items_by_type": {
+                  "bus": "<max_depth>",
+                  "load": "<max_depth>",
+                  "line": "<max_depth>",
+                  "transformer": "<max_depth>",
+                  "generator": "<max_depth>",
+                  "switch": "<max_depth>"
+                },
+                "samples_by_type": {
+                  "bus": "<max_depth>",
+                  "load": "<max_depth>",
+                  "line": "<max_depth>",
+                  "transformer": "<max_depth>",
+                  "generator": "<max_depth>",
+                  "switch": "<max_depth>"
+                }
+              }
+            },
+            "result": {
+              "status": "error",
+              "tool": "resolve_objects_from_inventory_llm",
+              "project": "<omitted:str>",
+              "instruction": {
+                "query_type": "switch_operation",
+                "operation": "close",
+                "entity_type": "switch",
+                "entity_name_raw": "Schalte Schalter B an.",
+                "entity_name_candidates": [
+                  "<max_depth>",
+                  "<max_depth>"
+                ],
+                "available_types": [
+                  "<max_depth>"
+                ],
+                "debug_switch_decision": {
+                  "operation": "<max_depth>",
+                  "should_execute": "<max_depth>",
+                  "confidence": "<max_depth>",
+                  "rationale": "<max_depth>"
+                }
+              },
+              "error": "invalid_object_selection",
+              "details": "Das LLM hat keinen gültigen exakten Namen aus der Kandidatenliste zurückgegeben.",
+              "llm_decision": {
+                "selected_object_name": null,
+                "selected_object_names": [],
+                "selection_mode": null,
+                "confidence": "high",
+                "rationale": "The user requested to switch 'B' but there is no exact match for a switch named 'B'. The candidates list does not contain any object with the name 'Switch B', and without further context, it's impossible to determine which specific switch is referred to as 'B'.",
+                "alternatives": [
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>"
+                ],
+                "should_execute": false
+              },
+              "candidate_names": [
+                "Switch",
+                "Switch",
+                "Switch",
+                "Switch",
+                "Switch",
+                "Switch",
+                "Switch",
+                "Switch",
+                "Switch",
+                "Switch",
+                "Switch",
+                "Switch",
+                "Switch",
+                "Switch",
+                "Switch",
+                "Switch",
+                "Switch 1",
+                "Switch 2"
+              ]
+            }
+          }
+        ]
+      },
+      "raw_answer": "Die Anfrage konnte nicht sauber ausgeführt werden (invalid_object_selection). Details: Das LLM hat keinen gültigen exakten Namen aus der Kandidatenliste zurückgegeben."
+    }
+  }
+}

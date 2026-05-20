@@ -1,0 +1,44 @@
+{
+  "run_id": 19,
+  "timestamp": "2026-05-20T17:13:18.207766",
+  "user_input": "Trenne Switch 1.",
+  "duration_seconds": 1.411,
+  "token_usage": {
+    "prompt_tokens": 881,
+    "completion_tokens": 241,
+    "total_tokens": 1122,
+    "details": {
+      "phi3:mini": {
+        "input_tokens": 881,
+        "output_tokens": 241,
+        "total_tokens": 1122
+      }
+    }
+  },
+  "decision_trace": {
+    "domain": "ERROR",
+    "planning_mode": "",
+    "workflow": "",
+    "confidence": "",
+    "safe_to_execute": "",
+    "num_steps": 0,
+    "steps": "",
+    "planner_reasoning": "",
+    "resolved_object": "<omitted:str>",
+    "resolved_object_confidence": "",
+    "selected_attributes": "",
+    "attribute_confidence": "",
+    "num_tool_calls": 0,
+    "executed_tools": "",
+    "failed_tool": ""
+  },
+  "router_output": {
+    "route": "ERROR",
+    "status": "error",
+    "result": {
+      "status": "error",
+      "answer": "Der UnifiedPlanner hat keine gültige strukturierte Ausgabe erzeugt.",
+      "planner_error": "Invalid json output: It seems like you're referring to a specific product or model named \"Trenne Switch.\" However, without additional context, it is challenging to provide an accurate response as this name does not correspond with widely recognized products in the market up until my knowledge cutoff date in early 2023. If Trenne Switch refers to a brand new release after that time or if there's been any miscommunication regarding its name, I recommend checking for updates on official product launches from credible sources like company websites, press releases, or authorized retailers.\n\nIf you are looking for information about an existing switch and it is simply misspelled as \"Trenne Switch,\" please provide the correct spelling so that I can assist you better with accurate details regarding its specifications, features, availability, etc.\nFor troubleshooting, visit: https://docs.langchain.com/oss/python/langchain/errors/OUTPUT_PARSING_FAILURE "
+    }
+  }
+}

@@ -1,0 +1,376 @@
+{
+  "run_id": 123,
+  "timestamp": "2026-05-20T09:46:41.202458",
+  "user_input": "Was is die nennspannung von bus 19 aus den historischen daten?",
+  "duration_seconds": 10.813,
+  "token_usage": {
+    "prompt_tokens": 8911,
+    "completion_tokens": 324,
+    "total_tokens": 9235,
+    "details": {
+      "phi3:mini": {
+        "input_tokens": 8911,
+        "output_tokens": 324,
+        "total_tokens": 9235
+      }
+    }
+  },
+  "decision_trace": {
+    "domain": "cim",
+    "planning_mode": "standard_workflow",
+    "workflow": "cim.standard_base",
+    "confidence": "",
+    "safe_to_execute": "True",
+    "num_steps": 4,
+    "steps": "cim.scan_snapshot_inventory | cim.resolve_cim_object | cim.read_cim_base_values | cim.summarize_cim_result",
+    "planner_reasoning": "",
+    "resolved_object": "<omitted:str>",
+    "resolved_object_confidence": "",
+    "selected_attributes": "",
+    "attribute_confidence": "",
+    "num_tool_calls": 3,
+    "executed_tools": "scan_snapshot_inventory | resolve_cim_object | read_cim_base_values",
+    "failed_tool": "read_cim_base_values"
+  },
+  "router_output": {
+    "route": "CIM",
+    "domain": "cim",
+    "plan": {
+      "domain": "cim",
+      "user_input": "Was is die nennspannung von bus 19 aus den historischen daten?",
+      "steps": [
+        {
+          "domain": "cim",
+          "tool": "scan_snapshot_inventory",
+          "args": {},
+          "save_as": null,
+          "description": "standard_workflow: cim.standard_base",
+          "mutating": false
+        },
+        {
+          "domain": "cim",
+          "tool": "resolve_cim_object",
+          "args": {},
+          "save_as": null,
+          "description": "standard_workflow: cim.standard_base",
+          "mutating": false
+        },
+        {
+          "domain": "cim",
+          "tool": "read_cim_base_values",
+          "args": {},
+          "save_as": null,
+          "description": "standard_workflow: cim.standard_base",
+          "mutating": false
+        },
+        {
+          "domain": "cim",
+          "tool": "summarize_cim_result",
+          "args": {},
+          "save_as": null,
+          "description": "standard_workflow: cim.standard_base",
+          "mutating": false
+        }
+      ],
+      "classification": {
+        "domain": "cim",
+        "planning_mode": "standard_workflow",
+        "workflow": "cim.standard_base",
+        "custom_steps": [],
+        "safe_to_execute": true,
+        "missing_context": [],
+        "clarification_question": "",
+        "reasoning": ""
+      },
+      "reasoning": ""
+    },
+    "planner_decision": {
+      "domain": "cim",
+      "planning_mode": "standard_workflow",
+      "workflow": "cim.standard_base",
+      "custom_steps": [],
+      "safe_to_execute": true,
+      "missing_context": [],
+      "clarification_question": "",
+      "reasoning": ""
+    },
+    "result": {
+      "status": "error",
+      "tool": "read_cim_base_values",
+      "cim_root": "C:\\Users\\STELLER\\Documents\\Masterarbeit\\CIM-Dateien\\tobias_CIM_daten\\data\\extracted",
+      "error": "no_resolved_base_values_found",
+      "answer": "Für die angefragten Basisattribute konnten keine lesbaren Werte gefunden werden.",
+      "base_attribute_debug": {
+        "selected_attributes": [],
+        "selected_candidates": [
+          "ratedU"
+        ],
+        "resolution_mode": "semantic_llm_candidate_match",
+        "available_attributes": [
+          "name",
+          "mRID",
+          "description",
+          "ratedS",
+          "ratedU",
+          "p",
+          "q",
+          "maxQ",
+          "minQ",
+          "initialP",
+          "nominalP",
+          "maxOperatingP",
+          "minOperatingP",
+          "r",
+          "r0",
+          "x",
+          "x0",
+          "b",
+          "b0",
+          "g",
+          "g0",
+          "connectionKind",
+          "phaseAngleClock",
+          "endNumber",
+          "grounded",
+          "operatingMode",
+          "type",
+          "lowVoltageLimit",
+          "highVoltageLimit",
+          "DiagramObjects",
+          "energyIdentCodeEic",
+          "shortName",
+          "Controls",
+          "Location",
+          "Measurements",
+          "EquipmentContainer",
+          "OperationalLimitSet",
+          "aggregate",
+          "BaseVoltage",
+          "SvStatus",
+          "Terminals",
+          "ipMax"
+        ],
+        "llm_decision": {
+          "selected_candidates": [
+            "ratedU"
+          ],
+          "confidence": "high",
+          "rationale": "Die nennspannung wird durch das ratedU Attribut repraesentiert."
+        }
+      },
+      "attribute_resolution_debug": {
+        "ratedU": {
+          "status": "not_found",
+          "candidate": "ratedU",
+          "value": null,
+          "searched_scopes": [
+            "direct_or_canonical_reader",
+            "direct_object_attribute",
+            "expanded_structural_lookup",
+            "expanded_structural_lookup_error: name 'max_depth' is not defined"
+          ],
+          "resolution_path": "not_found"
+        }
+      },
+      "debug_trace": [
+        {
+          "step": "scan_snapshot_inventory",
+          "tool_spec": {
+            "name": "scan_snapshot_inventory",
+            "description": "Scan snapshot inventory and build base network index",
+            "capability_tags": [
+              "inventory",
+              "network_index",
+              "equipment_catalog",
+              "read_only"
+            ],
+            "mutating": false
+          },
+          "result": {
+            "status": "ok",
+            "tool": "scan_snapshot_inventory",
+            "cim_root": "C:\\Users\\STELLER\\Documents\\Masterarbeit\\CIM-Dateien\\tobias_CIM_daten\\data\\extracted",
+            "snapshot_inventory": {
+              "root_folder": "C:\\Users\\STELLER\\Documents\\Masterarbeit\\CIM-Dateien\\tobias_CIM_daten\\data\\extracted",
+              "snapshots": [
+                {
+                  "snapshot_name": "<max_depth>",
+                  "case_dir": "<max_depth>",
+                  "xml_files": "<max_depth>",
+                  "default_time": "<max_depth>",
+                  "default_time_str": "<max_depth>",
+                  "default_time_source": "<max_depth>",
+                  "times_by_profile": "<max_depth>",
+                  "all_scenario_times": "<max_depth>",
+                  "has_sv_profile": "<max_depth>",
+                  "has_tp_profile": "<max_depth>",
+                  "has_eq_profile": "<max_depth>",
+                  "has_ssh_profile": "<max_depth>"
+                },
+                {
+                  "snapshot_name": "<max_depth>",
+                  "case_dir": "<max_depth>",
+                  "xml_files": "<max_depth>",
+                  "default_time": "<max_depth>",
+                  "default_time_str": "<max_depth>",
+                  "default_time_source": "<max_depth>",
+                  "times_by_profile": "<max_depth>",
+                  "all_scenario_times": "<max_depth>",
+                  "has_sv_profile": "<max_depth>",
+                  "has_tp_profile": "<max_depth>",
+                  "has_eq_profile": "<max_depth>",
+                  "has_ssh_profile": "<max_depth>"
+                },
+                {
+                  "snapshot_name": "<max_depth>",
+                  "case_dir": "<max_depth>",
+                  "xml_files": "<max_depth>",
+                  "default_time": "<max_depth>",
+                  "default_time_str": "<max_depth>",
+                  "default_time_source": "<max_depth>",
+                  "times_by_profile": "<max_depth>",
+                  "all_scenario_times": "<max_depth>",
+                  "has_sv_profile": "<max_depth>",
+                  "has_tp_profile": "<max_depth>",
+                  "has_eq_profile": "<max_depth>",
+                  "has_ssh_profile": "<max_depth>"
+                }
+              ]
+            },
+            "base_snapshot": "<omitted:dict>",
+            "network_index": "<omitted:dict>",
+            "equipment_catalog_summary": {
+              "equipment_types": [
+                "ACLineSegment",
+                "BusbarSection",
+                "ConformLoad",
+                "ConformLoadGroup",
+                "CurrentLimit",
+                "FossilFuel",
+                "GeneratingUnit",
+                "HydroGeneratingUnit",
+                "LoadAggregate",
+                "LoadArea",
+                "LoadResponseCharacteristic",
+                "LoadStatic",
+                "NuclearGeneratingUnit",
+                "OperationalLimitSet",
+                "OperationalLimitType",
+                "PowerTransformer",
+                "PowerTransformerEnd",
+                "RatioTapChanger",
+                "RegulatingControl",
+                "SubLoadArea",
+                "SynchronousMachine",
+                "SynchronousMachineTimeConstantReactance",
+                "ThermalGeneratingUnit",
+                "TopologicalIsland",
+                "VoltageLimit"
+              ],
+              "equipment_type_counts": {
+                "SynchronousMachineTimeConstantReactance": 10,
+                "LoadAggregate": 1,
+                "LoadStatic": 1,
+                "TopologicalIsland": 1,
+                "BusbarSection": 39,
+                "VoltageLimit": 39,
+                "OperationalLimitSet": 131,
+                "ACLineSegment": 34,
+                "CurrentLimit": 92,
+                "OperationalLimitType": 2,
+                "ConformLoad": 19,
+                "ConformLoadGroup": 1,
+                "SubLoadArea": 1,
+                "LoadArea": 1,
+                "LoadResponseCharacteristic": 1,
+                "PowerTransformerEnd": 24,
+                "SynchronousMachine": 10,
+                "PowerTransformer": 12,
+                "RatioTapChanger": 11,
+                "RegulatingControl": 10,
+                "HydroGeneratingUnit": 1,
+                "NuclearGeneratingUnit": 5,
+                "FossilFuel": 3,
+                "ThermalGeneratingUnit": 3,
+                "GeneratingUnit": 1
+              },
+              "num_equipment_objects": 453
+            }
+          }
+        },
+        {
+          "step": "resolve_cim_object",
+          "tool_spec": {
+            "name": "resolve_cim_object",
+            "description": "Resolve asset or equipment from user query and parse time/state intent",
+            "capability_tags": [
+              "object_resolution",
+              "query_parsing",
+              "equipment_catalog",
+              "llm_match",
+              "read_only"
+            ],
+            "mutating": false
+          },
+          "result": {
+            "status": "ok",
+            "tool": "resolve_cim_object",
+            "cim_root": "C:\\Users\\STELLER\\Documents\\Masterarbeit\\CIM-Dateien\\tobias_CIM_daten\\data\\extracted",
+            "user_input": "Was is die nennspannung von bus 19 aus den historischen daten?",
+            "parsed_query": {
+              "equipment_detected": [
+                "BusbarSection"
+              ],
+              "state_detected": [
+                "SvVoltage"
+              ],
+              "metric": null,
+              "equipment_selection": [
+                {
+                  "equipment_type": "<max_depth>",
+                  "equipment_key": "<max_depth>",
+                  "equipment_name": "<max_depth>",
+                  "equipment_id": "<max_depth>"
+                }
+              ],
+              "time_start": null,
+              "time_end": null,
+              "time_label": null,
+              "intent": "historical_analysis",
+              "request_mode": "standard_base",
+              "is_topology_query": false
+            },
+            "resolved_object": "<omitted:BusbarSection>",
+            "equipment_obj": "<non_serializable:BusbarSection>",
+            "resolution_mode": "interpret_user_query",
+            "equipment_resolution_debug": {
+              "parsed_query_equipment_selection": [
+                {
+                  "equipment_type": "<max_depth>",
+                  "equipment_key": "<max_depth>",
+                  "equipment_name": "<max_depth>",
+                  "equipment_id": "<max_depth>"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "step": "read_cim_base_values",
+          "tool_spec": {
+            "name": "read_cim_base_values",
+            "description": "Read static CIM base or nameplate attributes from a resolved equipment object",
+            "capability_tags": [
+              "base_values",
+              "nameplate_data",
+              "read_only"
+            ],
+            "mutating": false
+          },
+          "result": "<circular_reference>"
+        }
+      ],
+      "raw_answer": "Für die angefragten Basisattribute konnten keine lesbaren Werte gefunden werden."
+    }
+  }
+}

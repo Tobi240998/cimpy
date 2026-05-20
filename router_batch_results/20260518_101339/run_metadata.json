@@ -1,0 +1,35 @@
+{
+  "started_at": "2026-05-18T10:13:39.835365",
+  "entrypoint": "cimpy.single_agent2.llm_routing.orchestrator.Orchestrator.handle",
+  "equivalent_cli": "python -m cimpy.single_agent2.llm_routing.run_router",
+  "user_inputs": [
+    "Erhöhe Last A um 2 MW."
+  ],
+  "resume_mode": false,
+  "existing_output_dir": "",
+  "existing_completed_run_ids": [],
+  "trace_columns": [
+    "domain",
+    "planning_mode",
+    "workflow",
+    "confidence",
+    "safe_to_execute",
+    "num_steps",
+    "steps",
+    "planner_reasoning",
+    "resolved_object",
+    "resolved_object_confidence",
+    "selected_attributes",
+    "attribute_confidence",
+    "num_tool_calls",
+    "executed_tools",
+    "failed_tool"
+  ],
+  "finished_at": "2026-05-18T10:14:55.557194",
+  "output_dir": "router_batch_results\\20260518_101339",
+  "num_runs": 1,
+  "num_existing_runs_loaded": 0,
+  "num_errors": 0,
+  "total_duration_seconds": 75.72,
+  "average_duration_seconds": 75.698
+}

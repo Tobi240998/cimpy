@@ -1,0 +1,48 @@
+{
+  "run_id": 73,
+  "timestamp": "2026-05-20T07:44:39.268500",
+  "user_input": "Zeige die oberen und unteren Spannungsgrenzen aller Busse in PF.",
+  "duration_seconds": 1.897,
+  "token_usage": {
+    "prompt_tokens": 714,
+    "completion_tokens": 95,
+    "total_tokens": 809,
+    "details": {
+      "phi3:mini": {
+        "input_tokens": 714,
+        "output_tokens": 95,
+        "total_tokens": 809
+      }
+    }
+  },
+  "decision_trace": {
+    "domain": "ASK_USER",
+    "planning_mode": "",
+    "workflow": "",
+    "confidence": "",
+    "safe_to_execute": "",
+    "num_steps": 0,
+    "steps": "",
+    "planner_reasoning": "",
+    "resolved_object": "<omitted:str>",
+    "resolved_object_confidence": "",
+    "selected_attributes": "",
+    "attribute_confidence": "",
+    "num_tool_calls": 0,
+    "executed_tools": "",
+    "failed_tool": "",
+    "equipment_resolution_mode": "",
+    "attribute_resolution_mode": "",
+    "comparison_resolution_mode": ""
+  },
+  "router_output": {
+    "route": "ASK_USER",
+    "question": "Möchtest du die oberen und unteren Spannungsgrenzen für alle Busse im aktuellen PowerFactory-Projekt oder historische Daten abfragen?",
+    "missing_fields": [
+      "data_source"
+    ],
+    "partial": {
+      "user_input": "Zeige die oberen und unteren Spannungsgrenzen aller Busse in PF."
+    }
+  }
+}

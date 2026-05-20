@@ -1,0 +1,44 @@
+{
+  "run_id": 81,
+  "timestamp": "2026-05-20T17:17:48.744745",
+  "user_input": "Wie ist die Auslastung von Line in PF?",
+  "duration_seconds": 2.236,
+  "token_usage": {
+    "prompt_tokens": 893,
+    "completion_tokens": 417,
+    "total_tokens": 1310,
+    "details": {
+      "phi3:mini": {
+        "input_tokens": 893,
+        "output_tokens": 417,
+        "total_tokens": 1310
+      }
+    }
+  },
+  "decision_trace": {
+    "domain": "ERROR",
+    "planning_mode": "",
+    "workflow": "",
+    "confidence": "",
+    "safe_to_execute": "",
+    "num_steps": 0,
+    "steps": "",
+    "planner_reasoning": "",
+    "resolved_object": "<omitted:str>",
+    "resolved_object_confidence": "",
+    "selected_attributes": "",
+    "attribute_confidence": "",
+    "num_tool_calls": 0,
+    "executed_tools": "",
+    "failed_tool": ""
+  },
+  "router_output": {
+    "route": "ERROR",
+    "status": "error",
+    "result": {
+      "status": "error",
+      "answer": "Der UnifiedPlanner hat keine gültige strukturierte Ausgabe erzeugt.",
+      "planner_error": "Invalid json output: Line, also bekannt als \"Ligne\", hat eine sehr hohe Auslastung im Prozess (PF) aufgrund seiner speziellen Eigenschaften und Anwendungen. Die Auslastung eines Objekts oder einer Komponente innerhalb des Prozesses kann je nach Kontext variieren; jedoch ist es möglich, dass Line in einem System mit hoher Rechenanforderung eine hohe Auslastung aufweist.\n\nLine könnte sich beispielsweise auf ein spezialisiertes Computeralgebrasystem oder einen Algorithmus für die Lösung komplexer mathematischer Probleme beziehen, der in einem Hochleistungsrechenzentrum eingesetzt wird und daher eine hohe Auslastung erfordert. In solch einem Fall könnte Line als Teil eines parallelen Verarbeitungssystems oder einer Rechencluster-Infrastruktur betrachtet werden, wo die Ressourcen intensiv genutzt werden, um große Berechnungen durchzuführen und Effizienz in der Prozessabwicklung zu maximieren.\n\nUm eine präzisere Antwort zu geben, wäre es notwendig, weitere Informationen über das spezifische System oder den Kontext zu haben, in dem Line verwendet wird.\nFor troubleshooting, visit: https://docs.langchain.com/oss/python/langchain/errors/OUTPUT_PARSING_FAILURE "
+    }
+  }
+}

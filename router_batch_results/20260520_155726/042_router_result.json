@@ -1,0 +1,46 @@
+{
+  "run_id": 42,
+  "timestamp": "2026-05-20T16:20:47.356616",
+  "user_input": "Was ist die Leiter-Leiter-Spannung von Bus 1 nach dem Loadflow in Powerfactory?",
+  "duration_seconds": 0.617,
+  "token_usage": {
+    "prompt_tokens": 837,
+    "completion_tokens": 90,
+    "total_tokens": 927,
+    "details": {
+      "phi3:mini": {
+        "input_tokens": 837,
+        "output_tokens": 90,
+        "total_tokens": 927
+      }
+    }
+  },
+  "decision_trace": {
+    "domain": "ASK_USER",
+    "planning_mode": "",
+    "workflow": "",
+    "confidence": "",
+    "safe_to_execute": "",
+    "num_steps": 0,
+    "steps": "",
+    "planner_reasoning": "",
+    "resolved_object": "<omitted:str>",
+    "resolved_object_confidence": "",
+    "selected_attributes": "",
+    "attribute_confidence": "",
+    "num_tool_calls": 0,
+    "executed_tools": "",
+    "failed_tool": "",
+    "equipment_resolution_mode": "",
+    "attribute_resolution_mode": "",
+    "comparison_resolution_mode": ""
+  },
+  "router_output": {
+    "route": "ASK_USER",
+    "question": "Können Sie mir bitte sagen, welcher Datensatz oder welche Projektversion der Lastfluss für das historische CIM-Datenmodell verwendet wurde, um die Leiter-Leiter-Spannung von Bus 1 zu berechnen?",
+    "missing_fields": [
+      "data_source"
+    ],
+    "partial": {}
+  }
+}

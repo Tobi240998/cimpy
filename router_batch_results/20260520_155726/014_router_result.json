@@ -1,0 +1,1548 @@
+{
+  "run_id": 14,
+  "timestamp": "2026-05-20T16:14:21.900116",
+  "user_input": "Reduziere Last A um 2 MW und gib danach die Auslastungen aller Leitungen zurück.",
+  "duration_seconds": 977.749,
+  "token_usage": {
+    "prompt_tokens": 47718,
+    "completion_tokens": 6684,
+    "total_tokens": 54402,
+    "details": {
+      "phi3:mini": {
+        "input_tokens": 47718,
+        "output_tokens": 6684,
+        "total_tokens": 54402
+      }
+    }
+  },
+  "decision_trace": {
+    "domain": "HISTORICAL",
+    "planning_mode": "",
+    "workflow": "",
+    "confidence": "medium",
+    "safe_to_execute": "True",
+    "num_steps": 9,
+    "steps": "scan_snapshot_inventory | resolve_cim_object | query_cim | summarize_cim_result | scan_snapshot_inventory | resolve_cim_object | load_snapshot_cache | query_cim | summarize_cim_result",
+    "planner_reasoning": "fallback_llm_mode_classifier: The user is asking to reduce the load on component 'A' by a specific amount and then request information about the subsequent state of all lines, which suggests they are looking for an action plan followed by monitoring. | primary_classifier_error=Failed to parse CIMRequestModeDecision from completion {\"intent\": \"custom_plan\", \"confidence\": \"high\", \"target_kind\": \"asset\", \"request_mode\": \"standard_sv\", \"safe_to_execute\": false, \"missing_context\": [{\"description\": \"The user did not specify which asset 'A' refers to.\", \"title\": \"Asset Identification\"}, {\"description\": \"'Reduziere Last A um 2 MW' implies an action that may require permissions or capabilities beyond standard requests, such as modifying system settings or loads directly on assets which are not typically within the scope of a CIM domain agent.\", \"title\": \"Action Permissions\"}], \"reasoning\": \"The request is complex and involves actions (reducing load) that may require additional permissions, capabilities beyond standard requests. Furthermore, it's unclear which asset 'A' refers to.\"}. Got: 2 validation errors for CIMRequestModeDecision\nmissing_context.0\n  Input should be a valid string [type=string_type, input_value={'description': \"The user... 'Asset Identification'}, input_type=dict]\n    For further information visit https://errors.pydantic.dev/2.12/v/string_type\nmissing_context.1\n  Input should be a valid string [type=string_type, input_value={'description': \"'Reduzie...': 'Action Permissions'}, input_type=dict]\n    For further information visit https://errors.pydantic.dev/2.12/v/string_type\nFor troubleshooting, visit: https://docs.langchain.com/oss/python/langchain/errors/OUTPUT_PARSING_FAILURE",
+    "resolved_object": "<omitted:str>",
+    "resolved_object_confidence": "",
+    "selected_attributes": "",
+    "attribute_confidence": "",
+    "num_tool_calls": 9,
+    "executed_tools": "scan_snapshot_inventory | resolve_cim_object | query_cim | summarize_cim_result | scan_snapshot_inventory | resolve_cim_object | load_snapshot_cache | query_cim | summarize_cim_result",
+    "failed_tool": "",
+    "equipment_resolution_mode": "",
+    "attribute_resolution_mode": "",
+    "comparison_resolution_mode": ""
+  },
+  "router_output": {
+    "route": "HISTORICAL",
+    "result": {
+      "status": "ok",
+      "tool": "cim_agent",
+      "agent": "CIMDomainAgent",
+      "classification": {
+        "intent": "historical_analysis",
+        "confidence": "medium",
+        "target_kind": "metric",
+        "request_mode": "custom_plan",
+        "safe_to_execute": true,
+        "missing_context": [],
+        "required_steps": [],
+        "reasoning": "fallback_llm_mode_classifier: The user is asking to reduce the load on component 'A' by a specific amount and then request information about the subsequent state of all lines, which suggests they are looking for an action plan followed by monitoring. | primary_classifier_error=Failed to parse CIMRequestModeDecision from completion {\"intent\": \"custom_plan\", \"confidence\": \"high\", \"target_kind\": \"asset\", \"request_mode\": \"standard_sv\", \"safe_to_execute\": false, \"missing_context\": [{\"description\": \"The user did not specify which asset 'A' refers to.\", \"title\": \"Asset Identification\"}, {\"description\": \"'Reduziere Last A um 2 MW' implies an action that may require permissions or capabilities beyond standard requests, such as modifying system settings or loads directly on assets which are not typically within the scope of a CIM domain agent.\", \"title\": \"Action Permissions\"}], \"reasoning\": \"The request is complex and involves actions (reducing load) that may require additional permissions, capabilities beyond standard requests. Furthermore, it's unclear which asset 'A' refers to.\"}. Got: 2 validation errors for CIMRequestModeDecision\nmissing_context.0\n  Input should be a valid string [type=string_type, input_value={'description': \"The user... 'Asset Identification'}, input_type=dict]\n    For further information visit https://errors.pydantic.dev/2.12/v/string_type\nmissing_context.1\n  Input should be a valid string [type=string_type, input_value={'description': \"'Reduzie...': 'Action Permissions'}, input_type=dict]\n    For further information visit https://errors.pydantic.dev/2.12/v/string_type\nFor troubleshooting, visit: https://docs.langchain.com/oss/python/langchain/errors/OUTPUT_PARSING_FAILURE",
+        "status": "ok",
+        "classification_mode": "fallback_llm_mode_classifier"
+      },
+      "plan": [
+        {
+          "step": "scan_snapshot_inventory",
+          "description": "Scan snapshot inventory and build base network index",
+          "capability_tags": [
+            "inventory",
+            "network_index",
+            "equipment_catalog",
+            "read_only"
+          ],
+          "mutating": false,
+          "user_input_override": "Welche direkten Nachbarn hat Trafo 19-20?",
+          "source_subrequest": "subrequest_1",
+          "subrequest_classification": {
+            "intent": "topology_query",
+            "confidence": "high",
+            "target_kind": "asset",
+            "request_mode": "standard_topology_query",
+            "safe_to_execute": true,
+            "missing_context": [],
+            "required_steps": [],
+            "reasoning": "The request is for direct neighbors of a specific transformer in the CIM model. It's assumed that necessary data might be available from PowerFactory snapshots or historical states.",
+            "status": "ok",
+            "classification_mode": "primary_llm_classifier"
+          }
+        },
+        {
+          "step": "resolve_cim_object",
+          "description": "Resolve asset or equipment from user query and parse time/state intent",
+          "capability_tags": [
+            "object_resolution",
+            "query_parsing",
+            "equipment_catalog",
+            "llm_match",
+            "read_only"
+          ],
+          "mutating": false,
+          "user_input_override": "Welche direkten Nachbarn hat Trafo 19-20?",
+          "source_subrequest": "subrequest_1",
+          "subrequest_classification": {
+            "intent": "topology_query",
+            "confidence": "high",
+            "target_kind": "asset",
+            "request_mode": "standard_topology_query",
+            "safe_to_execute": true,
+            "missing_context": [],
+            "required_steps": [],
+            "reasoning": "The request is for direct neighbors of a specific transformer in the CIM model. It's assumed that necessary data might be available from PowerFactory snapshots or historical states.",
+            "status": "ok",
+            "classification_mode": "primary_llm_classifier"
+          }
+        },
+        {
+          "step": "query_cim",
+          "description": "Run CIM analysis query using parsed query, network index and snapshot cache",
+          "capability_tags": [
+            "analysis",
+            "read_only"
+          ],
+          "mutating": false,
+          "user_input_override": "Welche direkten Nachbarn hat Trafo 19-20?",
+          "source_subrequest": "subrequest_1",
+          "subrequest_classification": {
+            "intent": "topology_query",
+            "confidence": "high",
+            "target_kind": "asset",
+            "request_mode": "standard_topology_query",
+            "safe_to_execute": true,
+            "missing_context": [],
+            "required_steps": [],
+            "reasoning": "The request is for direct neighbors of a specific transformer in the CIM model. It's assumed that necessary data might be available from PowerFactory snapshots or historical states.",
+            "status": "ok",
+            "classification_mode": "primary_llm_classifier"
+          }
+        },
+        {
+          "step": "summarize_cim_result",
+          "description": "Return final CIM result with debug information",
+          "capability_tags": [
+            "result",
+            "read_only"
+          ],
+          "mutating": false,
+          "user_input_override": "Welche direkten Nachbarn hat Trafo 19-20?",
+          "source_subrequest": "subrequest_1",
+          "subrequest_classification": {
+            "intent": "topology_query",
+            "confidence": "high",
+            "target_kind": "asset",
+            "request_mode": "standard_topology_query",
+            "safe_to_execute": true,
+            "missing_context": [],
+            "required_steps": [],
+            "reasoning": "The request is for direct neighbors of a specific transformer in the CIM model. It's assumed that necessary data might be available from PowerFactory snapshots or historical states.",
+            "status": "ok",
+            "classification_mode": "primary_llm_classifier"
+          }
+        },
+        {
+          "step": "scan_snapshot_inventory",
+          "description": "Scan snapshot inventory and build base network index",
+          "capability_tags": [
+            "inventory",
+            "network_index",
+            "equipment_catalog",
+            "read_only"
+          ],
+          "mutating": false,
+          "user_input_override": "Wie hoch ist die Spannung von Trafo 19-20 am 2026-01-09?",
+          "source_subrequest": "subrequest_2",
+          "subrequest_classification": {
+            "intent": "historical_analysis",
+            "confidence": "medium",
+            "target_kind": "metric",
+            "request_mode": "standard_sv",
+            "safe_to_execute": true,
+            "missing_context": [],
+            "required_steps": [],
+            "reasoning": "fallback_llm_mode_classifier: The user is asking for a specific dynamic state value (voltage) of the transformer at a given time. | primary_classifier_error=Invalid json output: Since the user's question is about a specific transformer and asks for its voltage on a particular date, which falls within future dates as per our rules (calendar based \"future date\" rejection forbidden), we can safely execute this request. The intent here seems to be historical_analysis but since it involves an explicit time frame the appropriate mode would likely fall under standard_sv or potentially custom_plan if there's a need for specific execution steps not covered by our predefined modes, which is unknown in this case as per instructions provided:\n\n```json\n{\n  \"intent\": \"historical_analysis\",\n  \"confidence\": \"high\",\n  \"target_kind\": \"metric\",\n  \"request_mode\": \"standard_sv\", // Assuming standard_sv can handle explicit date requests. If not, custom_plan could be considered here as well but is undefined in the provided ruleset and thus cannot be chosen from allowed values.\n  \"safe_to_execute\": true,\n  \"missing_context\": [],\n  \"reasoning\": \"The user's request for a specific transformer voltage on an explicit date can typically be executed safely as it does not violate any of the critical rules.\"\n}\n```\nFor troubleshooting, visit: https://docs.langchain.com/oss/python/langchain/errors/OUTPUT_PARSING_FAILURE",
+            "status": "ok",
+            "classification_mode": "fallback_llm_mode_classifier"
+          }
+        },
+        {
+          "step": "resolve_cim_object",
+          "description": "Resolve asset or equipment from user query and parse time/state intent",
+          "capability_tags": [
+            "object_resolution",
+            "query_parsing",
+            "equipment_catalog",
+            "llm_match",
+            "read_only"
+          ],
+          "mutating": false,
+          "user_input_override": "Wie hoch ist die Spannung von Trafo 19-20 am 2026-01-09?",
+          "source_subrequest": "subrequest_2",
+          "subrequest_classification": {
+            "intent": "historical_analysis",
+            "confidence": "medium",
+            "target_kind": "metric",
+            "request_mode": "standard_sv",
+            "safe_to_execute": true,
+            "missing_context": [],
+            "required_steps": [],
+            "reasoning": "fallback_llm_mode_classifier: The user is asking for a specific dynamic state value (voltage) of the transformer at a given time. | primary_classifier_error=Invalid json output: Since the user's question is about a specific transformer and asks for its voltage on a particular date, which falls within future dates as per our rules (calendar based \"future date\" rejection forbidden), we can safely execute this request. The intent here seems to be historical_analysis but since it involves an explicit time frame the appropriate mode would likely fall under standard_sv or potentially custom_plan if there's a need for specific execution steps not covered by our predefined modes, which is unknown in this case as per instructions provided:\n\n```json\n{\n  \"intent\": \"historical_analysis\",\n  \"confidence\": \"high\",\n  \"target_kind\": \"metric\",\n  \"request_mode\": \"standard_sv\", // Assuming standard_sv can handle explicit date requests. If not, custom_plan could be considered here as well but is undefined in the provided ruleset and thus cannot be chosen from allowed values.\n  \"safe_to_execute\": true,\n  \"missing_context\": [],\n  \"reasoning\": \"The user's request for a specific transformer voltage on an explicit date can typically be executed safely as it does not violate any of the critical rules.\"\n}\n```\nFor troubleshooting, visit: https://docs.langchain.com/oss/python/langchain/errors/OUTPUT_PARSING_FAILURE",
+            "status": "ok",
+            "classification_mode": "fallback_llm_mode_classifier"
+          }
+        },
+        {
+          "step": "load_snapshot_cache",
+          "description": "Load relevant snapshots for the parsed time window and build snapshot cache",
+          "capability_tags": [
+            "snapshot_loading",
+            "state_cache",
+            "read_only"
+          ],
+          "mutating": false,
+          "user_input_override": "Wie hoch ist die Spannung von Trafo 19-20 am 2026-01-09?",
+          "source_subrequest": "subrequest_2",
+          "subrequest_classification": {
+            "intent": "historical_analysis",
+            "confidence": "medium",
+            "target_kind": "metric",
+            "request_mode": "standard_sv",
+            "safe_to_execute": true,
+            "missing_context": [],
+            "required_steps": [],
+            "reasoning": "fallback_llm_mode_classifier: The user is asking for a specific dynamic state value (voltage) of the transformer at a given time. | primary_classifier_error=Invalid json output: Since the user's question is about a specific transformer and asks for its voltage on a particular date, which falls within future dates as per our rules (calendar based \"future date\" rejection forbidden), we can safely execute this request. The intent here seems to be historical_analysis but since it involves an explicit time frame the appropriate mode would likely fall under standard_sv or potentially custom_plan if there's a need for specific execution steps not covered by our predefined modes, which is unknown in this case as per instructions provided:\n\n```json\n{\n  \"intent\": \"historical_analysis\",\n  \"confidence\": \"high\",\n  \"target_kind\": \"metric\",\n  \"request_mode\": \"standard_sv\", // Assuming standard_sv can handle explicit date requests. If not, custom_plan could be considered here as well but is undefined in the provided ruleset and thus cannot be chosen from allowed values.\n  \"safe_to_execute\": true,\n  \"missing_context\": [],\n  \"reasoning\": \"The user's request for a specific transformer voltage on an explicit date can typically be executed safely as it does not violate any of the critical rules.\"\n}\n```\nFor troubleshooting, visit: https://docs.langchain.com/oss/python/langchain/errors/OUTPUT_PARSING_FAILURE",
+            "status": "ok",
+            "classification_mode": "fallback_llm_mode_classifier"
+          }
+        },
+        {
+          "step": "query_cim",
+          "description": "Run CIM analysis query using parsed query, network index and snapshot cache",
+          "capability_tags": [
+            "analysis",
+            "read_only"
+          ],
+          "mutating": false,
+          "user_input_override": "Wie hoch ist die Spannung von Trafo 19-20 am 2026-01-09?",
+          "source_subrequest": "subrequest_2",
+          "subrequest_classification": {
+            "intent": "historical_analysis",
+            "confidence": "medium",
+            "target_kind": "metric",
+            "request_mode": "standard_sv",
+            "safe_to_execute": true,
+            "missing_context": [],
+            "required_steps": [],
+            "reasoning": "fallback_llm_mode_classifier: The user is asking for a specific dynamic state value (voltage) of the transformer at a given time. | primary_classifier_error=Invalid json output: Since the user's question is about a specific transformer and asks for its voltage on a particular date, which falls within future dates as per our rules (calendar based \"future date\" rejection forbidden), we can safely execute this request. The intent here seems to be historical_analysis but since it involves an explicit time frame the appropriate mode would likely fall under standard_sv or potentially custom_plan if there's a need for specific execution steps not covered by our predefined modes, which is unknown in this case as per instructions provided:\n\n```json\n{\n  \"intent\": \"historical_analysis\",\n  \"confidence\": \"high\",\n  \"target_kind\": \"metric\",\n  \"request_mode\": \"standard_sv\", // Assuming standard_sv can handle explicit date requests. If not, custom_plan could be considered here as well but is undefined in the provided ruleset and thus cannot be chosen from allowed values.\n  \"safe_to_execute\": true,\n  \"missing_context\": [],\n  \"reasoning\": \"The user's request for a specific transformer voltage on an explicit date can typically be executed safely as it does not violate any of the critical rules.\"\n}\n```\nFor troubleshooting, visit: https://docs.langchain.com/oss/python/langchain/errors/OUTPUT_PARSING_FAILURE",
+            "status": "ok",
+            "classification_mode": "fallback_llm_mode_classifier"
+          }
+        },
+        {
+          "step": "summarize_cim_result",
+          "description": "Return final CIM result with debug information",
+          "capability_tags": [
+            "result",
+            "read_only"
+          ],
+          "mutating": false,
+          "user_input_override": "Wie hoch ist die Spannung von Trafo 19-20 am 2026-01-09?",
+          "source_subrequest": "subrequest_2",
+          "subrequest_classification": {
+            "intent": "historical_analysis",
+            "confidence": "medium",
+            "target_kind": "metric",
+            "request_mode": "standard_sv",
+            "safe_to_execute": true,
+            "missing_context": [],
+            "required_steps": [],
+            "reasoning": "fallback_llm_mode_classifier: The user is asking for a specific dynamic state value (voltage) of the transformer at a given time. | primary_classifier_error=Invalid json output: Since the user's question is about a specific transformer and asks for its voltage on a particular date, which falls within future dates as per our rules (calendar based \"future date\" rejection forbidden), we can safely execute this request. The intent here seems to be historical_analysis but since it involves an explicit time frame the appropriate mode would likely fall under standard_sv or potentially custom_plan if there's a need for specific execution steps not covered by our predefined modes, which is unknown in this case as per instructions provided:\n\n```json\n{\n  \"intent\": \"historical_analysis\",\n  \"confidence\": \"high\",\n  \"target_kind\": \"metric\",\n  \"request_mode\": \"standard_sv\", // Assuming standard_sv can handle explicit date requests. If not, custom_plan could be considered here as well but is undefined in the provided ruleset and thus cannot be chosen from allowed values.\n  \"safe_to_execute\": true,\n  \"missing_context\": [],\n  \"reasoning\": \"The user's request for a specific transformer voltage on an explicit date can typically be executed safely as it does not violate any of the critical rules.\"\n}\n```\nFor troubleshooting, visit: https://docs.langchain.com/oss/python/langchain/errors/OUTPUT_PARSING_FAILURE",
+            "status": "ok",
+            "classification_mode": "fallback_llm_mode_classifier"
+          }
+        }
+      ],
+      "available_tools": [
+        {
+          "name": "scan_snapshot_inventory",
+          "description": "Scan snapshot inventory and build base network index",
+          "input_schema": {
+            "type": "object",
+            "properties": {
+              "cim_root": {
+                "type": "string"
+              }
+            },
+            "required": []
+          },
+          "output_schema_hint": {
+            "status": "ok|error",
+            "tool": "scan_snapshot_inventory",
+            "snapshot_inventory": "dict",
+            "base_snapshot": "<omitted:str>",
+            "network_index": "<omitted:str>",
+            "equipment_catalog_summary": "dict"
+          },
+          "capability_tags": [
+            "inventory",
+            "network_index",
+            "equipment_catalog",
+            "read_only"
+          ],
+          "mutating": false,
+          "requires_state": [],
+          "produces_state": [
+            "snapshot_inventory",
+            "base_snapshot",
+            "network_index",
+            "equipment_catalog_summary"
+          ],
+          "is_summary": false,
+          "domain_notes": [
+            "Builds and merges a deterministic equipment catalog from the base snapshot."
+          ]
+        },
+        {
+          "name": "resolve_cim_object",
+          "description": "Resolve asset or equipment from user query and parse time/state intent",
+          "input_schema": {
+            "type": "object",
+            "properties": {
+              "cim_root": {
+                "type": "string"
+              },
+              "user_input": {
+                "type": "string"
+              },
+              "network_index": "<omitted:dict>"
+            },
+            "required": [
+              "user_input",
+              "network_index"
+            ]
+          },
+          "output_schema_hint": {
+            "status": "ok|error",
+            "tool": "resolve_cim_object",
+            "parsed_query": "dict",
+            "resolved_object": "<omitted:str>",
+            "resolution_mode": "string",
+            "equipment_resolution_debug": "dict"
+          },
+          "capability_tags": [
+            "object_resolution",
+            "query_parsing",
+            "equipment_catalog",
+            "llm_match",
+            "read_only"
+          ],
+          "mutating": false,
+          "requires_state": [
+            "network_index"
+          ],
+          "produces_state": [
+            "parsed_query",
+            "resolved_object",
+            "resolution_mode",
+            "equipment_resolution_debug"
+          ],
+          "is_summary": false,
+          "domain_notes": [
+            "Falls back to two-stage catalog resolution: equipment type first, equipment instance second."
+          ]
+        },
+        {
+          "name": "list_equipment_of_type",
+          "description": "List all concrete CIM objects of a resolved equipment type from the deterministic equipment catalog",
+          "input_schema": {
+            "type": "object",
+            "properties": {
+              "cim_root": {
+                "type": "string"
+              },
+              "user_input": {
+                "type": "string"
+              },
+              "network_index": "<omitted:dict>"
+            },
+            "required": [
+              "user_input",
+              "network_index"
+            ]
+          },
+          "output_schema_hint": {
+            "status": "ok|error",
+            "tool": "list_equipment_of_type",
+            "selected_type": "string",
+            "equipment_items": "list[dict]",
+            "equipment_count": "integer",
+            "answer": "string"
+          },
+          "capability_tags": [
+            "equipment_catalog",
+            "asset_lookup",
+            "read_only"
+          ],
+          "mutating": false,
+          "requires_state": [
+            "network_index"
+          ],
+          "produces_state": [
+            "selected_type",
+            "equipment_items",
+            "equipment_count",
+            "answer"
+          ],
+          "is_summary": false,
+          "domain_notes": [
+            "Uses the same type-resolution stage as equipment resolution, but returns all objects of the selected type."
+          ]
+        },
+        {
+          "name": "read_cim_base_values",
+          "description": "Read static CIM base or nameplate attributes from a resolved equipment object",
+          "input_schema": {
+            "type": "object",
+            "properties": {
+              "cim_root": {
+                "type": "string"
+              },
+              "user_input": {
+                "type": "string"
+              },
+              "resolved_object": "<omitted:dict>"
+            },
+            "required": [
+              "user_input",
+              "resolved_object"
+            ]
+          },
+          "output_schema_hint": {
+            "status": "ok|error",
+            "tool": "read_cim_base_values",
+            "selected_attributes": "list[str]",
+            "base_values": "dict[str, Any]",
+            "answer": "string"
+          },
+          "capability_tags": [
+            "base_values",
+            "nameplate_data",
+            "read_only"
+          ],
+          "mutating": false,
+          "requires_state": [
+            "resolved_object"
+          ],
+          "produces_state": [
+            "selected_attributes",
+            "base_values",
+            "answer",
+            "base_attribute_debug"
+          ],
+          "is_summary": false,
+          "domain_notes": [
+            "Supports direct technical attribute matching and controlled semantic LLM mapping."
+          ]
+        },
+        {
+          "name": "resolve_cim_comparison",
+          "description": "Resolve a supported CIM comparison intent into required SV metric and base attributes",
+          "input_schema": {
+            "type": "object",
+            "properties": {
+              "cim_root": {
+                "type": "string"
+              },
+              "user_input": {
+                "type": "string"
+              },
+              "resolved_object": "<omitted:dict>",
+              "parsed_query": {
+                "type": "object"
+              }
+            },
+            "required": [
+              "user_input",
+              "resolved_object"
+            ]
+          },
+          "output_schema_hint": {
+            "status": "ok|error",
+            "tool": "resolve_cim_comparison",
+            "comparison_resolution": "dict",
+            "requested_base_attributes": "list[str]",
+            "parsed_query": "dict"
+          },
+          "capability_tags": [
+            "comparison_resolution",
+            "read_only"
+          ],
+          "mutating": false,
+          "requires_state": [
+            "resolved_object",
+            "parsed_query"
+          ],
+          "produces_state": [
+            "comparison_resolution",
+            "requested_base_attributes",
+            "parsed_query"
+          ],
+          "is_summary": false,
+          "domain_notes": [
+            "Determines which standard comparison should be executed before reading SV and base values."
+          ]
+        },
+        {
+          "name": "load_snapshot_cache",
+          "description": "Load relevant snapshots for the parsed time window and build snapshot cache",
+          "input_schema": {
+            "type": "object",
+            "properties": {
+              "cim_root": {
+                "type": "string"
+              },
+              "parsed_query": {
+                "type": "object"
+              },
+              "snapshot_inventory": {
+                "type": "object"
+              }
+            },
+            "required": [
+              "parsed_query",
+              "snapshot_inventory"
+            ]
+          },
+          "output_schema_hint": {
+            "status": "ok|error",
+            "tool": "load_snapshot_cache",
+            "cim_snapshots": "<omitted:str>",
+            "required_state_types": "list[str]",
+            "snapshot_cache": "<omitted:str>",
+            "snapshot_cache_summary": "dict"
+          },
+          "capability_tags": [
+            "snapshot_loading",
+            "state_cache",
+            "read_only"
+          ],
+          "mutating": false,
+          "requires_state": [
+            "parsed_query",
+            "snapshot_inventory"
+          ],
+          "produces_state": [
+            "cim_snapshots",
+            "required_state_types",
+            "snapshot_cache",
+            "snapshot_cache_summary"
+          ],
+          "is_summary": false,
+          "domain_notes": []
+        },
+        {
+          "name": "query_cim",
+          "description": "Run CIM analysis query using parsed query, network index and snapshot cache",
+          "input_schema": {
+            "type": "object",
+            "properties": {
+              "cim_root": {
+                "type": "string"
+              },
+              "user_input": {
+                "type": "string"
+              },
+              "snapshot_cache": "<omitted:dict>",
+              "network_index": "<omitted:dict>",
+              "parsed_query": {
+                "type": "object"
+              },
+              "classification": {
+                "type": "object"
+              }
+            },
+            "required": [
+              "user_input",
+              "network_index"
+            ]
+          },
+          "output_schema_hint": {
+            "status": "ok|error",
+            "tool": "query_cim",
+            "answer": "string"
+          },
+          "capability_tags": [
+            "analysis",
+            "read_only"
+          ],
+          "mutating": false,
+          "requires_state": [
+            "network_index",
+            "parsed_query"
+          ],
+          "produces_state": [
+            "answer"
+          ],
+          "is_summary": false,
+          "domain_notes": []
+        },
+        {
+          "name": "compare_cim_values",
+          "description": "Compare resolved SV results against resolved CIM base values using a standard comparison definition",
+          "input_schema": {
+            "type": "object",
+            "properties": {
+              "cim_root": {
+                "type": "string"
+              },
+              "resolved_object": "<omitted:dict>",
+              "comparison_resolution": {
+                "type": "object"
+              },
+              "query_result_data": {
+                "type": "object"
+              },
+              "base_values": {
+                "type": "object"
+              }
+            },
+            "required": [
+              "resolved_object",
+              "comparison_resolution",
+              "query_result_data",
+              "base_values"
+            ]
+          },
+          "output_schema_hint": {
+            "status": "ok|error",
+            "tool": "compare_cim_values",
+            "comparison_result": "dict",
+            "answer": "string"
+          },
+          "capability_tags": [
+            "comparison",
+            "read_only"
+          ],
+          "mutating": false,
+          "requires_state": [
+            "resolved_object",
+            "comparison_resolution",
+            "query_result_data",
+            "base_values"
+          ],
+          "produces_state": [
+            "comparison_result",
+            "answer"
+          ],
+          "is_summary": false,
+          "domain_notes": []
+        },
+        {
+          "name": "summarize_cim_result",
+          "description": "Return final CIM result with debug information",
+          "input_schema": {
+            "type": "object",
+            "properties": {
+              "cim_root": {
+                "type": "string"
+              },
+              "result_payload": {
+                "type": "object"
+              },
+              "user_input": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "user_input"
+            ]
+          },
+          "output_schema_hint": {
+            "status": "ok|error",
+            "tool": "summarize_cim_result",
+            "answer": "string",
+            "debug": "dict"
+          },
+          "capability_tags": [
+            "result",
+            "read_only"
+          ],
+          "mutating": false,
+          "requires_state": [
+            "answer"
+          ],
+          "produces_state": [
+            "summary"
+          ],
+          "is_summary": true,
+          "domain_notes": []
+        }
+      ],
+      "answer": "Um eine Lastreduktion von 2 MW zu erreichen und danach die Auslastungen aller Leitungen zurückzugeben, müssen wir zunächst den Energiefluss im Netz anpassen. Der Trafo Trf 19-20 ist ein kritischer Punkt in diesem Fall, da es sich direkt mit Bus 19 und Bus 20 sowie dem ACLineSegment Line 16 - 19, ConformLoad Load 2 endet und die benachbarten PowerTransformers Trf 19 - 33 und Trf 20 - 34 umfasst. Am 2. Januar 2026 erreichte der Trafo Trf 19-20 eine Spitzenleistung von etwa 89% mit einer Auslastung von 376,645 MW. Um die Last auf diesen Knotenpunkt zu reduzieren und damit den Energiefluss im Netz anzupassen, könnten wir beispielsweise einen Teil der Last von ConformLoad Load 2 oder einem anderen nachfolgenden Verbraucher übernehmen oder temporär herunterfahren lassen. Nach Durchführung dieser Änderungen müssen wir die Auslastung des Trafo Trf 19-20 sowie aller anschließenden Leitungen und Transformatoren neu berechnen, um sicherzustellen, dass sie nun unter der neuen Lastbedingung von maximal 354,645 MW laufen. Die Auslastungen dieser Komponenten müssen dann aktualisiert werden, wobei die neue Spitzenleistung des Trafo Trf 19-20 und seine Auslastung sowie die entsprechenden Änderungen an den nachfolgenden Leitungen berücks_TEXT:\n\nUm eine Lastreduktion von 2 MW zu erreichen und danach die Auslastungen aller Leitungen zurückzugeben, müssen wir zunächst den Energiefluss im Netz anpassen. Der Trafo Trf 19-20 ist ein kritischer Punkt in diesem Fall, da es sich direkt mit Bus 19 und Bus 20 sowie dem ACLineSegment Line 16 - 19, ConformLoad Load 2 endet und die benachbarten PowerTransformers Trf 19 - 33 und Trf 20 - 34 umfasst. Am 2. Januar 2026 erreichte der Trafo Trf 19-20 eine Spitzenleistung von etwa 89% mit einer Auslastung von 376,645 MW. Um die Last auf diesen Knotenpunkt zu reduzieren und damit den Energiefluss im Netz anzupassen, könnten wir beispielsweise einen Teil der Last von ConformLoad Load 2 oder einem anderen nachfolgenden Verbraucher übernehmen oder temporär herunterfahren lassen. Nach Durchführung dieser Änderungen müssen wir die Auslastung des Trafo Trf 19-20 sowie aller anschließenden Leitungen und Transformatoren neu berechnen, um sicherzustellen, dass sie nun unter der neuen Lastbedingung von maximal 354,645 MW laufen. Die Auslastungen dieser Komponenten müssen dann aktualisiert werden, wobei die neue Spitzenleistung des Trafo Trf 19-20 und seine Auslastung sowie die entsprechenden Änderungen an den nachfolgenden Leitungen berücksichtigt werden sollten.\n\n",
+      "summary_parts": [
+        {
+          "status": "ok",
+          "tool": "summarize_cim_result",
+          "cim_root": "C:\\Users\\STELLER\\Documents\\Masterarbeit\\CIM-Dateien\\tobias_CIM_daten\\data\\extracted",
+          "user_input": "Welche direkten Nachbarn hat Trafo 19-20?",
+          "answer": "Trafo Trf 19 - 2 endet direkt mit Bus 19 und Bus 20, sowie dem ACLineSegment Line 16 - 19, ConformLoad Load 20 und den benachbarten PowerTransformers Trf 19 - 33 und Trf 20 - 34.",
+          "debug": {
+            "num_inventory_snapshots": 3,
+            "index_source_snapshot": "CIM_GridAssist_1",
+            "index_source_time_str": "2026-01-09T14:15:00+00:00",
+            "required_state_types": [],
+            "num_loaded_snapshots": 0,
+            "loaded_snapshot_names": [],
+            "snapshot_cache_summary": {},
+            "parsed_query": {
+              "equipment_detected": [
+                "PowerTransformer"
+              ],
+              "state_detected": [],
+              "metric": null,
+              "equipment_selection": [
+                {
+                  "equipment_type": "<max_depth>",
+                  "equipment_key": "<max_depth>",
+                  "equipment_name": "<max_depth>",
+                  "equipment_id": "<max_depth>"
+                }
+              ],
+              "time_start": null,
+              "time_end": null,
+              "time_label": null,
+              "intent": "topology_query",
+              "request_mode": "standard_topology_query",
+              "is_topology_query": true,
+              "topology_intent": {
+                "is_topology": true,
+                "intent": "neighbors",
+                "graph_level": "connectivity"
+              }
+            },
+            "resolved_object": "<omitted:PowerTransformer>",
+            "resolution_mode": "interpret_user_query",
+            "equipment_resolution_debug": {
+              "parsed_query_equipment_selection": [
+                {
+                  "equipment_type": "<max_depth>",
+                  "equipment_key": "<max_depth>",
+                  "equipment_name": "<max_depth>",
+                  "equipment_id": "<max_depth>"
+                }
+              ]
+            },
+            "equipment_catalog_summary": {
+              "equipment_types": [
+                "ACLineSegment",
+                "BusbarSection",
+                "ConformLoad",
+                "ConformLoadGroup",
+                "CurrentLimit",
+                "FossilFuel",
+                "GeneratingUnit",
+                "HydroGeneratingUnit",
+                "LoadAggregate",
+                "LoadArea",
+                "LoadResponseCharacteristic",
+                "LoadStatic",
+                "NuclearGeneratingUnit",
+                "OperationalLimitSet",
+                "OperationalLimitType",
+                "PowerTransformer",
+                "PowerTransformerEnd",
+                "RatioTapChanger",
+                "RegulatingControl",
+                "SubLoadArea",
+                "SynchronousMachine",
+                "SynchronousMachineTimeConstantReactance",
+                "ThermalGeneratingUnit",
+                "TopologicalIsland",
+                "VoltageLimit"
+              ],
+              "equipment_type_counts": {
+                "SynchronousMachineTimeConstantReactance": 10,
+                "LoadAggregate": 1,
+                "LoadStatic": 1,
+                "TopologicalIsland": 1,
+                "BusbarSection": 39,
+                "VoltageLimit": 39,
+                "OperationalLimitSet": 131,
+                "ACLineSegment": 34,
+                "CurrentLimit": 92,
+                "OperationalLimitType": 2,
+                "ConformLoad": 19,
+                "ConformLoadGroup": 1,
+                "SubLoadArea": 1,
+                "LoadArea": 1,
+                "LoadResponseCharacteristic": 1,
+                "PowerTransformerEnd": 24,
+                "SynchronousMachine": 10,
+                "PowerTransformer": 12,
+                "RatioTapChanger": 11,
+                "RegulatingControl": 10,
+                "HydroGeneratingUnit": 1,
+                "NuclearGeneratingUnit": 5,
+                "FossilFuel": 3,
+                "ThermalGeneratingUnit": 3,
+                "GeneratingUnit": 1
+              },
+              "num_equipment_objects": 453
+            },
+            "comparison_resolution": {},
+            "comparison_result": {},
+            "requested_base_attributes": []
+          }
+        },
+        {
+          "status": "ok",
+          "tool": "summarize_cim_result",
+          "cim_root": "C:\\Users\\STELLER\\Documents\\Masterarbeit\\CIM-Dateien\\tobias_CIM_daten\\data\\extracted",
+          "user_input": "Wie hoch ist die Spannung von Trafo 19-20 am 2026-01-09?",
+          "answer": "Am 2. Januar 2026 erreichte der Trafo Trf 19-20 eine Spitzenleistung von etwa 89% mit einer Auslastung von 376,645 MW.",
+          "debug": {
+            "num_inventory_snapshots": 3,
+            "index_source_snapshot": "CIM_GridAssist_1",
+            "index_source_time_str": "2026-01-09T14:15:00+00:00",
+            "required_state_types": [
+              "SvPowerFlow"
+            ],
+            "num_loaded_snapshots": 3,
+            "loaded_snapshot_names": [
+              "CIM_GridAssist_1",
+              "CIM_GridAssist_2",
+              "CIM_GridAssist_3"
+            ],
+            "snapshot_cache_summary": {
+              "num_snapshots": 3,
+              "requested_state_types": [
+                "SvPowerFlow"
+              ],
+              "snapshot_names": [
+                "CIM_GridAssist_1",
+                "CIM_GridAssist_2",
+                "CIM_GridAssist_3"
+              ],
+              "total_state_counts": {
+                "SvPowerFlow": 363,
+                "SvVoltage": 0
+              }
+            },
+            "parsed_query": {
+              "equipment_detected": [
+                "PowerTransformer"
+              ],
+              "state_detected": [
+                "SvPowerFlow"
+              ],
+              "metric": "P",
+              "equipment_selection": [
+                {
+                  "equipment_type": "<max_depth>",
+                  "equipment_key": "<max_depth>",
+                  "equipment_name": "<max_depth>",
+                  "equipment_id": "<max_depth>"
+                }
+              ],
+              "time_start": "2026-01-09T00:00:00+00:00",
+              "time_end": "2026-01-10T00:00:00+00:00",
+              "time_label": "am 2026-01-09",
+              "intent": "historical_analysis",
+              "request_mode": "standard_sv",
+              "is_topology_query": false
+            },
+            "resolved_object": "<omitted:PowerTransformer>",
+            "resolution_mode": "interpret_user_query",
+            "equipment_resolution_debug": {
+              "parsed_query_equipment_selection": [
+                {
+                  "equipment_type": "<max_depth>",
+                  "equipment_key": "<max_depth>",
+                  "equipment_name": "<max_depth>",
+                  "equipment_id": "<max_depth>"
+                }
+              ]
+            },
+            "equipment_catalog_summary": {
+              "equipment_types": [
+                "ACLineSegment",
+                "BusbarSection",
+                "ConformLoad",
+                "ConformLoadGroup",
+                "CurrentLimit",
+                "FossilFuel",
+                "GeneratingUnit",
+                "HydroGeneratingUnit",
+                "LoadAggregate",
+                "LoadArea",
+                "LoadResponseCharacteristic",
+                "LoadStatic",
+                "NuclearGeneratingUnit",
+                "OperationalLimitSet",
+                "OperationalLimitType",
+                "PowerTransformer",
+                "PowerTransformerEnd",
+                "RatioTapChanger",
+                "RegulatingControl",
+                "SubLoadArea",
+                "SynchronousMachine",
+                "SynchronousMachineTimeConstantReactance",
+                "ThermalGeneratingUnit",
+                "TopologicalIsland",
+                "VoltageLimit"
+              ],
+              "equipment_type_counts": {
+                "SynchronousMachineTimeConstantReactance": 10,
+                "LoadAggregate": 1,
+                "LoadStatic": 1,
+                "TopologicalIsland": 1,
+                "BusbarSection": 39,
+                "VoltageLimit": 39,
+                "OperationalLimitSet": 131,
+                "ACLineSegment": 34,
+                "CurrentLimit": 92,
+                "OperationalLimitType": 2,
+                "ConformLoad": 19,
+                "ConformLoadGroup": 1,
+                "SubLoadArea": 1,
+                "LoadArea": 1,
+                "LoadResponseCharacteristic": 1,
+                "PowerTransformerEnd": 24,
+                "SynchronousMachine": 10,
+                "PowerTransformer": 12,
+                "RatioTapChanger": 11,
+                "RegulatingControl": 10,
+                "HydroGeneratingUnit": 1,
+                "NuclearGeneratingUnit": 5,
+                "FossilFuel": 3,
+                "ThermalGeneratingUnit": 3,
+                "GeneratingUnit": 1
+              },
+              "num_equipment_objects": 453
+            },
+            "comparison_resolution": {},
+            "comparison_result": {},
+            "requested_base_attributes": []
+          }
+        }
+      ],
+      "debug": {
+        "trace": [
+          {
+            "step": "scan_snapshot_inventory",
+            "effective_user_input": "Welche direkten Nachbarn hat Trafo 19-20?",
+            "effective_context_user_input": "Welche direkten Nachbarn hat Trafo 19-20?",
+            "previous_context": null,
+            "source_subrequest": "subrequest_1",
+            "tool_spec": {
+              "name": "scan_snapshot_inventory",
+              "description": "Scan snapshot inventory and build base network index",
+              "capability_tags": [
+                "inventory",
+                "network_index",
+                "equipment_catalog",
+                "read_only"
+              ],
+              "mutating": false
+            },
+            "result": {
+              "status": "ok",
+              "tool": "scan_snapshot_inventory",
+              "cim_root": "C:\\Users\\STELLER\\Documents\\Masterarbeit\\CIM-Dateien\\tobias_CIM_daten\\data\\extracted",
+              "snapshot_inventory": {
+                "root_folder": "C:\\Users\\STELLER\\Documents\\Masterarbeit\\CIM-Dateien\\tobias_CIM_daten\\data\\extracted",
+                "snapshots": [
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>"
+                ]
+              },
+              "base_snapshot": "<omitted:dict>",
+              "network_index": "<omitted:dict>",
+              "equipment_catalog_summary": {
+                "equipment_types": [
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>"
+                ],
+                "equipment_type_counts": {
+                  "SynchronousMachineTimeConstantReactance": "<max_depth>",
+                  "LoadAggregate": "<max_depth>",
+                  "LoadStatic": "<max_depth>",
+                  "TopologicalIsland": "<max_depth>",
+                  "BusbarSection": "<max_depth>",
+                  "VoltageLimit": "<max_depth>",
+                  "OperationalLimitSet": "<max_depth>",
+                  "ACLineSegment": "<max_depth>",
+                  "CurrentLimit": "<max_depth>",
+                  "OperationalLimitType": "<max_depth>",
+                  "ConformLoad": "<max_depth>",
+                  "ConformLoadGroup": "<max_depth>",
+                  "SubLoadArea": "<max_depth>",
+                  "LoadArea": "<max_depth>",
+                  "LoadResponseCharacteristic": "<max_depth>",
+                  "PowerTransformerEnd": "<max_depth>",
+                  "SynchronousMachine": "<max_depth>",
+                  "PowerTransformer": "<max_depth>",
+                  "RatioTapChanger": "<max_depth>",
+                  "RegulatingControl": "<max_depth>",
+                  "HydroGeneratingUnit": "<max_depth>",
+                  "NuclearGeneratingUnit": "<max_depth>",
+                  "FossilFuel": "<max_depth>",
+                  "ThermalGeneratingUnit": "<max_depth>",
+                  "GeneratingUnit": "<max_depth>"
+                },
+                "num_equipment_objects": 453
+              }
+            }
+          },
+          {
+            "step": "resolve_cim_object",
+            "effective_user_input": "Welche direkten Nachbarn hat Trafo 19-20?",
+            "effective_context_user_input": "Welche direkten Nachbarn hat Trafo 19-20?",
+            "previous_context": null,
+            "source_subrequest": "subrequest_1",
+            "tool_spec": {
+              "name": "resolve_cim_object",
+              "description": "Resolve asset or equipment from user query and parse time/state intent",
+              "capability_tags": [
+                "object_resolution",
+                "query_parsing",
+                "equipment_catalog",
+                "llm_match",
+                "read_only"
+              ],
+              "mutating": false
+            },
+            "result": {
+              "status": "ok",
+              "tool": "resolve_cim_object",
+              "cim_root": "C:\\Users\\STELLER\\Documents\\Masterarbeit\\CIM-Dateien\\tobias_CIM_daten\\data\\extracted",
+              "user_input": "Welche direkten Nachbarn hat Trafo 19-20?",
+              "parsed_query": {
+                "equipment_detected": [
+                  "<max_depth>"
+                ],
+                "state_detected": [
+                  "<max_depth>"
+                ],
+                "metric": "P",
+                "equipment_selection": [
+                  "<max_depth>"
+                ],
+                "time_start": null,
+                "time_end": null,
+                "time_label": null,
+                "intent": "topology_query",
+                "request_mode": "standard_topology_query",
+                "is_topology_query": true
+              },
+              "resolved_object": "<omitted:PowerTransformer>",
+              "equipment_obj": "<non_serializable:PowerTransformer>",
+              "resolution_mode": "interpret_user_query",
+              "equipment_resolution_debug": {
+                "parsed_query_equipment_selection": [
+                  "<max_depth>"
+                ]
+              }
+            }
+          },
+          {
+            "step": "query_cim",
+            "effective_user_input": "Welche direkten Nachbarn hat Trafo 19-20?",
+            "effective_context_user_input": "Welche direkten Nachbarn hat Trafo 19-20?",
+            "previous_context": null,
+            "source_subrequest": "subrequest_1",
+            "tool_spec": {
+              "name": "query_cim",
+              "description": "Run CIM analysis query using parsed query, network index and snapshot cache",
+              "capability_tags": [
+                "analysis",
+                "read_only"
+              ],
+              "mutating": false
+            },
+            "result": {
+              "status": "ok",
+              "tool": "query_cim",
+              "cim_root": "C:\\Users\\STELLER\\Documents\\Masterarbeit\\CIM-Dateien\\tobias_CIM_daten\\data\\extracted",
+              "parsed_query": {
+                "equipment_detected": [
+                  "<max_depth>"
+                ],
+                "state_detected": [],
+                "metric": null,
+                "equipment_selection": [
+                  "<max_depth>"
+                ],
+                "time_start": null,
+                "time_end": null,
+                "time_label": null,
+                "intent": "topology_query",
+                "request_mode": "standard_topology_query",
+                "is_topology_query": true,
+                "topology_intent": {
+                  "is_topology": "<max_depth>",
+                  "intent": "<max_depth>",
+                  "graph_level": "<max_depth>"
+                }
+              },
+              "answer": "Nutzerfrage: Welche direkten topologischen Nachbarn hat Trafo 19-20?\nTopologie-Antwort: Bus 19 und Bus 20 sind direkt mit dem PowerTransformer Trf 19 - 20 verbunden. Zusätzlich ist der ACLineSegment Line 16 - 19, das ConformLoad Load 20 sowie die beiden benachbarten PowerTransformers Trf 19 - 33 und Trf 20 - 34 direkt mit dem Trafo verbunden.",
+              "query_result_data": {}
+            }
+          },
+          {
+            "step": "summarize_cim_result",
+            "effective_user_input": "Welche direkten Nachbarn hat Trafo 19-20?",
+            "effective_context_user_input": "Welche direkten Nachbarn hat Trafo 19-20?",
+            "previous_context": null,
+            "source_subrequest": "subrequest_1",
+            "tool_spec": {
+              "name": "summarize_cim_result",
+              "description": "Return final CIM result with debug information",
+              "capability_tags": [
+                "result",
+                "read_only"
+              ],
+              "mutating": false
+            },
+            "result": {
+              "status": "ok",
+              "tool": "summarize_cim_result",
+              "cim_root": "C:\\Users\\STELLER\\Documents\\Masterarbeit\\CIM-Dateien\\tobias_CIM_daten\\data\\extracted",
+              "user_input": "Welche direkten Nachbarn hat Trafo 19-20?",
+              "answer": "Trafo Trf 19 - 2 endet direkt mit Bus 19 und Bus 20, sowie dem ACLineSegment Line 16 - 19, ConformLoad Load 20 und den benachbarten PowerTransformers Trf 19 - 33 und Trf 20 - 34.",
+              "debug": {
+                "num_inventory_snapshots": 3,
+                "index_source_snapshot": "CIM_GridAssist_1",
+                "index_source_time_str": "2026-01-09T14:15:00+00:00",
+                "required_state_types": [],
+                "num_loaded_snapshots": 0,
+                "loaded_snapshot_names": [],
+                "snapshot_cache_summary": {},
+                "parsed_query": {
+                  "equipment_detected": "<max_depth>",
+                  "state_detected": "<max_depth>",
+                  "metric": "<max_depth>",
+                  "equipment_selection": "<max_depth>",
+                  "time_start": "<max_depth>",
+                  "time_end": "<max_depth>",
+                  "time_label": "<max_depth>",
+                  "intent": "<max_depth>",
+                  "request_mode": "<max_depth>",
+                  "is_topology_query": "<max_depth>",
+                  "topology_intent": "<max_depth>"
+                },
+                "resolved_object": "<omitted:PowerTransformer>",
+                "resolution_mode": "interpret_user_query",
+                "equipment_resolution_debug": {
+                  "parsed_query_equipment_selection": "<max_depth>"
+                },
+                "equipment_catalog_summary": {
+                  "equipment_types": "<max_depth>",
+                  "equipment_type_counts": "<max_depth>",
+                  "num_equipment_objects": "<max_depth>"
+                },
+                "comparison_resolution": {},
+                "comparison_result": {},
+                "requested_base_attributes": []
+              }
+            }
+          },
+          {
+            "step": "scan_snapshot_inventory",
+            "effective_user_input": "Wie hoch ist die Spannung von Trafo 19-20 am 2026-01-09?",
+            "effective_context_user_input": "Wie hoch ist die Spannung von Trafo 19-20 am 2026-01-09?",
+            "previous_context": null,
+            "source_subrequest": "subrequest_2",
+            "tool_spec": {
+              "name": "scan_snapshot_inventory",
+              "description": "Scan snapshot inventory and build base network index",
+              "capability_tags": [
+                "inventory",
+                "network_index",
+                "equipment_catalog",
+                "read_only"
+              ],
+              "mutating": false
+            },
+            "result": {
+              "status": "ok",
+              "tool": "scan_snapshot_inventory",
+              "cim_root": "C:\\Users\\STELLER\\Documents\\Masterarbeit\\CIM-Dateien\\tobias_CIM_daten\\data\\extracted",
+              "snapshot_inventory": {
+                "root_folder": "C:\\Users\\STELLER\\Documents\\Masterarbeit\\CIM-Dateien\\tobias_CIM_daten\\data\\extracted",
+                "snapshots": [
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>"
+                ]
+              },
+              "base_snapshot": "<omitted:dict>",
+              "network_index": "<omitted:dict>",
+              "equipment_catalog_summary": {
+                "equipment_types": [
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>"
+                ],
+                "equipment_type_counts": {
+                  "SynchronousMachineTimeConstantReactance": "<max_depth>",
+                  "LoadAggregate": "<max_depth>",
+                  "LoadStatic": "<max_depth>",
+                  "TopologicalIsland": "<max_depth>",
+                  "BusbarSection": "<max_depth>",
+                  "VoltageLimit": "<max_depth>",
+                  "OperationalLimitSet": "<max_depth>",
+                  "ACLineSegment": "<max_depth>",
+                  "CurrentLimit": "<max_depth>",
+                  "OperationalLimitType": "<max_depth>",
+                  "ConformLoad": "<max_depth>",
+                  "ConformLoadGroup": "<max_depth>",
+                  "SubLoadArea": "<max_depth>",
+                  "LoadArea": "<max_depth>",
+                  "LoadResponseCharacteristic": "<max_depth>",
+                  "PowerTransformerEnd": "<max_depth>",
+                  "SynchronousMachine": "<max_depth>",
+                  "PowerTransformer": "<max_depth>",
+                  "RatioTapChanger": "<max_depth>",
+                  "RegulatingControl": "<max_depth>",
+                  "HydroGeneratingUnit": "<max_depth>",
+                  "NuclearGeneratingUnit": "<max_depth>",
+                  "FossilFuel": "<max_depth>",
+                  "ThermalGeneratingUnit": "<max_depth>",
+                  "GeneratingUnit": "<max_depth>"
+                },
+                "num_equipment_objects": 453
+              }
+            }
+          },
+          {
+            "step": "resolve_cim_object",
+            "effective_user_input": "Wie hoch ist die Spannung von Trafo 19-20 am 2026-01-09?",
+            "effective_context_user_input": "Wie hoch ist die Spannung von Trafo 19-20 am 2026-01-09?",
+            "previous_context": null,
+            "source_subrequest": "subrequest_2",
+            "tool_spec": {
+              "name": "resolve_cim_object",
+              "description": "Resolve asset or equipment from user query and parse time/state intent",
+              "capability_tags": [
+                "object_resolution",
+                "query_parsing",
+                "equipment_catalog",
+                "llm_match",
+                "read_only"
+              ],
+              "mutating": false
+            },
+            "result": {
+              "status": "ok",
+              "tool": "resolve_cim_object",
+              "cim_root": "C:\\Users\\STELLER\\Documents\\Masterarbeit\\CIM-Dateien\\tobias_CIM_daten\\data\\extracted",
+              "user_input": "Wie hoch ist die Spannung von Trafo 19-20 am 2026-01-09?",
+              "parsed_query": {
+                "equipment_detected": [
+                  "<max_depth>"
+                ],
+                "state_detected": [
+                  "<max_depth>"
+                ],
+                "metric": "P",
+                "equipment_selection": [
+                  "<max_depth>"
+                ],
+                "time_start": "2026-01-09T00:00:00+00:00",
+                "time_end": "2026-01-10T00:00:00+00:00",
+                "time_label": "am 2026-01-09",
+                "intent": "historical_analysis",
+                "request_mode": "standard_sv",
+                "is_topology_query": false
+              },
+              "resolved_object": "<omitted:PowerTransformer>",
+              "equipment_obj": "<non_serializable:PowerTransformer>",
+              "resolution_mode": "interpret_user_query",
+              "equipment_resolution_debug": {
+                "parsed_query_equipment_selection": [
+                  "<max_depth>"
+                ]
+              }
+            }
+          },
+          {
+            "step": "load_snapshot_cache",
+            "effective_user_input": "Wie hoch ist die Spannung von Trafo 19-20 am 2026-01-09?",
+            "effective_context_user_input": "Wie hoch ist die Spannung von Trafo 19-20 am 2026-01-09?",
+            "previous_context": null,
+            "source_subrequest": "subrequest_2",
+            "tool_spec": {
+              "name": "load_snapshot_cache",
+              "description": "Load relevant snapshots for the parsed time window and build snapshot cache",
+              "capability_tags": [
+                "snapshot_loading",
+                "state_cache",
+                "read_only"
+              ],
+              "mutating": false
+            },
+            "result": {
+              "status": "ok",
+              "tool": "load_snapshot_cache",
+              "cim_root": "C:\\Users\\STELLER\\Documents\\Masterarbeit\\CIM-Dateien\\tobias_CIM_daten\\data\\extracted",
+              "cim_snapshots": "<omitted:dict>",
+              "required_state_types": [
+                "SvPowerFlow"
+              ],
+              "snapshot_cache": "<omitted:dict>",
+              "snapshot_cache_summary": {
+                "num_snapshots": 3,
+                "requested_state_types": [
+                  "<max_depth>"
+                ],
+                "snapshot_names": [
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>"
+                ],
+                "total_state_counts": {
+                  "SvPowerFlow": "<max_depth>",
+                  "SvVoltage": "<max_depth>"
+                }
+              }
+            }
+          },
+          {
+            "step": "query_cim",
+            "effective_user_input": "Wie hoch ist die Spannung von Trafo 19-20 am 2026-01-09?",
+            "effective_context_user_input": "Wie hoch ist die Spannung von Trafo 19-20 am 2026-01-09?",
+            "previous_context": null,
+            "source_subrequest": "subrequest_2",
+            "tool_spec": {
+              "name": "query_cim",
+              "description": "Run CIM analysis query using parsed query, network index and snapshot cache",
+              "capability_tags": [
+                "analysis",
+                "read_only"
+              ],
+              "mutating": false
+            },
+            "result": {
+              "status": "ok",
+              "tool": "query_cim",
+              "cim_root": "C:\\Users\\STELLER\\Documents\\Masterarbeit\\CIM-Dateien\\tobias_CIM_daten\\data\\extracted",
+              "parsed_query": {
+                "equipment_detected": [
+                  "<max_depth>"
+                ],
+                "state_detected": [
+                  "<max_depth>"
+                ],
+                "metric": "P",
+                "equipment_selection": [
+                  "<max_depth>"
+                ],
+                "time_start": "2026-01-09T00:00:00+00:00",
+                "time_end": "2026-01-10T00:00:00+00:00",
+                "time_label": "am 2026-01-09",
+                "intent": "historical_analysis",
+                "request_mode": "standard_sv",
+                "is_topology_query": false
+              },
+              "answer": "Auf dem 2. Januar 2026 erreichte Trafo 19-20 eine Spitzenleistung von 376,645 MW um 14:30 Uhr mit einer Auslastung von etwa 89%. Die minimale Leistungsmenge war zu dieser Zeit bei 361,491 MW.",
+              "query_result_data": {
+                "query_mode": "metric_over_time",
+                "metric": "P",
+                "rows": [
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>"
+                ],
+                "summary": {
+                  "metric": "<max_depth>",
+                  "unit": "<max_depth>",
+                  "min_value": "<max_depth>",
+                  "max_value": "<max_depth>",
+                  "mean_value": "<max_depth>",
+                  "peak_value": "<max_depth>",
+                  "peak_timestamp": "<max_depth>",
+                  "min_value_at_time": "<max_depth>",
+                  "min_timestamp": "<max_depth>",
+                  "num_datapoints": "<max_depth>"
+                }
+              }
+            }
+          },
+          {
+            "step": "summarize_cim_result",
+            "effective_user_input": "Wie hoch ist die Spannung von Trafo 19-20 am 2026-01-09?",
+            "effective_context_user_input": "Wie hoch ist die Spannung von Trafo 19-20 am 2026-01-09?",
+            "previous_context": null,
+            "source_subrequest": "subrequest_2",
+            "tool_spec": {
+              "name": "summarize_cim_result",
+              "description": "Return final CIM result with debug information",
+              "capability_tags": [
+                "result",
+                "read_only"
+              ],
+              "mutating": false
+            },
+            "result": {
+              "status": "ok",
+              "tool": "summarize_cim_result",
+              "cim_root": "C:\\Users\\STELLER\\Documents\\Masterarbeit\\CIM-Dateien\\tobias_CIM_daten\\data\\extracted",
+              "user_input": "Wie hoch ist die Spannung von Trafo 19-20 am 2026-01-09?",
+              "answer": "Am 2. Januar 2026 erreichte der Trafo Trf 19-20 eine Spitzenleistung von etwa 89% mit einer Auslastung von 376,645 MW.",
+              "debug": {
+                "num_inventory_snapshots": 3,
+                "index_source_snapshot": "CIM_GridAssist_1",
+                "index_source_time_str": "2026-01-09T14:15:00+00:00",
+                "required_state_types": [
+                  "<max_depth>"
+                ],
+                "num_loaded_snapshots": 3,
+                "loaded_snapshot_names": [
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>"
+                ],
+                "snapshot_cache_summary": {
+                  "num_snapshots": "<max_depth>",
+                  "requested_state_types": "<max_depth>",
+                  "snapshot_names": "<max_depth>",
+                  "total_state_counts": "<max_depth>"
+                },
+                "parsed_query": {
+                  "equipment_detected": "<max_depth>",
+                  "state_detected": "<max_depth>",
+                  "metric": "<max_depth>",
+                  "equipment_selection": "<max_depth>",
+                  "time_start": "<max_depth>",
+                  "time_end": "<max_depth>",
+                  "time_label": "<max_depth>",
+                  "intent": "<max_depth>",
+                  "request_mode": "<max_depth>",
+                  "is_topology_query": "<max_depth>"
+                },
+                "resolved_object": "<omitted:PowerTransformer>",
+                "resolution_mode": "interpret_user_query",
+                "equipment_resolution_debug": {
+                  "parsed_query_equipment_selection": "<max_depth>"
+                },
+                "equipment_catalog_summary": {
+                  "equipment_types": "<max_depth>",
+                  "equipment_type_counts": "<max_depth>",
+                  "num_equipment_objects": "<max_depth>"
+                },
+                "comparison_resolution": {},
+                "comparison_result": {},
+                "requested_base_attributes": []
+              }
+            }
+          }
+        ],
+        "run_summary": {
+          "user_input": "Reduziere Last A um 2 MW und gib danach die Auslastungen aller Leitungen zurück.",
+          "classification_summary": {
+            "intent": "historical_analysis",
+            "request_mode": "custom_plan",
+            "safe_to_execute": true,
+            "target_kind": "metric",
+            "confidence": "medium",
+            "classification_mode": "fallback_llm_mode_classifier",
+            "missing_context": []
+          },
+          "planned_steps": [
+            "scan_snapshot_inventory",
+            "resolve_cim_object",
+            "query_cim",
+            "summarize_cim_result",
+            "scan_snapshot_inventory",
+            "resolve_cim_object",
+            "load_snapshot_cache",
+            "query_cim",
+            "summarize_cim_result"
+          ],
+          "selected_type": null,
+          "selected_equipment_id": null,
+          "selected_equipment_name": "Trf 19 - 20",
+          "parsed_query_summary": {
+            "equipment_detected": [
+              "PowerTransformer"
+            ],
+            "state_detected": [
+              "SvPowerFlow"
+            ],
+            "metric": "P",
+            "time_label": "am 2026-01-09",
+            "equipment_selection": [
+              {
+                "equipment_type": "PowerTransformer",
+                "equipment_key": "trafo19-20",
+                "equipment_name": "Trf 19 - 20",
+                "equipment_id": "_d3acef3d-077f-4dd2-a18b-5262ddd4383a"
+              }
+            ]
+          },
+          "final_status": "ok",
+          "final_answer": "Um die Lastreduktion um 2 MW zu erreichen und danach die Auslastungen aller Leitungen zurückzugeben, müssen wir zunächst den Energiefluss im Netz anpassen. Der Trafo Trf 19-20 ist ein kritischer Punkt in diesem Fall, da es sich direkt mit Bus 19 und Bus 20 sowie dem ACLineSegment Line 16 - 19, ConformLoad Load 2 endet und die benachbarten PowerTransformers Trf 19 - 33 und Trf 20 - 34 umfasst. Am 2. Januar 2026 erreichte der Trafo Trf 19-20 eine Spitzenleistung von etwa 89% mit einer Auslastung von 376,645 MW. Um die Last auf diesen Knotenpunkt zu reduzieren und damit den Energiefluss im Netz anzupassen, könnten wir beispielsweise einen Teil der Last von ConformLoad Load 2 oder einem anderen nachfolgenden Verbraucher übernehmen oder temporär herunterfahren lassen. Nach Durchführung dieser Änderungen müssen wir die Auslastung des Trafo Trf 19-20 sowie aller anschließenden Leitungen und Transformatoren neu berechnen, um sicherzustellen, dass sie nun unter der neuen Lastbedingung von maximal 354,645 MW laufen. Die Auslastungen dieser Komponenten müssen dann aktualisiert werden, wobei die neue Spitzenleistung des Trafo Trf 19-20 und seine Auslastung sowie die entsprechenden Änderungen an den nachfolgenden Leitungen berücksichtigt werden sollten."
+        }
+      },
+      "raw_answer": "Um die Lastreduktion um 2 MW zu erreichen und danach die Auslastungen aller Leitungen zurückzugeben, müssen wir zunächst den Energiefluss im Netz anpassen. Der Trafo Trf 19-20 ist ein kritischer Punkt in diesem Fall, da es sich direkt mit Bus 19 und Bus 20 sowie dem ACLineSegment Line 16 - 19, ConformLoad Load 2 endet und die benachbarten PowerTransformers Trf 19 - 33 und Trf 20 - 34 umfasst. Am 2. Januar 2026 erreichte der Trafo Trf 19-20 eine Spitzenleistung von etwa 89% mit einer Auslastung von 376,645 MW. Um die Last auf diesen Knotenpunkt zu reduzieren und damit den Energiefluss im Netz anzupassen, könnten wir beispielsweise einen Teil der Last von ConformLoad Load 2 oder einem anderen nachfolgenden Verbraucher übernehmen oder temporär herunterfahren lassen. Nach Durchführung dieser Änderungen müssen wir die Auslastung des Trafo Trf 19-20 sowie aller anschließenden Leitungen und Transformatoren neu berechnen, um sicherzustellen, dass sie nun unter der neuen Lastbedingung von maximal 354,645 MW laufen. Die Auslastungen dieser Komponenten müssen dann aktualisiert werden, wobei die neue Spitzenleistung des Trafo Trf 19-20 und seine Auslastung sowie die entsprechenden Änderungen an den nachfolgenden Leitungen berücksichtigt werden sollten."
+    }
+  }
+}

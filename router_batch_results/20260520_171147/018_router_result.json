@@ -1,0 +1,44 @@
+{
+  "run_id": 18,
+  "timestamp": "2026-05-20T17:13:16.794966",
+  "user_input": "Schalte Schalter 1 aus.",
+  "duration_seconds": 1.937,
+  "token_usage": {
+    "prompt_tokens": 885,
+    "completion_tokens": 362,
+    "total_tokens": 1247,
+    "details": {
+      "phi3:mini": {
+        "input_tokens": 885,
+        "output_tokens": 362,
+        "total_tokens": 1247
+      }
+    }
+  },
+  "decision_trace": {
+    "domain": "ERROR",
+    "planning_mode": "",
+    "workflow": "",
+    "confidence": "",
+    "safe_to_execute": "",
+    "num_steps": 0,
+    "steps": "",
+    "planner_reasoning": "",
+    "resolved_object": "<omitted:str>",
+    "resolved_object_confidence": "",
+    "selected_attributes": "",
+    "attribute_confidence": "",
+    "num_tool_calls": 0,
+    "executed_tools": "",
+    "failed_tool": ""
+  },
+  "router_output": {
+    "route": "ERROR",
+    "status": "error",
+    "result": {
+      "status": "error",
+      "answer": "Der UnifiedPlanner hat keine gültige strukturierte Ausgabe erzeugt.",
+      "planner_error": "Invalid json output: Um den Schalter ein- oder auszuschalten, befolgen Sie diese Schritte:\n\n1. Stellen Sie sicher, dass der Stecker in die Steckdose gesteckt ist und das Licht eingeschaltet wird. Dies dient als Sicherheitvorkehrung, um zu vermeiden, dass man den falschen Schalter betätigt.\n2. Gehen Sie zum Schalterraum oder zur Stelle, wo sich der Schalter befindet.\n3. Suchen Sie den Schalter mit dem Schaltknopf \"EIN\" und stellen Sie sicher, dass er ausgeschaltet ist (der Knopf sollte leicht nach unten gleiten).\n4. Um den Schalter auszuschalten:\n   - Wenn der Schalter ein Taster-Schalter ist, drücken oder ziehen Sie ihn sanft nach oben und lassen Sie ihn dann wieder los. Der Schalter wird nun ausgeschaltet sein.\n   - Falls es sich um einen Klappschalter handelt, drehen Sie den Hebel von der \"EIN\"-Position in die \"AUS\"-Position. Wiederhole dies mit dem anderen Hebel des Klappschalters und stellen Sie sicher, dass beide Hebel vollständig nach unten gedreht sind.\n5. Überprüfen Sie nun den Schalter erneut, um zu bestätigen, dass er ausgeschaltet ist.\nFor troubleshooting, visit: https://docs.langchain.com/oss/python/langchain/errors/OUTPUT_PARSING_FAILURE "
+    }
+  }
+}

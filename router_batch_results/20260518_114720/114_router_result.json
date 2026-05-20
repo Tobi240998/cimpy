@@ -1,0 +1,75 @@
+{
+  "run_id": 114,
+  "timestamp": "2026-05-18T16:49:37.035735",
+  "user_input": "Zu welcher topologischen Komponente gehört Load 27? Wie hoch war die Wirkleistung von Load 27 am 09.01.2026?",
+  "duration_seconds": 48.059,
+  "token_usage": {
+    "prompt_tokens": 4505,
+    "completion_tokens": 4613,
+    "total_tokens": 9118,
+    "details": {
+      "phi3:mini": {
+        "total_tokens": 9118,
+        "output_tokens": 4613,
+        "input_tokens": 4505
+      }
+    }
+  },
+  "decision_trace": {
+    "domain": "ERROR",
+    "planning_mode": "",
+    "workflow": "",
+    "confidence": "",
+    "safe_to_execute": "",
+    "num_steps": 0,
+    "steps": "",
+    "planner_reasoning": "",
+    "resolved_object": "<omitted:str>",
+    "resolved_object_confidence": "",
+    "selected_attributes": "",
+    "attribute_confidence": "",
+    "num_tool_calls": 0,
+    "executed_tools": "",
+    "failed_tool": ""
+  },
+  "router_output": {
+    "route": "ERROR",
+    "status": "error",
+    "result": {
+      "status": "error",
+      "answer": "Die zusammengesetzte Anfrage konnte nicht vollständig ausgeführt werden.",
+      "composite": {
+        "status": "ok",
+        "is_composite": true,
+        "subrequests": [
+          {
+            "user_input": "Zu welcher topologischen Komponente gehört Load 27?",
+            "depends_on_previous": false
+          },
+          {
+            "user_input": "Wie hoch war die Wirkleistung von Load 27 am 09.01.2026?",
+            "depends_on_previous": false
+          }
+        ],
+        "reasoning": "The user asks two distinct, independent questions: (1) identifying the topological component of Load 27, and (2) retrieving historical active power data for Load 27 on a specific date. Neither part depends on the result of the other, but they represent separate goals requiring two separate data queries."
+      },
+      "subresults": [
+        {
+          "index": 1,
+          "user_input": "Zu welcher topologischen Komponente gehört Load 27?",
+          "effective_input": "Zu welcher topologischen Komponente gehört Load 27?",
+          "depends_on_previous": false,
+          "output": {
+            "route": "ERROR",
+            "status": "error",
+            "result": {
+              "status": "error",
+              "answer": "Der UnifiedPlanner hat keine gültige strukturierte Ausgabe erzeugt.",
+              "planner_error": "Invalid json output: \nFor troubleshooting, visit: https://docs.langchain.com/oss/python/langchain/errors/OUTPUT_PARSING_FAILURE "
+            }
+          }
+        }
+      ]
+    }
+  }
+}

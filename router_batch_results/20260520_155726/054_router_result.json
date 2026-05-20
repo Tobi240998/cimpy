@@ -1,0 +1,46 @@
+{
+  "run_id": 54,
+  "timestamp": "2026-05-20T16:22:36.084876",
+  "user_input": "Liste alle verfügbaren Attribute von Bus 1 in Powerfactory auf.",
+  "duration_seconds": 0.731,
+  "token_usage": {
+    "prompt_tokens": 829,
+    "completion_tokens": 115,
+    "total_tokens": 944,
+    "details": {
+      "phi3:mini": {
+        "input_tokens": 829,
+        "output_tokens": 115,
+        "total_tokens": 944
+      }
+    }
+  },
+  "decision_trace": {
+    "domain": "ASK_USER",
+    "planning_mode": "",
+    "workflow": "",
+    "confidence": "",
+    "safe_to_execute": "",
+    "num_steps": 0,
+    "steps": "",
+    "planner_reasoning": "",
+    "resolved_object": "<omitted:str>",
+    "resolved_object_confidence": "",
+    "selected_attributes": "",
+    "attribute_confidence": "",
+    "num_tool_calls": 0,
+    "executed_tools": "",
+    "failed_tool": "",
+    "equipment_resolution_mode": "",
+    "attribute_resolution_mode": "",
+    "comparison_resolution_mode": ""
+  },
+  "router_output": {
+    "route": "ASK_USER",
+    "question": "Welche spezifischen Informationen benötigen Sie über die Attributen des Busses 1 im PowerFactory-Projekt? Zum Beispiel, möchten Sie den Spannungsabfall oder den Stromfluss wissen? Gibt es bestimmte Parameter wie Lastmomente oder Leistungswerte, die Ihnen interessieren?",
+    "missing_fields": [
+      "attribute"
+    ],
+    "partial": {}
+  }
+}

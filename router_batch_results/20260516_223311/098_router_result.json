@@ -1,0 +1,44 @@
+{
+  "run_id": 98,
+  "timestamp": "2026-05-17T10:34:12.222760",
+  "user_input": "Wie hat sich in CIM die Wirkleistung von Load 27 am 09.01.2026 über die Zeit entwickelt?",
+  "duration_seconds": 29.826,
+  "token_usage": {
+    "prompt_tokens": 4513,
+    "completion_tokens": 2868,
+    "total_tokens": 7381,
+    "details": {
+      "phi3:mini": {
+        "input_tokens": 4513,
+        "output_tokens": 2868,
+        "total_tokens": 7381
+      }
+    }
+  },
+  "decision_trace": {
+    "domain": "ERROR",
+    "planning_mode": "",
+    "workflow": "",
+    "confidence": "",
+    "safe_to_execute": "",
+    "num_steps": 0,
+    "steps": "",
+    "planner_reasoning": "",
+    "resolved_object": "",
+    "resolved_object_confidence": "",
+    "selected_attributes": "",
+    "attribute_confidence": "",
+    "num_tool_calls": 0,
+    "executed_tools": "",
+    "failed_tool": ""
+  },
+  "router_output": {
+    "route": "ERROR",
+    "status": "error",
+    "result": {
+      "status": "error",
+      "answer": "Der UnifiedPlanner hat keine gültige strukturierte Ausgabe erzeugt.",
+      "planner_error": "Invalid json output: \nFor troubleshooting, visit: https://docs.langchain.com/oss/python/langchain/errors/OUTPUT_PARSING_FAILURE "
+    }
+  }
+}

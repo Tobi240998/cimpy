@@ -1,0 +1,44 @@
+{
+  "run_id": 22,
+  "timestamp": "2026-05-20T17:13:22.734623",
+  "user_input": "Zuschalten: Switch 1.",
+  "duration_seconds": 1.604,
+  "token_usage": {
+    "prompt_tokens": 885,
+    "completion_tokens": 290,
+    "total_tokens": 1175,
+    "details": {
+      "phi3:mini": {
+        "input_tokens": 885,
+        "output_tokens": 290,
+        "total_tokens": 1175
+      }
+    }
+  },
+  "decision_trace": {
+    "domain": "ERROR",
+    "planning_mode": "",
+    "workflow": "",
+    "confidence": "",
+    "safe_to_execute": "",
+    "num_steps": 0,
+    "steps": "",
+    "planner_reasoning": "",
+    "resolved_object": "<omitted:str>",
+    "resolved_object_confidence": "",
+    "selected_attributes": "",
+    "attribute_confidence": "",
+    "num_tool_calls": 0,
+    "executed_tools": "",
+    "failed_tool": ""
+  },
+  "router_output": {
+    "route": "ERROR",
+    "status": "error",
+    "result": {
+      "status": "error",
+      "answer": "Der UnifiedPlanner hat keine gültige strukturierte Ausgabe erzeugt.",
+      "planner_error": "Invalid json output: To switch to power source number one, please follow these steps or use the designated command for your system if available:\n\n1. Locate the main control panel of your device where you can access different settings and options.\n2. Look for a button labeled 'Switch', 'Power Source' or similar that indicates multiple sources with selectable numbers (e.g., 1, 2).\n3. Press this button to cycle through available power sources until the indicator shows source number one is active. If your device has an LED display showing current settings, it should now reflect \"Switched to Power Source: 1\".\n4. Alternatively, if you have a remote control or smartphone app for managing your devices' functions, navigate to the 'Power Settings' section and select option 'Source Switcher'. Choose source number one from the list of available sources. The device should confirm that it has switched over by displaying \"Switched to Power Source: 1\" on its screen if applicable.\n5. If you are unable to find a physical switch or button, consult your user manual for specific instructions related to switching power sources in this model as these procedures can vary significantly between devices.\nFor troubleshooting, visit: https://docs.langchain.com/oss/python/langchain/errors/OUTPUT_PARSING_FAILURE "
+    }
+  }
+}

@@ -1,0 +1,44 @@
+{
+  "run_id": 85,
+  "timestamp": "2026-05-20T17:17:56.319033",
+  "user_input": "Erhöhe Last 3 um 20 MW.",
+  "duration_seconds": 1.859,
+  "token_usage": {
+    "prompt_tokens": 893,
+    "completion_tokens": 343,
+    "total_tokens": 1236,
+    "details": {
+      "phi3:mini": {
+        "input_tokens": 893,
+        "output_tokens": 343,
+        "total_tokens": 1236
+      }
+    }
+  },
+  "decision_trace": {
+    "domain": "ERROR",
+    "planning_mode": "",
+    "workflow": "",
+    "confidence": "",
+    "safe_to_execute": "",
+    "num_steps": 0,
+    "steps": "",
+    "planner_reasoning": "",
+    "resolved_object": "<omitted:str>",
+    "resolved_object_confidence": "",
+    "selected_attributes": "",
+    "attribute_confidence": "",
+    "num_tool_calls": 0,
+    "executed_tools": "",
+    "failed_tool": ""
+  },
+  "router_output": {
+    "route": "ERROR",
+    "status": "error",
+    "result": {
+      "status": "error",
+      "answer": "Der UnifiedPlanner hat keine gültige strukturierte Ausgabe erzeugt.",
+      "planner_error": "Invalid json output: Um die Last von 3 auf 50 MW zu erhöhen, muss der Strombedarf des Systems ermittelt werden und entsprechend angepasst oder zusätzlich bereitgestellt werden. Dies könnte eine Erhöhung der Leistung an den Generatoren beinhalten oder ein Anpassen von Energiequellen wie Solar- oder Windenergie, um die zusätzliche Last zu decken.\n\n\nBeispiel: Wenn das System mit 3 MW betrieben wird und nun auf 50 MW erweitert werden soll, muss der Strombedarf um 47 MW erhöht werden (unter der Annahme, dass die bestehende Last von 3 MW beibehalten wird). Dies könnte durch folgende Maßnahmen erreicht werden:\n\n- Erhöhung der Leistung an den Generatoren auf insgesamt 50 MW.\n\n- Ausbau des Solarenergieanlagen um zusätzliche Kapazität hinzuzufügen, die genügend Strom liefern kann, wenn er notwendig ist (abhängig von lokalen Wetterbedingungen und Sonnenstunden).\n\n- Erweiterung der Windkraftanlage oder Installation neuer Anlagen mit einer Kapazität von mindestens 47 MW.\nFor troubleshooting, visit: https://docs.langchain.com/oss/python/langchain/errors/OUTPUT_PARSING_FAILURE "
+    }
+  }
+}

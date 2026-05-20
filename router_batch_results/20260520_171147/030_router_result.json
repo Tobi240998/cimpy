@@ -1,0 +1,44 @@
+{
+  "run_id": 30,
+  "timestamp": "2026-05-20T17:13:41.664626",
+  "user_input": "Was ist bei Powerfactory direkt mit Bus 5 verbunden?",
+  "duration_seconds": 1.675,
+  "token_usage": {
+    "prompt_tokens": 895,
+    "completion_tokens": 298,
+    "total_tokens": 1193,
+    "details": {
+      "phi3:mini": {
+        "input_tokens": 895,
+        "output_tokens": 298,
+        "total_tokens": 1193
+      }
+    }
+  },
+  "decision_trace": {
+    "domain": "ERROR",
+    "planning_mode": "",
+    "workflow": "",
+    "confidence": "",
+    "safe_to_execute": "",
+    "num_steps": 0,
+    "steps": "",
+    "planner_reasoning": "",
+    "resolved_object": "<omitted:str>",
+    "resolved_object_confidence": "",
+    "selected_attributes": "",
+    "attribute_confidence": "",
+    "num_tool_calls": 0,
+    "executed_tools": "",
+    "failed_tool": ""
+  },
+  "router_output": {
+    "route": "ERROR",
+    "status": "error",
+    "result": {
+      "status": "error",
+      "answer": "Der UnifiedPlanner hat keine gültige strukturierte Ausgabe erzeugt.",
+      "planner_error": "Invalid json output: Um Ihre Frage zu beantworten, müssten wir zunächst wissen, was \"Powerfactory\" in diesem Kontext bedeutet. Da es sich nicht um ein weit verbreitetes Produkt oder eine Dienstleistung handelt und keine weiteren Informationen vorhanden sind, kann ich nur spekulieren. Wenn Powerfactory einen Energieverteilungsnetzbetreiber ist, könnte Bus 5 mit einem bestimmten Teil des Netzes verbunden sein, wie z.B. einer Gruppe von Verbrauchern oder ein anderes System innerhalb der Netzeinheit.\n\nIn diesem Fall wäre es notwendig, die spezifischen Dokumentationen oder Datenbanken von Powerfactory zu konsultieren, um genaue Informationen über den Status und die Konnektivität des Busses 5 mit anderen Komponenten im Netzwerk zu erhalten.\nFor troubleshooting, visit: https://docs.langchain.com/oss/python/langchain/errors/OUTPUT_PARSING_FAILURE "
+    }
+  }
+}

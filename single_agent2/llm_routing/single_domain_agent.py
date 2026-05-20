@@ -95,30 +95,41 @@ class SingleDomainAgent:
 
         self._pending = None
         plan = planner_result["plan"]
+
         self._debug(
             "UNIFIED_PLAN",
             plan.model_dump() if hasattr(plan, "model_dump") else plan.dict()
         )
+
         result = self.executor.execute(plan)
+
+        if not isinstance(result, dict):
+            result = {"answer": str(result)}
+
+        # Rohantwort sichern, bevor der Finalizer result["answer"] überschreibt
+        result["raw_answer"] = result.get("answer")
+
+        # Kleiner, kontrollierter Payload für den Finalizer
+        # Dadurch ist der Single Agent hier vergleichbar mit dem Multiagenten.
+        finalizer_payload = {
+            "status": result.get("status"),
+            "answer": result.get("raw_answer"),
+            "error": result.get("error"),
+            "details": result.get("details"),
+        }
 
         final_answer = build_final_answer_with_llm(
             llm=self.planner.llm,
             user_input=user_input,
             route=plan.domain,
-            execution_result=result,
+            execution_result=finalizer_payload,
         )
-
-        if not isinstance(result, dict):
-            result = {"answer": str(result)}
-
-        result["raw_answer"] = result.get("answer")
 
         if hasattr(final_answer, "content"):
             result["answer"] = final_answer.content
         else:
             result["answer"] = str(final_answer)
 
-        trace = []
         trace = result.get("debug_trace", [])
         if not trace:
             debug = result.get("debug", {})

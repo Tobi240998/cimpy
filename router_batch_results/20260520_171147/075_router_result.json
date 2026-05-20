@@ -1,0 +1,44 @@
+{
+  "run_id": 75,
+  "timestamp": "2026-05-20T17:17:24.729876",
+  "user_input": "Öffne den Schalter Schalter 1 und gib danach die Busspannungen zurück.",
+  "duration_seconds": 2.22,
+  "token_usage": {
+    "prompt_tokens": 911,
+    "completion_tokens": 406,
+    "total_tokens": 1317,
+    "details": {
+      "phi3:mini": {
+        "input_tokens": 911,
+        "output_tokens": 406,
+        "total_tokens": 1317
+      }
+    }
+  },
+  "decision_trace": {
+    "domain": "ERROR",
+    "planning_mode": "",
+    "workflow": "",
+    "confidence": "",
+    "safe_to_execute": "",
+    "num_steps": 0,
+    "steps": "",
+    "planner_reasoning": "",
+    "resolved_object": "<omitted:str>",
+    "resolved_object_confidence": "",
+    "selected_attributes": "",
+    "attribute_confidence": "",
+    "num_tool_calls": 0,
+    "executed_tools": "",
+    "failed_tool": ""
+  },
+  "router_output": {
+    "route": "ERROR",
+    "status": "error",
+    "result": {
+      "status": "error",
+      "answer": "Der UnifiedPlanner hat keine gültige strukturierte Ausgabe erzeugt.",
+      "planner_error": "Invalid json output: Um diese Anweisung umzusetzen, müsste ich als KI-Assistent keine physischen Aktionen ausführen können. Stattdessen kann ich eine simulierte Reaktion oder einen Befehl geben, der einem Menschen in einer realen Situation ähneln könnte:\n\n\"Schalter 1 öffnen und anschließend die Busspannungen zurückgeben.\"\n\nIn einem echten Szenario würde dies bedeuten, dass ein Techniker den Schalter für das System betätigen muss, welches die Busspannung bereitstellt. Nach dem Öffnen des Schalters müsste der Techniker dann überprüfen und sicherstellen, dass alle angeschlossenen Geräte ordnungsgemäß funktionieren und keine Fehler auftreten.\nFor troubleshooting, visit: https://docs.langchain.com/oss/python/langchain/errors/OUTPUT_PARSING_FAILURE "
+    }
+  }
+}

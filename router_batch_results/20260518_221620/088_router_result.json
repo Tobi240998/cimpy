@@ -1,0 +1,48 @@
+{
+  "run_id": 88,
+  "timestamp": "2026-05-20T07:49:52.578639",
+  "user_input": "Welche Betriebsmittel sind in den CIM-Daten unmittelbar mit Trf 19 20 verbunden?",
+  "duration_seconds": 1.957,
+  "token_usage": {
+    "prompt_tokens": 722,
+    "completion_tokens": 98,
+    "total_tokens": 820,
+    "details": {
+      "phi3:mini": {
+        "input_tokens": 722,
+        "output_tokens": 98,
+        "total_tokens": 820
+      }
+    }
+  },
+  "decision_trace": {
+    "domain": "ASK_USER",
+    "planning_mode": "",
+    "workflow": "",
+    "confidence": "",
+    "safe_to_execute": "",
+    "num_steps": 0,
+    "steps": "",
+    "planner_reasoning": "",
+    "resolved_object": "<omitted:str>",
+    "resolved_object_confidence": "",
+    "selected_attributes": "",
+    "attribute_confidence": "",
+    "num_tool_calls": 0,
+    "executed_tools": "",
+    "failed_tool": "",
+    "equipment_resolution_mode": "",
+    "attribute_resolution_mode": "",
+    "comparison_resolution_mode": ""
+  },
+  "router_output": {
+    "route": "ASK_USER",
+    "question": "Sind Sie an den historischen Verbindungen zu 'Trf 19 20' interessiert oder möchten Sie Informationen zum aktuellen Zustand aus dem PowerFactory-Projekt?",
+    "missing_fields": [
+      "data_source"
+    ],
+    "partial": {
+      "user_input": "Welche Betriebsmittel sind in den CIM-Daten unmittelbar mit Trf 19 20 verbunden?"
+    }
+  }
+}

@@ -1,0 +1,46 @@
+{
+  "run_id": 13,
+  "timestamp": "2026-05-20T15:58:04.144818",
+  "user_input": "Last B 3 MW rauf, danach bitte die Belastung von Line 4-5.",
+  "duration_seconds": 0.588,
+  "token_usage": {
+    "prompt_tokens": 921,
+    "completion_tokens": 101,
+    "total_tokens": 1022,
+    "details": {
+      "phi3:mini": {
+        "input_tokens": 921,
+        "output_tokens": 101,
+        "total_tokens": 1022
+      }
+    }
+  },
+  "decision_trace": {
+    "domain": "ASK_USER",
+    "planning_mode": "",
+    "workflow": "",
+    "confidence": "",
+    "safe_to_execute": "",
+    "num_steps": 0,
+    "steps": "",
+    "planner_reasoning": "",
+    "resolved_object": "<omitted:str>",
+    "resolved_object_confidence": "",
+    "selected_attributes": "",
+    "attribute_confidence": "",
+    "num_tool_calls": 0,
+    "executed_tools": "",
+    "failed_tool": "",
+    "equipment_resolution_mode": "",
+    "attribute_resolution_mode": "",
+    "comparison_resolution_mode": ""
+  },
+  "router_output": {
+    "route": "ASK_USER",
+    "question": "Sollten wir den Stromfluss in der Übertragungsleitung zwischen Bus 4 und 5 um 3 MW erhöhen? Ist dies ein Lastanstau, oder handelt es sich um eine andere Art von Änderung an der Leitung? Bitte geben Sie weitere Details zur Anfrage.",
+    "missing_fields": [
+      "type_of_change"
+    ],
+    "partial": {}
+  }
+}

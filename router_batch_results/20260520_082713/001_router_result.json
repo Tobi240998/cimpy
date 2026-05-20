@@ -1,0 +1,348 @@
+{
+  "run_id": 1,
+  "timestamp": "2026-05-20T08:27:29.148893",
+  "user_input": "Welche Lasten gibt es in PowerFactory?",
+  "duration_seconds": 15.939,
+  "token_usage": {
+    "prompt_tokens": 5219,
+    "completion_tokens": 123,
+    "total_tokens": 5342,
+    "details": {
+      "phi3:mini": {
+        "input_tokens": 5219,
+        "output_tokens": 123,
+        "total_tokens": 5342
+      }
+    }
+  },
+  "decision_trace": {
+    "domain": "powerfactory",
+    "planning_mode": "standard_workflow",
+    "workflow": "pf.load_catalog",
+    "confidence": "",
+    "safe_to_execute": "True",
+    "num_steps": 2,
+    "steps": "powerfactory.get_load_catalog | powerfactory.summarize_load_catalog",
+    "planner_reasoning": "",
+    "resolved_object": "<omitted:str>",
+    "resolved_object_confidence": "",
+    "selected_attributes": "",
+    "attribute_confidence": "",
+    "num_tool_calls": 2,
+    "executed_tools": "get_load_catalog | summarize_load_catalog",
+    "failed_tool": ""
+  },
+  "router_output": {
+    "route": "POWERFACTORY",
+    "domain": "powerfactory",
+    "plan": {
+      "domain": "powerfactory",
+      "user_input": "Welche Lasten gibt es in PowerFactory?",
+      "steps": [
+        {
+          "domain": "powerfactory",
+          "tool": "get_load_catalog",
+          "args": {},
+          "save_as": null,
+          "description": "standard_workflow: pf.load_catalog",
+          "mutating": false
+        },
+        {
+          "domain": "powerfactory",
+          "tool": "summarize_load_catalog",
+          "args": {},
+          "save_as": null,
+          "description": "standard_workflow: pf.load_catalog",
+          "mutating": false
+        }
+      ],
+      "classification": {
+        "domain": "powerfactory",
+        "planning_mode": "standard_workflow",
+        "workflow": "pf.load_catalog",
+        "custom_steps": [],
+        "safe_to_execute": true,
+        "missing_context": [],
+        "clarification_question": "",
+        "reasoning": ""
+      },
+      "reasoning": ""
+    },
+    "planner_decision": {
+      "domain": "powerfactory",
+      "planning_mode": "standard_workflow",
+      "workflow": "pf.load_catalog",
+      "custom_steps": [],
+      "safe_to_execute": true,
+      "missing_context": [],
+      "clarification_question": "",
+      "reasoning": ""
+    },
+    "result": {
+      "status": "ok",
+      "tool": "powerfactory",
+      "agent": "SingleAgent",
+      "project": "<omitted:str>",
+      "studycase": "<omitted:NoneType>",
+      "user_input": "Welche Lasten gibt es in PowerFactory?",
+      "classification": {
+        "domain": "powerfactory",
+        "planning_mode": "standard_workflow",
+        "workflow": "pf.load_catalog",
+        "custom_steps": [],
+        "safe_to_execute": true,
+        "missing_context": [],
+        "clarification_question": "",
+        "reasoning": ""
+      },
+      "plan": [
+        {
+          "step": "get_load_catalog",
+          "description": "standard_workflow: pf.load_catalog"
+        },
+        {
+          "step": "summarize_load_catalog",
+          "description": "standard_workflow: pf.load_catalog"
+        }
+      ],
+      "available_tools": [
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>"
+      ],
+      "instruction": null,
+      "resolved_load": null,
+      "data": {},
+      "catalog": [
+        {
+          "loc_name": "Load A",
+          "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Load A.ElmLod",
+          "pf_class": "ElmLod",
+          "inventory_type": "load"
+        },
+        {
+          "loc_name": "Load B",
+          "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Load B.ElmLod",
+          "pf_class": "ElmLod",
+          "inventory_type": "load"
+        },
+        {
+          "loc_name": "Load C",
+          "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Load C.ElmLod",
+          "pf_class": "ElmLod",
+          "inventory_type": "load"
+        }
+      ],
+      "messages": [
+        "Verfügbare Lasten im aktiven PowerFactory-Projekt: Load A, Load B, Load C"
+      ],
+      "answer": "Im aktuellen PowerFactory-Projekt sind die folgenden Lasten vorhanden: Load A, Load B, Load C.",
+      "summary": {
+        "status": "ok",
+        "tool": "merged_powerfactory_summary",
+        "answer": "Verfügbare Lasten im aktiven PowerFactory-Projekt: Load A, Load B, Load C",
+        "messages": [
+          "Verfügbare Lasten im aktiven PowerFactory-Projekt: Load A, Load B, Load C"
+        ],
+        "summary_count": 1,
+        "plan_steps": [
+          "get_load_catalog",
+          "summarize_load_catalog"
+        ]
+      },
+      "summary_parts": [
+        {
+          "status": "ok",
+          "tool": "summarize_load_catalog",
+          "answer": "Verfügbare Lasten im aktiven PowerFactory-Projekt: Load A, Load B, Load C",
+          "count": 3,
+          "requested_type": "load",
+          "loads": [
+            {
+              "loc_name": "Load A",
+              "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Load A.ElmLod",
+              "pf_class": "ElmLod",
+              "inventory_type": "load"
+            },
+            {
+              "loc_name": "Load B",
+              "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Load B.ElmLod",
+              "pf_class": "ElmLod",
+              "inventory_type": "load"
+            },
+            {
+              "loc_name": "Load C",
+              "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Load C.ElmLod",
+              "pf_class": "ElmLod",
+              "inventory_type": "load"
+            }
+          ]
+        }
+      ],
+      "topology": {
+        "graph_mode": null,
+        "graph_summary": {},
+        "build_debug": {},
+        "inventory": {},
+        "instruction": null,
+        "resolution": null,
+        "selected_node": null,
+        "neighbor_count": 0,
+        "neighbors": [],
+        "matches": []
+      },
+      "switch": {
+        "instruction": null,
+        "resolution": null,
+        "execution": null,
+        "summary": null
+      },
+      "data_query": {
+        "inventory": null,
+        "instruction": null,
+        "resolution": null,
+        "attribute_listing": null,
+        "attribute_selection": null,
+        "execution": null,
+        "summary": null
+      },
+      "debug": {
+        "planning": {},
+        "selected_equipment": {
+          "resolved_load": null,
+          "entity_resolution": null,
+          "object_resolution": null
+        },
+        "trace": [
+          {
+            "step": "get_load_catalog",
+            "effective_user_input": "Welche Lasten gibt es in PowerFactory?",
+            "source_subrequest": null,
+            "tool_spec": {
+              "name": "get_load_catalog",
+              "description": "Read the available catalog of PowerFactory objects of the requested type from the active project.",
+              "capability_tags": [],
+              "mutating": false
+            },
+            "tool_kwargs": {
+              "services": "<omitted:dict>",
+              "user_input": "Welche Lasten gibt es in PowerFactory?"
+            },
+            "result": {
+              "status": "ok",
+              "tool": "get_load_catalog",
+              "project": "<omitted:str>",
+              "requested_type": "load",
+              "loads": [
+                {
+                  "loc_name": "<max_depth>",
+                  "full_name": "<max_depth>",
+                  "pf_class": "<max_depth>",
+                  "inventory_type": "<max_depth>"
+                },
+                {
+                  "loc_name": "<max_depth>",
+                  "full_name": "<max_depth>",
+                  "pf_class": "<max_depth>",
+                  "inventory_type": "<max_depth>"
+                },
+                {
+                  "loc_name": "<max_depth>",
+                  "full_name": "<max_depth>",
+                  "pf_class": "<max_depth>",
+                  "inventory_type": "<max_depth>"
+                }
+              ],
+              "count": 3
+            }
+          },
+          {
+            "step": "summarize_load_catalog",
+            "effective_user_input": "Welche Lasten gibt es in PowerFactory?",
+            "source_subrequest": null,
+            "tool_spec": {
+              "name": "summarize_load_catalog",
+              "description": "Build a concise user-facing catalog answer.",
+              "capability_tags": [],
+              "mutating": false
+            },
+            "tool_kwargs": {
+              "services": "<omitted:dict>",
+              "catalog_result": {
+                "status": "ok",
+                "tool": "get_load_catalog",
+                "project": "<omitted:str>",
+                "requested_type": "load",
+                "loads": [
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>"
+                ],
+                "count": 3
+              },
+              "user_input": "Welche Lasten gibt es in PowerFactory?"
+            },
+            "result": {
+              "status": "ok",
+              "tool": "summarize_load_catalog",
+              "answer": "Verfügbare Lasten im aktiven PowerFactory-Projekt: Load A, Load B, Load C",
+              "count": 3,
+              "requested_type": "load",
+              "loads": [
+                {
+                  "loc_name": "<max_depth>",
+                  "full_name": "<max_depth>",
+                  "pf_class": "<max_depth>",
+                  "inventory_type": "<max_depth>"
+                },
+                {
+                  "loc_name": "<max_depth>",
+                  "full_name": "<max_depth>",
+                  "pf_class": "<max_depth>",
+                  "inventory_type": "<max_depth>"
+                },
+                {
+                  "loc_name": "<max_depth>",
+                  "full_name": "<max_depth>",
+                  "pf_class": "<max_depth>",
+                  "inventory_type": "<max_depth>"
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "raw_answer": "Verfügbare Lasten im aktiven PowerFactory-Projekt: Load A, Load B, Load C"
+    }
+  }
+}

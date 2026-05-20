@@ -1,0 +1,1058 @@
+{
+  "run_id": 99,
+  "timestamp": "2026-05-20T09:10:05.835873",
+  "user_input": "Zeig mir den historischen Verlauf der aktiven Leistung von Verbraucher 27 am 09.01.2026.",
+  "duration_seconds": 14.921,
+  "token_usage": {
+    "prompt_tokens": 9383,
+    "completion_tokens": 557,
+    "total_tokens": 9940,
+    "details": {
+      "phi3:mini": {
+        "input_tokens": 9383,
+        "output_tokens": 557,
+        "total_tokens": 9940
+      }
+    }
+  },
+  "decision_trace": {
+    "domain": "cim",
+    "planning_mode": "standard_workflow",
+    "workflow": "cim.standard_sv",
+    "confidence": "",
+    "safe_to_execute": "True",
+    "num_steps": 5,
+    "steps": "cim.scan_snapshot_inventory | cim.resolve_cim_object | cim.load_snapshot_cache | cim.query_cim | cim.summarize_cim_result",
+    "planner_reasoning": "",
+    "resolved_object": "<omitted:str>",
+    "resolved_object_confidence": "",
+    "selected_attributes": "",
+    "attribute_confidence": "",
+    "num_tool_calls": 5,
+    "executed_tools": "scan_snapshot_inventory | resolve_cim_object | load_snapshot_cache | query_cim | summarize_cim_result",
+    "failed_tool": ""
+  },
+  "router_output": {
+    "route": "CIM",
+    "domain": "cim",
+    "plan": {
+      "domain": "cim",
+      "user_input": "Zeig mir den historischen Verlauf der aktiven Leistung von Verbraucher 27 am 09.01.2026.",
+      "steps": [
+        {
+          "domain": "cim",
+          "tool": "scan_snapshot_inventory",
+          "args": {},
+          "save_as": null,
+          "description": "standard_workflow: cim.standard_sv",
+          "mutating": false
+        },
+        {
+          "domain": "cim",
+          "tool": "resolve_cim_object",
+          "args": {},
+          "save_as": null,
+          "description": "standard_workflow: cim.standard_sv",
+          "mutating": false
+        },
+        {
+          "domain": "cim",
+          "tool": "load_snapshot_cache",
+          "args": {},
+          "save_as": null,
+          "description": "standard_workflow: cim.standard_sv",
+          "mutating": false
+        },
+        {
+          "domain": "cim",
+          "tool": "query_cim",
+          "args": {},
+          "save_as": null,
+          "description": "standard_workflow: cim.standard_sv",
+          "mutating": false
+        },
+        {
+          "domain": "cim",
+          "tool": "summarize_cim_result",
+          "args": {},
+          "save_as": null,
+          "description": "standard_workflow: cim.standard_sv",
+          "mutating": false
+        }
+      ],
+      "classification": {
+        "domain": "cim",
+        "planning_mode": "standard_workflow",
+        "workflow": "cim.standard_sv",
+        "custom_steps": [],
+        "safe_to_execute": true,
+        "missing_context": [],
+        "clarification_question": "",
+        "reasoning": ""
+      },
+      "reasoning": ""
+    },
+    "planner_decision": {
+      "domain": "cim",
+      "planning_mode": "standard_workflow",
+      "workflow": "cim.standard_sv",
+      "custom_steps": [],
+      "safe_to_execute": true,
+      "missing_context": [],
+      "clarification_question": "",
+      "reasoning": ""
+    },
+    "result": {
+      "user_input": "Zeig mir den historischen Verlauf der aktiven Leistung von Verbraucher 27 am 09.01.2026.",
+      "classification": {
+        "domain": "cim",
+        "planning_mode": "standard_workflow",
+        "workflow": "cim.standard_sv",
+        "custom_steps": [],
+        "safe_to_execute": true,
+        "missing_context": [],
+        "clarification_question": "",
+        "reasoning": "",
+        "intent": "historical_analysis",
+        "request_mode": "standard_sv",
+        "target_kind": "metric"
+      },
+      "status": "ok",
+      "tool": "summarize_cim_result",
+      "cim_root": "C:\\Users\\STELLER\\Documents\\Masterarbeit\\CIM-Dateien\\tobias_CIM_daten\\data\\extracted",
+      "snapshot_inventory": {
+        "root_folder": "C:\\Users\\STELLER\\Documents\\Masterarbeit\\CIM-Dateien\\tobias_CIM_daten\\data\\extracted",
+        "snapshots": [
+          {
+            "snapshot_name": "CIM_GridAssist_1",
+            "case_dir": "C:\\Users\\STELLER\\Documents\\Masterarbeit\\CIM-Dateien\\tobias_CIM_daten\\data\\extracted\\CIM_GridAssist_1",
+            "xml_files": [
+              "C:\\Users\\STELLER\\Documents\\Masterarbeit\\CIM-Dateien\\tobias_CIM_daten\\data\\extracted\\CIM_GridAssist_1\\20260109T1415Z___DL_.xml",
+              "C:\\Users\\STELLER\\Documents\\Masterarbeit\\CIM-Dateien\\tobias_CIM_daten\\data\\extracted\\CIM_GridAssist_1\\20260109T1415Z___DY_.xml",
+              "C:\\Users\\STELLER\\Documents\\Masterarbeit\\CIM-Dateien\\tobias_CIM_daten\\data\\extracted\\CIM_GridAssist_1\\20260109T1415Z___GL_.xml",
+              "C:\\Users\\STELLER\\Documents\\Masterarbeit\\CIM-Dateien\\tobias_CIM_daten\\data\\extracted\\CIM_GridAssist_1\\20260109T1415Z___SSH_.xml",
+              "C:\\Users\\STELLER\\Documents\\Masterarbeit\\CIM-Dateien\\tobias_CIM_daten\\data\\extracted\\CIM_GridAssist_1\\20260109T1415Z___SV_.xml",
+              "C:\\Users\\STELLER\\Documents\\Masterarbeit\\CIM-Dateien\\tobias_CIM_daten\\data\\extracted\\CIM_GridAssist_1\\20260109T1415Z___TP_.xml",
+              "C:\\Users\\STELLER\\Documents\\Masterarbeit\\CIM-Dateien\\tobias_CIM_daten\\data\\extracted\\CIM_GridAssist_1\\20260109T1415Z__EQ_.xml"
+            ],
+            "default_time": "<non_serializable:datetime>",
+            "default_time_str": "2026-01-09T14:15:00+00:00",
+            "default_time_source": "SV:md:Model.scenarioTime",
+            "times_by_profile": {
+              "SV": {
+                "scenario_time": "<non_serializable:datetime>",
+                "created": "<non_serializable:datetime>",
+                "files": [
+                  "<max_depth>"
+                ]
+              },
+              "SSH": {
+                "scenario_time": "<non_serializable:datetime>",
+                "created": "<non_serializable:datetime>",
+                "files": [
+                  "<max_depth>"
+                ]
+              },
+              "TP": {
+                "scenario_time": "<non_serializable:datetime>",
+                "created": "<non_serializable:datetime>",
+                "files": [
+                  "<max_depth>"
+                ]
+              },
+              "EQ": {
+                "scenario_time": "<non_serializable:datetime>",
+                "created": "<non_serializable:datetime>",
+                "files": [
+                  "<max_depth>"
+                ]
+              },
+              "OTHER": {
+                "scenario_time": "<non_serializable:datetime>",
+                "created": "<non_serializable:datetime>",
+                "files": [
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>"
+                ]
+              },
+              "None": {
+                "scenario_time": null,
+                "created": null,
+                "files": []
+              }
+            },
+            "all_scenario_times": [
+              "2026-01-09T14:15:00+00:00"
+            ],
+            "has_sv_profile": true,
+            "has_tp_profile": true,
+            "has_eq_profile": true,
+            "has_ssh_profile": true
+          },
+          {
+            "snapshot_name": "CIM_GridAssist_2",
+            "case_dir": "C:\\Users\\STELLER\\Documents\\Masterarbeit\\CIM-Dateien\\tobias_CIM_daten\\data\\extracted\\CIM_GridAssist_2",
+            "xml_files": [
+              "C:\\Users\\STELLER\\Documents\\Masterarbeit\\CIM-Dateien\\tobias_CIM_daten\\data\\extracted\\CIM_GridAssist_2\\20260109T1430Z___DL_.xml",
+              "C:\\Users\\STELLER\\Documents\\Masterarbeit\\CIM-Dateien\\tobias_CIM_daten\\data\\extracted\\CIM_GridAssist_2\\20260109T1430Z___DY_.xml",
+              "C:\\Users\\STELLER\\Documents\\Masterarbeit\\CIM-Dateien\\tobias_CIM_daten\\data\\extracted\\CIM_GridAssist_2\\20260109T1430Z___GL_.xml",
+              "C:\\Users\\STELLER\\Documents\\Masterarbeit\\CIM-Dateien\\tobias_CIM_daten\\data\\extracted\\CIM_GridAssist_2\\20260109T1430Z___SSH_.xml",
+              "C:\\Users\\STELLER\\Documents\\Masterarbeit\\CIM-Dateien\\tobias_CIM_daten\\data\\extracted\\CIM_GridAssist_2\\20260109T1430Z___SV_.xml",
+              "C:\\Users\\STELLER\\Documents\\Masterarbeit\\CIM-Dateien\\tobias_CIM_daten\\data\\extracted\\CIM_GridAssist_2\\20260109T1430Z___TP_.xml",
+              "C:\\Users\\STELLER\\Documents\\Masterarbeit\\CIM-Dateien\\tobias_CIM_daten\\data\\extracted\\CIM_GridAssist_2\\20260109T1430Z__EQ_.xml"
+            ],
+            "default_time": "<non_serializable:datetime>",
+            "default_time_str": "2026-01-09T14:30:00+00:00",
+            "default_time_source": "SV:md:Model.scenarioTime",
+            "times_by_profile": {
+              "SV": {
+                "scenario_time": "<non_serializable:datetime>",
+                "created": "<non_serializable:datetime>",
+                "files": [
+                  "<max_depth>"
+                ]
+              },
+              "SSH": {
+                "scenario_time": "<non_serializable:datetime>",
+                "created": "<non_serializable:datetime>",
+                "files": [
+                  "<max_depth>"
+                ]
+              },
+              "TP": {
+                "scenario_time": "<non_serializable:datetime>",
+                "created": "<non_serializable:datetime>",
+                "files": [
+                  "<max_depth>"
+                ]
+              },
+              "EQ": {
+                "scenario_time": "<non_serializable:datetime>",
+                "created": "<non_serializable:datetime>",
+                "files": [
+                  "<max_depth>"
+                ]
+              },
+              "OTHER": {
+                "scenario_time": "<non_serializable:datetime>",
+                "created": "<non_serializable:datetime>",
+                "files": [
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>"
+                ]
+              },
+              "None": {
+                "scenario_time": null,
+                "created": null,
+                "files": []
+              }
+            },
+            "all_scenario_times": [
+              "2026-01-09T14:30:00+00:00"
+            ],
+            "has_sv_profile": true,
+            "has_tp_profile": true,
+            "has_eq_profile": true,
+            "has_ssh_profile": true
+          },
+          {
+            "snapshot_name": "CIM_GridAssist_3",
+            "case_dir": "C:\\Users\\STELLER\\Documents\\Masterarbeit\\CIM-Dateien\\tobias_CIM_daten\\data\\extracted\\CIM_GridAssist_3",
+            "xml_files": [
+              "C:\\Users\\STELLER\\Documents\\Masterarbeit\\CIM-Dateien\\tobias_CIM_daten\\data\\extracted\\CIM_GridAssist_3\\20260109T1445Z___DL_.xml",
+              "C:\\Users\\STELLER\\Documents\\Masterarbeit\\CIM-Dateien\\tobias_CIM_daten\\data\\extracted\\CIM_GridAssist_3\\20260109T1445Z___DY_.xml",
+              "C:\\Users\\STELLER\\Documents\\Masterarbeit\\CIM-Dateien\\tobias_CIM_daten\\data\\extracted\\CIM_GridAssist_3\\20260109T1445Z___GL_.xml",
+              "C:\\Users\\STELLER\\Documents\\Masterarbeit\\CIM-Dateien\\tobias_CIM_daten\\data\\extracted\\CIM_GridAssist_3\\20260109T1445Z___SSH_.xml",
+              "C:\\Users\\STELLER\\Documents\\Masterarbeit\\CIM-Dateien\\tobias_CIM_daten\\data\\extracted\\CIM_GridAssist_3\\20260109T1445Z___SV_.xml",
+              "C:\\Users\\STELLER\\Documents\\Masterarbeit\\CIM-Dateien\\tobias_CIM_daten\\data\\extracted\\CIM_GridAssist_3\\20260109T1445Z___TP_.xml",
+              "C:\\Users\\STELLER\\Documents\\Masterarbeit\\CIM-Dateien\\tobias_CIM_daten\\data\\extracted\\CIM_GridAssist_3\\20260109T1445Z__EQ_.xml"
+            ],
+            "default_time": "<non_serializable:datetime>",
+            "default_time_str": "2026-01-09T14:45:00+00:00",
+            "default_time_source": "SV:md:Model.scenarioTime",
+            "times_by_profile": {
+              "SV": {
+                "scenario_time": "<non_serializable:datetime>",
+                "created": "<non_serializable:datetime>",
+                "files": [
+                  "<max_depth>"
+                ]
+              },
+              "SSH": {
+                "scenario_time": "<non_serializable:datetime>",
+                "created": "<non_serializable:datetime>",
+                "files": [
+                  "<max_depth>"
+                ]
+              },
+              "TP": {
+                "scenario_time": "<non_serializable:datetime>",
+                "created": "<non_serializable:datetime>",
+                "files": [
+                  "<max_depth>"
+                ]
+              },
+              "EQ": {
+                "scenario_time": "<non_serializable:datetime>",
+                "created": "<non_serializable:datetime>",
+                "files": [
+                  "<max_depth>"
+                ]
+              },
+              "OTHER": {
+                "scenario_time": "<non_serializable:datetime>",
+                "created": "<non_serializable:datetime>",
+                "files": [
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>"
+                ]
+              },
+              "None": {
+                "scenario_time": null,
+                "created": null,
+                "files": []
+              }
+            },
+            "all_scenario_times": [
+              "2026-01-09T14:45:00+00:00"
+            ],
+            "has_sv_profile": true,
+            "has_tp_profile": true,
+            "has_eq_profile": true,
+            "has_ssh_profile": true
+          }
+        ]
+      },
+      "base_snapshot": "<omitted:dict>",
+      "network_index": "<omitted:dict>",
+      "equipment_catalog_summary": {
+        "equipment_types": [
+          "ACLineSegment",
+          "BusbarSection",
+          "ConformLoad",
+          "ConformLoadGroup",
+          "CurrentLimit",
+          "FossilFuel",
+          "GeneratingUnit",
+          "HydroGeneratingUnit",
+          "LoadAggregate",
+          "LoadArea",
+          "LoadResponseCharacteristic",
+          "LoadStatic",
+          "NuclearGeneratingUnit",
+          "OperationalLimitSet",
+          "OperationalLimitType",
+          "PowerTransformer",
+          "PowerTransformerEnd",
+          "RatioTapChanger",
+          "RegulatingControl",
+          "SubLoadArea",
+          "SynchronousMachine",
+          "SynchronousMachineTimeConstantReactance",
+          "ThermalGeneratingUnit",
+          "TopologicalIsland",
+          "VoltageLimit"
+        ],
+        "equipment_type_counts": {
+          "SynchronousMachineTimeConstantReactance": 10,
+          "LoadAggregate": 1,
+          "LoadStatic": 1,
+          "TopologicalIsland": 1,
+          "BusbarSection": 39,
+          "VoltageLimit": 39,
+          "OperationalLimitSet": 131,
+          "ACLineSegment": 34,
+          "CurrentLimit": 92,
+          "OperationalLimitType": 2,
+          "ConformLoad": 19,
+          "ConformLoadGroup": 1,
+          "SubLoadArea": 1,
+          "LoadArea": 1,
+          "LoadResponseCharacteristic": 1,
+          "PowerTransformerEnd": 24,
+          "SynchronousMachine": 10,
+          "PowerTransformer": 12,
+          "RatioTapChanger": 11,
+          "RegulatingControl": 10,
+          "HydroGeneratingUnit": 1,
+          "NuclearGeneratingUnit": 5,
+          "FossilFuel": 3,
+          "ThermalGeneratingUnit": 3,
+          "GeneratingUnit": 1
+        },
+        "num_equipment_objects": 453
+      },
+      "parsed_query": {
+        "equipment_detected": [
+          "ConformLoad"
+        ],
+        "state_detected": [
+          "SvPowerFlow"
+        ],
+        "metric": "P",
+        "equipment_selection": [
+          {
+            "equipment_type": "ConformLoad",
+            "equipment_key": "load27",
+            "equipment_name": "Load 27",
+            "equipment_id": "_42bf2e85-cdac-4959-9ed1-9f89e7740e96"
+          }
+        ],
+        "time_start": "2026-01-09T00:00:00+00:00",
+        "time_end": "2026-01-10T00:00:00+00:00",
+        "time_label": "am 2026-01-09",
+        "intent": "historical_analysis",
+        "request_mode": "standard_sv",
+        "is_topology_query": false
+      },
+      "resolved_object": "<omitted:ConformLoad>",
+      "equipment_obj": "<non_serializable:ConformLoad>",
+      "resolution_mode": "interpret_user_query",
+      "equipment_resolution_debug": {
+        "parsed_query_equipment_selection": [
+          {
+            "equipment_type": "ConformLoad",
+            "equipment_key": "load27",
+            "equipment_name": "Load 27",
+            "equipment_id": "_42bf2e85-cdac-4959-9ed1-9f89e7740e96"
+          }
+        ]
+      },
+      "cim_snapshots": "<omitted:dict>",
+      "required_state_types": [
+        "SvPowerFlow"
+      ],
+      "snapshot_cache": "<omitted:dict>",
+      "snapshot_cache_summary": {
+        "num_snapshots": 3,
+        "requested_state_types": [
+          "SvPowerFlow"
+        ],
+        "snapshot_names": [
+          "CIM_GridAssist_1",
+          "CIM_GridAssist_2",
+          "CIM_GridAssist_3"
+        ],
+        "total_state_counts": {
+          "SvPowerFlow": 363,
+          "SvVoltage": 0
+        }
+      },
+      "answer": "Am 09.01.2026 variierte die aktive Leistung von Verbraucher 27 zwischen einem Minimum von 250,96 MW um 14:15 Uhr und einem Maximum von 293,123 MW um 14:30 Uhr. Der durchschnittliche Wert betrug 270,671 MW basierend auf drei Messpunkten.",
+      "query_result_data": {
+        "query_mode": "metric_over_time",
+        "metric": "P",
+        "rows": [
+          {
+            "snapshot": "CIM_GridAssist_1",
+            "timestamp": "<non_serializable:datetime>",
+            "timestamp_str": "2026-01-09T14:15:00+00:00",
+            "equipment": "Load 27",
+            "type": "ConformLoad",
+            "metric": "P",
+            "active_power_MW": 250.96
+          },
+          {
+            "snapshot": "CIM_GridAssist_2",
+            "timestamp": "<non_serializable:datetime>",
+            "timestamp_str": "2026-01-09T14:30:00+00:00",
+            "equipment": "Load 27",
+            "type": "ConformLoad",
+            "metric": "P",
+            "active_power_MW": 293.123
+          },
+          {
+            "snapshot": "CIM_GridAssist_3",
+            "timestamp": "<non_serializable:datetime>",
+            "timestamp_str": "2026-01-09T14:45:00+00:00",
+            "equipment": "Load 27",
+            "type": "ConformLoad",
+            "metric": "P",
+            "active_power_MW": 267.93
+          }
+        ],
+        "summary": {
+          "metric": "P",
+          "unit": "MW",
+          "min_value": 250.96,
+          "max_value": 293.123,
+          "mean_value": 270.671,
+          "peak_value": 293.123,
+          "peak_timestamp": "2026-01-09T14:30:00+00:00",
+          "min_value_at_time": 250.96,
+          "min_timestamp": "2026-01-09T14:15:00+00:00",
+          "num_datapoints": 3
+        }
+      },
+      "debug": {
+        "num_inventory_snapshots": 3,
+        "index_source_snapshot": "CIM_GridAssist_1",
+        "index_source_time_str": "2026-01-09T14:15:00+00:00",
+        "required_state_types": [
+          "SvPowerFlow"
+        ],
+        "num_loaded_snapshots": 3,
+        "loaded_snapshot_names": [
+          "CIM_GridAssist_1",
+          "CIM_GridAssist_2",
+          "CIM_GridAssist_3"
+        ],
+        "snapshot_cache_summary": {
+          "num_snapshots": 3,
+          "requested_state_types": [
+            "SvPowerFlow"
+          ],
+          "snapshot_names": [
+            "CIM_GridAssist_1",
+            "CIM_GridAssist_2",
+            "CIM_GridAssist_3"
+          ],
+          "total_state_counts": {
+            "SvPowerFlow": 363,
+            "SvVoltage": 0
+          }
+        },
+        "parsed_query": {
+          "equipment_detected": [
+            "ConformLoad"
+          ],
+          "state_detected": [
+            "SvPowerFlow"
+          ],
+          "metric": "P",
+          "equipment_selection": [
+            {
+              "equipment_type": "ConformLoad",
+              "equipment_key": "load27",
+              "equipment_name": "Load 27",
+              "equipment_id": "_42bf2e85-cdac-4959-9ed1-9f89e7740e96"
+            }
+          ],
+          "time_start": "2026-01-09T00:00:00+00:00",
+          "time_end": "2026-01-10T00:00:00+00:00",
+          "time_label": "am 2026-01-09",
+          "intent": "historical_analysis",
+          "request_mode": "standard_sv",
+          "is_topology_query": false
+        },
+        "resolved_object": "<omitted:ConformLoad>",
+        "resolution_mode": "interpret_user_query",
+        "equipment_resolution_debug": {
+          "parsed_query_equipment_selection": [
+            {
+              "equipment_type": "ConformLoad",
+              "equipment_key": "load27",
+              "equipment_name": "Load 27",
+              "equipment_id": "_42bf2e85-cdac-4959-9ed1-9f89e7740e96"
+            }
+          ]
+        },
+        "equipment_catalog_summary": {
+          "equipment_types": [
+            "ACLineSegment",
+            "BusbarSection",
+            "ConformLoad",
+            "ConformLoadGroup",
+            "CurrentLimit",
+            "FossilFuel",
+            "GeneratingUnit",
+            "HydroGeneratingUnit",
+            "LoadAggregate",
+            "LoadArea",
+            "LoadResponseCharacteristic",
+            "LoadStatic",
+            "NuclearGeneratingUnit",
+            "OperationalLimitSet",
+            "OperationalLimitType",
+            "PowerTransformer",
+            "PowerTransformerEnd",
+            "RatioTapChanger",
+            "RegulatingControl",
+            "SubLoadArea",
+            "SynchronousMachine",
+            "SynchronousMachineTimeConstantReactance",
+            "ThermalGeneratingUnit",
+            "TopologicalIsland",
+            "VoltageLimit"
+          ],
+          "equipment_type_counts": {
+            "SynchronousMachineTimeConstantReactance": 10,
+            "LoadAggregate": 1,
+            "LoadStatic": 1,
+            "TopologicalIsland": 1,
+            "BusbarSection": 39,
+            "VoltageLimit": 39,
+            "OperationalLimitSet": 131,
+            "ACLineSegment": 34,
+            "CurrentLimit": 92,
+            "OperationalLimitType": 2,
+            "ConformLoad": 19,
+            "ConformLoadGroup": 1,
+            "SubLoadArea": 1,
+            "LoadArea": 1,
+            "LoadResponseCharacteristic": 1,
+            "PowerTransformerEnd": 24,
+            "SynchronousMachine": 10,
+            "PowerTransformer": 12,
+            "RatioTapChanger": 11,
+            "RegulatingControl": 10,
+            "HydroGeneratingUnit": 1,
+            "NuclearGeneratingUnit": 5,
+            "FossilFuel": 3,
+            "ThermalGeneratingUnit": 3,
+            "GeneratingUnit": 1
+          },
+          "num_equipment_objects": 453
+        },
+        "comparison_resolution": {},
+        "comparison_result": {},
+        "requested_base_attributes": []
+      },
+      "debug_trace": [
+        {
+          "step": "scan_snapshot_inventory",
+          "tool_spec": {
+            "name": "scan_snapshot_inventory",
+            "description": "Scan snapshot inventory and build base network index",
+            "capability_tags": [
+              "inventory",
+              "network_index",
+              "equipment_catalog",
+              "read_only"
+            ],
+            "mutating": false
+          },
+          "result": {
+            "status": "ok",
+            "tool": "scan_snapshot_inventory",
+            "cim_root": "C:\\Users\\STELLER\\Documents\\Masterarbeit\\CIM-Dateien\\tobias_CIM_daten\\data\\extracted",
+            "snapshot_inventory": {
+              "root_folder": "C:\\Users\\STELLER\\Documents\\Masterarbeit\\CIM-Dateien\\tobias_CIM_daten\\data\\extracted",
+              "snapshots": [
+                {
+                  "snapshot_name": "<max_depth>",
+                  "case_dir": "<max_depth>",
+                  "xml_files": "<max_depth>",
+                  "default_time": "<max_depth>",
+                  "default_time_str": "<max_depth>",
+                  "default_time_source": "<max_depth>",
+                  "times_by_profile": "<max_depth>",
+                  "all_scenario_times": "<max_depth>",
+                  "has_sv_profile": "<max_depth>",
+                  "has_tp_profile": "<max_depth>",
+                  "has_eq_profile": "<max_depth>",
+                  "has_ssh_profile": "<max_depth>"
+                },
+                {
+                  "snapshot_name": "<max_depth>",
+                  "case_dir": "<max_depth>",
+                  "xml_files": "<max_depth>",
+                  "default_time": "<max_depth>",
+                  "default_time_str": "<max_depth>",
+                  "default_time_source": "<max_depth>",
+                  "times_by_profile": "<max_depth>",
+                  "all_scenario_times": "<max_depth>",
+                  "has_sv_profile": "<max_depth>",
+                  "has_tp_profile": "<max_depth>",
+                  "has_eq_profile": "<max_depth>",
+                  "has_ssh_profile": "<max_depth>"
+                },
+                {
+                  "snapshot_name": "<max_depth>",
+                  "case_dir": "<max_depth>",
+                  "xml_files": "<max_depth>",
+                  "default_time": "<max_depth>",
+                  "default_time_str": "<max_depth>",
+                  "default_time_source": "<max_depth>",
+                  "times_by_profile": "<max_depth>",
+                  "all_scenario_times": "<max_depth>",
+                  "has_sv_profile": "<max_depth>",
+                  "has_tp_profile": "<max_depth>",
+                  "has_eq_profile": "<max_depth>",
+                  "has_ssh_profile": "<max_depth>"
+                }
+              ]
+            },
+            "base_snapshot": "<omitted:dict>",
+            "network_index": "<omitted:dict>",
+            "equipment_catalog_summary": {
+              "equipment_types": [
+                "ACLineSegment",
+                "BusbarSection",
+                "ConformLoad",
+                "ConformLoadGroup",
+                "CurrentLimit",
+                "FossilFuel",
+                "GeneratingUnit",
+                "HydroGeneratingUnit",
+                "LoadAggregate",
+                "LoadArea",
+                "LoadResponseCharacteristic",
+                "LoadStatic",
+                "NuclearGeneratingUnit",
+                "OperationalLimitSet",
+                "OperationalLimitType",
+                "PowerTransformer",
+                "PowerTransformerEnd",
+                "RatioTapChanger",
+                "RegulatingControl",
+                "SubLoadArea",
+                "SynchronousMachine",
+                "SynchronousMachineTimeConstantReactance",
+                "ThermalGeneratingUnit",
+                "TopologicalIsland",
+                "VoltageLimit"
+              ],
+              "equipment_type_counts": {
+                "SynchronousMachineTimeConstantReactance": 10,
+                "LoadAggregate": 1,
+                "LoadStatic": 1,
+                "TopologicalIsland": 1,
+                "BusbarSection": 39,
+                "VoltageLimit": 39,
+                "OperationalLimitSet": 131,
+                "ACLineSegment": 34,
+                "CurrentLimit": 92,
+                "OperationalLimitType": 2,
+                "ConformLoad": 19,
+                "ConformLoadGroup": 1,
+                "SubLoadArea": 1,
+                "LoadArea": 1,
+                "LoadResponseCharacteristic": 1,
+                "PowerTransformerEnd": 24,
+                "SynchronousMachine": 10,
+                "PowerTransformer": 12,
+                "RatioTapChanger": 11,
+                "RegulatingControl": 10,
+                "HydroGeneratingUnit": 1,
+                "NuclearGeneratingUnit": 5,
+                "FossilFuel": 3,
+                "ThermalGeneratingUnit": 3,
+                "GeneratingUnit": 1
+              },
+              "num_equipment_objects": 453
+            }
+          }
+        },
+        {
+          "step": "resolve_cim_object",
+          "tool_spec": {
+            "name": "resolve_cim_object",
+            "description": "Resolve asset or equipment from user query and parse time/state intent",
+            "capability_tags": [
+              "object_resolution",
+              "query_parsing",
+              "equipment_catalog",
+              "llm_match",
+              "read_only"
+            ],
+            "mutating": false
+          },
+          "result": {
+            "status": "ok",
+            "tool": "resolve_cim_object",
+            "cim_root": "C:\\Users\\STELLER\\Documents\\Masterarbeit\\CIM-Dateien\\tobias_CIM_daten\\data\\extracted",
+            "user_input": "Zeig mir den historischen Verlauf der aktiven Leistung von Verbraucher 27 am 09.01.2026.",
+            "parsed_query": {
+              "equipment_detected": [
+                "ConformLoad"
+              ],
+              "state_detected": [
+                "SvPowerFlow"
+              ],
+              "metric": "P",
+              "equipment_selection": [
+                {
+                  "equipment_type": "<max_depth>",
+                  "equipment_key": "<max_depth>",
+                  "equipment_name": "<max_depth>",
+                  "equipment_id": "<max_depth>"
+                }
+              ],
+              "time_start": "2026-01-09T00:00:00+00:00",
+              "time_end": "2026-01-10T00:00:00+00:00",
+              "time_label": "am 2026-01-09",
+              "intent": "historical_analysis",
+              "request_mode": "standard_sv",
+              "is_topology_query": false
+            },
+            "resolved_object": "<omitted:ConformLoad>",
+            "equipment_obj": "<non_serializable:ConformLoad>",
+            "resolution_mode": "interpret_user_query",
+            "equipment_resolution_debug": {
+              "parsed_query_equipment_selection": [
+                {
+                  "equipment_type": "<max_depth>",
+                  "equipment_key": "<max_depth>",
+                  "equipment_name": "<max_depth>",
+                  "equipment_id": "<max_depth>"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "step": "load_snapshot_cache",
+          "tool_spec": {
+            "name": "load_snapshot_cache",
+            "description": "Load relevant snapshots for the parsed time window and build snapshot cache",
+            "capability_tags": [
+              "snapshot_loading",
+              "state_cache",
+              "read_only"
+            ],
+            "mutating": false
+          },
+          "result": {
+            "status": "ok",
+            "tool": "load_snapshot_cache",
+            "cim_root": "C:\\Users\\STELLER\\Documents\\Masterarbeit\\CIM-Dateien\\tobias_CIM_daten\\data\\extracted",
+            "cim_snapshots": "<omitted:dict>",
+            "required_state_types": [
+              "SvPowerFlow"
+            ],
+            "snapshot_cache": "<omitted:dict>",
+            "snapshot_cache_summary": {
+              "num_snapshots": 3,
+              "requested_state_types": [
+                "SvPowerFlow"
+              ],
+              "snapshot_names": [
+                "CIM_GridAssist_1",
+                "CIM_GridAssist_2",
+                "CIM_GridAssist_3"
+              ],
+              "total_state_counts": {
+                "SvPowerFlow": 363,
+                "SvVoltage": 0
+              }
+            }
+          }
+        },
+        {
+          "step": "query_cim",
+          "tool_spec": {
+            "name": "query_cim",
+            "description": "Run CIM analysis query using parsed query, network index and snapshot cache",
+            "capability_tags": [
+              "analysis",
+              "read_only"
+            ],
+            "mutating": false
+          },
+          "result": {
+            "status": "ok",
+            "tool": "query_cim",
+            "cim_root": "C:\\Users\\STELLER\\Documents\\Masterarbeit\\CIM-Dateien\\tobias_CIM_daten\\data\\extracted",
+            "parsed_query": {
+              "equipment_detected": [
+                "ConformLoad"
+              ],
+              "state_detected": [
+                "SvPowerFlow"
+              ],
+              "metric": "P",
+              "equipment_selection": [
+                {
+                  "equipment_type": "<max_depth>",
+                  "equipment_key": "<max_depth>",
+                  "equipment_name": "<max_depth>",
+                  "equipment_id": "<max_depth>"
+                }
+              ],
+              "time_start": "2026-01-09T00:00:00+00:00",
+              "time_end": "2026-01-10T00:00:00+00:00",
+              "time_label": "am 2026-01-09",
+              "intent": "historical_analysis",
+              "request_mode": "standard_sv",
+              "is_topology_query": false
+            },
+            "answer": "Am 09.01.2026 variierte die aktive Leistung von Verbraucher 27 zwischen einem Minimum von 250,96 MW um 14:15 Uhr und einem Maximum von 293,123 MW um 14:30 Uhr. Der durchschnittliche Wert betrug 270,671 MW basierend auf drei Messpunkten.",
+            "query_result_data": {
+              "query_mode": "metric_over_time",
+              "metric": "P",
+              "rows": [
+                {
+                  "snapshot": "<max_depth>",
+                  "timestamp": "<max_depth>",
+                  "timestamp_str": "<max_depth>",
+                  "equipment": "<max_depth>",
+                  "type": "<max_depth>",
+                  "metric": "<max_depth>",
+                  "active_power_MW": "<max_depth>"
+                },
+                {
+                  "snapshot": "<max_depth>",
+                  "timestamp": "<max_depth>",
+                  "timestamp_str": "<max_depth>",
+                  "equipment": "<max_depth>",
+                  "type": "<max_depth>",
+                  "metric": "<max_depth>",
+                  "active_power_MW": "<max_depth>"
+                },
+                {
+                  "snapshot": "<max_depth>",
+                  "timestamp": "<max_depth>",
+                  "timestamp_str": "<max_depth>",
+                  "equipment": "<max_depth>",
+                  "type": "<max_depth>",
+                  "metric": "<max_depth>",
+                  "active_power_MW": "<max_depth>"
+                }
+              ],
+              "summary": {
+                "metric": "P",
+                "unit": "MW",
+                "min_value": 250.96,
+                "max_value": 293.123,
+                "mean_value": 270.671,
+                "peak_value": 293.123,
+                "peak_timestamp": "2026-01-09T14:30:00+00:00",
+                "min_value_at_time": 250.96,
+                "min_timestamp": "2026-01-09T14:15:00+00:00",
+                "num_datapoints": 3
+              }
+            }
+          }
+        },
+        {
+          "step": "summarize_cim_result",
+          "tool_spec": {
+            "name": "summarize_cim_result",
+            "description": "Return final CIM result with debug information",
+            "capability_tags": [
+              "result",
+              "read_only"
+            ],
+            "mutating": false
+          },
+          "result": {
+            "status": "ok",
+            "tool": "summarize_cim_result",
+            "cim_root": "C:\\Users\\STELLER\\Documents\\Masterarbeit\\CIM-Dateien\\tobias_CIM_daten\\data\\extracted",
+            "user_input": "Zeig mir den historischen Verlauf der aktiven Leistung von Verbraucher 27 am 09.01.2026.",
+            "answer": "Am 09.01.2026 variierte die aktive Leistung von Verbraucher 27 zwischen einem Minimum von 250,96 MW um 14:15 Uhr und einem Maximum von 293,123 MW um 14:30 Uhr. Der durchschnittliche Wert betrug 270,671 MW basierend auf drei Messpunkten.",
+            "debug": {
+              "num_inventory_snapshots": 3,
+              "index_source_snapshot": "CIM_GridAssist_1",
+              "index_source_time_str": "2026-01-09T14:15:00+00:00",
+              "required_state_types": [
+                "SvPowerFlow"
+              ],
+              "num_loaded_snapshots": 3,
+              "loaded_snapshot_names": [
+                "CIM_GridAssist_1",
+                "CIM_GridAssist_2",
+                "CIM_GridAssist_3"
+              ],
+              "snapshot_cache_summary": {
+                "num_snapshots": 3,
+                "requested_state_types": [
+                  "<max_depth>"
+                ],
+                "snapshot_names": [
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>"
+                ],
+                "total_state_counts": {
+                  "SvPowerFlow": "<max_depth>",
+                  "SvVoltage": "<max_depth>"
+                }
+              },
+              "parsed_query": {
+                "equipment_detected": [
+                  "<max_depth>"
+                ],
+                "state_detected": [
+                  "<max_depth>"
+                ],
+                "metric": "P",
+                "equipment_selection": [
+                  "<max_depth>"
+                ],
+                "time_start": "2026-01-09T00:00:00+00:00",
+                "time_end": "2026-01-10T00:00:00+00:00",
+                "time_label": "am 2026-01-09",
+                "intent": "historical_analysis",
+                "request_mode": "standard_sv",
+                "is_topology_query": false
+              },
+              "resolved_object": "<omitted:ConformLoad>",
+              "resolution_mode": "interpret_user_query",
+              "equipment_resolution_debug": {
+                "parsed_query_equipment_selection": [
+                  "<max_depth>"
+                ]
+              },
+              "equipment_catalog_summary": {
+                "equipment_types": [
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>"
+                ],
+                "equipment_type_counts": {
+                  "SynchronousMachineTimeConstantReactance": "<max_depth>",
+                  "LoadAggregate": "<max_depth>",
+                  "LoadStatic": "<max_depth>",
+                  "TopologicalIsland": "<max_depth>",
+                  "BusbarSection": "<max_depth>",
+                  "VoltageLimit": "<max_depth>",
+                  "OperationalLimitSet": "<max_depth>",
+                  "ACLineSegment": "<max_depth>",
+                  "CurrentLimit": "<max_depth>",
+                  "OperationalLimitType": "<max_depth>",
+                  "ConformLoad": "<max_depth>",
+                  "ConformLoadGroup": "<max_depth>",
+                  "SubLoadArea": "<max_depth>",
+                  "LoadArea": "<max_depth>",
+                  "LoadResponseCharacteristic": "<max_depth>",
+                  "PowerTransformerEnd": "<max_depth>",
+                  "SynchronousMachine": "<max_depth>",
+                  "PowerTransformer": "<max_depth>",
+                  "RatioTapChanger": "<max_depth>",
+                  "RegulatingControl": "<max_depth>",
+                  "HydroGeneratingUnit": "<max_depth>",
+                  "NuclearGeneratingUnit": "<max_depth>",
+                  "FossilFuel": "<max_depth>",
+                  "ThermalGeneratingUnit": "<max_depth>",
+                  "GeneratingUnit": "<max_depth>"
+                },
+                "num_equipment_objects": 453
+              },
+              "comparison_resolution": {},
+              "comparison_result": {},
+              "requested_base_attributes": []
+            }
+          }
+        }
+      ],
+      "raw_answer": "Am 09.01.2026 variierte die aktive Leistung von Verbraucher 27 zwischen einem Minimum von 250,96 MW um 14:15 Uhr und einem Maximum von 293,123 MW um 14:30 Uhr. Der durchschnittliche Wert betrug 270,671 MW basierend auf drei Messpunkten."
+    }
+  }
+}

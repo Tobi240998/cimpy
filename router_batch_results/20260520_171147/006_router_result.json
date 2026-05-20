@@ -1,0 +1,44 @@
+{
+  "run_id": 6,
+  "timestamp": "2026-05-20T17:12:06.802651",
+  "user_input": "Füge 2 MW bei Load A hinzu.",
+  "duration_seconds": 0.968,
+  "token_usage": {
+    "prompt_tokens": 891,
+    "completion_tokens": 145,
+    "total_tokens": 1036,
+    "details": {
+      "phi3:mini": {
+        "input_tokens": 891,
+        "output_tokens": 145,
+        "total_tokens": 1036
+      }
+    }
+  },
+  "decision_trace": {
+    "domain": "ERROR",
+    "planning_mode": "",
+    "workflow": "",
+    "confidence": "",
+    "safe_to_execute": "",
+    "num_steps": 0,
+    "steps": "",
+    "planner_reasoning": "",
+    "resolved_object": "<omitted:str>",
+    "resolved_object_confidence": "",
+    "selected_attributes": "",
+    "attribute_confidence": "",
+    "num_tool_calls": 0,
+    "executed_tools": "",
+    "failed_tool": ""
+  },
+  "router_output": {
+    "route": "ERROR",
+    "status": "error",
+    "result": {
+      "status": "error",
+      "answer": "Der UnifiedPlanner hat keine gültige strukturierte Ausgabe erzeugt.",
+      "planner_error": "Invalid json output: To fulfill the user's request, I would execute a command or action that adds an additional capacity of 2 megawatts (MW) to 'Load A'. This could be done in various systems such as power grid management software where loads are managed and adjusted dynamically:\n\n```plaintext\nAddCapacity(LoadA, 2 MW);\n```\nThis command would result in Load A having an additional capacity of 2 megawenerces.\nFor troubleshooting, visit: https://docs.langchain.com/oss/python/langchain/errors/OUTPUT_PARSING_FAILURE "
+    }
+  }
+}

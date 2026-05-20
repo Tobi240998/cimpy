@@ -82,7 +82,6 @@ def choose_snapshot_scenario_time(xml_files: list[str]) -> FullModelTimes | None
     """
     Wählt pro Snapshot den besten scenarioTime.
 
-    Heuristik:
     1) Bevorzugt Datei mit md:Model.profile, die auf StateVariables (SV) hindeutet und scenarioTime hat.
     2) Sonst irgendeine Datei mit scenarioTime.
     3) Sonst None.

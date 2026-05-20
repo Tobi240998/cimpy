@@ -1,0 +1,44 @@
+{
+  "run_id": 45,
+  "timestamp": "2026-05-20T17:14:29.370337",
+  "user_input": "Welche Busspannungen gibt es nach dem Lastfluss in PF?",
+  "duration_seconds": 3.75,
+  "token_usage": {
+    "prompt_tokens": 899,
+    "completion_tokens": 745,
+    "total_tokens": 1644,
+    "details": {
+      "phi3:mini": {
+        "input_tokens": 899,
+        "output_tokens": 745,
+        "total_tokens": 1644
+      }
+    }
+  },
+  "decision_trace": {
+    "domain": "ERROR",
+    "planning_mode": "",
+    "workflow": "",
+    "confidence": "",
+    "safe_to_execute": "",
+    "num_steps": 0,
+    "steps": "",
+    "planner_reasoning": "",
+    "resolved_object": "<omitted:str>",
+    "resolved_object_confidence": "",
+    "selected_attributes": "",
+    "attribute_confidence": "",
+    "num_tool_calls": 0,
+    "executed_tools": "",
+    "failed_tool": ""
+  },
+  "router_output": {
+    "route": "ERROR",
+    "status": "error",
+    "result": {
+      "status": "error",
+      "answer": "Der UnifiedPlanner hat keine gültige strukturierte Ausgabe erzeugt.",
+      "planner_error": "Invalid json output: In einem Leistungsfaktor (PF)-System, das mit Wechselstrom betrieben wird und über einphasige Verteilungssysteme verfügt, werden üblicherweise zwei unterschiedliche Spannungsebenen angeboten: die Hochspannungsebene für große Lasten und den Niederspannungsbereich für kleinere bis mittlere Anwendungen.\n\nDie Busspannung (oder Phase-to-Phase-Spannung) in einem einphasigen System kann je nach Typ des Systems variieren, aber typische Werte liegen zwischen 10 und 32 kV vor. Die genaue Spannung hängt von der Entfernung zum Verbraucher ab (da die Busspannung mit der Entfernung zunimmt) sowie vom Systemdesign und den Sicherheitsanforderungen des Betreibers oder Herstellers.\n\nDie Niederspannungsseiten sind in Wohngebieten üblicherweise auf 120/240 V (in Nordamerika) bzw. 230/400 V (wird international verwendet, z.B. in Europa und Asien) festgelegt. Diese Spannung wird über ein Mittel- oder Außenleitermedium übertragen und ist für den alltäglichen Gebrauch geeignet.\n\nEs gibt jedoch auch Systeme mit höherer Phasenspannung, wie z.B. 132/220 V in Nordamerika (für größere Gebäude oder spezielle Anwendungen) und 400 V für industrielle Netzwerke. Diese Spannungsniveaus sind weniger verbreitet als die Standardspannungen von 120/240 V bzw. 230/40 endlich, aber sie werden in bestimmten Branchen verwendet, um spezifische Anforderungen an Leistung und Effizienz zu erfüllen.\n\nEs ist wichtig zu beachten, dass die Busspannung nicht direkt mit der Lastflussmenge korreliert wird; stattdessen werden sie durch das Netzdesign bestimmt. Die Spannungsabnahme aufgrund des Lastflusses kann jedoch dazu führen, dass zusätzliche Leistung bereitgestellt oder Umspannwerke benötigt werden, um die erforderlichen Spannungen an den Verbraucher zu liefern.\n\nUm spezifische Busspannungen für ein bestimmtes PF-System mit einer Lastflussmenge zu ermitteln, müsste man in der Regel eine detaillierte Analyse des Netzes durchführen und die Spannungswerte an den Verbraucherpunkten berechnen.\nFor troubleshooting, visit: https://docs.langchain.com/oss/python/langchain/errors/OUTPUT_PARSING_FAILURE "
+    }
+  }
+}

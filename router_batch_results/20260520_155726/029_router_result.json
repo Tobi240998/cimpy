@@ -1,0 +1,46 @@
+{
+  "run_id": 29,
+  "timestamp": "2026-05-20T16:17:30.616071",
+  "user_input": "Welche direkten Nachbarn hat Bus 5 in PF?",
+  "duration_seconds": 0.531,
+  "token_usage": {
+    "prompt_tokens": 827,
+    "completion_tokens": 70,
+    "total_tokens": 897,
+    "details": {
+      "phi3:mini": {
+        "input_tokens": 827,
+        "output_tokens": 70,
+        "total_tokens": 897
+      }
+    }
+  },
+  "decision_trace": {
+    "domain": "ASK_USER",
+    "planning_mode": "",
+    "workflow": "",
+    "confidence": "",
+    "safe_to_execute": "",
+    "num_steps": 0,
+    "steps": "",
+    "planner_reasoning": "",
+    "resolved_object": "<omitted:str>",
+    "resolved_object_confidence": "",
+    "selected_attributes": "",
+    "attribute_confidence": "",
+    "num_tool_calls": 0,
+    "executed_tools": "",
+    "failed_tool": "",
+    "equipment_resolution_mode": "",
+    "attribute_resolution_mode": "",
+    "comparison_resolution_mode": ""
+  },
+  "router_output": {
+    "route": "ASK_USER",
+    "question": "Bitte geben Sie den Namen des Busses, der direkt neben Bus 5 im PowerFactory-Projekt liegt.",
+    "missing_fields": [
+      "bus_neighbors"
+    ],
+    "partial": {}
+  }
+}

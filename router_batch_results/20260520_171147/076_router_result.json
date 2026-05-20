@@ -1,0 +1,44 @@
+{
+  "run_id": 76,
+  "timestamp": "2026-05-20T17:17:31.086752",
+  "user_input": "Schalte Schalter 1 aus. Wie sind anschließend die Busspannungen?",
+  "duration_seconds": 6.355,
+  "token_usage": {
+    "prompt_tokens": 905,
+    "completion_tokens": 1208,
+    "total_tokens": 2113,
+    "details": {
+      "phi3:mini": {
+        "input_tokens": 905,
+        "output_tokens": 1208,
+        "total_tokens": 2113
+      }
+    }
+  },
+  "decision_trace": {
+    "domain": "ERROR",
+    "planning_mode": "",
+    "workflow": "",
+    "confidence": "",
+    "safe_to_execute": "",
+    "num_steps": 0,
+    "steps": "",
+    "planner_reasoning": "",
+    "resolved_object": "<omitted:str>",
+    "resolved_object_confidence": "",
+    "selected_attributes": "",
+    "attribute_confidence": "",
+    "num_tool_calls": 0,
+    "executed_tools": "",
+    "failed_tool": ""
+  },
+  "router_output": {
+    "route": "ERROR",
+    "status": "error",
+    "result": {
+      "status": "error",
+      "answer": "Der UnifiedPlanner hat keine gültige strukturierte Ausgabe erzeugt.",
+      "planner_error": "Invalid json output: Um diese Anweisung zu befolgen, müssen wir zunächst das Verhalten des Systems verstehen und welche Auswirkungen der Deaktivierung eines Schalters hat. Da keine spezifischen Details zum System gegeben wurden, nehmen wir an, dass es sich um ein typisches elektrisches System mit mehreren Busspannungen handelt.\n\nWenn Sie einen Schalter im System deaktivieren (ausschalten), wird die Verbindung zwischen dem Schaltkreis und der Stromquelle unterbrochen. Dies bedeutet, dass keine oder nur minimale Ströme durch diesen Teil des Systems fließen können. Die Busspannungen hängen von den anderen Komponenten im System ab, wie z.B. Transformatoren, Verstärker oder weiteren Schaltern und Widerständen.\n\nWenn der betreffende Schalter ein einzelnes Signalbus-Element ist (wie eine Leitung mit einem eigenen Schutzwiderstand), wird die Spannung an diesem Buspunkt nach dem Ausschalten des Schalters auf null fallen, vorausgesetzt, dass keine anderen Quellen oder Lasten im System den Stromfluss weiterhin unterstützen.\n\nWenn der betreffende Schalter jedoch Teil eines größeren Systems ist und mehrere Busspannungen mitsteuert (zum Beispiel ein PLL-Schaltkreis), könnte das Ausschalten des Schalters die Spannung an anderen Busspannungen nicht direkt beeinflussen, es sei denn, diese sind miteinander verbunden oder gemeinsam vom gleichen Stromquelle versorgt.\n\nIn einem allgemeineren Szenario ohne spezifische Details über das System würde man davon ausgehen, dass die anderen Busspannungen unberührt bleiben und ihre Spannungswerte vor dem Ausschalten des Schalters beibehalten werden. Dies setzt jedoch eine isolierte Verbindung der Busspannungen voneinander oder von einer gemeinsamen Stromquelle voraus.\n\nUm die genauen nachfolgenden Busspannungen zu bestimmen, müssten wir detailliertere Informationen über das elektrische System und dessen Konfiguration kennen.\nFor troubleshooting, visit: https://docs.langchain.com/oss/python/langchain/errors/OUTPUT_PARSING_FAILURE "
+    }
+  }
+}

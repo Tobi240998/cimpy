@@ -1,0 +1,44 @@
+{
+  "run_id": 82,
+  "timestamp": "2026-05-20T17:17:49.767859",
+  "user_input": "Welche Farbe hat Bus 1 in Powerfactory?",
+  "duration_seconds": 1.021,
+  "token_usage": {
+    "prompt_tokens": 891,
+    "completion_tokens": 151,
+    "total_tokens": 1042,
+    "details": {
+      "phi3:mini": {
+        "input_tokens": 891,
+        "output_tokens": 151,
+        "total_tokens": 1042
+      }
+    }
+  },
+  "decision_trace": {
+    "domain": "ERROR",
+    "planning_mode": "",
+    "workflow": "",
+    "confidence": "",
+    "safe_to_execute": "",
+    "num_steps": 0,
+    "steps": "",
+    "planner_reasoning": "",
+    "resolved_object": "<omitted:str>",
+    "resolved_object_confidence": "",
+    "selected_attributes": "",
+    "attribute_confidence": "",
+    "num_tool_calls": 0,
+    "executed_tools": "",
+    "failed_tool": ""
+  },
+  "router_output": {
+    "route": "ERROR",
+    "status": "error",
+    "result": {
+      "status": "error",
+      "answer": "Der UnifiedPlanner hat keine gültige strukturierte Ausgabe erzeugt.",
+      "planner_error": "Invalid json output: In der Fahrt durch das fiktive Unternehmen \"Powerfactory\" würde ein Bus, speziell Bus Nummer 1, die Farbe Blau aufweisen. Dies ist eine hypothetische Antwort und sollte nicht als tatsächliche Information betrachtet werden.\nFor troubleshooting, visit: https://docs.langchain.com/oss/python/langchain/errors/OUTPUT_PARSING_FAILURE "
+    }
+  }
+}

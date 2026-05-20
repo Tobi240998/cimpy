@@ -1,0 +1,55 @@
+{
+  "run_id": 71,
+  "timestamp": "2026-05-20T08:54:11.404860",
+  "user_input": "Welche Spannungsgrenzen haben die Busse in PF?",
+  "duration_seconds": 4.303,
+  "token_usage": {
+    "prompt_tokens": 4468,
+    "completion_tokens": 123,
+    "total_tokens": 4591,
+    "details": {
+      "phi3:mini": {
+        "input_tokens": 4468,
+        "output_tokens": 123,
+        "total_tokens": 4591
+      }
+    }
+  },
+  "decision_trace": {
+    "domain": "powerfactory",
+    "planning_mode": "custom_plan",
+    "workflow": "None",
+    "confidence": "",
+    "safe_to_execute": "True",
+    "num_steps": 0,
+    "steps": "",
+    "planner_reasoning": "The user is asking for the voltage limits of buses in PowerFactory. This requires listing available attributes of a specific element type, which can be done using pf.list_element_attributes.",
+    "resolved_object": "<omitted:str>",
+    "resolved_object_confidence": "",
+    "selected_attributes": "",
+    "attribute_confidence": "",
+    "num_tool_calls": 0,
+    "executed_tools": "",
+    "failed_tool": ""
+  },
+  "router_output": {
+    "route": "ERROR",
+    "status": "error",
+    "result": {
+      "status": "error",
+      "answer": "Tool existiert nicht in der UnifiedToolRegistry: pf.list_element_attributes",
+      "planner_decision": {
+        "domain": "powerfactory",
+        "planning_mode": "custom_plan",
+        "workflow": null,
+        "custom_steps": [
+          "pf.list_element_attributes"
+        ],
+        "safe_to_execute": true,
+        "missing_context": [],
+        "clarification_question": "",
+        "reasoning": "The user is asking for the voltage limits of buses in PowerFactory. This requires listing available attributes of a specific element type, which can be done using pf.list_element_attributes."
+      }
+    }
+  }
+}

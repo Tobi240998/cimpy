@@ -1,0 +1,44 @@
+{
+  "run_id": 29,
+  "timestamp": "2026-05-20T17:13:39.987579",
+  "user_input": "Welche direkten Nachbarn hat Bus 5 in PF?",
+  "duration_seconds": 2.023,
+  "token_usage": {
+    "prompt_tokens": 897,
+    "completion_tokens": 382,
+    "total_tokens": 1279,
+    "details": {
+      "phi3:mini": {
+        "input_tokens": 897,
+        "output_tokens": 382,
+        "total_tokens": 1279
+      }
+    }
+  },
+  "decision_trace": {
+    "domain": "ERROR",
+    "planning_mode": "",
+    "workflow": "",
+    "confidence": "",
+    "safe_to_execute": "",
+    "num_steps": 0,
+    "steps": "",
+    "planner_reasoning": "",
+    "resolved_object": "<omitted:str>",
+    "resolved_object_confidence": "",
+    "selected_attributes": "",
+    "attribute_confidence": "",
+    "num_tool_calls": 0,
+    "executed_tools": "",
+    "failed_tool": ""
+  },
+  "router_output": {
+    "route": "ERROR",
+    "status": "error",
+    "result": {
+      "status": "error",
+      "answer": "Der UnifiedPlanner hat keine gültige strukturierte Ausgabe erzeugt.",
+      "planner_error": "Invalid json output: Um die direkten Nachbarn von Bus 5 in der Stadt PF zu finden, müssten wir normalerenerstens auf den öffentlichen Verkehrsplan oder eine entsprechende App zurückgreifen. Diese Ressourcen bieten oft detaillierte Informationen über Buslinien und ihre jeweiligen Routen sowie die benachbarten Linien an.\n\nAngenommen, nach Durchsuchung des relevanten Stadtplans von PF oder einer entsprechenden App finden wir heraus, dass Bus 5 auf der Route A verkehrt. Diese Route könnte beispielsweise folgende Nachbarlinien haben: Bus 3 und Bus 7. Dies bedeutet, dass diese Linien direkt mit Bus 5 verbunden sind und somit seine direkten Nachbarn im öffentlichen Verkehrsnetz von PF wären.\n\nEs ist wichtig zu beachten, dass die genauen Namen der Nachbarlinien je nach Stadtplan oder App variieren können. Daher sollte man immer auf den aktuellsten und genausten Plan zurückgreifen, um präzise Informationen über direkte Nachbarn von Bus 5 in PF zu erhalten.\nFor troubleshooting, visit: https://docs.langchain.com/oss/python/langchain/errors/OUTPUT_PARSING_FAILURE "
+    }
+  }
+}

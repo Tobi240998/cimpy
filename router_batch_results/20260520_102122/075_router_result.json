@@ -1,0 +1,757 @@
+{
+  "run_id": 75,
+  "timestamp": "2026-05-20T12:53:13.287255",
+  "user_input": "Öffne den Schalter Schalter 1 und gib danach die Busspannungen zurück.",
+  "duration_seconds": 540.878,
+  "token_usage": {
+    "prompt_tokens": 17747,
+    "completion_tokens": 51709,
+    "total_tokens": 69456,
+    "details": {
+      "phi3:mini": {
+        "input_tokens": 17747,
+        "total_tokens": 69456,
+        "output_tokens": 51709
+      }
+    }
+  },
+  "decision_trace": {
+    "domain": "composite",
+    "planning_mode": "",
+    "workflow": "",
+    "confidence": "",
+    "safe_to_execute": "",
+    "num_steps": 0,
+    "steps": "",
+    "planner_reasoning": "",
+    "resolved_object": "<omitted:str>",
+    "resolved_object_confidence": "",
+    "selected_attributes": "",
+    "attribute_confidence": "",
+    "num_tool_calls": 0,
+    "executed_tools": "",
+    "failed_tool": ""
+  },
+  "router_output": {
+    "route": "COMPOSITE",
+    "domain": "composite",
+    "status": "ok",
+    "is_composite": true,
+    "composite_decision": {
+      "status": "ok",
+      "is_composite": true,
+      "subrequests": [
+        {
+          "user_input": "Öffne den Schalter Schalter 1",
+          "depends_on_previous": false
+        },
+        {
+          "user_input": "gib danach die Busspannungen zurück",
+          "depends_on_previous": true
+        }
+      ],
+      "reasoning": "The request contains two sequential actions where the second part ('gib danach die Busspannungen zurück') explicitly depends on the result of the first action ('Öffne den Schalter Schalter 1') using 'danach' (after). This matches the splitting criteria for switch changes followed by dependent load-flow queries."
+    },
+    "result": {
+      "status": "ok",
+      "answer": "1. Die Schalteroperation 'open' wurde für 'Switch 1' (StaSwitch) ausgeführt. Zustand vorher: closed. Zustand nachher: open. Anschließend wurde ein Lastfluss gerechnet.\n2. Die Anfrage konnte nicht sauber ausgeführt werden (result_attribute_selection_not_safe). Details: Die Resultat-Attributauswahl konnte nicht sicher genug aufgelöst werden.",
+      "subresults": [
+        {
+          "index": 1,
+          "user_input": "Öffne den Schalter Schalter 1",
+          "effective_input": "Öffne den Schalter Schalter 1",
+          "depends_on_previous": false,
+          "output": {
+            "route": "POWERFACTORY",
+            "domain": "powerfactory",
+            "plan": {
+              "domain": "powerfactory",
+              "user_input": "Öffne den Schalter Schalter 1",
+              "steps": [
+                {
+                  "domain": "<max_depth>",
+                  "tool": "<max_depth>",
+                  "args": "<max_depth>",
+                  "save_as": "<max_depth>",
+                  "description": "<max_depth>",
+                  "mutating": "<max_depth>"
+                },
+                {
+                  "domain": "<max_depth>",
+                  "tool": "<max_depth>",
+                  "args": "<max_depth>",
+                  "save_as": "<max_depth>",
+                  "description": "<max_depth>",
+                  "mutating": "<max_depth>"
+                },
+                {
+                  "domain": "<max_depth>",
+                  "tool": "<max_depth>",
+                  "args": "<max_depth>",
+                  "save_as": "<max_depth>",
+                  "description": "<max_depth>",
+                  "mutating": "<max_depth>"
+                },
+                {
+                  "domain": "<max_depth>",
+                  "tool": "<max_depth>",
+                  "args": "<max_depth>",
+                  "save_as": "<max_depth>",
+                  "description": "<max_depth>",
+                  "mutating": "<max_depth>"
+                },
+                {
+                  "domain": "<max_depth>",
+                  "tool": "<max_depth>",
+                  "args": "<max_depth>",
+                  "save_as": "<max_depth>",
+                  "description": "<max_depth>",
+                  "mutating": "<max_depth>"
+                }
+              ],
+              "classification": {
+                "domain": "powerfactory",
+                "planning_mode": "standard_workflow",
+                "workflow": "pf.change_switch_state",
+                "custom_steps": [],
+                "safe_to_execute": true,
+                "missing_context": [],
+                "clarification_question": "",
+                "reasoning": "User explicitly requests to open a switch (Schalter 1), which matches PowerFactory's switch operation workflow. No historical or CIM data context is present, so PowerFactory tools are appropriate. The standard workflow 'pf.change_switch_state' directly handles switch state changes."
+              },
+              "reasoning": "User explicitly requests to open a switch (Schalter 1), which matches PowerFactory's switch operation workflow. No historical or CIM data context is present, so PowerFactory tools are appropriate. The standard workflow 'pf.change_switch_state' directly handles switch state changes."
+            },
+            "planner_decision": {
+              "domain": "powerfactory",
+              "planning_mode": "standard_workflow",
+              "workflow": "pf.change_switch_state",
+              "custom_steps": [],
+              "safe_to_execute": true,
+              "missing_context": [],
+              "clarification_question": "",
+              "reasoning": "User explicitly requests to open a switch (Schalter 1), which matches PowerFactory's switch operation workflow. No historical or CIM data context is present, so PowerFactory tools are appropriate. The standard workflow 'pf.change_switch_state' directly handles switch state changes."
+            },
+            "result": {
+              "status": "ok",
+              "tool": "powerfactory",
+              "agent": "SingleAgent",
+              "project": "<omitted:str>",
+              "studycase": "<omitted:str>",
+              "user_input": "Öffne den Schalter Schalter 1",
+              "classification": {
+                "domain": "powerfactory",
+                "planning_mode": "standard_workflow",
+                "workflow": "pf.change_switch_state",
+                "custom_steps": [],
+                "safe_to_execute": true,
+                "missing_context": [],
+                "clarification_question": "",
+                "reasoning": "User explicitly requests to open a switch (Schalter 1), which matches PowerFactory's switch operation workflow. No historical or CIM data context is present, so PowerFactory tools are appropriate. The standard workflow 'pf.change_switch_state' directly handles switch state changes."
+              },
+              "plan": [
+                {
+                  "step": "<max_depth>",
+                  "description": "<max_depth>"
+                },
+                {
+                  "step": "<max_depth>",
+                  "description": "<max_depth>"
+                },
+                {
+                  "step": "<max_depth>",
+                  "description": "<max_depth>"
+                },
+                {
+                  "step": "<max_depth>",
+                  "description": "<max_depth>"
+                },
+                {
+                  "step": "<max_depth>",
+                  "description": "<max_depth>"
+                }
+              ],
+              "available_tools": [
+                "<non_serializable:UnifiedToolSpec>",
+                "<non_serializable:UnifiedToolSpec>",
+                "<non_serializable:UnifiedToolSpec>",
+                "<non_serializable:UnifiedToolSpec>",
+                "<non_serializable:UnifiedToolSpec>",
+                "<non_serializable:UnifiedToolSpec>",
+                "<non_serializable:UnifiedToolSpec>",
+                "<non_serializable:UnifiedToolSpec>",
+                "<non_serializable:UnifiedToolSpec>",
+                "<non_serializable:UnifiedToolSpec>",
+                "<non_serializable:UnifiedToolSpec>",
+                "<non_serializable:UnifiedToolSpec>",
+                "<non_serializable:UnifiedToolSpec>",
+                "<non_serializable:UnifiedToolSpec>",
+                "<non_serializable:UnifiedToolSpec>",
+                "<non_serializable:UnifiedToolSpec>",
+                "<non_serializable:UnifiedToolSpec>",
+                "<non_serializable:UnifiedToolSpec>",
+                "<non_serializable:UnifiedToolSpec>",
+                "<non_serializable:UnifiedToolSpec>",
+                "<non_serializable:UnifiedToolSpec>",
+                "<non_serializable:UnifiedToolSpec>",
+                "<non_serializable:UnifiedToolSpec>",
+                "<non_serializable:UnifiedToolSpec>",
+                "<non_serializable:UnifiedToolSpec>",
+                "<non_serializable:UnifiedToolSpec>",
+                "<non_serializable:UnifiedToolSpec>",
+                "<non_serializable:UnifiedToolSpec>",
+                "<non_serializable:UnifiedToolSpec>",
+                "<non_serializable:UnifiedToolSpec>",
+                "<non_serializable:UnifiedToolSpec>",
+                "<non_serializable:UnifiedToolSpec>",
+                "<non_serializable:UnifiedToolSpec>"
+              ],
+              "instruction": null,
+              "resolved_load": null,
+              "data": {},
+              "catalog": [],
+              "messages": [
+                "Die Schalteroperation 'open' wurde für 'Switch 1' (StaSwitch) ausgeführt. Zustand vorher: closed. Zustand nachher: open. Anschließend wurde ein Lastfluss gerechnet."
+              ],
+              "answer": "Die Schalteroperation 'open' wurde für 'Switch 1' (StaSwitch) ausgeführt. Zustand vorher: closed. Zustand nachher: open. Anschließend wurde ein Lastfluss gerechnet.",
+              "summary": {
+                "status": "ok",
+                "tool": "merged_powerfactory_summary",
+                "answer": "Die Schalteroperation 'open' wurde für 'Switch 1' (StaSwitch) ausgeführt. Zustand vorher: closed. Zustand nachher: open. Anschließend wurde ein Lastfluss gerechnet.",
+                "messages": [
+                  "<max_depth>"
+                ],
+                "summary_count": 1,
+                "plan_steps": [
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>"
+                ]
+              },
+              "summary_parts": [
+                {
+                  "status": "<max_depth>",
+                  "tool": "<max_depth>",
+                  "project": "<omitted:str>",
+                  "answer": "<max_depth>",
+                  "messages": "<max_depth>"
+                }
+              ],
+              "topology": {
+                "graph_mode": null,
+                "graph_summary": {},
+                "build_debug": {},
+                "inventory": {},
+                "instruction": null,
+                "resolution": null,
+                "selected_node": null,
+                "neighbor_count": 0,
+                "neighbors": [],
+                "matches": []
+              },
+              "switch": {
+                "instruction": {
+                  "query_type": "<max_depth>",
+                  "operation": "<max_depth>",
+                  "entity_type": "<max_depth>",
+                  "entity_name_raw": "<max_depth>",
+                  "entity_name_candidates": "<max_depth>",
+                  "available_types": "<max_depth>",
+                  "debug_switch_decision": "<max_depth>"
+                },
+                "resolution": {
+                  "status": "<max_depth>",
+                  "tool": "<max_depth>",
+                  "project": "<omitted:str>",
+                  "instruction": "<max_depth>",
+                  "asset_query": "<max_depth>",
+                  "selected_match": "<max_depth>",
+                  "selected_matches": "<max_depth>",
+                  "selected_object_names": "<max_depth>",
+                  "selection_mode": "<max_depth>",
+                  "matches": "<max_depth>",
+                  "llm_decision": "<max_depth>",
+                  "entity_type": "<max_depth>"
+                },
+                "execution": {
+                  "status": "<max_depth>",
+                  "tool": "<max_depth>",
+                  "project": "<omitted:str>",
+                  "studycase": "<omitted:str>",
+                  "instruction": "<max_depth>",
+                  "resolution": "<max_depth>",
+                  "switch": "<max_depth>",
+                  "state_before": "<max_depth>",
+                  "state_after": "<max_depth>",
+                  "state_before_raw": "<max_depth>",
+                  "state_after_raw": "<max_depth>",
+                  "apply_result": "<max_depth>",
+                  "loadflow": "<max_depth>"
+                },
+                "summary": {
+                  "status": "<max_depth>",
+                  "tool": "<max_depth>",
+                  "project": "<omitted:str>",
+                  "answer": "<max_depth>",
+                  "messages": "<max_depth>"
+                }
+              },
+              "data_query": {
+                "inventory": null,
+                "instruction": null,
+                "resolution": {
+                  "status": "<max_depth>",
+                  "tool": "<max_depth>",
+                  "project": "<omitted:str>",
+                  "instruction": "<max_depth>",
+                  "asset_query": "<max_depth>",
+                  "selected_match": "<max_depth>",
+                  "selected_matches": "<max_depth>",
+                  "selected_object_names": "<max_depth>",
+                  "selection_mode": "<max_depth>",
+                  "matches": "<max_depth>",
+                  "llm_decision": "<max_depth>",
+                  "entity_type": "<max_depth>"
+                },
+                "attribute_listing": null,
+                "attribute_selection": null,
+                "execution": null,
+                "summary": null
+              },
+              "debug": {
+                "planning": {},
+                "selected_equipment": {
+                  "resolved_load": "<max_depth>",
+                  "entity_resolution": "<max_depth>",
+                  "object_resolution": "<max_depth>"
+                },
+                "trace": [
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>"
+                ]
+              },
+              "raw_answer": "Die Schalteroperation 'open' wurde für 'Switch 1' (StaSwitch) ausgeführt. Zustand vorher: closed. Zustand nachher: open. Anschließend wurde ein Lastfluss gerechnet."
+            }
+          }
+        },
+        {
+          "index": 2,
+          "user_input": "gib danach die Busspannungen zurück",
+          "effective_input": "Originale Gesamtanfrage: Öffne den Schalter Schalter 1 und gib danach die Busspannungen zurück.\n\nVorheriger Kontext:\n\nTeil 1: Die Schalteroperation 'open' wurde für 'Switch 1' (StaSwitch) ausgeführt. Zustand vorher: closed. Zustand nachher: open. Anschließend wurde ein Lastfluss gerechnet.\n\nAktuelle Teilanfrage:\ngib danach die Busspannungen zurück",
+          "depends_on_previous": true,
+          "output": {
+            "route": "POWERFACTORY",
+            "domain": "powerfactory",
+            "plan": {
+              "domain": "powerfactory",
+              "user_input": "Originale Gesamtanfrage: Öffne den Schalter Schalter 1 und gib danach die Busspannungen zurück.\n\nVorheriger Kontext:\n\nTeil 1: Die Schalteroperation 'open' wurde für 'Switch 1' (StaSwitch) ausgeführt. Zustand vorher: closed. Zustand nachher: open. Anschließend wurde ein Lastfluss gerechnet.\n\nAktuelle Teilanfrage:\ngib danach die Busspannungen zurück",
+              "steps": [
+                {
+                  "domain": "<max_depth>",
+                  "tool": "<max_depth>",
+                  "args": "<max_depth>",
+                  "save_as": "<max_depth>",
+                  "description": "<max_depth>",
+                  "mutating": "<max_depth>"
+                },
+                {
+                  "domain": "<max_depth>",
+                  "tool": "<max_depth>",
+                  "args": "<max_depth>",
+                  "save_as": "<max_depth>",
+                  "description": "<max_depth>",
+                  "mutating": "<max_depth>"
+                },
+                {
+                  "domain": "<max_depth>",
+                  "tool": "<max_depth>",
+                  "args": "<max_depth>",
+                  "save_as": "<max_depth>",
+                  "description": "<max_depth>",
+                  "mutating": "<max_depth>"
+                },
+                {
+                  "domain": "<max_depth>",
+                  "tool": "<max_depth>",
+                  "args": "<max_depth>",
+                  "save_as": "<max_depth>",
+                  "description": "<max_depth>",
+                  "mutating": "<max_depth>"
+                },
+                {
+                  "domain": "<max_depth>",
+                  "tool": "<max_depth>",
+                  "args": "<max_depth>",
+                  "save_as": "<max_depth>",
+                  "description": "<max_depth>",
+                  "mutating": "<max_depth>"
+                },
+                {
+                  "domain": "<max_depth>",
+                  "tool": "<max_depth>",
+                  "args": "<max_depth>",
+                  "save_as": "<max_depth>",
+                  "description": "<max_depth>",
+                  "mutating": "<max_depth>"
+                },
+                {
+                  "domain": "<max_depth>",
+                  "tool": "<max_depth>",
+                  "args": "<max_depth>",
+                  "save_as": "<max_depth>",
+                  "description": "<max_depth>",
+                  "mutating": "<max_depth>"
+                },
+                {
+                  "domain": "<max_depth>",
+                  "tool": "<max_depth>",
+                  "args": "<max_depth>",
+                  "save_as": "<max_depth>",
+                  "description": "<max_depth>",
+                  "mutating": "<max_depth>"
+                }
+              ],
+              "classification": {
+                "domain": "powerfactory",
+                "planning_mode": "standard_workflow",
+                "workflow": "pf.query_element_data",
+                "custom_steps": [],
+                "safe_to_execute": true,
+                "missing_context": [],
+                "clarification_question": "",
+                "reasoning": ""
+              },
+              "reasoning": ""
+            },
+            "planner_decision": {
+              "domain": "powerfactory",
+              "planning_mode": "standard_workflow",
+              "workflow": "pf.query_element_data",
+              "custom_steps": [],
+              "safe_to_execute": true,
+              "missing_context": [],
+              "clarification_question": "",
+              "reasoning": ""
+            },
+            "result": {
+              "status": "error",
+              "tool": "select_pf_object_attributes_llm",
+              "project": "<omitted:str>",
+              "instruction": {
+                "query_type": "element_data",
+                "entity_type": "bus",
+                "entity_name_raw": "Originale Gesamtanfrage: Öffne den Schalter Schalter 1 und gib danach die Busspannungen zurück.\n\nVorheriger Kontext:\n\nTeil 1: Die Schalteroperation 'open' wurde für 'Switch 1' (StaSwitch) ausgeführt. Zustand vorher: closed. Zustand nachher: open. Anschließend wurde ein Lastfluss gerechnet.\n\nAktuelle Teilanfrage:\ngib danach die Busspannungen zurück",
+                "entity_name_candidates": [
+                  "<max_depth>",
+                  "<max_depth>"
+                ],
+                "attribute_request_text": "Originale Gesamtanfrage: Öffne den Schalter Schalter 1 und gib danach die Busspannungen zurück.\n\nVorheriger Kontext:\n\nTeil 1: Die Schalteroperation 'open' wurde für 'Switch 1' (StaSwitch) ausgeführt. Zustand vorher: closed. Zustand nachher: open. Anschließend wurde ein Lastfluss gerechnet.\n\nAktuelle Teilanfrage:\ngib danach die Busspannungen zurück",
+                "available_types": [
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>"
+                ],
+                "requested_attribute_names": [],
+                "requested_attribute_name_extraction": {
+                  "status": "<max_depth>",
+                  "requested_attribute_names": "<max_depth>",
+                  "llm_decision": "<max_depth>",
+                  "chain_mode": "<max_depth>"
+                },
+                "data_source_preference": "result",
+                "data_source_note": "Lastflussergebnisse wurden explizit oder sicher angefordert.",
+                "data_source_decision": {
+                  "status": "<max_depth>",
+                  "selected_data_source": "<max_depth>",
+                  "confidence": "<max_depth>",
+                  "rationale": "<max_depth>",
+                  "should_execute": "<max_depth>",
+                  "decision_mode": "<max_depth>",
+                  "llm_decision": "<max_depth>",
+                  "chain_mode": "<max_depth>",
+                  "attribute_match_mode": "<max_depth>",
+                  "attribute_match_confidence": "<max_depth>",
+                  "attribute_match_rationale": "<max_depth>",
+                  "attribute_cardinality": "<max_depth>",
+                  "attribute_cardinality_rationale": "<max_depth>",
+                  "fallback_applied": "<max_depth>",
+                  "effective_data_source": "<max_depth>",
+                  "data_source_note": "<max_depth>"
+                },
+                "attribute_match_mode": {
+                  "status": "<max_depth>",
+                  "mode": "<max_depth>",
+                  "confidence": "<max_depth>",
+                  "should_execute": "<max_depth>",
+                  "rationale": "<max_depth>",
+                  "source": "<max_depth>"
+                },
+                "attribute_cardinality": "multiple",
+                "attribute_cardinality_rationale": "Request for 'Busspannungen' (plural) implies multiple bus voltage values across the network, not a single value.",
+                "selected_attribute_handles": []
+              },
+              "resolution": {
+                "status": "ok",
+                "tool": "resolve_objects_from_inventory_llm",
+                "project": "<omitted:str>",
+                "instruction": {
+                  "query_type": "<max_depth>",
+                  "entity_type": "<max_depth>",
+                  "entity_name_raw": "<max_depth>",
+                  "entity_name_candidates": "<max_depth>",
+                  "attribute_request_text": "<max_depth>",
+                  "available_types": "<max_depth>",
+                  "requested_attribute_names": "<max_depth>",
+                  "requested_attribute_name_extraction": "<max_depth>",
+                  "data_source_preference": "<max_depth>",
+                  "data_source_note": "<max_depth>",
+                  "data_source_decision": "<max_depth>",
+                  "attribute_match_mode": "<max_depth>",
+                  "attribute_cardinality": "<max_depth>",
+                  "attribute_cardinality_rationale": "<max_depth>"
+                },
+                "asset_query": "__ALL__",
+                "selected_match": {
+                  "node_id": "<max_depth>",
+                  "name": "<max_depth>",
+                  "full_name": "<max_depth>",
+                  "pf_class": "<max_depth>",
+                  "kind": "<max_depth>",
+                  "degree": "<max_depth>",
+                  "inventory_type": "<max_depth>"
+                },
+                "selected_matches": [
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>"
+                ],
+                "selected_object_names": [
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>"
+                ],
+                "selection_mode": "all",
+                "matches": [
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>"
+                ],
+                "llm_decision": {
+                  "selected_object_name": "<max_depth>",
+                  "selected_object_names": "<max_depth>",
+                  "selection_mode": "<max_depth>",
+                  "confidence": "<max_depth>",
+                  "rationale": "<max_depth>",
+                  "alternatives": "<max_depth>",
+                  "should_execute": "<max_depth>"
+                },
+                "entity_type": "bus"
+              },
+              "attribute_listing": {
+                "status": "ok",
+                "tool": "list_available_object_attributes",
+                "project": "<omitted:str>",
+                "studycase": "<omitted:str>",
+                "instruction": {
+                  "query_type": "<max_depth>",
+                  "entity_type": "<max_depth>",
+                  "entity_name_raw": "<max_depth>",
+                  "entity_name_candidates": "<max_depth>",
+                  "attribute_request_text": "<max_depth>",
+                  "available_types": "<max_depth>",
+                  "requested_attribute_names": "<max_depth>",
+                  "requested_attribute_name_extraction": "<max_depth>",
+                  "data_source_preference": "<max_depth>",
+                  "data_source_note": "<max_depth>",
+                  "data_source_decision": "<max_depth>",
+                  "attribute_match_mode": "<max_depth>",
+                  "attribute_cardinality": "<max_depth>",
+                  "attribute_cardinality_rationale": "<max_depth>"
+                },
+                "resolution": {
+                  "status": "<max_depth>",
+                  "tool": "<max_depth>",
+                  "project": "<omitted:str>",
+                  "instruction": "<max_depth>",
+                  "asset_query": "<max_depth>",
+                  "selected_match": "<max_depth>",
+                  "selected_matches": "<max_depth>",
+                  "selected_object_names": "<max_depth>",
+                  "selection_mode": "<max_depth>",
+                  "matches": "<max_depth>",
+                  "llm_decision": "<max_depth>",
+                  "entity_type": "<max_depth>"
+                },
+                "object": {
+                  "name": "<max_depth>",
+                  "full_name": "<max_depth>",
+                  "pf_class": "<max_depth>"
+                },
+                "attribute_options": [
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>"
+                ],
+                "loadflow": {
+                  "executed": "<max_depth>",
+                  "loadflow_command": "<max_depth>",
+                  "loadflow_result": "<max_depth>"
+                },
+                "attribute_search_mode": "result",
+                "debug": {
+                  "project": "<omitted:str>",
+                  "entity_type": "<max_depth>",
+                  "object_name": "<max_depth>",
+                  "request_text": "<max_depth>",
+                  "data_source_decision": "<max_depth>",
+                  "data_source_preference_effective": "<max_depth>",
+                  "attribute_search_mode": "<max_depth>",
+                  "num_attribute_options": "<max_depth>",
+                  "attribute_option_preview": "<max_depth>",
+                  "loadflow": "<max_depth>"
+                }
+              },
+              "error": "result_attribute_selection_not_safe",
+              "details": "Die Resultat-Attributauswahl konnte nicht sicher genug aufgelöst werden.",
+              "selection_debug": {
+                "project": "<omitted:str>",
+                "entity_type": "bus",
+                "object_name": "Bus 1",
+                "request_text": "Originale Gesamtanfrage: Öffne den Schalter Schalter 1 und gib danach die Busspannungen zurück.\n\nVorheriger Kontext:\n\nTeil 1: Die Schalteroperation 'open' wurde für 'Switch 1' (StaSwitch) ausgeführt. Zustand vorher: closed. Zustand nachher: open. Anschließend wurde ein Lastfluss gerechnet.\n\nAktuelle Teilanfrage:\ngib danach die Busspannungen zurück",
+                "requested_attribute_names": [],
+                "requested_attribute_name_extraction": {
+                  "status": "<max_depth>",
+                  "requested_attribute_names": "<max_depth>",
+                  "llm_decision": "<max_depth>",
+                  "chain_mode": "<max_depth>"
+                },
+                "available_result_attribute_count": 8,
+                "predefined_result_attribute_count": 4,
+                "predefined_result_attribute_handles_preview": [
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>"
+                ],
+                "predefined_llm_result": {
+                  "status": "<max_depth>",
+                  "selected_attribute_handles": "<max_depth>",
+                  "selected_field_names": "<max_depth>",
+                  "matched_candidates": "<max_depth>",
+                  "should_execute": "<max_depth>",
+                  "confidence": "<max_depth>",
+                  "rationale": "<max_depth>",
+                  "llm_decision": "<max_depth>",
+                  "chain_mode": "<max_depth>"
+                },
+                "exact_match_result": {
+                  "status": "<max_depth>",
+                  "selected_attribute_names": "<max_depth>",
+                  "selected_attribute_handles": "<max_depth>",
+                  "matched_candidates": "<max_depth>",
+                  "should_execute": "<max_depth>",
+                  "confidence": "<max_depth>",
+                  "rationale": "<max_depth>"
+                },
+                "full_option_llm_result": {
+                  "status": "<max_depth>",
+                  "selected_attribute_handles": "<max_depth>",
+                  "matched_candidates": "<max_depth>",
+                  "should_execute": "<max_depth>",
+                  "confidence": "<max_depth>",
+                  "rationale": "<max_depth>",
+                  "llm_decision": "<max_depth>"
+                },
+                "selection_mode": "no_match",
+                "selection_notes": [],
+                "final_selected_handles": [],
+                "final_rationale": "",
+                "final_should_execute": false,
+                "final_confidence": "low"
+              },
+              "agent": "SingleAgent",
+              "available_tools": [
+                "<non_serializable:UnifiedToolSpec>",
+                "<non_serializable:UnifiedToolSpec>",
+                "<non_serializable:UnifiedToolSpec>",
+                "<non_serializable:UnifiedToolSpec>",
+                "<non_serializable:UnifiedToolSpec>",
+                "<non_serializable:UnifiedToolSpec>",
+                "<non_serializable:UnifiedToolSpec>",
+                "<non_serializable:UnifiedToolSpec>",
+                "<non_serializable:UnifiedToolSpec>",
+                "<non_serializable:UnifiedToolSpec>",
+                "<non_serializable:UnifiedToolSpec>",
+                "<non_serializable:UnifiedToolSpec>",
+                "<non_serializable:UnifiedToolSpec>",
+                "<non_serializable:UnifiedToolSpec>",
+                "<non_serializable:UnifiedToolSpec>",
+                "<non_serializable:UnifiedToolSpec>",
+                "<non_serializable:UnifiedToolSpec>",
+                "<non_serializable:UnifiedToolSpec>",
+                "<non_serializable:UnifiedToolSpec>",
+                "<non_serializable:UnifiedToolSpec>",
+                "<non_serializable:UnifiedToolSpec>",
+                "<non_serializable:UnifiedToolSpec>",
+                "<non_serializable:UnifiedToolSpec>",
+                "<non_serializable:UnifiedToolSpec>",
+                "<non_serializable:UnifiedToolSpec>",
+                "<non_serializable:UnifiedToolSpec>",
+                "<non_serializable:UnifiedToolSpec>",
+                "<non_serializable:UnifiedToolSpec>",
+                "<non_serializable:UnifiedToolSpec>",
+                "<non_serializable:UnifiedToolSpec>",
+                "<non_serializable:UnifiedToolSpec>",
+                "<non_serializable:UnifiedToolSpec>",
+                "<non_serializable:UnifiedToolSpec>"
+              ],
+              "answer": "Die Anfrage konnte nicht sauber ausgeführt werden (result_attribute_selection_not_safe). Details: Die Resultat-Attributauswahl konnte nicht sicher genug aufgelöst werden.",
+              "debug": {
+                "planning": {},
+                "trace": [
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>"
+                ]
+              },
+              "raw_answer": "Die Anfrage konnte nicht sauber ausgeführt werden (result_attribute_selection_not_safe). Details: Die Resultat-Attributauswahl konnte nicht sicher genug aufgelöst werden."
+            }
+          }
+        }
+      ]
+    }
+  }
+}

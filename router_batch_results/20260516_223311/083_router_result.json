@@ -1,0 +1,46 @@
+{
+  "run_id": 83,
+  "timestamp": "2026-05-17T09:56:29.320091",
+  "user_input": "Wie ist die Spannung in PF?",
+  "duration_seconds": 36.04,
+  "token_usage": {
+    "prompt_tokens": 4463,
+    "completion_tokens": 3533,
+    "total_tokens": 7996,
+    "details": {
+      "phi3:mini": {
+        "input_tokens": 4463,
+        "output_tokens": 3533,
+        "total_tokens": 7996
+      }
+    }
+  },
+  "decision_trace": {
+    "domain": "ASK_USER",
+    "planning_mode": "",
+    "workflow": "",
+    "confidence": "",
+    "safe_to_execute": "",
+    "num_steps": 0,
+    "steps": "",
+    "planner_reasoning": "",
+    "resolved_object": "",
+    "resolved_object_confidence": "",
+    "selected_attributes": "",
+    "attribute_confidence": "",
+    "num_tool_calls": 0,
+    "executed_tools": "",
+    "failed_tool": ""
+  },
+  "router_output": {
+    "route": "ASK_USER",
+    "status": "needs_clarification",
+    "question": "Bitte geben Sie an, an welcher Stelle (z.B. Bus) die Spannung abgefragt werden soll.",
+    "missing_fields": [
+      "specific bus or node"
+    ],
+    "partial": {
+      "user_input": "Wie ist die Spannung in PF?"
+    }
+  }
+}

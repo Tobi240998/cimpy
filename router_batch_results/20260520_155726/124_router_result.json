@@ -1,0 +1,46 @@
+{
+  "run_id": 124,
+  "timestamp": "2026-05-20T17:11:26.589246",
+  "user_input": "Was war los bei Verbraucher 27 am 9. Januar zwischen 14 und 15 uhr?",
+  "duration_seconds": 0.61,
+  "token_usage": {
+    "prompt_tokens": 840,
+    "completion_tokens": 89,
+    "total_tokens": 929,
+    "details": {
+      "phi3:mini": {
+        "input_tokens": 840,
+        "output_tokens": 89,
+        "total_tokens": 929
+      }
+    }
+  },
+  "decision_trace": {
+    "domain": "ASK_USER",
+    "planning_mode": "",
+    "workflow": "",
+    "confidence": "",
+    "safe_to_execute": "",
+    "num_steps": 0,
+    "steps": "",
+    "planner_reasoning": "",
+    "resolved_object": "<omitted:str>",
+    "resolved_object_confidence": "",
+    "selected_attributes": "",
+    "attribute_confidence": "",
+    "num_tool_calls": 0,
+    "executed_tools": "",
+    "failed_tool": "",
+    "equipment_resolution_mode": "",
+    "attribute_resolution_mode": "",
+    "comparison_resolution_mode": ""
+  },
+  "router_output": {
+    "route": "ASK_USER",
+    "question": "Könnten Sie mir bitte sagen, welches Dataset oder welche Quelle ich verwenden sollte, um die Verbrauchsdaten für den Kunden 27 am 9. Januar zwischen 14 und 15 Uhr zu erhalten?",
+    "missing_fields": [
+      "data_source"
+    ],
+    "partial": {}
+  }
+}

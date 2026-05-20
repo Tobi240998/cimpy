@@ -1,0 +1,46 @@
+{
+  "run_id": 108,
+  "timestamp": "2026-05-20T17:02:39.692374",
+  "user_input": "Zu welchen Zeitpunkten war Transformator 19/20 am 09.01.26 am stärksten bzw. am schwächsten ausgelastet?",
+  "duration_seconds": 0.563,
+  "token_usage": {
+    "prompt_tokens": 856,
+    "completion_tokens": 77,
+    "total_tokens": 933,
+    "details": {
+      "phi3:mini": {
+        "input_tokens": 856,
+        "output_tokens": 77,
+        "total_tokens": 933
+      }
+    }
+  },
+  "decision_trace": {
+    "domain": "ASK_USER",
+    "planning_mode": "",
+    "workflow": "",
+    "confidence": "",
+    "safe_to_execute": "",
+    "num_steps": 0,
+    "steps": "",
+    "planner_reasoning": "",
+    "resolved_object": "<omitted:str>",
+    "resolved_object_confidence": "",
+    "selected_attributes": "",
+    "attribute_confidence": "",
+    "num_tool_calls": 0,
+    "executed_tools": "",
+    "failed_tool": "",
+    "equipment_resolution_mode": "",
+    "attribute_resolution_mode": "",
+    "comparison_resolution_mode": ""
+  },
+  "router_output": {
+    "route": "ASK_USER",
+    "question": "Können Sie mir sagen, ob die Frage nach dem Zeitpunkt der Auslastung von Transformator 19/20 auf historischen CIM-Daten oder PowerFactory basiert?",
+    "missing_fields": [
+      "data_source"
+    ],
+    "partial": {}
+  }
+}

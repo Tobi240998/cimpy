@@ -8,7 +8,7 @@
     "completion_tokens": 9893,
     "total_tokens": 31067,
     "details": {
-      "qwen3:30b": {
+      "phi3:mini": {
         "input_tokens": 21174,
         "total_tokens": 31067,
         "output_tokens": 9893

@@ -1,0 +1,53 @@
+{
+  "run_id": 82,
+  "timestamp": "2026-05-20T13:02:55.388711",
+  "user_input": "Welche Farbe hat Bus 1 in Powerfactory?",
+  "duration_seconds": 12.871,
+  "token_usage": {
+    "prompt_tokens": 4471,
+    "completion_tokens": 1141,
+    "total_tokens": 5612,
+    "details": {
+      "phi3:mini": {
+        "input_tokens": 4471,
+        "total_tokens": 5612,
+        "output_tokens": 1141
+      }
+    }
+  },
+  "decision_trace": {
+    "domain": "unsupported",
+    "planning_mode": "unsupported",
+    "workflow": "None",
+    "confidence": "",
+    "safe_to_execute": "True",
+    "num_steps": 0,
+    "steps": "",
+    "planner_reasoning": "The request asks for the visual color attribute of a bus in PowerFactory, which is a display property not stored in the model data. None of the available PowerFactory tools (e.g., load catalog, topology queries, attribute reading) support retrieving visual properties like color. This is outside the scope of the provided toolset.",
+    "resolved_object": "<omitted:str>",
+    "resolved_object_confidence": "",
+    "selected_attributes": "",
+    "attribute_confidence": "",
+    "num_tool_calls": 0,
+    "executed_tools": "",
+    "failed_tool": ""
+  },
+  "router_output": {
+    "route": "ERROR",
+    "status": "error",
+    "result": {
+      "status": "error",
+      "answer": "Die Anfrage wird aktuell nicht unterstützt.",
+      "planner_decision": {
+        "domain": "unsupported",
+        "planning_mode": "unsupported",
+        "workflow": null,
+        "custom_steps": [],
+        "safe_to_execute": true,
+        "missing_context": [],
+        "clarification_question": "",
+        "reasoning": "The request asks for the visual color attribute of a bus in PowerFactory, which is a display property not stored in the model data. None of the available PowerFactory tools (e.g., load catalog, topology queries, attribute reading) support retrieving visual properties like color. This is outside the scope of the provided toolset."
+      }
+    }
+  }
+}

@@ -1,0 +1,44 @@
+{
+  "run_id": 123,
+  "timestamp": "2026-05-20T17:20:59.291481",
+  "user_input": "Was is die nennspannung von bus 19 aus den historischen daten?",
+  "duration_seconds": 2.324,
+  "token_usage": {
+    "prompt_tokens": 909,
+    "completion_tokens": 435,
+    "total_tokens": 1344,
+    "details": {
+      "phi3:mini": {
+        "input_tokens": 909,
+        "output_tokens": 435,
+        "total_tokens": 1344
+      }
+    }
+  },
+  "decision_trace": {
+    "domain": "ERROR",
+    "planning_mode": "",
+    "workflow": "",
+    "confidence": "",
+    "safe_to_execute": "",
+    "num_steps": 0,
+    "steps": "",
+    "planner_reasoning": "",
+    "resolved_object": "<omitted:str>",
+    "resolved_object_confidence": "",
+    "selected_attributes": "",
+    "attribute_confidence": "",
+    "num_tool_calls": 0,
+    "executed_tools": "",
+    "failed_tool": ""
+  },
+  "router_output": {
+    "route": "ERROR",
+    "status": "error",
+    "result": {
+      "status": "error",
+      "answer": "Der UnifiedPlanner hat keine gültige strukturierte Ausgabe erzeugt.",
+      "planner_error": "Invalid json output: I'm sorry, but it seems like there might be a misunderstanding or miscommunication in your question. \"Bus 19\" does not correspond to any known electrical component with a nominal voltage that would typically require historical data for its specification. It is possible you are referring to something specific within the context of an electronic system, but without additional details, it's challenging to provide accurate information.\n\nIf \"Bus 19\" refers to a particular bus in a computer or other electrical/electronic systems and you want historical data on its nominal voltage (which is not standard terminology), please clarify the context of your inquiry—such as which system, model, or technology it pertains to.\n\nFor example:\n- If \"Bus 19\" refers to a specific bus in an older computer architecture like IBM's System/360 series (which had various models with different power supplies), you would need the exact model and context for accurate information on its nominal voltage, which typically wouldn't be labeled as 'bus.'\n- If it is related to electrical engineering or a specific piece of equipment in an industrial setting that has been decommissioned over time, historical data might require research into technical archives, manufacturer records, and industry publications.\n\nPlease provide more context so I can assist you better with your request for information on the nominal voltage (if applicable) from historic sources related to \"Bus 19.\"\nFor troubleshooting, visit: https://docs.langchain.com/oss/python/langchain/errors/OUTPUT_PARSING_FAILURE "
+    }
+  }
+}

@@ -1,0 +1,46 @@
+{
+  "run_id": 121,
+  "timestamp": "2026-05-18T21:48:43.822866",
+  "user_input": "Wie hoch war die Lastaufnahme von Verbraucher 27?",
+  "duration_seconds": 20.729,
+  "token_usage": {
+    "prompt_tokens": 4477,
+    "completion_tokens": 1961,
+    "total_tokens": 6438,
+    "details": {
+      "phi3:mini": {
+        "total_tokens": 6438,
+        "output_tokens": 1961,
+        "input_tokens": 4477
+      }
+    }
+  },
+  "decision_trace": {
+    "domain": "ASK_USER",
+    "planning_mode": "",
+    "workflow": "",
+    "confidence": "",
+    "safe_to_execute": "",
+    "num_steps": 0,
+    "steps": "",
+    "planner_reasoning": "",
+    "resolved_object": "<omitted:str>",
+    "resolved_object_confidence": "",
+    "selected_attributes": "",
+    "attribute_confidence": "",
+    "num_tool_calls": 0,
+    "executed_tools": "",
+    "failed_tool": ""
+  },
+  "router_output": {
+    "route": "ASK_USER",
+    "status": "needs_clarification",
+    "question": "Bitte geben Sie das Datum und die Uhrzeit an, für die Sie die Lastaufnahme von Verbraucher 27 wissen möchten.",
+    "missing_fields": [
+      "time"
+    ],
+    "partial": {
+      "user_input": "Wie hoch war die Lastaufnahme von Verbraucher 27?"
+    }
+  }
+}

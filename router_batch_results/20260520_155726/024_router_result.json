@@ -1,0 +1,46 @@
+{
+  "run_id": 24,
+  "timestamp": "2026-05-20T16:16:20.674379",
+  "user_input": "Toggle Schalter 1.",
+  "duration_seconds": 0.457,
+  "token_usage": {
+    "prompt_tokens": 818,
+    "completion_tokens": 56,
+    "total_tokens": 874,
+    "details": {
+      "phi3:mini": {
+        "input_tokens": 818,
+        "output_tokens": 56,
+        "total_tokens": 874
+      }
+    }
+  },
+  "decision_trace": {
+    "domain": "ASK_USER",
+    "planning_mode": "",
+    "workflow": "",
+    "confidence": "",
+    "safe_to_execute": "",
+    "num_steps": 0,
+    "steps": "",
+    "planner_reasoning": "",
+    "resolved_object": "<omitted:str>",
+    "resolved_object_confidence": "",
+    "selected_attributes": "",
+    "attribute_confidence": "",
+    "num_tool_calls": 0,
+    "executed_tools": "",
+    "failed_tool": "",
+    "equipment_resolution_mode": "",
+    "attribute_resolution_mode": "",
+    "comparison_resolution_mode": ""
+  },
+  "router_output": {
+    "route": "ASK_USER",
+    "question": "Welchen Zeitraum benötigen Sie für die Auswertung der Togel-Auslastung?",
+    "missing_fields": [
+      "time_range"
+    ],
+    "partial": {}
+  }
+}

@@ -1,0 +1,53 @@
+{
+  "run_id": 61,
+  "timestamp": "2026-05-17T00:36:14.915374",
+  "user_input": "Zeige für Bus 1 den Wert von uknom in Powerfactory.",
+  "duration_seconds": 35.824,
+  "token_usage": {
+    "prompt_tokens": 4477,
+    "completion_tokens": 3423,
+    "total_tokens": 7900,
+    "details": {
+      "phi3:mini": {
+        "output_tokens": 3423,
+        "input_tokens": 4477,
+        "total_tokens": 7900
+      }
+    }
+  },
+  "decision_trace": {
+    "domain": "powerfactory",
+    "planning_mode": "standard_workflow",
+    "workflow": "query_element_data",
+    "confidence": "",
+    "safe_to_execute": "True",
+    "num_steps": 0,
+    "steps": "",
+    "planner_reasoning": "The user specifically requests the value of 'uknom' (nominal voltage) for Bus 1 in PowerFactory. The standard workflow 'query_element_data' is used to retrieve attribute values from PowerFactory objects, making it the appropriate choice for this request.",
+    "resolved_object": "<omitted:str>",
+    "resolved_object_confidence": "",
+    "selected_attributes": "",
+    "attribute_confidence": "",
+    "num_tool_calls": 0,
+    "executed_tools": "",
+    "failed_tool": ""
+  },
+  "router_output": {
+    "route": "ERROR",
+    "status": "error",
+    "result": {
+      "status": "error",
+      "answer": "Unbekannter Standard-Workflow: query_element_data",
+      "planner_decision": {
+        "domain": "powerfactory",
+        "planning_mode": "standard_workflow",
+        "workflow": "query_element_data",
+        "custom_steps": [],
+        "safe_to_execute": true,
+        "missing_context": [],
+        "clarification_question": "",
+        "reasoning": "The user specifically requests the value of 'uknom' (nominal voltage) for Bus 1 in PowerFactory. The standard workflow 'query_element_data' is used to retrieve attribute values from PowerFactory objects, making it the appropriate choice for this request."
+      }
+    }
+  }
+}

@@ -1,0 +1,44 @@
+{
+  "run_id": 72,
+  "timestamp": "2026-05-20T17:17:17.299033",
+  "user_input": "Gib Umin und Umax für alle Busse in PF zurück.",
+  "duration_seconds": 1.202,
+  "token_usage": {
+    "prompt_tokens": 899,
+    "completion_tokens": 192,
+    "total_tokens": 1091,
+    "details": {
+      "phi3:mini": {
+        "input_tokens": 899,
+        "output_tokens": 192,
+        "total_tokens": 1091
+      }
+    }
+  },
+  "decision_trace": {
+    "domain": "ERROR",
+    "planning_mode": "",
+    "workflow": "",
+    "confidence": "",
+    "safe_to_execute": "",
+    "num_steps": 0,
+    "steps": "",
+    "planner_reasoning": "",
+    "resolved_object": "<omitted:str>",
+    "resolved_object_confidence": "",
+    "selected_attributes": "",
+    "attribute_confidence": "",
+    "num_tool_calls": 0,
+    "executed_tools": "",
+    "failed_tool": ""
+  },
+  "router_output": {
+    "route": "ERROR",
+    "status": "error",
+    "result": {
+      "status": "error",
+      "answer": "Der UnifiedPlanner hat keine gültige strukturierte Ausgabe erzeugt.",
+      "planner_error": "Invalid json output: Bitte umstellen Sie die Verkaufsstrategie, damit keine Minisoldaten- oder Maxi-Soldaten-Busse mehr im Produktionsplan (PF) enthalten sind. Stellen Sie sicher, dass diese Änderung sofort wirksam ist und alle relevanten Teams über den Wechsel informiert haben.\nFor troubleshooting, visit: https://docs.langchain.com/oss/python/langchain/errors/OUTPUT_PARSING_FAILURE "
+    }
+  }
+}

@@ -1,0 +1,46 @@
+{
+  "run_id": 50,
+  "timestamp": "2026-05-20T16:21:55.545684",
+  "user_input": "Welche Leitungsauslastungen liegen nach dem Lastfluss in PF vor?",
+  "duration_seconds": 0.534,
+  "token_usage": {
+    "prompt_tokens": 831,
+    "completion_tokens": 72,
+    "total_tokens": 903,
+    "details": {
+      "phi3:mini": {
+        "input_tokens": 831,
+        "output_tokens": 72,
+        "total_tokens": 903
+      }
+    }
+  },
+  "decision_trace": {
+    "domain": "ASK_USER",
+    "planning_mode": "",
+    "workflow": "",
+    "confidence": "",
+    "safe_to_execute": "",
+    "num_steps": 0,
+    "steps": "",
+    "planner_reasoning": "",
+    "resolved_object": "<omitted:str>",
+    "resolved_object_confidence": "",
+    "selected_attributes": "",
+    "attribute_confidence": "",
+    "num_tool_calls": 0,
+    "executed_tools": "",
+    "failed_tool": "",
+    "equipment_resolution_mode": "",
+    "attribute_resolution_mode": "",
+    "comparison_resolution_mode": ""
+  },
+  "router_output": {
+    "route": "ASK_USER",
+    "question": "Können Sie mir sagen, welche Leitungsauslastungen im PowerFactory-Projekt vorhanden sind und wie sie sich über den Tag entwickelt haben?",
+    "missing_fields": [
+      "time_range"
+    ],
+    "partial": {}
+  }
+}

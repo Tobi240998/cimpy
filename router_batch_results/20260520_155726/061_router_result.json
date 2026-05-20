@@ -1,0 +1,117 @@
+{
+  "run_id": 61,
+  "timestamp": "2026-05-20T16:30:17.986665",
+  "user_input": "Zeige für Bus 1 den Wert von uknom in Powerfactory.",
+  "duration_seconds": 2.817,
+  "token_usage": {
+    "prompt_tokens": 4469,
+    "completion_tokens": 376,
+    "total_tokens": 4845,
+    "details": {
+      "phi3:mini": {
+        "input_tokens": 4469,
+        "output_tokens": 376,
+        "total_tokens": 4845
+      }
+    }
+  },
+  "decision_trace": {
+    "domain": "HISTORICAL",
+    "planning_mode": "",
+    "workflow": "",
+    "confidence": "medium",
+    "safe_to_execute": "False",
+    "num_steps": 0,
+    "steps": "",
+    "planner_reasoning": "User requested an unsupported or non-standard value which cannot be executed without further clarification on what exactly they are asking for, hence it requires additional context about their request intentions.",
+    "resolved_object": "<omitted:str>",
+    "resolved_object_confidence": "",
+    "selected_attributes": "",
+    "attribute_confidence": "",
+    "num_tool_calls": 1,
+    "executed_tools": "unsupported_request",
+    "failed_tool": "unsupported_request",
+    "equipment_resolution_mode": "",
+    "attribute_resolution_mode": "",
+    "comparison_resolution_mode": ""
+  },
+  "router_output": {
+    "route": "HISTORICAL",
+    "result": {
+      "status": "error",
+      "tool": "cim_agent",
+      "agent": "CIMDomainAgent",
+      "error": "unsupported_cim_request",
+      "answer": "I'm sorry, but it seems there was an issue with your request for Bus 1 in Powerfactory as we couldn't find a standard CIM attribute named 'uknom'. Could you please provide the correct object and property name?",
+      "classification": {
+        "intent": "historical_analysis",
+        "confidence": "medium",
+        "target_kind": "asset",
+        "request_mode": "standard_sv",
+        "safe_to_execute": false,
+        "missing_context": [
+          "The user request is unclear as 'uknom' does not appear to be a standard CIM attribute. Please specify the correct object and property name."
+        ],
+        "required_steps": [],
+        "reasoning": "User requested an unsupported or non-standard value which cannot be executed without further clarification on what exactly they are asking for, hence it requires additional context about their request intentions.",
+        "status": "ok",
+        "classification_mode": "primary_llm_classifier"
+      },
+      "user_input": "Zeige für Bus 1 den Wert von uknom in Powerfactory.",
+      "debug": {
+        "trace": [
+          {
+            "step": "unsupported_request",
+            "effective_user_input": "Zeige für Bus 1 den Wert von uknom in Powerfactory.",
+            "source_subrequest": null,
+            "result": "<circular_reference>"
+          }
+        ],
+        "classification": {
+          "intent": "historical_analysis",
+          "confidence": "medium",
+          "target_kind": "asset",
+          "request_mode": "standard_sv",
+          "safe_to_execute": false,
+          "missing_context": [
+            "The user request is unclear as 'uknom' does not appear to be a standard CIM attribute. Please specify the correct object and property name."
+          ],
+          "required_steps": [],
+          "reasoning": "User requested an unsupported or non-standard value which cannot be executed without further clarification on what exactly they are asking for, hence it requires additional context about their request intentions.",
+          "status": "ok",
+          "classification_mode": "primary_llm_classifier"
+        },
+        "plan": [
+          {
+            "step": "unsupported_request",
+            "description": "Return a controlled unsupported-workflow message"
+          }
+        ],
+        "run_summary": {
+          "user_input": "Zeige für Bus 1 den Wert von uknom in Powerfactory.",
+          "classification_summary": {
+            "intent": "historical_analysis",
+            "request_mode": "standard_sv",
+            "safe_to_execute": false,
+            "target_kind": "asset",
+            "confidence": "medium",
+            "classification_mode": "primary_llm_classifier",
+            "missing_context": [
+              "The user request is unclear as 'uknom' does not appear to be a standard CIM attribute. Please specify the correct object and property name."
+            ]
+          },
+          "planned_steps": [
+            "unsupported_request"
+          ],
+          "selected_type": null,
+          "selected_equipment_id": null,
+          "selected_equipment_name": null,
+          "parsed_query_summary": null,
+          "final_status": "error",
+          "final_answer": "Die Anfrage wurde zur CIM-Seite geroutet, ist aktuell aber noch nicht sicher oder unterstützt ausführbar. Fehlender Kontext: The user request is unclear as 'uknom' does not appear to be a standard CIM attribute. Please specify the correct object and property name.."
+        }
+      },
+      "raw_answer": "Die Anfrage wurde zur CIM-Seite geroutet, ist aktuell aber noch nicht sicher oder unterstützt ausführbar. Fehlender Kontext: The user request is unclear as 'uknom' does not appear to be a standard CIM attribute. Please specify the correct object and property name.."
+    }
+  }
+}

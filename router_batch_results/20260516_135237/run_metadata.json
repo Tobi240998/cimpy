@@ -1,0 +1,35 @@
+{
+  "started_at": "2026-05-16T13:52:37.268970",
+  "entrypoint": "cimpy.llm_routing.orchestrator.Orchestrator.handle",
+  "equivalent_cli": "python -m cimpy.llm_routing.run_router",
+  "user_inputs": [
+    "Was ist die rated voltage von Bus 1 bei PowerFactory?",
+    "Wie hat sich in CIM die Wirkleistung von Load 27 am 09.01.2026 über die Zeit entwickelt?"
+  ],
+  "trace_columns": [
+    "domain",
+    "planning_mode",
+    "workflow",
+    "confidence",
+    "safe_to_execute",
+    "num_steps",
+    "steps",
+    "planner_reasoning",
+    "resolved_object",
+    "resolved_object_confidence",
+    "selected_attributes",
+    "attribute_confidence",
+    "num_tool_calls",
+    "executed_tools",
+    "failed_tool",
+    "equipment_resolution_mode",
+    "attribute_resolution_mode",
+    "comparison_resolution_mode"
+  ],
+  "finished_at": "2026-05-16T13:57:27.023008",
+  "output_dir": "router_batch_results\\20260516_135237",
+  "num_runs": 2,
+  "num_errors": 1,
+  "total_duration_seconds": 289.752,
+  "average_duration_seconds": 144.855
+}

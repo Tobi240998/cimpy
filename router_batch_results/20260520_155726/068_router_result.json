@@ -1,0 +1,599 @@
+{
+  "run_id": 68,
+  "timestamp": "2026-05-20T16:33:49.970961",
+  "user_input": "Welche rated voltages haben die Busse in Powerfactory?",
+  "duration_seconds": 67.855,
+  "token_usage": {
+    "prompt_tokens": 9476,
+    "completion_tokens": 1526,
+    "total_tokens": 11002,
+    "details": {
+      "phi3:mini": {
+        "input_tokens": 9476,
+        "output_tokens": 1526,
+        "total_tokens": 11002
+      }
+    }
+  },
+  "decision_trace": {
+    "domain": "HISTORICAL",
+    "planning_mode": "",
+    "workflow": "",
+    "confidence": "",
+    "safe_to_execute": "",
+    "num_steps": 0,
+    "steps": "",
+    "planner_reasoning": "",
+    "resolved_object": "<omitted:str>",
+    "resolved_object_confidence": "",
+    "selected_attributes": "",
+    "attribute_confidence": "",
+    "num_tool_calls": 6,
+    "executed_tools": "scan_snapshot_inventory | resolve_cim_object | resolve_cim_comparison | load_snapshot_cache | query_cim | read_cim_base_values",
+    "failed_tool": "read_cim_base_values",
+    "equipment_resolution_mode": "",
+    "attribute_resolution_mode": "preselected_attributes",
+    "comparison_resolution_mode": "heuristic_fallback"
+  },
+  "router_output": {
+    "route": "HISTORICAL",
+    "result": {
+      "status": "error",
+      "tool": "read_cim_base_values",
+      "cim_root": "C:\\Users\\STELLER\\Documents\\Masterarbeit\\CIM-Dateien\\tobias_CIM_daten\\data\\extracted",
+      "error": "no_resolved_base_values_found",
+      "answer": "Es gab einen Fehler beim Abrufen der angegebenen Basiswerte für die Bussysteme in Powerfactory, da keine lesbaren Werte gefunden wurden.",
+      "base_attribute_debug": {
+        "selected_attributes": [],
+        "selected_candidates": [
+          "ratedU"
+        ],
+        "resolution_mode": "preselected_attributes",
+        "available_attributes": [],
+        "requested_attributes": [
+          "ratedU"
+        ],
+        "preselected_values": {},
+        "preselected_resolution_debug": {
+          "ratedU": {
+            "status": "not_found",
+            "candidate": "ratedU",
+            "value": null,
+            "searched_scopes": [
+              "direct_or_canonical_reader",
+              "direct_object_attribute",
+              "expanded_structural_lookup"
+            ],
+            "resolution_path": "not_found"
+          }
+        }
+      },
+      "attribute_resolution_debug": {
+        "ratedU": {
+          "status": "not_found",
+          "candidate": "ratedU",
+          "value": null,
+          "searched_scopes": [
+            "direct_or_canonical_reader",
+            "direct_object_attribute",
+            "expanded_structural_lookup"
+          ],
+          "resolution_path": "not_found"
+        }
+      },
+      "agent": "CIMDomainAgent",
+      "debug": {
+        "trace": [
+          {
+            "step": "scan_snapshot_inventory",
+            "effective_user_input": "Welche rated voltages haben die Busse in Powerfactory?",
+            "effective_context_user_input": "Welche rated voltages haben die Busse in Powerfactory?",
+            "previous_context": null,
+            "source_subrequest": null,
+            "tool_spec": {
+              "name": "scan_snapshot_inventory",
+              "description": "Scan snapshot inventory and build base network index",
+              "capability_tags": [
+                "inventory",
+                "network_index",
+                "equipment_catalog",
+                "read_only"
+              ],
+              "mutating": false
+            },
+            "result": {
+              "status": "ok",
+              "tool": "scan_snapshot_inventory",
+              "cim_root": "C:\\Users\\STELLER\\Documents\\Masterarbeit\\CIM-Dateien\\tobias_CIM_daten\\data\\extracted",
+              "snapshot_inventory": {
+                "root_folder": "C:\\Users\\STELLER\\Documents\\Masterarbeit\\CIM-Dateien\\tobias_CIM_daten\\data\\extracted",
+                "snapshots": [
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>"
+                ]
+              },
+              "base_snapshot": "<omitted:dict>",
+              "network_index": "<omitted:dict>",
+              "equipment_catalog_summary": {
+                "equipment_types": [
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>"
+                ],
+                "equipment_type_counts": {
+                  "SynchronousMachineTimeConstantReactance": "<max_depth>",
+                  "LoadAggregate": "<max_depth>",
+                  "LoadStatic": "<max_depth>",
+                  "TopologicalIsland": "<max_depth>",
+                  "BusbarSection": "<max_depth>",
+                  "VoltageLimit": "<max_depth>",
+                  "OperationalLimitSet": "<max_depth>",
+                  "ACLineSegment": "<max_depth>",
+                  "CurrentLimit": "<max_depth>",
+                  "OperationalLimitType": "<max_depth>",
+                  "ConformLoad": "<max_depth>",
+                  "ConformLoadGroup": "<max_depth>",
+                  "SubLoadArea": "<max_depth>",
+                  "LoadArea": "<max_depth>",
+                  "LoadResponseCharacteristic": "<max_depth>",
+                  "PowerTransformerEnd": "<max_depth>",
+                  "SynchronousMachine": "<max_depth>",
+                  "PowerTransformer": "<max_depth>",
+                  "RatioTapChanger": "<max_depth>",
+                  "RegulatingControl": "<max_depth>",
+                  "HydroGeneratingUnit": "<max_depth>",
+                  "NuclearGeneratingUnit": "<max_depth>",
+                  "FossilFuel": "<max_depth>",
+                  "ThermalGeneratingUnit": "<max_depth>",
+                  "GeneratingUnit": "<max_depth>"
+                },
+                "num_equipment_objects": 453
+              }
+            }
+          },
+          {
+            "step": "resolve_cim_object",
+            "effective_user_input": "Welche rated voltages haben die Busse in Powerfactory?",
+            "effective_context_user_input": "Welche rated voltages haben die Busse in Powerfactory?",
+            "previous_context": null,
+            "source_subrequest": null,
+            "tool_spec": {
+              "name": "resolve_cim_object",
+              "description": "Resolve asset or equipment from user query and parse time/state intent",
+              "capability_tags": [
+                "object_resolution",
+                "query_parsing",
+                "equipment_catalog",
+                "llm_match",
+                "read_only"
+              ],
+              "mutating": false
+            },
+            "result": {
+              "status": "ok",
+              "tool": "resolve_cim_object",
+              "cim_root": "C:\\Users\\STELLER\\Documents\\Masterarbeit\\CIM-Dateien\\tobias_CIM_daten\\data\\extracted",
+              "user_input": "Welche rated voltages haben die Busse in Powerfactory?",
+              "parsed_query": {
+                "equipment_detected": [
+                  "<max_depth>"
+                ],
+                "state_detected": [
+                  "<max_depth>"
+                ],
+                "metric": "P",
+                "equipment_selection": [
+                  "<max_depth>"
+                ],
+                "time_start": "2026-01-09T00:00:00+00:00",
+                "time_end": "2026-01-10T00:00:00+00:00",
+                "time_label": "am 2026-01-09",
+                "intent": "historical_analysis",
+                "request_mode": "standard_comparison",
+                "is_topology_query": false
+              },
+              "resolved_object": "<omitted:BusbarSection>",
+              "equipment_obj": "<non_serializable:BusbarSection>",
+              "resolution_mode": "interpret_user_query",
+              "equipment_resolution_debug": {
+                "parsed_query_equipment_selection": [
+                  "<max_depth>"
+                ]
+              }
+            }
+          },
+          {
+            "step": "resolve_cim_comparison",
+            "effective_user_input": "Welche rated voltages haben die Busse in Powerfactory?",
+            "effective_context_user_input": "Welche rated voltages haben die Busse in Powerfactory?",
+            "previous_context": null,
+            "source_subrequest": null,
+            "tool_spec": {
+              "name": "resolve_cim_comparison",
+              "description": "Resolve a supported CIM comparison intent into required SV metric and base attributes",
+              "capability_tags": [
+                "comparison_resolution",
+                "read_only"
+              ],
+              "mutating": false
+            },
+            "result": {
+              "status": "ok",
+              "tool": "resolve_cim_comparison",
+              "cim_root": "C:\\Users\\STELLER\\Documents\\Masterarbeit\\CIM-Dateien\\tobias_CIM_daten\\data\\extracted",
+              "comparison_resolution": {
+                "equipment_types": [
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>"
+                ],
+                "required_state_type": "SvVoltage",
+                "sv_metric": "U",
+                "base_attributes": [
+                  "<max_depth>"
+                ],
+                "comparison_mode": "upper_limit",
+                "observed_value_mode": "peak",
+                "limit_attribute": "ratedU",
+                "comparison_type": "voltage_vs_rated_voltage",
+                "status": "ok",
+                "resolution_mode": "heuristic_fallback",
+                "llm_error": "Failed to parse ComparisonResolutionDecision from completion {\"comparison_type\": {\"$schema\": \"http://json-schema.org/draft-07/schema#\", \"type\": \"object\", \"properties\": {\"comparison_type\": {\"anyOf\": [{\"const\": \"voltage_vs_rated_voltage\"}, {\"const\": null}]}, \"should_execute\": {\"default\": false, \"type\": \"boolean\"}, \"rationale\": {\"default\": \"\", \"type\": \"string\"}}, \"required\": [\"comparison_type\", \"should_execute\", \"rationale\"]}, \"busbarsection\": {\"state_type\": null, \"sv_metric\": null, \"base_attributes\": [{\"name\": \"ratedU\"}], \"mode\": \"upper_limit\"}}. Got: 1 validation error for ComparisonResolutionDecision\ncomparison_type\n  Input should be a valid string [type=string_type, input_value={'$schema': 'http://json-..._execute', 'rationale']}, input_type=dict]\n    For further information visit https://errors.pydantic.dev/2.12/v/string_type\nFor troubleshooting, visit: https://docs.langchain.com/oss/python/langchain/errors/OUTPUT_PARSING_FAILURE "
+              },
+              "parsed_query": {
+                "equipment_detected": [
+                  "<max_depth>"
+                ],
+                "state_detected": [
+                  "<max_depth>"
+                ],
+                "metric": "P",
+                "equipment_selection": [
+                  "<max_depth>"
+                ],
+                "time_start": "2026-01-09T00:00:00+00:00",
+                "time_end": "2026-01-10T00:00:00+00:00",
+                "time_label": "am 2026-01-09",
+                "intent": "historical_analysis",
+                "request_mode": "standard_comparison",
+                "is_topology_query": false
+              },
+              "requested_base_attributes": [
+                "ratedU"
+              ],
+              "comparison_resolution_debug": {
+                "equipment_types": [
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>"
+                ],
+                "required_state_type": "SvVoltage",
+                "sv_metric": "U",
+                "base_attributes": [
+                  "<max_depth>"
+                ],
+                "comparison_mode": "upper_limit",
+                "observed_value_mode": "peak",
+                "limit_attribute": "ratedU",
+                "comparison_type": "voltage_vs_rated_voltage",
+                "status": "ok",
+                "resolution_mode": "heuristic_fallback",
+                "llm_error": "Failed to parse ComparisonResolutionDecision from completion {\"comparison_type\": {\"$schema\": \"http://json-schema.org/draft-07/schema#\", \"type\": \"object\", \"properties\": {\"comparison_type\": {\"anyOf\": [{\"const\": \"voltage_vs_rated_voltage\"}, {\"const\": null}]}, \"should_execute\": {\"default\": false, \"type\": \"boolean\"}, \"rationale\": {\"default\": \"\", \"type\": \"string\"}}, \"required\": [\"comparison_type\", \"should_execute\", \"rationale\"]}, \"busbarsection\": {\"state_type\": null, \"sv_metric\": null, \"base_attributes\": [{\"name\": \"ratedU\"}], \"mode\": \"upper_limit\"}}. Got: 1 validation error for ComparisonResolutionDecision\ncomparison_type\n  Input should be a valid string [type=string_type, input_value={'$schema': 'http://json-..._execute', 'rationale']}, input_type=dict]\n    For further information visit https://errors.pydantic.dev/2.12/v/string_type\nFor troubleshooting, visit: https://docs.langchain.com/oss/python/langchain/errors/OUTPUT_PARSING_FAILURE ",
+                "comparison_target_resolution": {
+                  "status": "<max_depth>",
+                  "resolved_object": "<omitted:BusbarSection>",
+                  "resolution_mode": "<max_depth>"
+                }
+              },
+              "resolved_object": "<omitted:BusbarSection>",
+              "answer": "Vergleichslogik aufgelöst: voltage_vs_rated_voltage"
+            }
+          },
+          {
+            "step": "load_snapshot_cache",
+            "effective_user_input": "Welche rated voltages haben die Busse in Powerfactory?",
+            "effective_context_user_input": "Welche rated voltages haben die Busse in Powerfactory?",
+            "previous_context": null,
+            "source_subrequest": null,
+            "tool_spec": {
+              "name": "load_snapshot_cache",
+              "description": "Load relevant snapshots for the parsed time window and build snapshot cache",
+              "capability_tags": [
+                "snapshot_loading",
+                "state_cache",
+                "read_only"
+              ],
+              "mutating": false
+            },
+            "result": {
+              "status": "ok",
+              "tool": "load_snapshot_cache",
+              "cim_root": "C:\\Users\\STELLER\\Documents\\Masterarbeit\\CIM-Dateien\\tobias_CIM_daten\\data\\extracted",
+              "cim_snapshots": "<omitted:dict>",
+              "required_state_types": [
+                "SvVoltage"
+              ],
+              "snapshot_cache": "<omitted:dict>",
+              "snapshot_cache_summary": {
+                "num_snapshots": 3,
+                "requested_state_types": [
+                  "<max_depth>"
+                ],
+                "snapshot_names": [
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>"
+                ],
+                "total_state_counts": {
+                  "SvPowerFlow": "<max_depth>",
+                  "SvVoltage": "<max_depth>"
+                }
+              }
+            }
+          },
+          {
+            "step": "query_cim",
+            "effective_user_input": "Welche rated voltages haben die Busse in Powerfactory?",
+            "effective_context_user_input": "Welche rated voltages haben die Busse in Powerfactory?",
+            "previous_context": null,
+            "source_subrequest": null,
+            "tool_spec": {
+              "name": "query_cim",
+              "description": "Run CIM analysis query using parsed query, network index and snapshot cache",
+              "capability_tags": [
+                "analysis",
+                "read_only"
+              ],
+              "mutating": false
+            },
+            "result": {
+              "status": "ok",
+              "tool": "query_cim",
+              "cim_root": "C:\\Users\\STELLER\\Documents\\Masterarbeit\\CIM-Dateien\\tobias_CIM_daten\\data\\extracted",
+              "parsed_query": {
+                "equipment_detected": [
+                  "<max_depth>"
+                ],
+                "state_detected": [
+                  "<max_depth>"
+                ],
+                "metric": "P",
+                "equipment_selection": [
+                  "<max_depth>"
+                ],
+                "time_start": "2026-01-09T00:00:00+00:00",
+                "time_end": "2026-01-10T00:00:00+00:00",
+                "time_label": "am 2026-01-09",
+                "intent": "historical_analysis",
+                "request_mode": "standard_comparison",
+                "is_topology_query": false
+              },
+              "answer": "Die Busse im Powerfactory haben eine rated voltage von mindestens 349,473 kV bis zu einem Maximum von 350,504 kV. Der mittlere Wert liegt bei etwa 349,82967 kV.",
+              "query_result_data": {
+                "query_mode": "voltage_over_time",
+                "metric": "U",
+                "rows": [
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>"
+                ],
+                "summary": {
+                  "type": "<max_depth>",
+                  "unit": "<max_depth>",
+                  "min_value": "<max_depth>",
+                  "max_value": "<max_depth>",
+                  "mean_value": "<max_depth>",
+                  "max_value_at_time": "<max_depth>",
+                  "max_snapshot": "<max_depth>",
+                  "max_timestamp": "<max_depth>",
+                  "max_equipment": "<max_depth>",
+                  "max_terminal_id": "<max_depth>",
+                  "max_topological_node_id": "<max_depth>",
+                  "min_value_at_time": "<max_depth>",
+                  "min_snapshot": "<max_depth>",
+                  "min_timestamp": "<max_depth>",
+                  "min_equipment": "<max_depth>",
+                  "min_terminal_id": "<max_depth>",
+                  "min_topological_node_id": "<max_depth>",
+                  "num_datapoints": "<max_depth>"
+                }
+              }
+            }
+          },
+          {
+            "step": "read_cim_base_values",
+            "effective_user_input": "Welche rated voltages haben die Busse in Powerfactory?",
+            "effective_context_user_input": "Welche rated voltages haben die Busse in Powerfactory?",
+            "previous_context": null,
+            "source_subrequest": null,
+            "tool_spec": {
+              "name": "read_cim_base_values",
+              "description": "Read static CIM base or nameplate attributes from a resolved equipment object",
+              "capability_tags": [
+                "base_values",
+                "nameplate_data",
+                "read_only"
+              ],
+              "mutating": false
+            },
+            "result": "<circular_reference>"
+          }
+        ],
+        "classification": {
+          "intent": "historical_analysis",
+          "confidence": "high",
+          "target_kind": "metric",
+          "request_mode": "standard_comparison",
+          "safe_to_execute": true,
+          "missing_context": [],
+          "required_steps": [],
+          "reasoning": "The user's request for historical rated voltages of buses in Powerfactory is a standard comparison between expected (rated) and actual values. The confidence level has been set to high due to the specificity of the query.",
+          "status": "ok",
+          "classification_mode": "primary_llm_classifier"
+        },
+        "plan": [
+          {
+            "step": "scan_snapshot_inventory",
+            "description": "Scan snapshot inventory and build base network index",
+            "capability_tags": [
+              "inventory",
+              "network_index",
+              "equipment_catalog",
+              "read_only"
+            ],
+            "mutating": false
+          },
+          {
+            "step": "resolve_cim_object",
+            "description": "Resolve asset or equipment from user query and parse time/state intent",
+            "capability_tags": [
+              "object_resolution",
+              "query_parsing",
+              "equipment_catalog",
+              "llm_match",
+              "read_only"
+            ],
+            "mutating": false
+          },
+          {
+            "step": "resolve_cim_comparison",
+            "description": "Resolve a supported CIM comparison intent into required SV metric and base attributes",
+            "capability_tags": [
+              "comparison_resolution",
+              "read_only"
+            ],
+            "mutating": false
+          },
+          {
+            "step": "load_snapshot_cache",
+            "description": "Load relevant snapshots for the parsed time window and build snapshot cache",
+            "capability_tags": [
+              "snapshot_loading",
+              "state_cache",
+              "read_only"
+            ],
+            "mutating": false
+          },
+          {
+            "step": "query_cim",
+            "description": "Run CIM analysis query using parsed query, network index and snapshot cache",
+            "capability_tags": [
+              "analysis",
+              "read_only"
+            ],
+            "mutating": false
+          },
+          {
+            "step": "read_cim_base_values",
+            "description": "Read static CIM base or nameplate attributes from a resolved equipment object",
+            "capability_tags": [
+              "base_values",
+              "nameplate_data",
+              "read_only"
+            ],
+            "mutating": false
+          },
+          {
+            "step": "compare_cim_values",
+            "description": "Compare resolved SV results against resolved CIM base values using a standard comparison definition",
+            "capability_tags": [
+              "comparison",
+              "read_only"
+            ],
+            "mutating": false
+          },
+          {
+            "step": "summarize_cim_result",
+            "description": "Return final CIM result with debug information",
+            "capability_tags": [
+              "result",
+              "read_only"
+            ],
+            "mutating": false
+          }
+        ],
+        "run_summary": {
+          "user_input": "Welche rated voltages haben die Busse in Powerfactory?",
+          "classification_summary": {
+            "intent": "historical_analysis",
+            "request_mode": "standard_comparison",
+            "safe_to_execute": true,
+            "target_kind": "metric",
+            "confidence": "high",
+            "classification_mode": "primary_llm_classifier",
+            "missing_context": []
+          },
+          "planned_steps": [
+            "scan_snapshot_inventory",
+            "resolve_cim_object",
+            "resolve_cim_comparison",
+            "load_snapshot_cache",
+            "query_cim",
+            "read_cim_base_values",
+            "compare_cim_values",
+            "summarize_cim_result"
+          ],
+          "selected_type": null,
+          "selected_equipment_id": null,
+          "selected_equipment_name": "Bus 24",
+          "parsed_query_summary": {
+            "equipment_detected": [
+              "BusbarSection"
+            ],
+            "state_detected": [
+              "SvPowerFlow"
+            ],
+            "metric": "P",
+            "time_label": "am 2026-01-09",
+            "equipment_selection": [
+              {
+                "equipment_type": "BusbarSection",
+                "equipment_key": "bus24",
+                "equipment_name": "Bus 24",
+                "equipment_id": "_49cbbd22-7fab-04e8-473d-70eae24ccb0d"
+              }
+            ]
+          },
+          "final_status": "error",
+          "final_answer": "Für die angefragten Basisattribute konnten keine lesbaren Werte gefunden werden."
+        }
+      },
+      "raw_answer": "Für die angefragten Basisattribute konnten keine lesbaren Werte gefunden werden."
+    }
+  }
+}

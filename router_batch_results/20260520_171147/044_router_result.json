@@ -1,0 +1,44 @@
+{
+  "run_id": 44,
+  "timestamp": "2026-05-20T17:14:25.618503",
+  "user_input": "Gib mir die Spannungen aller Busse in PF.",
+  "duration_seconds": 2.523,
+  "token_usage": {
+    "prompt_tokens": 895,
+    "completion_tokens": 493,
+    "total_tokens": 1388,
+    "details": {
+      "phi3:mini": {
+        "input_tokens": 895,
+        "output_tokens": 493,
+        "total_tokens": 1388
+      }
+    }
+  },
+  "decision_trace": {
+    "domain": "ERROR",
+    "planning_mode": "",
+    "workflow": "",
+    "confidence": "",
+    "safe_to_execute": "",
+    "num_steps": 0,
+    "steps": "",
+    "planner_reasoning": "",
+    "resolved_object": "<omitted:str>",
+    "resolved_object_confidence": "",
+    "selected_attributes": "",
+    "attribute_confidence": "",
+    "num_tool_calls": 0,
+    "executed_tools": "",
+    "failed_tool": ""
+  },
+  "router_output": {
+    "route": "ERROR",
+    "status": "error",
+    "result": {
+      "status": "error",
+      "answer": "Der UnifiedPlanner hat keine gültige strukturierte Ausgabe erzeugt.",
+      "planner_error": "Invalid json output: Um Ihnen die Spannungswerte aller Busses im Phasenbus (PF) zu geben, benötige ich spezifische Informationen über den betreffenden Stromkreis oder das elektrische System. Ohne konkrete Details ist es nicht möglich, eine präzise Antwort zu geben.\n\nIm Allgemeinen kann die Spannung an einem Bus in einem Wechselstromsystem mit Hilfe von Messgeräten wie Multiplikatoren und Oszillosdern gemessen werden. Die Spannungswerte können je nach Typ des Systems (z.B. einphasig oder Drei-Phasen) variieren, sowie durch die Art der Last und den Winkel zwischen Phasen.\n\nWenn Sie einen spezifischen Stromkreis im Sichtfeld haben, könnten wir versuchen, eine Annahme zu treffen basierend auf typischen Werte für einphasige oder Drei-Phasensysteme mit Standardlasttypen (wie z.B. Lasten aus Induktoren und Kondensatoren).\n\nFür einen einphasigen System könnte die Spannung an einem Bus etwa 230V bis 400V betragen, je nachdem, ob es sich um eine Mittelspannungs- oder Niederspannungsleitung handelt. Für Drei-Phasensysteme liegt der typische Phasenspannungsabstand zwischen den drei Leitungen bei etwa 230V bis 460V über einer Standardlast, aber dies kann je nach System und Last variieren.\n\nBitte geben Sie weitere Informationen oder spezifischen Details zum betreffenden Stromkreis an, damit ich Ihnen eine genauere Antwort geben kann.\nFor troubleshooting, visit: https://docs.langchain.com/oss/python/langchain/errors/OUTPUT_PARSING_FAILURE "
+    }
+  }
+}

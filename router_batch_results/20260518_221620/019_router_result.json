@@ -1,0 +1,48 @@
+{
+  "run_id": 19,
+  "timestamp": "2026-05-18T22:20:18.480814",
+  "user_input": "Trenne Switch 1.",
+  "duration_seconds": 1.62,
+  "token_usage": {
+    "prompt_tokens": 702,
+    "completion_tokens": 77,
+    "total_tokens": 779,
+    "details": {
+      "phi3:mini": {
+        "input_tokens": 702,
+        "output_tokens": 77,
+        "total_tokens": 779
+      }
+    }
+  },
+  "decision_trace": {
+    "domain": "ASK_USER",
+    "planning_mode": "",
+    "workflow": "",
+    "confidence": "",
+    "safe_to_execute": "",
+    "num_steps": 0,
+    "steps": "",
+    "planner_reasoning": "",
+    "resolved_object": "<omitted:str>",
+    "resolved_object_confidence": "",
+    "selected_attributes": "",
+    "attribute_confidence": "",
+    "num_tool_calls": 0,
+    "executed_tools": "",
+    "failed_tool": "",
+    "equipment_resolution_mode": "",
+    "attribute_resolution_mode": "",
+    "comparison_resolution_mode": ""
+  },
+  "router_output": {
+    "route": "ASK_USER",
+    "question": "Soll ich den Zustand von Switch 1 in einem PowerFactory-Projekt ändern oder soll dies eine historische Datenanfrage sein?",
+    "missing_fields": [
+      "data_source"
+    ],
+    "partial": {
+      "user_input": "Trenne Switch 1."
+    }
+  }
+}

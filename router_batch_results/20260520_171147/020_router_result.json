@@ -1,0 +1,44 @@
+{
+  "run_id": 20,
+  "timestamp": "2026-05-20T17:13:19.533892",
+  "user_input": "Schließe den Schalter Schalter 1.",
+  "duration_seconds": 1.324,
+  "token_usage": {
+    "prompt_tokens": 889,
+    "completion_tokens": 217,
+    "total_tokens": 1106,
+    "details": {
+      "phi3:mini": {
+        "input_tokens": 889,
+        "output_tokens": 217,
+        "total_tokens": 1106
+      }
+    }
+  },
+  "decision_trace": {
+    "domain": "ERROR",
+    "planning_mode": "",
+    "workflow": "",
+    "confidence": "",
+    "safe_to_execute": "",
+    "num_steps": 0,
+    "steps": "",
+    "planner_reasoning": "",
+    "resolved_object": "<omitted:str>",
+    "resolved_object_confidence": "",
+    "selected_attributes": "",
+    "attribute_confidence": "",
+    "num_tool_calls": 0,
+    "executed_tools": "",
+    "failed_tool": ""
+  },
+  "router_output": {
+    "route": "ERROR",
+    "status": "error",
+    "result": {
+      "status": "error",
+      "answer": "Der UnifiedPlanner hat keine gültige strukturierte Ausgabe erzeugt.",
+      "planner_error": "Invalid json output: Um einen Computerprogrammierer zu assistieren, könnte die folgende Anweisung in Deutsch formuliert werden: \"Entschlüssle bitte das Verfahren zum Schalten des Schalters 'Schalter 1'.\" Diese Umformulierung der ursprünglichen englischen Anweisung berücksichtigt den Kontext und die Fachsprache eines Computerprogrammierers.\nFor troubleshooting, visit: https://docs.langchain.com/oss/python/langchain/errors/OUTPUT_PARSING_FAILURE "
+    }
+  }
+}

@@ -1,0 +1,46 @@
+{
+  "run_id": 52,
+  "timestamp": "2026-05-20T16:22:30.049371",
+  "user_input": "Welche Attribute sind für Bus 1 in PowerFactory verfügbar?",
+  "duration_seconds": 0.529,
+  "token_usage": {
+    "prompt_tokens": 827,
+    "completion_tokens": 73,
+    "total_tokens": 900,
+    "details": {
+      "phi3:mini": {
+        "input_tokens": 827,
+        "output_tokens": 73,
+        "total_tokens": 900
+      }
+    }
+  },
+  "decision_trace": {
+    "domain": "ASK_USER",
+    "planning_mode": "",
+    "workflow": "",
+    "confidence": "",
+    "safe_to_execute": "",
+    "num_steps": 0,
+    "steps": "",
+    "planner_reasoning": "",
+    "resolved_object": "<omitted:str>",
+    "resolved_object_confidence": "",
+    "selected_attributes": "",
+    "attribute_confidence": "",
+    "num_tool_calls": 0,
+    "executed_tools": "",
+    "failed_tool": "",
+    "equipment_resolution_mode": "",
+    "attribute_resolution_mode": "",
+    "comparison_resolution_mode": ""
+  },
+  "router_output": {
+    "route": "ASK_USER",
+    "question": "Bitte geben Sie an, welches Attribut Sie von Bus 1 im Kontext des aktuellen PowerFactory-Projekts benötigen.",
+    "missing_fields": [
+      "bus"
+    ],
+    "partial": {}
+  }
+}

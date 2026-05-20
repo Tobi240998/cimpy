@@ -1,0 +1,44 @@
+{
+  "run_id": 56,
+  "timestamp": "2026-05-20T17:16:26.096156",
+  "user_input": "Liste die verfügbaren Attribute von Leitung 4-5 in Powerfactory auf.",
+  "duration_seconds": 5.432,
+  "token_usage": {
+    "prompt_tokens": 907,
+    "completion_tokens": 1085,
+    "total_tokens": 1992,
+    "details": {
+      "phi3:mini": {
+        "input_tokens": 907,
+        "output_tokens": 1085,
+        "total_tokens": 1992
+      }
+    }
+  },
+  "decision_trace": {
+    "domain": "ERROR",
+    "planning_mode": "",
+    "workflow": "",
+    "confidence": "",
+    "safe_to_execute": "",
+    "num_steps": 0,
+    "steps": "",
+    "planner_reasoning": "",
+    "resolved_object": "<omitted:str>",
+    "resolved_object_confidence": "",
+    "selected_attributes": "",
+    "attribute_confidence": "",
+    "num_tool_calls": 0,
+    "executed_tools": "",
+    "failed_tool": ""
+  },
+  "router_output": {
+    "route": "ERROR",
+    "status": "error",
+    "result": {
+      "status": "error",
+      "answer": "Der UnifiedPlanner hat keine gültige strukturierte Ausgabe erzeugt.",
+      "planner_error": "Invalid json output: In der Software \"PowerFactory\" (ehemals known as ETAP) können Sie verschiedene Attributen für jede Leitung im Netzwerk anzeigen und verwalten, einschließlich Leitung 4-5. Hier sind die typischerweise verfügbaren Attribute:\n\n1. **Leitungsnummer** - Die spezifische Nummer der Leitung innerhalb des Systems (in diesem Fall könnte es \"L4\" sein).\n2. **Kabeltyp** - Der Typ des verwendeten Kabels, z.B. ACSR, XLPE oder USE.\n3. **Leitungslänge** - Die Länge der Leitung in Metern/Fuß.\n4. **Zulässige Tragfähigkeit (Ampacity)** - Die maximale Stromstärke, die das Kabel tragen kann.\n5. **Spannungsebenen** - Wenn es mehrere Spannungsebenen gibt, könnte dies angezeigt werden.\n6. endlich: \n7. **Kabelmaterial und Konfiguration (z.B. ACSR-Draht oder USE)** - Informationen über das verwendete Material des Kabels und seine physikalische Struktur, falls verfügbar.\n8. **Leitungslinienführung** - Details zur Route der Leitung im Netzwerk (z.B. unterirdisch, oberirdisch).\n9. **Kabeldurchmesser/Querschnittsfläche** - Der Durchmesser des Kabels oder die Querschnittsfläche in mm² bzw. Inches².\n10. **Leitungslast (Last)** - Die aktuelle Last, die auf der Leitung anliegt, z.B. in Ampere-Wellenstärke.\n11. **Überlastungswarnungen/Alarme** - Wenn das System Überlastung oder andere potenzielle Probleme erkennt und Alarmmeldungen ausgibt.\n12. **Leitungslastverteilung (Phasenlos)** - Informationen über die Last auf der Leitung, wenn es sich um ein Mehrphasensystem handelt.\n13. **Temperaturmessungspunkte/Messwerte** - Wenn Temperatursensoren installiert sind, könnten diese Datenpunkte und Messungen angezeigt werden.\n14. **Leitungslastverteilung (Phasenlos)** - Informationen über die Last auf der Leitung, wenn es sich um ein Mehrphasensystem handelt.\n15. **Kabelmaterial-Datenbankabfrage/Einträge** - Wenn das System mit einer externen Datenbank verbunden ist, könnten diese Abfragen oder Einträge angezeigt werden.\n16. **Leitungslastverteilung (Phasenlos)** - Informationen über die Last auf der Leitung, wenn es sich um ein Mehrphasensystem handelt.\n17. **Kabelmaterial-Datenbankabfrage/Einträge** - Wenn das System mit einer externen Datenbank verbunden ist, könnten diese Abfragen oder Einträge angezeigt werden.\n18. **Leitungslastverteilung (Phasenlos)** - Informationen über die Last auf der Leitung, wenn es sich um ein Mehrphasensystem handelt.\n19. endlich: \n20. **Kabelmaterial-Datenbankabfrage/Einträge** - Wenn das System mit einer externen Datenbank verbunden ist, könnten diese Abfragen oder Einträge angezeigt werden.\n21. **Leitungslastverteilung (Phasenlos)** - Informationen über die Last auf der Leitung, wenn es sich um ein Mehrphasensystem handelt.\n22. endlich: \n23. **Kabelmaterial-Datenbankabfrage/Einträge** - Wenn das System mit einer externen Datenbank verbunden ist, könnten diese Abfragen oder Einträge angezeigt werden.\n24. **Leitungslastverteilung (Phasenlos)** - Informationen über die Last auf der Leitung, wenn es sich um ein Mehrphasensystem handelt.\n25. endlich: 0\nFor troubleshooting, visit: https://docs.langchain.com/oss/python/langchain/errors/OUTPUT_PARSING_FAILURE "
+    }
+  }
+}

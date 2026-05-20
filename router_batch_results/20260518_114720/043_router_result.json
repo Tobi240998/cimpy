@@ -1,0 +1,53 @@
+{
+  "run_id": 43,
+  "timestamp": "2026-05-18T12:59:31.883411",
+  "user_input": "Wie sind die Spannungen der Busse in PowerFactory?",
+  "duration_seconds": 25.874,
+  "token_usage": {
+    "prompt_tokens": 4473,
+    "completion_tokens": 2429,
+    "total_tokens": 6902,
+    "details": {
+      "phi3:mini": {
+        "total_tokens": 6902,
+        "output_tokens": 2429,
+        "input_tokens": 4473
+      }
+    }
+  },
+  "decision_trace": {
+    "domain": "powerfactory",
+    "planning_mode": "standard_workflow",
+    "workflow": "query_element_data",
+    "confidence": "",
+    "safe_to_execute": "True",
+    "num_steps": 0,
+    "steps": "",
+    "planner_reasoning": "",
+    "resolved_object": "<omitted:str>",
+    "resolved_object_confidence": "",
+    "selected_attributes": "",
+    "attribute_confidence": "",
+    "num_tool_calls": 0,
+    "executed_tools": "",
+    "failed_tool": ""
+  },
+  "router_output": {
+    "route": "ERROR",
+    "status": "error",
+    "result": {
+      "status": "error",
+      "answer": "Unbekannter Standard-Workflow: query_element_data",
+      "planner_decision": {
+        "domain": "powerfactory",
+        "planning_mode": "standard_workflow",
+        "workflow": "query_element_data",
+        "custom_steps": [],
+        "safe_to_execute": true,
+        "missing_context": [],
+        "clarification_question": "",
+        "reasoning": ""
+      }
+    }
+  }
+}
