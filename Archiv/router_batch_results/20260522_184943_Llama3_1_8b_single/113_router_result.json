@@ -1,0 +1,550 @@
+{
+  "run_id": 113,
+  "timestamp": "2026-05-23T19:15:10.168331",
+  "user_input": "Welche direkten Nachbarn hat Trafo 19-20 in den CIM-Daten? Wie hoch ist die Spannung von Trafo 19-20 am 09.01.2026?",
+  "duration_seconds": 19.259,
+  "token_usage": {
+    "prompt_tokens": 18583,
+    "completion_tokens": 1179,
+    "total_tokens": 19762,
+    "details": {
+      "llama3.1:8b": {
+        "total_tokens": 19762,
+        "output_tokens": 1179,
+        "input_tokens": 18583
+      }
+    }
+  },
+  "decision_trace": {
+    "domain": "composite",
+    "planning_mode": "",
+    "workflow": "",
+    "confidence": "",
+    "safe_to_execute": "",
+    "num_steps": 0,
+    "steps": "",
+    "planner_reasoning": "",
+    "resolved_object": "<omitted:str>",
+    "resolved_object_confidence": "",
+    "selected_attributes": "",
+    "attribute_confidence": "",
+    "num_tool_calls": 0,
+    "executed_tools": "",
+    "failed_tool": ""
+  },
+  "router_output": {
+    "route": "COMPOSITE",
+    "domain": "composite",
+    "status": "ok",
+    "is_composite": true,
+    "composite_decision": {
+      "status": "ok",
+      "is_composite": true,
+      "subrequests": [
+        {
+          "user_input": "Welche direkten Nachbarn hat Trafo 19-20 in den CIM-Daten?",
+          "depends_on_previous": false
+        },
+        {
+          "user_input": "Wie hoch ist die Spannung von Trafo 19-20 am 09.01.2026?",
+          "depends_on_previous": true
+        }
+      ],
+      "reasoning": "The request contains two distinct questions, one asking for the direct neighbors of a transformer and another asking for its voltage at a specific date."
+    },
+    "result": {
+      "status": "ok",
+      "answer": "1. Die direkten Nachbarn von Trafo 19-20 in den CIM-Daten sind Bus 33, G 04 und Line 16 - 19.\n2. Keine Daten verfügbar",
+      "subresults": [
+        {
+          "index": 1,
+          "user_input": "Welche direkten Nachbarn hat Trafo 19-20 in den CIM-Daten?",
+          "effective_input": "Welche direkten Nachbarn hat Trafo 19-20 in den CIM-Daten?",
+          "depends_on_previous": false,
+          "output": {
+            "route": "CIM",
+            "domain": "cim",
+            "plan": {
+              "domain": "cim",
+              "user_input": "Welche direkten Nachbarn hat Trafo 19-20 in den CIM-Daten?",
+              "steps": [
+                {
+                  "domain": "<max_depth>",
+                  "tool": "<max_depth>",
+                  "args": "<max_depth>",
+                  "save_as": "<max_depth>",
+                  "description": "<max_depth>",
+                  "mutating": "<max_depth>"
+                },
+                {
+                  "domain": "<max_depth>",
+                  "tool": "<max_depth>",
+                  "args": "<max_depth>",
+                  "save_as": "<max_depth>",
+                  "description": "<max_depth>",
+                  "mutating": "<max_depth>"
+                },
+                {
+                  "domain": "<max_depth>",
+                  "tool": "<max_depth>",
+                  "args": "<max_depth>",
+                  "save_as": "<max_depth>",
+                  "description": "<max_depth>",
+                  "mutating": "<max_depth>"
+                },
+                {
+                  "domain": "<max_depth>",
+                  "tool": "<max_depth>",
+                  "args": "<max_depth>",
+                  "save_as": "<max_depth>",
+                  "description": "<max_depth>",
+                  "mutating": "<max_depth>"
+                }
+              ],
+              "classification": {
+                "domain": "cim",
+                "planning_mode": "standard_workflow",
+                "workflow": "cim.topology_query",
+                "custom_steps": [],
+                "safe_to_execute": true,
+                "missing_context": [],
+                "clarification_question": "",
+                "reasoning": ""
+              },
+              "reasoning": ""
+            },
+            "planner_decision": {
+              "domain": "cim",
+              "planning_mode": "standard_workflow",
+              "workflow": "cim.topology_query",
+              "custom_steps": [],
+              "safe_to_execute": true,
+              "missing_context": [],
+              "clarification_question": "",
+              "reasoning": ""
+            },
+            "result": {
+              "user_input": "Welche direkten Nachbarn hat Trafo 19-20 in den CIM-Daten?",
+              "classification": {
+                "domain": "cim",
+                "planning_mode": "standard_workflow",
+                "workflow": "cim.topology_query",
+                "custom_steps": [],
+                "safe_to_execute": true,
+                "missing_context": [],
+                "clarification_question": "",
+                "reasoning": "",
+                "intent": "topology_query",
+                "request_mode": "custom_plan",
+                "target_kind": "topology"
+              },
+              "status": "ok",
+              "tool": "summarize_cim_result",
+              "cim_root": "C:\\Users\\STELLER\\Documents\\Masterarbeit\\CIM-Dateien\\tobias_CIM_daten\\data\\extracted",
+              "snapshot_inventory": {
+                "root_folder": "C:\\Users\\STELLER\\Documents\\Masterarbeit\\CIM-Dateien\\tobias_CIM_daten\\data\\extracted",
+                "snapshots": [
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>"
+                ]
+              },
+              "base_snapshot": "<omitted:dict>",
+              "network_index": "<omitted:dict>",
+              "equipment_catalog_summary": {
+                "equipment_types": [
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>"
+                ],
+                "equipment_type_counts": {
+                  "SynchronousMachineTimeConstantReactance": "<max_depth>",
+                  "LoadAggregate": "<max_depth>",
+                  "LoadStatic": "<max_depth>",
+                  "TopologicalIsland": "<max_depth>",
+                  "BusbarSection": "<max_depth>",
+                  "VoltageLimit": "<max_depth>",
+                  "OperationalLimitSet": "<max_depth>",
+                  "ACLineSegment": "<max_depth>",
+                  "CurrentLimit": "<max_depth>",
+                  "OperationalLimitType": "<max_depth>",
+                  "ConformLoad": "<max_depth>",
+                  "ConformLoadGroup": "<max_depth>",
+                  "SubLoadArea": "<max_depth>",
+                  "LoadArea": "<max_depth>",
+                  "LoadResponseCharacteristic": "<max_depth>",
+                  "PowerTransformerEnd": "<max_depth>",
+                  "SynchronousMachine": "<max_depth>",
+                  "PowerTransformer": "<max_depth>",
+                  "RatioTapChanger": "<max_depth>",
+                  "RegulatingControl": "<max_depth>",
+                  "HydroGeneratingUnit": "<max_depth>",
+                  "NuclearGeneratingUnit": "<max_depth>",
+                  "FossilFuel": "<max_depth>",
+                  "ThermalGeneratingUnit": "<max_depth>",
+                  "GeneratingUnit": "<max_depth>"
+                },
+                "num_equipment_objects": 453
+              },
+              "parsed_query": {
+                "equipment_detected": [
+                  "<max_depth>"
+                ],
+                "state_detected": [
+                  "<max_depth>"
+                ],
+                "metric": null,
+                "equipment_selection": [
+                  "<max_depth>"
+                ],
+                "time_start": null,
+                "time_end": null,
+                "time_label": "",
+                "intent": "topology_query",
+                "request_mode": "custom_plan",
+                "is_topology_query": true
+              },
+              "resolved_object": "<omitted:PowerTransformer>",
+              "equipment_obj": "<non_serializable:PowerTransformer>",
+              "resolution_mode": "interpret_user_query",
+              "equipment_resolution_debug": {
+                "parsed_query_equipment_selection": [
+                  "<max_depth>"
+                ]
+              },
+              "answer": "Die direkten Nachbarn von Trafo 19-20 in den CIM-Daten sind Bus 33, G 04 und Line 16 - 19.",
+              "query_result_data": {},
+              "debug": {
+                "num_inventory_snapshots": 3,
+                "index_source_snapshot": "CIM_GridAssist_1",
+                "index_source_time_str": "2026-01-09T14:15:00+00:00",
+                "required_state_types": [],
+                "num_loaded_snapshots": 0,
+                "loaded_snapshot_names": [],
+                "snapshot_cache_summary": {},
+                "parsed_query": {
+                  "equipment_detected": "<max_depth>",
+                  "state_detected": "<max_depth>",
+                  "metric": "<max_depth>",
+                  "equipment_selection": "<max_depth>",
+                  "time_start": "<max_depth>",
+                  "time_end": "<max_depth>",
+                  "time_label": "<max_depth>",
+                  "intent": "<max_depth>",
+                  "request_mode": "<max_depth>",
+                  "is_topology_query": "<max_depth>"
+                },
+                "resolved_object": "<omitted:PowerTransformer>",
+                "resolution_mode": "interpret_user_query",
+                "equipment_resolution_debug": {
+                  "parsed_query_equipment_selection": "<max_depth>"
+                },
+                "equipment_catalog_summary": {
+                  "equipment_types": "<max_depth>",
+                  "equipment_type_counts": "<max_depth>",
+                  "num_equipment_objects": "<max_depth>"
+                },
+                "comparison_resolution": {},
+                "comparison_result": {},
+                "requested_base_attributes": []
+              },
+              "debug_trace": [
+                {
+                  "step": "<max_depth>",
+                  "tool_spec": "<max_depth>",
+                  "result": "<max_depth>"
+                },
+                {
+                  "step": "<max_depth>",
+                  "tool_spec": "<max_depth>",
+                  "result": "<max_depth>"
+                },
+                {
+                  "step": "<max_depth>",
+                  "tool_spec": "<max_depth>",
+                  "result": "<max_depth>"
+                },
+                {
+                  "step": "<max_depth>",
+                  "tool_spec": "<max_depth>",
+                  "result": "<max_depth>"
+                }
+              ],
+              "raw_answer": "Die direkten Nachbarn von Trafo 19-20 in den CIM-Daten sind Bus 33, G 04 und Line 16 - 19."
+            }
+          }
+        },
+        {
+          "index": 2,
+          "user_input": "Wie hoch ist die Spannung von Trafo 19-20 am 09.01.2026?",
+          "effective_input": "Originale Gesamtanfrage: Welche direkten Nachbarn hat Trafo 19-20 in den CIM-Daten? Wie hoch ist die Spannung von Trafo 19-20 am 09.01.2026?\n\nVorheriger Kontext:\n\nTeil 1: Die direkten Nachbarn von Trafo 19-20 in den CIM-Daten sind Bus 33, G 04 und Line 16 - 19.\n\nAktuelle Teilanfrage:\nWie hoch ist die Spannung von Trafo 19-20 am 09.01.2026?",
+          "depends_on_previous": true,
+          "output": {
+            "route": "CIM",
+            "domain": "cim",
+            "plan": {
+              "domain": "cim",
+              "user_input": "Originale Gesamtanfrage: Welche direkten Nachbarn hat Trafo 19-20 in den CIM-Daten? Wie hoch ist die Spannung von Trafo 19-20 am 09.01.2026?\n\nVorheriger Kontext:\n\nTeil 1: Die direkten Nachbarn von Trafo 19-20 in den CIM-Daten sind Bus 33, G 04 und Line 16 - 19.\n\nAktuelle Teilanfrage:\nWie hoch ist die Spannung von Trafo 19-20 am 09.01.2026?",
+              "steps": [
+                {
+                  "domain": "<max_depth>",
+                  "tool": "<max_depth>",
+                  "args": "<max_depth>",
+                  "save_as": "<max_depth>",
+                  "description": "<max_depth>",
+                  "mutating": "<max_depth>"
+                },
+                {
+                  "domain": "<max_depth>",
+                  "tool": "<max_depth>",
+                  "args": "<max_depth>",
+                  "save_as": "<max_depth>",
+                  "description": "<max_depth>",
+                  "mutating": "<max_depth>"
+                },
+                {
+                  "domain": "<max_depth>",
+                  "tool": "<max_depth>",
+                  "args": "<max_depth>",
+                  "save_as": "<max_depth>",
+                  "description": "<max_depth>",
+                  "mutating": "<max_depth>"
+                },
+                {
+                  "domain": "<max_depth>",
+                  "tool": "<max_depth>",
+                  "args": "<max_depth>",
+                  "save_as": "<max_depth>",
+                  "description": "<max_depth>",
+                  "mutating": "<max_depth>"
+                }
+              ],
+              "classification": {
+                "domain": "cim",
+                "planning_mode": "standard_workflow",
+                "workflow": "cim.topology_query",
+                "custom_steps": [],
+                "safe_to_execute": true,
+                "missing_context": [],
+                "clarification_question": "",
+                "reasoning": ""
+              },
+              "reasoning": ""
+            },
+            "planner_decision": {
+              "domain": "cim",
+              "planning_mode": "standard_workflow",
+              "workflow": "cim.topology_query",
+              "custom_steps": [],
+              "safe_to_execute": true,
+              "missing_context": [],
+              "clarification_question": "",
+              "reasoning": ""
+            },
+            "result": {
+              "user_input": "Originale Gesamtanfrage: Welche direkten Nachbarn hat Trafo 19-20 in den CIM-Daten? Wie hoch ist die Spannung von Trafo 19-20 am 09.01.2026?\n\nVorheriger Kontext:\n\nTeil 1: Die direkten Nachbarn von Trafo 19-20 in den CIM-Daten sind Bus 33, G 04 und Line 16 - 19.\n\nAktuelle Teilanfrage:\nWie hoch ist die Spannung von Trafo 19-20 am 09.01.2026?",
+              "classification": {
+                "domain": "cim",
+                "planning_mode": "standard_workflow",
+                "workflow": "cim.topology_query",
+                "custom_steps": [],
+                "safe_to_execute": true,
+                "missing_context": [],
+                "clarification_question": "",
+                "reasoning": "",
+                "intent": "topology_query",
+                "request_mode": "custom_plan",
+                "target_kind": "topology"
+              },
+              "status": "ok",
+              "tool": "summarize_cim_result",
+              "cim_root": "C:\\Users\\STELLER\\Documents\\Masterarbeit\\CIM-Dateien\\tobias_CIM_daten\\data\\extracted",
+              "snapshot_inventory": {
+                "root_folder": "C:\\Users\\STELLER\\Documents\\Masterarbeit\\CIM-Dateien\\tobias_CIM_daten\\data\\extracted",
+                "snapshots": [
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>"
+                ]
+              },
+              "base_snapshot": "<omitted:dict>",
+              "network_index": "<omitted:dict>",
+              "equipment_catalog_summary": {
+                "equipment_types": [
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>"
+                ],
+                "equipment_type_counts": {
+                  "SynchronousMachineTimeConstantReactance": "<max_depth>",
+                  "LoadAggregate": "<max_depth>",
+                  "LoadStatic": "<max_depth>",
+                  "TopologicalIsland": "<max_depth>",
+                  "BusbarSection": "<max_depth>",
+                  "VoltageLimit": "<max_depth>",
+                  "OperationalLimitSet": "<max_depth>",
+                  "ACLineSegment": "<max_depth>",
+                  "CurrentLimit": "<max_depth>",
+                  "OperationalLimitType": "<max_depth>",
+                  "ConformLoad": "<max_depth>",
+                  "ConformLoadGroup": "<max_depth>",
+                  "SubLoadArea": "<max_depth>",
+                  "LoadArea": "<max_depth>",
+                  "LoadResponseCharacteristic": "<max_depth>",
+                  "PowerTransformerEnd": "<max_depth>",
+                  "SynchronousMachine": "<max_depth>",
+                  "PowerTransformer": "<max_depth>",
+                  "RatioTapChanger": "<max_depth>",
+                  "RegulatingControl": "<max_depth>",
+                  "HydroGeneratingUnit": "<max_depth>",
+                  "NuclearGeneratingUnit": "<max_depth>",
+                  "FossilFuel": "<max_depth>",
+                  "ThermalGeneratingUnit": "<max_depth>",
+                  "GeneratingUnit": "<max_depth>"
+                },
+                "num_equipment_objects": 453
+              },
+              "parsed_query": {
+                "equipment_detected": [
+                  "<max_depth>"
+                ],
+                "state_detected": [
+                  "<max_depth>"
+                ],
+                "metric": null,
+                "equipment_selection": [
+                  "<max_depth>"
+                ],
+                "time_start": "2026-01-09T00:00:00+00:00",
+                "time_end": "2026-01-10T00:00:00+00:00",
+                "time_label": "am 09.01.2026",
+                "intent": "topology_query",
+                "request_mode": "custom_plan",
+                "is_topology_query": true
+              },
+              "resolved_object": "<omitted:PowerTransformer>",
+              "equipment_obj": "<non_serializable:PowerTransformer>",
+              "resolution_mode": "interpret_user_query",
+              "equipment_resolution_debug": {
+                "parsed_query_equipment_selection": [
+                  "<max_depth>"
+                ]
+              },
+              "answer": "Die Spannung von Trafo 19-20 am 09.01.2026 ist nicht verfügbar.",
+              "query_result_data": {
+                "query_mode": "voltage_over_time",
+                "metric": "U",
+                "rows": [],
+                "summary": {
+                  "type": "<max_depth>",
+                  "message": "<max_depth>"
+                }
+              },
+              "debug": {
+                "num_inventory_snapshots": 3,
+                "index_source_snapshot": "CIM_GridAssist_1",
+                "index_source_time_str": "2026-01-09T14:15:00+00:00",
+                "required_state_types": [],
+                "num_loaded_snapshots": 0,
+                "loaded_snapshot_names": [],
+                "snapshot_cache_summary": {},
+                "parsed_query": {
+                  "equipment_detected": "<max_depth>",
+                  "state_detected": "<max_depth>",
+                  "metric": "<max_depth>",
+                  "equipment_selection": "<max_depth>",
+                  "time_start": "<max_depth>",
+                  "time_end": "<max_depth>",
+                  "time_label": "<max_depth>",
+                  "intent": "<max_depth>",
+                  "request_mode": "<max_depth>",
+                  "is_topology_query": "<max_depth>"
+                },
+                "resolved_object": "<omitted:PowerTransformer>",
+                "resolution_mode": "interpret_user_query",
+                "equipment_resolution_debug": {
+                  "parsed_query_equipment_selection": "<max_depth>"
+                },
+                "equipment_catalog_summary": {
+                  "equipment_types": "<max_depth>",
+                  "equipment_type_counts": "<max_depth>",
+                  "num_equipment_objects": "<max_depth>"
+                },
+                "comparison_resolution": {},
+                "comparison_result": {},
+                "requested_base_attributes": []
+              },
+              "debug_trace": [
+                {
+                  "step": "<max_depth>",
+                  "tool_spec": "<max_depth>",
+                  "result": "<max_depth>"
+                },
+                {
+                  "step": "<max_depth>",
+                  "tool_spec": "<max_depth>",
+                  "result": "<max_depth>"
+                },
+                {
+                  "step": "<max_depth>",
+                  "tool_spec": "<max_depth>",
+                  "result": "<max_depth>"
+                },
+                {
+                  "step": "<max_depth>",
+                  "tool_spec": "<max_depth>",
+                  "result": "<max_depth>"
+                }
+              ],
+              "raw_answer": "Keine Daten verfügbar"
+            }
+          }
+        }
+      ]
+    }
+  }
+}

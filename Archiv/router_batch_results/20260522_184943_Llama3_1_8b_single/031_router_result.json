@@ -1,0 +1,53 @@
+{
+  "run_id": 31,
+  "timestamp": "2026-05-23T18:42:24.817070",
+  "user_input": "Zeig mir die unmittelbaren Nachbarn von Bus 5 in Powerfactory.",
+  "duration_seconds": 3.034,
+  "token_usage": {
+    "prompt_tokens": 4466,
+    "completion_tokens": 163,
+    "total_tokens": 4629,
+    "details": {
+      "llama3.1:8b": {
+        "total_tokens": 4629,
+        "output_tokens": 163,
+        "input_tokens": 4466
+      }
+    }
+  },
+  "decision_trace": {
+    "domain": "powerfactory",
+    "planning_mode": "standard_workflow",
+    "workflow": "pf.query_topology_neighbors",
+    "confidence": "",
+    "safe_to_execute": "True",
+    "num_steps": 0,
+    "steps": "",
+    "planner_reasoning": "",
+    "resolved_object": "<omitted:str>",
+    "resolved_object_confidence": "",
+    "selected_attributes": "",
+    "attribute_confidence": "",
+    "num_tool_calls": 0,
+    "executed_tools": "",
+    "failed_tool": ""
+  },
+  "router_output": {
+    "route": "ERROR",
+    "status": "error",
+    "result": {
+      "status": "error",
+      "answer": "Unbekannter Standard-Workflow: pf.query_topology_neighbors",
+      "planner_decision": {
+        "domain": "powerfactory",
+        "planning_mode": "standard_workflow",
+        "workflow": "pf.query_topology_neighbors",
+        "custom_steps": [],
+        "safe_to_execute": true,
+        "missing_context": [],
+        "clarification_question": "",
+        "reasoning": ""
+      }
+    }
+  }
+}

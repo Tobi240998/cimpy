@@ -1,0 +1,423 @@
+{
+  "run_id": 51,
+  "timestamp": "2026-05-21T14:47:23.193282",
+  "user_input": "Zeige die Belastung für alle Lines in PF.",
+  "duration_seconds": 74.205,
+  "token_usage": {
+    "prompt_tokens": 5265,
+    "completion_tokens": 2281,
+    "total_tokens": 7546,
+    "details": {
+      "qwen3:32b": {
+        "output_tokens": 2281,
+        "input_tokens": 5265,
+        "total_tokens": 7546
+      }
+    }
+  },
+  "decision_trace": {
+    "domain": "powerfactory",
+    "planning_mode": "standard_workflow",
+    "workflow": "pf.load_catalog",
+    "confidence": "",
+    "safe_to_execute": "True",
+    "num_steps": 2,
+    "steps": "powerfactory.get_load_catalog | powerfactory.summarize_load_catalog",
+    "planner_reasoning": "The user explicitly requested data from PowerFactory (PF) and wants to show loading for all lines. The 'pf.load_catalog' workflow is designed to list PowerFactory objects of a specified type (e.g., lines). Since the user's request aligns with listing line objects, this workflow is appropriate. Further attribute queries would require additional steps, but the initial step is to catalog the lines.",
+    "resolved_object": "<omitted:str>",
+    "resolved_object_confidence": "",
+    "selected_attributes": "",
+    "attribute_confidence": "",
+    "num_tool_calls": 2,
+    "executed_tools": "get_load_catalog | summarize_load_catalog",
+    "failed_tool": ""
+  },
+  "router_output": {
+    "route": "POWERFACTORY",
+    "domain": "powerfactory",
+    "plan": {
+      "domain": "powerfactory",
+      "user_input": "Zeige die Belastung für alle Lines in PF.",
+      "steps": [
+        {
+          "domain": "powerfactory",
+          "tool": "get_load_catalog",
+          "args": {},
+          "save_as": null,
+          "description": "standard_workflow: pf.load_catalog",
+          "mutating": false
+        },
+        {
+          "domain": "powerfactory",
+          "tool": "summarize_load_catalog",
+          "args": {},
+          "save_as": null,
+          "description": "standard_workflow: pf.load_catalog",
+          "mutating": false
+        }
+      ],
+      "classification": {
+        "domain": "powerfactory",
+        "planning_mode": "standard_workflow",
+        "workflow": "pf.load_catalog",
+        "custom_steps": [],
+        "safe_to_execute": true,
+        "missing_context": [],
+        "clarification_question": "",
+        "reasoning": "The user explicitly requested data from PowerFactory (PF) and wants to show loading for all lines. The 'pf.load_catalog' workflow is designed to list PowerFactory objects of a specified type (e.g., lines). Since the user's request aligns with listing line objects, this workflow is appropriate. Further attribute queries would require additional steps, but the initial step is to catalog the lines."
+      },
+      "reasoning": "The user explicitly requested data from PowerFactory (PF) and wants to show loading for all lines. The 'pf.load_catalog' workflow is designed to list PowerFactory objects of a specified type (e.g., lines). Since the user's request aligns with listing line objects, this workflow is appropriate. Further attribute queries would require additional steps, but the initial step is to catalog the lines."
+    },
+    "planner_decision": {
+      "domain": "powerfactory",
+      "planning_mode": "standard_workflow",
+      "workflow": "pf.load_catalog",
+      "custom_steps": [],
+      "safe_to_execute": true,
+      "missing_context": [],
+      "clarification_question": "",
+      "reasoning": "The user explicitly requested data from PowerFactory (PF) and wants to show loading for all lines. The 'pf.load_catalog' workflow is designed to list PowerFactory objects of a specified type (e.g., lines). Since the user's request aligns with listing line objects, this workflow is appropriate. Further attribute queries would require additional steps, but the initial step is to catalog the lines."
+    },
+    "result": {
+      "status": "ok",
+      "tool": "powerfactory",
+      "agent": "SingleAgent",
+      "project": "<omitted:str>",
+      "studycase": "<omitted:NoneType>",
+      "user_input": "Zeige die Belastung für alle Lines in PF.",
+      "classification": {
+        "domain": "powerfactory",
+        "planning_mode": "standard_workflow",
+        "workflow": "pf.load_catalog",
+        "custom_steps": [],
+        "safe_to_execute": true,
+        "missing_context": [],
+        "clarification_question": "",
+        "reasoning": "The user explicitly requested data from PowerFactory (PF) and wants to show loading for all lines. The 'pf.load_catalog' workflow is designed to list PowerFactory objects of a specified type (e.g., lines). Since the user's request aligns with listing line objects, this workflow is appropriate. Further attribute queries would require additional steps, but the initial step is to catalog the lines."
+      },
+      "plan": [
+        {
+          "step": "get_load_catalog",
+          "description": "standard_workflow: pf.load_catalog"
+        },
+        {
+          "step": "summarize_load_catalog",
+          "description": "standard_workflow: pf.load_catalog"
+        }
+      ],
+      "available_tools": [
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>"
+      ],
+      "instruction": null,
+      "resolved_load": null,
+      "data": {},
+      "catalog": [
+        {
+          "loc_name": "Line 4-5",
+          "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Line 4-5.ElmLne",
+          "pf_class": "ElmLne",
+          "inventory_type": "line"
+        },
+        {
+          "loc_name": "Line 4-6",
+          "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Line 4-6.ElmLne",
+          "pf_class": "ElmLne",
+          "inventory_type": "line"
+        },
+        {
+          "loc_name": "Line 5-7",
+          "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Line 5-7.ElmLne",
+          "pf_class": "ElmLne",
+          "inventory_type": "line"
+        },
+        {
+          "loc_name": "Line 6-9",
+          "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Line 6-9.ElmLne",
+          "pf_class": "ElmLne",
+          "inventory_type": "line"
+        },
+        {
+          "loc_name": "Line 7-8",
+          "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Line 7-8.ElmLne",
+          "pf_class": "ElmLne",
+          "inventory_type": "line"
+        },
+        {
+          "loc_name": "Line 8-9",
+          "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Line 8-9.ElmLne",
+          "pf_class": "ElmLne",
+          "inventory_type": "line"
+        }
+      ],
+      "messages": [
+        "Verfügbare Leitungen im aktiven PowerFactory-Projekt: Line 4-5, Line 4-6, Line 5-7, Line 6-9, Line 7-8, Line 8-9"
+      ],
+      "answer": "Die verfügbaren Leitungen im aktiven PowerFactory-Projekt sind: Line 4-5, Line 4-6, Line 5-7, Line 6-9, Line 7-8 und Line 8-9.",
+      "summary": {
+        "status": "ok",
+        "tool": "merged_powerfactory_summary",
+        "answer": "Verfügbare Leitungen im aktiven PowerFactory-Projekt: Line 4-5, Line 4-6, Line 5-7, Line 6-9, Line 7-8, Line 8-9",
+        "messages": [
+          "Verfügbare Leitungen im aktiven PowerFactory-Projekt: Line 4-5, Line 4-6, Line 5-7, Line 6-9, Line 7-8, Line 8-9"
+        ],
+        "summary_count": 1,
+        "plan_steps": [
+          "get_load_catalog",
+          "summarize_load_catalog"
+        ]
+      },
+      "summary_parts": [
+        {
+          "status": "ok",
+          "tool": "summarize_load_catalog",
+          "answer": "Verfügbare Leitungen im aktiven PowerFactory-Projekt: Line 4-5, Line 4-6, Line 5-7, Line 6-9, Line 7-8, Line 8-9",
+          "count": 6,
+          "requested_type": "line",
+          "loads": [
+            {
+              "loc_name": "Line 4-5",
+              "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Line 4-5.ElmLne",
+              "pf_class": "ElmLne",
+              "inventory_type": "line"
+            },
+            {
+              "loc_name": "Line 4-6",
+              "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Line 4-6.ElmLne",
+              "pf_class": "ElmLne",
+              "inventory_type": "line"
+            },
+            {
+              "loc_name": "Line 5-7",
+              "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Line 5-7.ElmLne",
+              "pf_class": "ElmLne",
+              "inventory_type": "line"
+            },
+            {
+              "loc_name": "Line 6-9",
+              "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Line 6-9.ElmLne",
+              "pf_class": "ElmLne",
+              "inventory_type": "line"
+            },
+            {
+              "loc_name": "Line 7-8",
+              "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Line 7-8.ElmLne",
+              "pf_class": "ElmLne",
+              "inventory_type": "line"
+            },
+            {
+              "loc_name": "Line 8-9",
+              "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Line 8-9.ElmLne",
+              "pf_class": "ElmLne",
+              "inventory_type": "line"
+            }
+          ]
+        }
+      ],
+      "topology": {
+        "graph_mode": null,
+        "graph_summary": {},
+        "build_debug": {},
+        "inventory": {},
+        "instruction": null,
+        "resolution": null,
+        "selected_node": null,
+        "neighbor_count": 0,
+        "neighbors": [],
+        "matches": []
+      },
+      "switch": {
+        "instruction": null,
+        "resolution": null,
+        "execution": null,
+        "summary": null
+      },
+      "data_query": {
+        "inventory": null,
+        "instruction": null,
+        "resolution": null,
+        "attribute_listing": null,
+        "attribute_selection": null,
+        "execution": null,
+        "summary": null
+      },
+      "debug": {
+        "planning": {},
+        "selected_equipment": {
+          "resolved_load": null,
+          "entity_resolution": null,
+          "object_resolution": null
+        },
+        "trace": [
+          {
+            "step": "get_load_catalog",
+            "effective_user_input": "Zeige die Belastung für alle Lines in PF.",
+            "source_subrequest": null,
+            "tool_spec": {
+              "name": "get_load_catalog",
+              "description": "Read the available catalog of PowerFactory objects of the requested type from the active project.",
+              "capability_tags": [],
+              "mutating": false
+            },
+            "tool_kwargs": {
+              "services": "<omitted:dict>",
+              "user_input": "Zeige die Belastung für alle Lines in PF."
+            },
+            "result": {
+              "status": "ok",
+              "tool": "get_load_catalog",
+              "project": "<omitted:str>",
+              "requested_type": "line",
+              "loads": [
+                {
+                  "loc_name": "<max_depth>",
+                  "full_name": "<max_depth>",
+                  "pf_class": "<max_depth>",
+                  "inventory_type": "<max_depth>"
+                },
+                {
+                  "loc_name": "<max_depth>",
+                  "full_name": "<max_depth>",
+                  "pf_class": "<max_depth>",
+                  "inventory_type": "<max_depth>"
+                },
+                {
+                  "loc_name": "<max_depth>",
+                  "full_name": "<max_depth>",
+                  "pf_class": "<max_depth>",
+                  "inventory_type": "<max_depth>"
+                },
+                {
+                  "loc_name": "<max_depth>",
+                  "full_name": "<max_depth>",
+                  "pf_class": "<max_depth>",
+                  "inventory_type": "<max_depth>"
+                },
+                {
+                  "loc_name": "<max_depth>",
+                  "full_name": "<max_depth>",
+                  "pf_class": "<max_depth>",
+                  "inventory_type": "<max_depth>"
+                },
+                {
+                  "loc_name": "<max_depth>",
+                  "full_name": "<max_depth>",
+                  "pf_class": "<max_depth>",
+                  "inventory_type": "<max_depth>"
+                }
+              ],
+              "count": 6
+            }
+          },
+          {
+            "step": "summarize_load_catalog",
+            "effective_user_input": "Zeige die Belastung für alle Lines in PF.",
+            "source_subrequest": null,
+            "tool_spec": {
+              "name": "summarize_load_catalog",
+              "description": "Build a concise user-facing catalog answer.",
+              "capability_tags": [],
+              "mutating": false
+            },
+            "tool_kwargs": {
+              "services": "<omitted:dict>",
+              "catalog_result": {
+                "status": "ok",
+                "tool": "get_load_catalog",
+                "project": "<omitted:str>",
+                "requested_type": "line",
+                "loads": [
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>"
+                ],
+                "count": 6
+              },
+              "user_input": "Zeige die Belastung für alle Lines in PF."
+            },
+            "result": {
+              "status": "ok",
+              "tool": "summarize_load_catalog",
+              "answer": "Verfügbare Leitungen im aktiven PowerFactory-Projekt: Line 4-5, Line 4-6, Line 5-7, Line 6-9, Line 7-8, Line 8-9",
+              "count": 6,
+              "requested_type": "line",
+              "loads": [
+                {
+                  "loc_name": "<max_depth>",
+                  "full_name": "<max_depth>",
+                  "pf_class": "<max_depth>",
+                  "inventory_type": "<max_depth>"
+                },
+                {
+                  "loc_name": "<max_depth>",
+                  "full_name": "<max_depth>",
+                  "pf_class": "<max_depth>",
+                  "inventory_type": "<max_depth>"
+                },
+                {
+                  "loc_name": "<max_depth>",
+                  "full_name": "<max_depth>",
+                  "pf_class": "<max_depth>",
+                  "inventory_type": "<max_depth>"
+                },
+                {
+                  "loc_name": "<max_depth>",
+                  "full_name": "<max_depth>",
+                  "pf_class": "<max_depth>",
+                  "inventory_type": "<max_depth>"
+                },
+                {
+                  "loc_name": "<max_depth>",
+                  "full_name": "<max_depth>",
+                  "pf_class": "<max_depth>",
+                  "inventory_type": "<max_depth>"
+                },
+                {
+                  "loc_name": "<max_depth>",
+                  "full_name": "<max_depth>",
+                  "pf_class": "<max_depth>",
+                  "inventory_type": "<max_depth>"
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "raw_answer": "Verfügbare Leitungen im aktiven PowerFactory-Projekt: Line 4-5, Line 4-6, Line 5-7, Line 6-9, Line 7-8, Line 8-9"
+    }
+  }
+}

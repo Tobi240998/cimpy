@@ -1,0 +1,117 @@
+{
+  "run_id": 8,
+  "timestamp": "2026-05-23T11:11:43.073440",
+  "user_input": "Reduziere Last B um 3 MW.",
+  "duration_seconds": 14.026,
+  "token_usage": {
+    "prompt_tokens": 3961,
+    "completion_tokens": 364,
+    "total_tokens": 4325,
+    "details": {
+      "gemma3:27b": {
+        "output_tokens": 364,
+        "total_tokens": 4325,
+        "input_tokens": 3961
+      }
+    }
+  },
+  "decision_trace": {
+    "domain": "HISTORICAL",
+    "planning_mode": "",
+    "workflow": "",
+    "confidence": "low",
+    "safe_to_execute": "False",
+    "num_steps": 0,
+    "steps": "",
+    "planner_reasoning": "The request is a command to reduce a load, which is a control action. The CIM domain agent is designed for data retrieval and analysis, not for system control. Therefore, it is marked as unsupported and requires clarification.",
+    "resolved_object": "<omitted:str>",
+    "resolved_object_confidence": "",
+    "selected_attributes": "",
+    "attribute_confidence": "",
+    "num_tool_calls": 1,
+    "executed_tools": "unsupported_request",
+    "failed_tool": "unsupported_request",
+    "equipment_resolution_mode": "",
+    "attribute_resolution_mode": "",
+    "comparison_resolution_mode": ""
+  },
+  "router_output": {
+    "route": "HISTORICAL",
+    "result": {
+      "status": "error",
+      "tool": "cim_agent",
+      "agent": "CIMDomainAgent",
+      "error": "unsupported_cim_request",
+      "answer": "Die Anfrage wurde zur CIM-Seite geroutet, ist aktuell aber noch nicht sicher oder unterstützt ausführbar. Fehlender Kontext: This request appears to be a control action (reducing load). The CIM domain agent is for querying data, not for controlling the system.  Clarification is needed to determine if this is a permissible action within the scope of the agent.",
+      "classification": {
+        "intent": "unsupported_cim_request",
+        "confidence": "low",
+        "target_kind": "asset",
+        "request_mode": "clarification_needed",
+        "safe_to_execute": false,
+        "missing_context": [
+          "This request appears to be a control action (reducing load). The CIM domain agent is for querying data, not for controlling the system.  Clarification is needed to determine if this is a permissible action within the scope of the agent."
+        ],
+        "required_steps": [],
+        "reasoning": "The request is a command to reduce a load, which is a control action. The CIM domain agent is designed for data retrieval and analysis, not for system control. Therefore, it is marked as unsupported and requires clarification.",
+        "status": "ok",
+        "classification_mode": "primary_llm_classifier"
+      },
+      "user_input": "Reduziere Last B um 3 MW.",
+      "debug": {
+        "trace": [
+          {
+            "step": "unsupported_request",
+            "effective_user_input": "Reduziere Last B um 3 MW.",
+            "source_subrequest": null,
+            "result": "<circular_reference>"
+          }
+        ],
+        "classification": {
+          "intent": "unsupported_cim_request",
+          "confidence": "low",
+          "target_kind": "asset",
+          "request_mode": "clarification_needed",
+          "safe_to_execute": false,
+          "missing_context": [
+            "This request appears to be a control action (reducing load). The CIM domain agent is for querying data, not for controlling the system.  Clarification is needed to determine if this is a permissible action within the scope of the agent."
+          ],
+          "required_steps": [],
+          "reasoning": "The request is a command to reduce a load, which is a control action. The CIM domain agent is designed for data retrieval and analysis, not for system control. Therefore, it is marked as unsupported and requires clarification.",
+          "status": "ok",
+          "classification_mode": "primary_llm_classifier"
+        },
+        "plan": [
+          {
+            "step": "unsupported_request",
+            "description": "Return a controlled unsupported-workflow message"
+          }
+        ],
+        "run_summary": {
+          "user_input": "Reduziere Last B um 3 MW.",
+          "classification_summary": {
+            "intent": "unsupported_cim_request",
+            "request_mode": "clarification_needed",
+            "safe_to_execute": false,
+            "target_kind": "asset",
+            "confidence": "low",
+            "classification_mode": "primary_llm_classifier",
+            "missing_context": [
+              "This request appears to be a control action (reducing load). The CIM domain agent is for querying data, not for controlling the system.  Clarification is needed to determine if this is a permissible action within the scope of the agent."
+            ]
+          },
+          "planned_steps": [
+            "unsupported_request"
+          ],
+          "selected_type": null,
+          "selected_equipment_id": null,
+          "selected_equipment_name": null,
+          "parsed_query_summary": null,
+          "final_status": "error",
+          "final_answer": "Die Anfrage wurde zur CIM-Seite geroutet, ist aktuell aber noch nicht sicher oder unterstützt ausführbar. Fehlender Kontext: This request appears to be a control action (reducing load). The CIM domain agent is for querying data, not for controlling the system.  Clarification is needed to determine if this is a permissible action within the scope of the agent.."
+        }
+      },
+      "raw_answer": "Die Anfrage wurde zur CIM-Seite geroutet, ist aktuell aber noch nicht sicher oder unterstützt ausführbar. Fehlender Kontext: This request appears to be a control action (reducing load). The CIM domain agent is for querying data, not for controlling the system.  Clarification is needed to determine if this is a permissible action within the scope of the agent.."
+    }
+  }
+}

@@ -1,0 +1,48 @@
+{
+  "run_id": 106,
+  "timestamp": "2026-05-22T16:26:29.625953",
+  "user_input": "Wie stark war Trf 19 20 am 09.01.2026 ausgelastet?",
+  "duration_seconds": 16.199,
+  "token_usage": {
+    "prompt_tokens": 818,
+    "completion_tokens": 551,
+    "total_tokens": 1369,
+    "details": {
+      "qwen3:32b": {
+        "input_tokens": 818,
+        "output_tokens": 551,
+        "total_tokens": 1369
+      }
+    }
+  },
+  "decision_trace": {
+    "domain": "ASK_USER",
+    "planning_mode": "",
+    "workflow": "",
+    "confidence": "",
+    "safe_to_execute": "",
+    "num_steps": 0,
+    "steps": "",
+    "planner_reasoning": "",
+    "resolved_object": "<omitted:str>",
+    "resolved_object_confidence": "",
+    "selected_attributes": "",
+    "attribute_confidence": "",
+    "num_tool_calls": 0,
+    "executed_tools": "",
+    "failed_tool": "",
+    "equipment_resolution_mode": "",
+    "attribute_resolution_mode": "",
+    "comparison_resolution_mode": ""
+  },
+  "router_output": {
+    "route": "ASK_USER",
+    "question": "Bitte geben Sie den genauen Zeitraum (Start- und Endzeit) für den 09.01.2026 an, für den Sie die Auslastung von Transformator 19/20 benötigen.",
+    "missing_fields": [
+      "time_range"
+    ],
+    "partial": {
+      "user_input": "Wie stark war Trf 19 20 am 09.01.2026 ausgelastet?"
+    }
+  }
+}

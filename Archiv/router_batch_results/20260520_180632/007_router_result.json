@@ -1,0 +1,120 @@
+{
+  "run_id": 7,
+  "timestamp": "2026-05-23T11:11:29.042821",
+  "user_input": "Erhöhe Verbraucher A um 2 MW.",
+  "duration_seconds": 13.603,
+  "token_usage": {
+    "prompt_tokens": 3956,
+    "completion_tokens": 347,
+    "total_tokens": 4303,
+    "details": {
+      "gemma3:27b": {
+        "output_tokens": 347,
+        "total_tokens": 4303,
+        "input_tokens": 3956
+      }
+    }
+  },
+  "decision_trace": {
+    "domain": "HISTORICAL",
+    "planning_mode": "",
+    "workflow": "",
+    "confidence": "medium",
+    "safe_to_execute": "False",
+    "num_steps": 0,
+    "steps": "",
+    "planner_reasoning": "The request involves modifying an asset (Verbraucher A). This is not a standard read operation and requires a plan for execution. The request is not safely executable without further clarification on the type and timing of the increase.",
+    "resolved_object": "<omitted:str>",
+    "resolved_object_confidence": "",
+    "selected_attributes": "",
+    "attribute_confidence": "",
+    "num_tool_calls": 1,
+    "executed_tools": "unsupported_request",
+    "failed_tool": "unsupported_request",
+    "equipment_resolution_mode": "",
+    "attribute_resolution_mode": "",
+    "comparison_resolution_mode": ""
+  },
+  "router_output": {
+    "route": "HISTORICAL",
+    "result": {
+      "status": "error",
+      "tool": "cim_agent",
+      "agent": "CIMDomainAgent",
+      "error": "unsupported_cim_request",
+      "answer": "The request was routed to the CIM side, but is currently not secure or supported executable. Missing context: Details on how to increase the load. Is this a setpoint change, a simulation, or a forecast?, Timeframe for the increase. Is this an immediate change, a scheduled change, or a forecast?. Error: unsupported_cim_request.",
+      "classification": {
+        "intent": "asset_lookup",
+        "confidence": "medium",
+        "target_kind": "asset",
+        "request_mode": "custom_plan",
+        "safe_to_execute": false,
+        "missing_context": [
+          "Details on how to increase the load. Is this a setpoint change, a simulation, or a forecast?",
+          "Timeframe for the increase. Is this an immediate change, a scheduled change, or a forecast?"
+        ],
+        "required_steps": [],
+        "reasoning": "The request involves modifying an asset (Verbraucher A). This is not a standard read operation and requires a plan for execution. The request is not safely executable without further clarification on the type and timing of the increase.",
+        "status": "ok",
+        "classification_mode": "primary_llm_classifier"
+      },
+      "user_input": "Erhöhe Verbraucher A um 2 MW.",
+      "debug": {
+        "trace": [
+          {
+            "step": "unsupported_request",
+            "effective_user_input": "Erhöhe Verbraucher A um 2 MW.",
+            "source_subrequest": null,
+            "result": "<circular_reference>"
+          }
+        ],
+        "classification": {
+          "intent": "asset_lookup",
+          "confidence": "medium",
+          "target_kind": "asset",
+          "request_mode": "custom_plan",
+          "safe_to_execute": false,
+          "missing_context": [
+            "Details on how to increase the load. Is this a setpoint change, a simulation, or a forecast?",
+            "Timeframe for the increase. Is this an immediate change, a scheduled change, or a forecast?"
+          ],
+          "required_steps": [],
+          "reasoning": "The request involves modifying an asset (Verbraucher A). This is not a standard read operation and requires a plan for execution. The request is not safely executable without further clarification on the type and timing of the increase.",
+          "status": "ok",
+          "classification_mode": "primary_llm_classifier"
+        },
+        "plan": [
+          {
+            "step": "unsupported_request",
+            "description": "Return a controlled unsupported-workflow message"
+          }
+        ],
+        "run_summary": {
+          "user_input": "Erhöhe Verbraucher A um 2 MW.",
+          "classification_summary": {
+            "intent": "asset_lookup",
+            "request_mode": "custom_plan",
+            "safe_to_execute": false,
+            "target_kind": "asset",
+            "confidence": "medium",
+            "classification_mode": "primary_llm_classifier",
+            "missing_context": [
+              "Details on how to increase the load. Is this a setpoint change, a simulation, or a forecast?",
+              "Timeframe for the increase. Is this an immediate change, a scheduled change, or a forecast?"
+            ]
+          },
+          "planned_steps": [
+            "unsupported_request"
+          ],
+          "selected_type": null,
+          "selected_equipment_id": null,
+          "selected_equipment_name": null,
+          "parsed_query_summary": null,
+          "final_status": "error",
+          "final_answer": "Die Anfrage wurde zur CIM-Seite geroutet, ist aktuell aber noch nicht sicher oder unterstützt ausführbar. Fehlender Kontext: Details on how to increase the load. Is this a setpoint change, a simulation, or a forecast?, Timeframe for the increase. Is this an immediate change, a scheduled change, or a forecast?."
+        }
+      },
+      "raw_answer": "Die Anfrage wurde zur CIM-Seite geroutet, ist aktuell aber noch nicht sicher oder unterstützt ausführbar. Fehlender Kontext: Details on how to increase the load. Is this a setpoint change, a simulation, or a forecast?, Timeframe for the increase. Is this an immediate change, a scheduled change, or a forecast?."
+    }
+  }
+}

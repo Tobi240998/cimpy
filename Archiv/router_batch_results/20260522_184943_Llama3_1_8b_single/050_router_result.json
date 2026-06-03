@@ -1,0 +1,244 @@
+{
+  "run_id": 50,
+  "timestamp": "2026-05-23T18:47:43.297847",
+  "user_input": "Welche Leitungsauslastungen liegen nach dem Lastfluss in PF vor?",
+  "duration_seconds": 8.887,
+  "token_usage": {
+    "prompt_tokens": 6971,
+    "completion_tokens": 612,
+    "total_tokens": 7583,
+    "details": {
+      "llama3.1:8b": {
+        "total_tokens": 7583,
+        "output_tokens": 612,
+        "input_tokens": 6971
+      }
+    }
+  },
+  "decision_trace": {
+    "domain": "powerfactory",
+    "planning_mode": "standard_workflow",
+    "workflow": "pf.change_load",
+    "confidence": "",
+    "safe_to_execute": "True",
+    "num_steps": 4,
+    "steps": "powerfactory.interpret_instruction | powerfactory.resolve_load | powerfactory.execute_change_load | powerfactory.summarize_powerfactory_result",
+    "planner_reasoning": "",
+    "resolved_object": "<omitted:str>",
+    "resolved_object_confidence": "",
+    "selected_attributes": "",
+    "attribute_confidence": "",
+    "num_tool_calls": 2,
+    "executed_tools": "interpret_instruction | resolve_load",
+    "failed_tool": ""
+  },
+  "router_output": {
+    "route": "POWERFACTORY",
+    "domain": "powerfactory",
+    "plan": {
+      "domain": "powerfactory",
+      "user_input": "Welche Leitungsauslastungen liegen nach dem Lastfluss in PF vor?",
+      "steps": [
+        {
+          "domain": "powerfactory",
+          "tool": "interpret_instruction",
+          "args": {},
+          "save_as": null,
+          "description": "standard_workflow: pf.change_load",
+          "mutating": false
+        },
+        {
+          "domain": "powerfactory",
+          "tool": "resolve_load",
+          "args": {},
+          "save_as": null,
+          "description": "standard_workflow: pf.change_load",
+          "mutating": false
+        },
+        {
+          "domain": "powerfactory",
+          "tool": "execute_change_load",
+          "args": {},
+          "save_as": null,
+          "description": "standard_workflow: pf.change_load",
+          "mutating": false
+        },
+        {
+          "domain": "powerfactory",
+          "tool": "summarize_powerfactory_result",
+          "args": {},
+          "save_as": null,
+          "description": "standard_workflow: pf.change_load",
+          "mutating": false
+        }
+      ],
+      "classification": {
+        "domain": "powerfactory",
+        "planning_mode": "standard_workflow",
+        "workflow": "pf.change_load",
+        "custom_steps": [],
+        "safe_to_execute": true,
+        "missing_context": [],
+        "clarification_question": "",
+        "reasoning": ""
+      },
+      "reasoning": ""
+    },
+    "planner_decision": {
+      "domain": "powerfactory",
+      "planning_mode": "standard_workflow",
+      "workflow": "pf.change_load",
+      "custom_steps": [],
+      "safe_to_execute": true,
+      "missing_context": [],
+      "clarification_question": "",
+      "reasoning": ""
+    },
+    "result": {
+      "status": "not_found",
+      "tool": "resolve_load",
+      "project": "<omitted:str>",
+      "instruction": {
+        "action": "change_load",
+        "load_name": "Load A (aliases: load a, lasta, last a, loada)",
+        "delta_p_mw": 12.5,
+        "result_requests": [
+          "line_loading"
+        ],
+        "result_request_mode": "standard_metrics",
+        "result_query_text": "",
+        "result_request_rationale": "",
+        "result_request_confidence": "high"
+      },
+      "resolution": {
+        "status": "not_found",
+        "requested_load_name": "Load A (aliases: load a, lasta, last a, loada)",
+        "matches": []
+      },
+      "agent": "SingleAgent",
+      "available_tools": [
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>"
+      ],
+      "answer": "Die Leitungsauslastungen nach dem Lastfluss in PF konnten nicht ermittelt werden. Es ist ein unbekannter Fehler aufgetreten.",
+      "debug": {
+        "planning": {},
+        "trace": [
+          {
+            "step": "interpret_instruction",
+            "effective_user_input": "Welche Leitungsauslastungen liegen nach dem Lastfluss in PF vor?",
+            "source_subrequest": null,
+            "tool_spec": {
+              "name": "interpret_instruction",
+              "description": "Interpret a natural-language user request into a structured load-change instruction.",
+              "capability_tags": [],
+              "mutating": false
+            },
+            "tool_kwargs": {
+              "services": "<omitted:dict>",
+              "user_input": "Welche Leitungsauslastungen liegen nach dem Lastfluss in PF vor?"
+            },
+            "result": {
+              "status": "ok",
+              "tool": "interpret_instruction",
+              "user_input": "Welche Leitungsauslastungen liegen nach dem Lastfluss in PF vor?",
+              "project": "<omitted:str>",
+              "instruction": {
+                "action": "change_load",
+                "load_name": "Load A (aliases: load a, lasta, last a, loada)",
+                "delta_p_mw": 12.5,
+                "result_requests": [
+                  "<max_depth>"
+                ],
+                "result_request_mode": "standard_metrics",
+                "result_query_text": "",
+                "result_request_rationale": "",
+                "result_request_confidence": "high"
+              }
+            }
+          },
+          {
+            "step": "resolve_load",
+            "effective_user_input": "Welche Leitungsauslastungen liegen nach dem Lastfluss in PF vor?",
+            "source_subrequest": null,
+            "tool_spec": {
+              "name": "resolve_load",
+              "description": "Resolve the target load object inside the active PowerFactory project.",
+              "capability_tags": [],
+              "mutating": false
+            },
+            "tool_kwargs": {
+              "services": "<omitted:dict>",
+              "instruction": {
+                "action": "change_load",
+                "load_name": "Load A (aliases: load a, lasta, last a, loada)",
+                "delta_p_mw": 12.5,
+                "result_requests": [
+                  "<max_depth>"
+                ],
+                "result_request_mode": "standard_metrics",
+                "result_query_text": "",
+                "result_request_rationale": "",
+                "result_request_confidence": "high"
+              }
+            },
+            "result": {
+              "status": "not_found",
+              "tool": "resolve_load",
+              "project": "<omitted:str>",
+              "instruction": {
+                "action": "change_load",
+                "load_name": "Load A (aliases: load a, lasta, last a, loada)",
+                "delta_p_mw": 12.5,
+                "result_requests": [
+                  "<max_depth>"
+                ],
+                "result_request_mode": "standard_metrics",
+                "result_query_text": "",
+                "result_request_rationale": "",
+                "result_request_confidence": "high"
+              },
+              "resolution": {
+                "status": "not_found",
+                "requested_load_name": "Load A (aliases: load a, lasta, last a, loada)",
+                "matches": []
+              }
+            }
+          }
+        ]
+      },
+      "raw_answer": "Die Anfrage konnte nicht sauber ausgeführt werden (unknown_error)."
+    }
+  }
+}

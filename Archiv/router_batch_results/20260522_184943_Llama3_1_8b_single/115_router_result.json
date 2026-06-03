@@ -1,0 +1,84 @@
+{
+  "run_id": 115,
+  "timestamp": "2026-05-23T19:15:17.485572",
+  "user_input": "Welche Betriebsmittel sind mit Bus 19 verbunden? Wie hoch war die Spannung an Bus 19 am 09.01.2026?",
+  "duration_seconds": 3.093,
+  "token_usage": {
+    "prompt_tokens": 4475,
+    "completion_tokens": 180,
+    "total_tokens": 4655,
+    "details": {
+      "llama3.1:8b": {
+        "total_tokens": 4655,
+        "output_tokens": 180,
+        "input_tokens": 4475
+      }
+    }
+  },
+  "decision_trace": {
+    "domain": "ERROR",
+    "planning_mode": "",
+    "workflow": "",
+    "confidence": "",
+    "safe_to_execute": "",
+    "num_steps": 0,
+    "steps": "",
+    "planner_reasoning": "",
+    "resolved_object": "<omitted:str>",
+    "resolved_object_confidence": "",
+    "selected_attributes": "",
+    "attribute_confidence": "",
+    "num_tool_calls": 0,
+    "executed_tools": "",
+    "failed_tool": ""
+  },
+  "router_output": {
+    "route": "ERROR",
+    "status": "error",
+    "result": {
+      "status": "error",
+      "answer": "Die zusammengesetzte Anfrage konnte nicht vollständig ausgeführt werden.",
+      "composite": {
+        "status": "ok",
+        "is_composite": true,
+        "subrequests": [
+          {
+            "user_input": "Welche Betriebsmittel sind mit Bus 19 verbunden?",
+            "depends_on_previous": false
+          },
+          {
+            "user_input": "Wie hoch war die Spannung an Bus 19 am 09.01.2026?",
+            "depends_on_previous": true
+          }
+        ],
+        "reasoning": "The request contains two clearly separate user goals, and the second part refers to a previous result using the word 'Bus 19'."
+      },
+      "subresults": [
+        {
+          "index": 1,
+          "user_input": "Welche Betriebsmittel sind mit Bus 19 verbunden?",
+          "effective_input": "Welche Betriebsmittel sind mit Bus 19 verbunden?",
+          "depends_on_previous": false,
+          "output": {
+            "route": "ERROR",
+            "status": "error",
+            "result": {
+              "status": "error",
+              "answer": "Unbekannter Standard-Workflow: pf.query_topology_neighbors",
+              "planner_decision": {
+                "domain": "powerfactory",
+                "planning_mode": "standard_workflow",
+                "workflow": "pf.query_topology_neighbors",
+                "custom_steps": [],
+                "safe_to_execute": true,
+                "missing_context": [],
+                "clarification_question": "",
+                "reasoning": ""
+              }
+            }
+          }
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,41 @@
+{
+  "started_at": "2026-06-01T12:44:16.925545",
+  "entrypoint": "cimpy.single_agent2.llm_routing.orchestrator.Orchestrator.handle",
+  "equivalent_cli": "python -m cimpy.single_agent2.llm_routing.run_router",
+  "user_inputs": [
+    "Wie viele Transformatoren sind in den CIM-Daten vorhanden?",
+    "Welcher Transformator hatte am 09.01.2026 die höchste durchschnittliche Auslastung?",
+    "Welche Transformatoren waren am 09.01.2026 zu mehr als 80 % ausgelastet?",
+    "Gibt es in den CIM-Daten Daten für Trafo 19-20 am 09.01.2026?",
+    "Welche Leitung ist aktuell in Powerfactory am stärksten ausgelastet?",
+    "Wie viele Schalter sind aktuell in Powerfactory geöffnet?",
+    "Welcher Bus weist in Powerfactory aktuell die niedrigste Spannung auf?"
+  ],
+  "resume_mode": false,
+  "existing_output_dir": "",
+  "existing_completed_run_ids": [],
+  "trace_columns": [
+    "domain",
+    "planning_mode",
+    "workflow",
+    "confidence",
+    "safe_to_execute",
+    "num_steps",
+    "steps",
+    "planner_reasoning",
+    "resolved_object",
+    "resolved_object_confidence",
+    "selected_attributes",
+    "attribute_confidence",
+    "num_tool_calls",
+    "executed_tools",
+    "failed_tool"
+  ],
+  "finished_at": "2026-06-01T12:45:40.511705",
+  "output_dir": "router_batch_results\\20260601_124416",
+  "num_runs": 7,
+  "num_existing_runs_loaded": 0,
+  "num_errors": 6,
+  "total_duration_seconds": 83.584,
+  "average_duration_seconds": 11.937
+}

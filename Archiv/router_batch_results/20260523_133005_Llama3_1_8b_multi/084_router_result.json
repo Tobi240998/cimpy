@@ -1,0 +1,111 @@
+{
+  "run_id": 84,
+  "timestamp": "2026-05-23T17:25:45.309823",
+  "user_input": "Schalte Schalter B an.",
+  "duration_seconds": 4.284,
+  "token_usage": {
+    "prompt_tokens": 3609,
+    "completion_tokens": 288,
+    "total_tokens": 3897,
+    "details": {
+      "llama3.1:8b": {
+        "output_tokens": 288,
+        "input_tokens": 3609,
+        "total_tokens": 3897
+      }
+    }
+  },
+  "decision_trace": {
+    "domain": "HISTORICAL",
+    "planning_mode": "",
+    "workflow": "",
+    "confidence": "low",
+    "safe_to_execute": "False",
+    "num_steps": 0,
+    "steps": "",
+    "planner_reasoning": "Die Anfrage bezieht sich auf eine physische Aktion und nicht auf die Auswertung von CIM-Daten.",
+    "resolved_object": "<omitted:str>",
+    "resolved_object_confidence": "",
+    "selected_attributes": "",
+    "attribute_confidence": "",
+    "num_tool_calls": 1,
+    "executed_tools": "unsupported_request",
+    "failed_tool": "unsupported_request",
+    "equipment_resolution_mode": "",
+    "attribute_resolution_mode": "",
+    "comparison_resolution_mode": ""
+  },
+  "router_output": {
+    "route": "HISTORICAL",
+    "result": {
+      "status": "error",
+      "tool": "cim_agent",
+      "agent": "CIMDomainAgent",
+      "error": "unsupported_cim_request",
+      "answer": "Die Anfrage konnte nicht bearbeitet werden. Die CIM-Seite unterstützt diese Anfrage nicht.",
+      "classification": {
+        "intent": "unsupported_cim_request",
+        "confidence": "low",
+        "target_kind": "unknown",
+        "request_mode": "clarification_needed",
+        "safe_to_execute": false,
+        "missing_context": [],
+        "required_steps": [],
+        "reasoning": "Die Anfrage bezieht sich auf eine physische Aktion und nicht auf die Auswertung von CIM-Daten.",
+        "status": "ok",
+        "classification_mode": "primary_llm_classifier"
+      },
+      "user_input": "Schalte Schalter B an.",
+      "debug": {
+        "trace": [
+          {
+            "step": "unsupported_request",
+            "effective_user_input": "Schalte Schalter B an.",
+            "source_subrequest": null,
+            "result": "<circular_reference>"
+          }
+        ],
+        "classification": {
+          "intent": "unsupported_cim_request",
+          "confidence": "low",
+          "target_kind": "unknown",
+          "request_mode": "clarification_needed",
+          "safe_to_execute": false,
+          "missing_context": [],
+          "required_steps": [],
+          "reasoning": "Die Anfrage bezieht sich auf eine physische Aktion und nicht auf die Auswertung von CIM-Daten.",
+          "status": "ok",
+          "classification_mode": "primary_llm_classifier"
+        },
+        "plan": [
+          {
+            "step": "unsupported_request",
+            "description": "Return a controlled unsupported-workflow message"
+          }
+        ],
+        "run_summary": {
+          "user_input": "Schalte Schalter B an.",
+          "classification_summary": {
+            "intent": "unsupported_cim_request",
+            "request_mode": "clarification_needed",
+            "safe_to_execute": false,
+            "target_kind": "unknown",
+            "confidence": "low",
+            "classification_mode": "primary_llm_classifier",
+            "missing_context": []
+          },
+          "planned_steps": [
+            "unsupported_request"
+          ],
+          "selected_type": null,
+          "selected_equipment_id": null,
+          "selected_equipment_name": null,
+          "parsed_query_summary": null,
+          "final_status": "error",
+          "final_answer": "Die Anfrage wurde zur CIM-Seite geroutet, ist aktuell aber noch nicht sicher oder unterstützt ausführbar."
+        }
+      },
+      "raw_answer": "Die Anfrage wurde zur CIM-Seite geroutet, ist aktuell aber noch nicht sicher oder unterstützt ausführbar."
+    }
+  }
+}

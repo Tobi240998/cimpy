@@ -1,0 +1,655 @@
+{
+  "run_id": 97,
+  "timestamp": "2026-05-23T19:09:56.443747",
+  "user_input": "Nenne für Trf 19 20 den minimalen, maximalen und mittleren Spannungswert in den CIM-Daten am 09.01.2026.",
+  "duration_seconds": 9.412,
+  "token_usage": {
+    "prompt_tokens": 8708,
+    "completion_tokens": 539,
+    "total_tokens": 9247,
+    "details": {
+      "llama3.1:8b": {
+        "total_tokens": 9247,
+        "output_tokens": 539,
+        "input_tokens": 8708
+      }
+    }
+  },
+  "decision_trace": {
+    "domain": "cim",
+    "planning_mode": "standard_workflow",
+    "workflow": "cim.standard_comparison",
+    "confidence": "",
+    "safe_to_execute": "True",
+    "num_steps": 8,
+    "steps": "cim.scan_snapshot_inventory | cim.resolve_cim_object | cim.resolve_cim_comparison | cim.load_snapshot_cache | cim.query_cim | cim.read_cim_base_values | cim.compare_cim_values | cim.summarize_cim_result",
+    "planner_reasoning": "",
+    "resolved_object": "<omitted:str>",
+    "resolved_object_confidence": "",
+    "selected_attributes": "",
+    "attribute_confidence": "",
+    "num_tool_calls": 6,
+    "executed_tools": "scan_snapshot_inventory | resolve_cim_object | resolve_cim_comparison | load_snapshot_cache | query_cim | read_cim_base_values",
+    "failed_tool": "read_cim_base_values"
+  },
+  "router_output": {
+    "route": "CIM",
+    "domain": "cim",
+    "plan": {
+      "domain": "cim",
+      "user_input": "Nenne für Trf 19 20 den minimalen, maximalen und mittleren Spannungswert in den CIM-Daten am 09.01.2026.",
+      "steps": [
+        {
+          "domain": "cim",
+          "tool": "scan_snapshot_inventory",
+          "args": {},
+          "save_as": null,
+          "description": "standard_workflow: cim.standard_comparison",
+          "mutating": false
+        },
+        {
+          "domain": "cim",
+          "tool": "resolve_cim_object",
+          "args": {},
+          "save_as": null,
+          "description": "standard_workflow: cim.standard_comparison",
+          "mutating": false
+        },
+        {
+          "domain": "cim",
+          "tool": "resolve_cim_comparison",
+          "args": {},
+          "save_as": null,
+          "description": "standard_workflow: cim.standard_comparison",
+          "mutating": false
+        },
+        {
+          "domain": "cim",
+          "tool": "load_snapshot_cache",
+          "args": {},
+          "save_as": null,
+          "description": "standard_workflow: cim.standard_comparison",
+          "mutating": false
+        },
+        {
+          "domain": "cim",
+          "tool": "query_cim",
+          "args": {},
+          "save_as": null,
+          "description": "standard_workflow: cim.standard_comparison",
+          "mutating": false
+        },
+        {
+          "domain": "cim",
+          "tool": "read_cim_base_values",
+          "args": {},
+          "save_as": null,
+          "description": "standard_workflow: cim.standard_comparison",
+          "mutating": false
+        },
+        {
+          "domain": "cim",
+          "tool": "compare_cim_values",
+          "args": {},
+          "save_as": null,
+          "description": "standard_workflow: cim.standard_comparison",
+          "mutating": false
+        },
+        {
+          "domain": "cim",
+          "tool": "summarize_cim_result",
+          "args": {},
+          "save_as": null,
+          "description": "standard_workflow: cim.standard_comparison",
+          "mutating": false
+        }
+      ],
+      "classification": {
+        "domain": "cim",
+        "planning_mode": "standard_workflow",
+        "workflow": "cim.standard_comparison",
+        "custom_steps": [],
+        "safe_to_execute": true,
+        "missing_context": [],
+        "clarification_question": "",
+        "reasoning": ""
+      },
+      "reasoning": ""
+    },
+    "planner_decision": {
+      "domain": "cim",
+      "planning_mode": "standard_workflow",
+      "workflow": "cim.standard_comparison",
+      "custom_steps": [],
+      "safe_to_execute": true,
+      "missing_context": [],
+      "clarification_question": "",
+      "reasoning": ""
+    },
+    "result": {
+      "status": "error",
+      "tool": "read_cim_base_values",
+      "cim_root": "C:\\Users\\STELLER\\Documents\\Masterarbeit\\CIM-Dateien\\tobias_CIM_daten\\data\\extracted",
+      "error": "no_resolved_base_values_found",
+      "answer": "Keine lesbaren CIM-Daten für Trf 19 20 am 09.01.2026 gefunden.",
+      "base_attribute_debug": {
+        "selected_attributes": [],
+        "selected_candidates": [
+          "ratedU"
+        ],
+        "resolution_mode": "preselected_attributes",
+        "available_attributes": [],
+        "requested_attributes": [
+          "ratedU"
+        ],
+        "preselected_values": {},
+        "preselected_resolution_debug": {
+          "ratedU": {
+            "status": "not_found",
+            "candidate": "ratedU",
+            "value": null,
+            "searched_scopes": [
+              "direct_or_canonical_reader",
+              "direct_object_attribute",
+              "expanded_structural_lookup",
+              "expanded_structural_lookup_error: name 'max_depth' is not defined"
+            ],
+            "resolution_path": "not_found"
+          }
+        }
+      },
+      "attribute_resolution_debug": {
+        "ratedU": {
+          "status": "not_found",
+          "candidate": "ratedU",
+          "value": null,
+          "searched_scopes": [
+            "direct_or_canonical_reader",
+            "direct_object_attribute",
+            "expanded_structural_lookup",
+            "expanded_structural_lookup_error: name 'max_depth' is not defined"
+          ],
+          "resolution_path": "not_found"
+        }
+      },
+      "debug_trace": [
+        {
+          "step": "scan_snapshot_inventory",
+          "tool_spec": {
+            "name": "scan_snapshot_inventory",
+            "description": "Scan snapshot inventory and build base network index",
+            "capability_tags": [
+              "inventory",
+              "network_index",
+              "equipment_catalog",
+              "read_only"
+            ],
+            "mutating": false
+          },
+          "result": {
+            "status": "ok",
+            "tool": "scan_snapshot_inventory",
+            "cim_root": "C:\\Users\\STELLER\\Documents\\Masterarbeit\\CIM-Dateien\\tobias_CIM_daten\\data\\extracted",
+            "snapshot_inventory": {
+              "root_folder": "C:\\Users\\STELLER\\Documents\\Masterarbeit\\CIM-Dateien\\tobias_CIM_daten\\data\\extracted",
+              "snapshots": [
+                {
+                  "snapshot_name": "<max_depth>",
+                  "case_dir": "<max_depth>",
+                  "xml_files": "<max_depth>",
+                  "default_time": "<max_depth>",
+                  "default_time_str": "<max_depth>",
+                  "default_time_source": "<max_depth>",
+                  "times_by_profile": "<max_depth>",
+                  "all_scenario_times": "<max_depth>",
+                  "has_sv_profile": "<max_depth>",
+                  "has_tp_profile": "<max_depth>",
+                  "has_eq_profile": "<max_depth>",
+                  "has_ssh_profile": "<max_depth>"
+                },
+                {
+                  "snapshot_name": "<max_depth>",
+                  "case_dir": "<max_depth>",
+                  "xml_files": "<max_depth>",
+                  "default_time": "<max_depth>",
+                  "default_time_str": "<max_depth>",
+                  "default_time_source": "<max_depth>",
+                  "times_by_profile": "<max_depth>",
+                  "all_scenario_times": "<max_depth>",
+                  "has_sv_profile": "<max_depth>",
+                  "has_tp_profile": "<max_depth>",
+                  "has_eq_profile": "<max_depth>",
+                  "has_ssh_profile": "<max_depth>"
+                },
+                {
+                  "snapshot_name": "<max_depth>",
+                  "case_dir": "<max_depth>",
+                  "xml_files": "<max_depth>",
+                  "default_time": "<max_depth>",
+                  "default_time_str": "<max_depth>",
+                  "default_time_source": "<max_depth>",
+                  "times_by_profile": "<max_depth>",
+                  "all_scenario_times": "<max_depth>",
+                  "has_sv_profile": "<max_depth>",
+                  "has_tp_profile": "<max_depth>",
+                  "has_eq_profile": "<max_depth>",
+                  "has_ssh_profile": "<max_depth>"
+                }
+              ]
+            },
+            "base_snapshot": "<omitted:dict>",
+            "network_index": "<omitted:dict>",
+            "equipment_catalog_summary": {
+              "equipment_types": [
+                "ACLineSegment",
+                "BusbarSection",
+                "ConformLoad",
+                "ConformLoadGroup",
+                "CurrentLimit",
+                "FossilFuel",
+                "GeneratingUnit",
+                "HydroGeneratingUnit",
+                "LoadAggregate",
+                "LoadArea",
+                "LoadResponseCharacteristic",
+                "LoadStatic",
+                "NuclearGeneratingUnit",
+                "OperationalLimitSet",
+                "OperationalLimitType",
+                "PowerTransformer",
+                "PowerTransformerEnd",
+                "RatioTapChanger",
+                "RegulatingControl",
+                "SubLoadArea",
+                "SynchronousMachine",
+                "SynchronousMachineTimeConstantReactance",
+                "ThermalGeneratingUnit",
+                "TopologicalIsland",
+                "VoltageLimit"
+              ],
+              "equipment_type_counts": {
+                "SynchronousMachineTimeConstantReactance": 10,
+                "LoadAggregate": 1,
+                "LoadStatic": 1,
+                "TopologicalIsland": 1,
+                "BusbarSection": 39,
+                "VoltageLimit": 39,
+                "OperationalLimitSet": 131,
+                "ACLineSegment": 34,
+                "CurrentLimit": 92,
+                "OperationalLimitType": 2,
+                "ConformLoad": 19,
+                "ConformLoadGroup": 1,
+                "SubLoadArea": 1,
+                "LoadArea": 1,
+                "LoadResponseCharacteristic": 1,
+                "PowerTransformerEnd": 24,
+                "SynchronousMachine": 10,
+                "PowerTransformer": 12,
+                "RatioTapChanger": 11,
+                "RegulatingControl": 10,
+                "HydroGeneratingUnit": 1,
+                "NuclearGeneratingUnit": 5,
+                "FossilFuel": 3,
+                "ThermalGeneratingUnit": 3,
+                "GeneratingUnit": 1
+              },
+              "num_equipment_objects": 453
+            }
+          }
+        },
+        {
+          "step": "resolve_cim_object",
+          "tool_spec": {
+            "name": "resolve_cim_object",
+            "description": "Resolve asset or equipment from user query and parse time/state intent",
+            "capability_tags": [
+              "object_resolution",
+              "query_parsing",
+              "equipment_catalog",
+              "llm_match",
+              "read_only"
+            ],
+            "mutating": false
+          },
+          "result": {
+            "status": "ok",
+            "tool": "resolve_cim_object",
+            "cim_root": "C:\\Users\\STELLER\\Documents\\Masterarbeit\\CIM-Dateien\\tobias_CIM_daten\\data\\extracted",
+            "user_input": "Nenne für Trf 19 20 den minimalen, maximalen und mittleren Spannungswert in den CIM-Daten am 09.01.2026.",
+            "parsed_query": {
+              "equipment_detected": [
+                "ACLineSegment"
+              ],
+              "state_detected": [
+                "SvVoltage"
+              ],
+              "metric": null,
+              "equipment_selection": [
+                {
+                  "equipment_type": "<max_depth>",
+                  "equipment_key": "<max_depth>",
+                  "equipment_name": "<max_depth>",
+                  "equipment_id": "<max_depth>"
+                }
+              ],
+              "time_start": "2026-01-09T00:00:00+00:00",
+              "time_end": "2026-01-10T00:00:00+00:00",
+              "time_label": "am 2026-01-09",
+              "intent": "historical_analysis",
+              "request_mode": "standard_comparison",
+              "is_topology_query": false
+            },
+            "resolved_object": "<omitted:ACLineSegment>",
+            "equipment_obj": "<non_serializable:ACLineSegment>",
+            "resolution_mode": "interpret_user_query",
+            "equipment_resolution_debug": {
+              "parsed_query_equipment_selection": [
+                {
+                  "equipment_type": "<max_depth>",
+                  "equipment_key": "<max_depth>",
+                  "equipment_name": "<max_depth>",
+                  "equipment_id": "<max_depth>"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "step": "resolve_cim_comparison",
+          "tool_spec": {
+            "name": "resolve_cim_comparison",
+            "description": "Resolve a supported CIM comparison intent into required SV metric and base attributes",
+            "capability_tags": [
+              "comparison_resolution",
+              "read_only"
+            ],
+            "mutating": false
+          },
+          "result": {
+            "status": "ok",
+            "tool": "resolve_cim_comparison",
+            "cim_root": "C:\\Users\\STELLER\\Documents\\Masterarbeit\\CIM-Dateien\\tobias_CIM_daten\\data\\extracted",
+            "comparison_resolution": {
+              "equipment_types": [
+                "PowerTransformer",
+                "SynchronousMachine",
+                "AsynchronousMachine",
+                "ConformLoad",
+                "EnergyConsumer",
+                "BusbarSection",
+                "ACLineSegment",
+                "EquivalentInjection",
+                "ExternalNetworkInjection"
+              ],
+              "required_state_type": "SvVoltage",
+              "sv_metric": "U",
+              "base_attributes": [
+                "ratedU"
+              ],
+              "comparison_mode": "upper_limit",
+              "observed_value_mode": "peak",
+              "limit_attribute": "ratedU",
+              "comparison_type": "voltage_vs_rated_voltage",
+              "status": "ok",
+              "resolution_mode": "semantic_llm_match",
+              "llm_decision": {
+                "comparison_type": "voltage_vs_rated_voltage",
+                "should_execute": true,
+                "rationale": ""
+              }
+            },
+            "parsed_query": {
+              "equipment_detected": [
+                "ACLineSegment"
+              ],
+              "state_detected": [
+                "SvVoltage"
+              ],
+              "metric": null,
+              "equipment_selection": [
+                {
+                  "equipment_type": "<max_depth>",
+                  "equipment_key": "<max_depth>",
+                  "equipment_name": "<max_depth>",
+                  "equipment_id": "<max_depth>"
+                }
+              ],
+              "time_start": "2026-01-09T00:00:00+00:00",
+              "time_end": "2026-01-10T00:00:00+00:00",
+              "time_label": "am 2026-01-09",
+              "intent": "historical_analysis",
+              "request_mode": "standard_comparison",
+              "is_topology_query": false
+            },
+            "requested_base_attributes": [
+              "ratedU"
+            ],
+            "comparison_resolution_debug": {
+              "equipment_types": [
+                "PowerTransformer",
+                "SynchronousMachine",
+                "AsynchronousMachine",
+                "ConformLoad",
+                "EnergyConsumer",
+                "BusbarSection",
+                "ACLineSegment",
+                "EquivalentInjection",
+                "ExternalNetworkInjection"
+              ],
+              "required_state_type": "SvVoltage",
+              "sv_metric": "U",
+              "base_attributes": [
+                "ratedU"
+              ],
+              "comparison_mode": "upper_limit",
+              "observed_value_mode": "peak",
+              "limit_attribute": "ratedU",
+              "comparison_type": "voltage_vs_rated_voltage",
+              "status": "ok",
+              "resolution_mode": "semantic_llm_match",
+              "llm_decision": {
+                "comparison_type": "voltage_vs_rated_voltage",
+                "should_execute": true,
+                "rationale": ""
+              },
+              "comparison_target_resolution": {
+                "status": "ok",
+                "resolved_object": "<omitted:ACLineSegment>",
+                "resolution_mode": "unchanged"
+              }
+            },
+            "resolved_object": "<omitted:ACLineSegment>",
+            "answer": "Vergleichslogik aufgelöst: voltage_vs_rated_voltage"
+          }
+        },
+        {
+          "step": "load_snapshot_cache",
+          "tool_spec": {
+            "name": "load_snapshot_cache",
+            "description": "Load relevant snapshots for the parsed time window and build snapshot cache",
+            "capability_tags": [
+              "snapshot_loading",
+              "state_cache",
+              "read_only"
+            ],
+            "mutating": false
+          },
+          "result": {
+            "status": "ok",
+            "tool": "load_snapshot_cache",
+            "cim_root": "C:\\Users\\STELLER\\Documents\\Masterarbeit\\CIM-Dateien\\tobias_CIM_daten\\data\\extracted",
+            "cim_snapshots": "<omitted:dict>",
+            "required_state_types": [
+              "SvVoltage"
+            ],
+            "snapshot_cache": "<omitted:dict>",
+            "snapshot_cache_summary": {
+              "num_snapshots": 3,
+              "requested_state_types": [
+                "SvVoltage"
+              ],
+              "snapshot_names": [
+                "CIM_GridAssist_1",
+                "CIM_GridAssist_2",
+                "CIM_GridAssist_3"
+              ],
+              "total_state_counts": {
+                "SvPowerFlow": 0,
+                "SvVoltage": 117
+              }
+            }
+          }
+        },
+        {
+          "step": "query_cim",
+          "tool_spec": {
+            "name": "query_cim",
+            "description": "Run CIM analysis query using parsed query, network index and snapshot cache",
+            "capability_tags": [
+              "analysis",
+              "read_only"
+            ],
+            "mutating": false
+          },
+          "result": {
+            "status": "ok",
+            "tool": "query_cim",
+            "cim_root": "C:\\Users\\STELLER\\Documents\\Masterarbeit\\CIM-Dateien\\tobias_CIM_daten\\data\\extracted",
+            "parsed_query": {
+              "equipment_detected": [
+                "ACLineSegment"
+              ],
+              "state_detected": [
+                "SvVoltage"
+              ],
+              "metric": null,
+              "equipment_selection": [
+                {
+                  "equipment_type": "<max_depth>",
+                  "equipment_key": "<max_depth>",
+                  "equipment_name": "<max_depth>",
+                  "equipment_id": "<max_depth>"
+                }
+              ],
+              "time_start": "2026-01-09T00:00:00+00:00",
+              "time_end": "2026-01-10T00:00:00+00:00",
+              "time_label": "am 2026-01-09",
+              "intent": "historical_analysis",
+              "request_mode": "standard_comparison",
+              "is_topology_query": false
+            },
+            "answer": "Die CIM-Daten für Trf 19 20 am 09.01.2026 zeigen folgende Spannungswerte:\n\n* Minimaler Wert: 349,232 kV\n* Maximaler Wert: 360,119 kV\n* Mittlerer Wert: 354,747 kV\n\nDiese Werte sind direkt aus der Auswertung entnommen und beziehen sich auf die CIM-Daten am genannten Datum.",
+            "query_result_data": {
+              "query_mode": "voltage_over_time",
+              "metric": "U",
+              "rows": [
+                {
+                  "snapshot": "<max_depth>",
+                  "timestamp": "<max_depth>",
+                  "timestamp_str": "<max_depth>",
+                  "equipment": "<max_depth>",
+                  "type": "<max_depth>",
+                  "terminal_id": "<max_depth>",
+                  "connectivity_node_id": "<max_depth>",
+                  "topological_node_id": "<max_depth>",
+                  "voltage_kV": "<max_depth>"
+                },
+                {
+                  "snapshot": "<max_depth>",
+                  "timestamp": "<max_depth>",
+                  "timestamp_str": "<max_depth>",
+                  "equipment": "<max_depth>",
+                  "type": "<max_depth>",
+                  "terminal_id": "<max_depth>",
+                  "connectivity_node_id": "<max_depth>",
+                  "topological_node_id": "<max_depth>",
+                  "voltage_kV": "<max_depth>"
+                },
+                {
+                  "snapshot": "<max_depth>",
+                  "timestamp": "<max_depth>",
+                  "timestamp_str": "<max_depth>",
+                  "equipment": "<max_depth>",
+                  "type": "<max_depth>",
+                  "terminal_id": "<max_depth>",
+                  "connectivity_node_id": "<max_depth>",
+                  "topological_node_id": "<max_depth>",
+                  "voltage_kV": "<max_depth>"
+                },
+                {
+                  "snapshot": "<max_depth>",
+                  "timestamp": "<max_depth>",
+                  "timestamp_str": "<max_depth>",
+                  "equipment": "<max_depth>",
+                  "type": "<max_depth>",
+                  "terminal_id": "<max_depth>",
+                  "connectivity_node_id": "<max_depth>",
+                  "topological_node_id": "<max_depth>",
+                  "voltage_kV": "<max_depth>"
+                },
+                {
+                  "snapshot": "<max_depth>",
+                  "timestamp": "<max_depth>",
+                  "timestamp_str": "<max_depth>",
+                  "equipment": "<max_depth>",
+                  "type": "<max_depth>",
+                  "terminal_id": "<max_depth>",
+                  "connectivity_node_id": "<max_depth>",
+                  "topological_node_id": "<max_depth>",
+                  "voltage_kV": "<max_depth>"
+                },
+                {
+                  "snapshot": "<max_depth>",
+                  "timestamp": "<max_depth>",
+                  "timestamp_str": "<max_depth>",
+                  "equipment": "<max_depth>",
+                  "type": "<max_depth>",
+                  "terminal_id": "<max_depth>",
+                  "connectivity_node_id": "<max_depth>",
+                  "topological_node_id": "<max_depth>",
+                  "voltage_kV": "<max_depth>"
+                }
+              ],
+              "summary": {
+                "type": "ACLineSegment",
+                "unit": "kV",
+                "min_value": 349.232,
+                "max_value": 360.119,
+                "mean_value": 354.747,
+                "max_value_at_time": 360.119,
+                "max_snapshot": "CIM_GridAssist_1",
+                "max_timestamp": "2026-01-09T14:15:00+00:00",
+                "max_equipment": "Line 16 - 19",
+                "max_terminal_id": "_d0be9f10-bd58-2414-3e4c-c47098522d8a",
+                "max_topological_node_id": "_939d5db2-a216-c462-0934-6ad60a5f733c",
+                "min_value_at_time": 349.232,
+                "min_snapshot": "CIM_GridAssist_2",
+                "min_timestamp": "2026-01-09T14:30:00+00:00",
+                "min_equipment": "Line 16 - 19",
+                "min_terminal_id": "_f44378c4-ea54-3304-6b8a-ca6c987051c6",
+                "min_topological_node_id": "_196add8a-2ce0-674d-2a06-f6ba4b95d9cf",
+                "num_datapoints": 6
+              }
+            }
+          }
+        },
+        {
+          "step": "read_cim_base_values",
+          "tool_spec": {
+            "name": "read_cim_base_values",
+            "description": "Read static CIM base or nameplate attributes from a resolved equipment object",
+            "capability_tags": [
+              "base_values",
+              "nameplate_data",
+              "read_only"
+            ],
+            "mutating": false
+          },
+          "result": "<circular_reference>"
+        }
+      ],
+      "raw_answer": "Für die angefragten Basisattribute konnten keine lesbaren Werte gefunden werden."
+    }
+  }
+}

@@ -1,0 +1,217 @@
+{
+  "run_id": 6,
+  "timestamp": "2026-06-01T07:54:43.816866",
+  "user_input": "Wie viele Schalter sind aktuell in Powerfactory geöffnet?",
+  "duration_seconds": 5.515,
+  "token_usage": {
+    "prompt_tokens": 5638,
+    "completion_tokens": 312,
+    "total_tokens": 5950,
+    "details": {
+      "llama3.1:8b": {
+        "output_tokens": 312,
+        "total_tokens": 5950,
+        "input_tokens": 5638
+      }
+    }
+  },
+  "decision_trace": {
+    "domain": "powerfactory",
+    "planning_mode": "standard_workflow",
+    "workflow": "pf.change_switch_state",
+    "confidence": "",
+    "safe_to_execute": "True",
+    "num_steps": 5,
+    "steps": "powerfactory.interpret_switch_instruction | powerfactory.build_unified_inventory | powerfactory.resolve_objects_from_inventory_llm | powerfactory.execute_switch_operation | powerfactory.summarize_switch_result",
+    "planner_reasoning": "",
+    "resolved_object": "<omitted:str>",
+    "resolved_object_confidence": "",
+    "selected_attributes": "",
+    "attribute_confidence": "",
+    "num_tool_calls": 1,
+    "executed_tools": "interpret_switch_instruction",
+    "failed_tool": "interpret_switch_instruction"
+  },
+  "router_output": {
+    "route": "POWERFACTORY",
+    "domain": "powerfactory",
+    "plan": {
+      "domain": "powerfactory",
+      "user_input": "Wie viele Schalter sind aktuell in Powerfactory geöffnet?",
+      "steps": [
+        {
+          "domain": "powerfactory",
+          "tool": "interpret_switch_instruction",
+          "args": {},
+          "save_as": null,
+          "description": "standard_workflow: pf.change_switch_state",
+          "mutating": false
+        },
+        {
+          "domain": "powerfactory",
+          "tool": "build_unified_inventory",
+          "args": {},
+          "save_as": null,
+          "description": "standard_workflow: pf.change_switch_state",
+          "mutating": false
+        },
+        {
+          "domain": "powerfactory",
+          "tool": "resolve_objects_from_inventory_llm",
+          "args": {},
+          "save_as": null,
+          "description": "standard_workflow: pf.change_switch_state",
+          "mutating": false
+        },
+        {
+          "domain": "powerfactory",
+          "tool": "execute_switch_operation",
+          "args": {},
+          "save_as": null,
+          "description": "standard_workflow: pf.change_switch_state",
+          "mutating": false
+        },
+        {
+          "domain": "powerfactory",
+          "tool": "summarize_switch_result",
+          "args": {},
+          "save_as": null,
+          "description": "standard_workflow: pf.change_switch_state",
+          "mutating": false
+        }
+      ],
+      "classification": {
+        "domain": "powerfactory",
+        "planning_mode": "standard_workflow",
+        "workflow": "pf.change_switch_state",
+        "custom_steps": [],
+        "safe_to_execute": true,
+        "missing_context": [],
+        "clarification_question": "",
+        "reasoning": ""
+      },
+      "reasoning": ""
+    },
+    "planner_decision": {
+      "domain": "powerfactory",
+      "planning_mode": "standard_workflow",
+      "workflow": "pf.change_switch_state",
+      "custom_steps": [],
+      "safe_to_execute": true,
+      "missing_context": [],
+      "clarification_question": "",
+      "reasoning": ""
+    },
+    "result": {
+      "status": "error",
+      "tool": "interpret_switch_instruction",
+      "project": "<omitted:str>",
+      "user_input": "Wie viele Schalter sind aktuell in Powerfactory geöffnet?",
+      "error": "missing_switch_operation",
+      "details": "Es konnte keine Schalteroperation sicher erkannt werden.",
+      "instruction": {
+        "query_type": "switch_operation",
+        "operation": null,
+        "entity_type": "switch",
+        "entity_name_raw": "Wie viele Schalter sind aktuell in Powerfactory geöffnet?",
+        "entity_name_candidates": [
+          "Schalter"
+        ],
+        "available_types": [
+          "switch"
+        ],
+        "debug_switch_decision": {
+          "operation": null,
+          "should_execute": false,
+          "confidence": "low",
+          "rationale": "The request does not specify a switch operation to perform."
+        }
+      },
+      "agent": "SingleAgent",
+      "available_tools": [
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>"
+      ],
+      "answer": "Die Anfrage konnte nicht durchgeführt werden. Der Fehler liegt darin, dass keine Schalteroperation erkannt werden konnte.",
+      "debug": {
+        "planning": {},
+        "trace": [
+          {
+            "step": "interpret_switch_instruction",
+            "effective_user_input": "Wie viele Schalter sind aktuell in Powerfactory geöffnet?",
+            "source_subrequest": null,
+            "tool_spec": {
+              "name": "interpret_switch_instruction",
+              "description": "Interpret a natural-language switch request into a structured switch operation instruction.",
+              "capability_tags": [],
+              "mutating": false
+            },
+            "tool_kwargs": {
+              "services": "<omitted:dict>",
+              "user_input": "Wie viele Schalter sind aktuell in Powerfactory geöffnet?",
+              "inventory": {}
+            },
+            "result": {
+              "status": "error",
+              "tool": "interpret_switch_instruction",
+              "project": "<omitted:str>",
+              "user_input": "Wie viele Schalter sind aktuell in Powerfactory geöffnet?",
+              "error": "missing_switch_operation",
+              "details": "Es konnte keine Schalteroperation sicher erkannt werden.",
+              "instruction": {
+                "query_type": "switch_operation",
+                "operation": null,
+                "entity_type": "switch",
+                "entity_name_raw": "Wie viele Schalter sind aktuell in Powerfactory geöffnet?",
+                "entity_name_candidates": [
+                  "<max_depth>"
+                ],
+                "available_types": [
+                  "<max_depth>"
+                ],
+                "debug_switch_decision": {
+                  "operation": "<max_depth>",
+                  "should_execute": "<max_depth>",
+                  "confidence": "<max_depth>",
+                  "rationale": "<max_depth>"
+                }
+              }
+            }
+          }
+        ]
+      },
+      "raw_answer": "Die Anfrage konnte nicht sauber ausgeführt werden (missing_switch_operation). Details: Es konnte keine Schalteroperation sicher erkannt werden."
+    }
+  }
+}

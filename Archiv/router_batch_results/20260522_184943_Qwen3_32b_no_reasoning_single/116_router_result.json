@@ -1,0 +1,46 @@
+{
+  "run_id": 116,
+  "timestamp": "2026-05-23T10:27:46.104626",
+  "user_input": "Wie ist die Spannung in den CIM-Daten?",
+  "duration_seconds": 30.817,
+  "token_usage": {
+    "prompt_tokens": 4468,
+    "completion_tokens": 878,
+    "total_tokens": 5346,
+    "details": {
+      "qwen3:32b": {
+        "input_tokens": 4468,
+        "total_tokens": 5346,
+        "output_tokens": 878
+      }
+    }
+  },
+  "decision_trace": {
+    "domain": "ASK_USER",
+    "planning_mode": "",
+    "workflow": "",
+    "confidence": "",
+    "safe_to_execute": "",
+    "num_steps": 0,
+    "steps": "",
+    "planner_reasoning": "",
+    "resolved_object": "<omitted:str>",
+    "resolved_object_confidence": "",
+    "selected_attributes": "",
+    "attribute_confidence": "",
+    "num_tool_calls": 0,
+    "executed_tools": "",
+    "failed_tool": ""
+  },
+  "router_output": {
+    "route": "ASK_USER",
+    "status": "needs_clarification",
+    "question": "Möchten Sie die Basis-Spannung (z.B. Nennspannung) oder die aktuelle/letzte Betriebsspannung aus den CIM-Daten abfragen?",
+    "missing_fields": [
+      "Zeitraum/Zeitpunkt für die Spannungsanfrage"
+    ],
+    "partial": {
+      "user_input": "Wie ist die Spannung in den CIM-Daten?"
+    }
+  }
+}

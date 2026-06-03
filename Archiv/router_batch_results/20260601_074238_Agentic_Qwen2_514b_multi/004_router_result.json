@@ -1,0 +1,117 @@
+{
+  "run_id": 4,
+  "timestamp": "2026-06-01T07:42:51.381665",
+  "user_input": "Gibt es in den CIM-Daten Daten für Trafo 19-20 am 09.01.2026?",
+  "duration_seconds": 2.352,
+  "token_usage": {
+    "prompt_tokens": 981,
+    "completion_tokens": 94,
+    "total_tokens": 1075,
+    "details": {
+      "qwen2.5:14b": {
+        "input_tokens": 981,
+        "output_tokens": 94,
+        "total_tokens": 1075
+      }
+    }
+  },
+  "decision_trace": {
+    "domain": "HISTORICAL",
+    "planning_mode": "",
+    "workflow": "",
+    "confidence": "low",
+    "safe_to_execute": "False",
+    "num_steps": 0,
+    "steps": "",
+    "planner_reasoning": "Primary classifier failed: model 'qwen2.5:15b' not found (status code: 404) | Fallback classifier failed: model 'qwen2.5:15b' not found (status code: 404)",
+    "resolved_object": "<omitted:str>",
+    "resolved_object_confidence": "",
+    "selected_attributes": "",
+    "attribute_confidence": "",
+    "num_tool_calls": 1,
+    "executed_tools": "unsupported_request",
+    "failed_tool": "unsupported_request",
+    "equipment_resolution_mode": "",
+    "attribute_resolution_mode": "",
+    "comparison_resolution_mode": ""
+  },
+  "router_output": {
+    "route": "HISTORICAL",
+    "result": {
+      "status": "error",
+      "tool": "cim_agent",
+      "agent": "CIMDomainAgent",
+      "error": "unsupported_cim_request",
+      "answer": "Die Anfrage wurde zur CIM-Seite geroutet, ist aktuell aber noch nicht sicher oder unterstützt ausführbar. Fehlender Kontext: classification_failed.",
+      "classification": {
+        "status": "ok",
+        "classification_mode": "forced_fallback_after_classifier_failure",
+        "intent": "unsupported_cim_request",
+        "confidence": "low",
+        "target_kind": "unknown",
+        "request_mode": "clarification_needed",
+        "safe_to_execute": false,
+        "missing_context": [
+          "classification_failed"
+        ],
+        "required_steps": [],
+        "reasoning": "Primary classifier failed: model 'qwen2.5:15b' not found (status code: 404) | Fallback classifier failed: model 'qwen2.5:15b' not found (status code: 404)"
+      },
+      "user_input": "Gibt es in den CIM-Daten Daten für Trafo 19-20 am 09.01.2026?",
+      "debug": {
+        "trace": [
+          {
+            "step": "unsupported_request",
+            "effective_user_input": "Gibt es in den CIM-Daten Daten für Trafo 19-20 am 09.01.2026?",
+            "source_subrequest": null,
+            "result": "<circular_reference>"
+          }
+        ],
+        "classification": {
+          "status": "ok",
+          "classification_mode": "forced_fallback_after_classifier_failure",
+          "intent": "unsupported_cim_request",
+          "confidence": "low",
+          "target_kind": "unknown",
+          "request_mode": "clarification_needed",
+          "safe_to_execute": false,
+          "missing_context": [
+            "classification_failed"
+          ],
+          "required_steps": [],
+          "reasoning": "Primary classifier failed: model 'qwen2.5:15b' not found (status code: 404) | Fallback classifier failed: model 'qwen2.5:15b' not found (status code: 404)"
+        },
+        "plan": [
+          {
+            "step": "unsupported_request",
+            "description": "Return a controlled unsupported-workflow message"
+          }
+        ],
+        "run_summary": {
+          "user_input": "Gibt es in den CIM-Daten Daten für Trafo 19-20 am 09.01.2026?",
+          "classification_summary": {
+            "intent": "unsupported_cim_request",
+            "request_mode": "clarification_needed",
+            "safe_to_execute": false,
+            "target_kind": "unknown",
+            "confidence": "low",
+            "classification_mode": "forced_fallback_after_classifier_failure",
+            "missing_context": [
+              "classification_failed"
+            ]
+          },
+          "planned_steps": [
+            "unsupported_request"
+          ],
+          "selected_type": null,
+          "selected_equipment_id": null,
+          "selected_equipment_name": null,
+          "parsed_query_summary": null,
+          "final_status": "error",
+          "final_answer": "Die Anfrage wurde zur CIM-Seite geroutet, ist aktuell aber noch nicht sicher oder unterstützt ausführbar. Fehlender Kontext: classification_failed."
+        }
+      },
+      "raw_answer": "Die Anfrage wurde zur CIM-Seite geroutet, ist aktuell aber noch nicht sicher oder unterstützt ausführbar. Fehlender Kontext: classification_failed."
+    }
+  }
+}

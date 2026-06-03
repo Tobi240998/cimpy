@@ -1,0 +1,117 @@
+{
+  "run_id": 20,
+  "timestamp": "2026-05-23T13:01:13.299183",
+  "user_input": "Schließe den Schalter Schalter 1.",
+  "duration_seconds": 11.26,
+  "token_usage": {
+    "prompt_tokens": 3893,
+    "completion_tokens": 267,
+    "total_tokens": 4160,
+    "details": {
+      "gemma3:27b": {
+        "output_tokens": 267,
+        "total_tokens": 4160,
+        "input_tokens": 3893
+      }
+    }
+  },
+  "decision_trace": {
+    "domain": "HISTORICAL",
+    "planning_mode": "",
+    "workflow": "",
+    "confidence": "high",
+    "safe_to_execute": "False",
+    "num_steps": 0,
+    "steps": "",
+    "planner_reasoning": "The request is an action request ('close switch') and not a query. The CIM domain agent only supports queries, not control actions.",
+    "resolved_object": "<omitted:str>",
+    "resolved_object_confidence": "",
+    "selected_attributes": "",
+    "attribute_confidence": "",
+    "num_tool_calls": 1,
+    "executed_tools": "unsupported_request",
+    "failed_tool": "unsupported_request",
+    "equipment_resolution_mode": "",
+    "attribute_resolution_mode": "",
+    "comparison_resolution_mode": ""
+  },
+  "router_output": {
+    "route": "HISTORICAL",
+    "result": {
+      "status": "error",
+      "tool": "cim_agent",
+      "agent": "CIMDomainAgent",
+      "error": "unsupported_cim_request",
+      "answer": "Die Anfrage wurde zur CIM-Seite geroutet, ist aktuell aber noch nicht sicher oder unterstützt ausführbar. Fehlender Kontext: Action requests (e.g., 'close switch') are not supported. Only queries are allowed.",
+      "classification": {
+        "intent": "unsupported_cim_request",
+        "confidence": "high",
+        "target_kind": "asset",
+        "request_mode": "clarification_needed",
+        "safe_to_execute": false,
+        "missing_context": [
+          "Action requests (e.g., 'close switch') are not supported. Only queries are allowed."
+        ],
+        "required_steps": [],
+        "reasoning": "The request is an action request ('close switch') and not a query. The CIM domain agent only supports queries, not control actions.",
+        "status": "ok",
+        "classification_mode": "primary_llm_classifier"
+      },
+      "user_input": "Schließe den Schalter Schalter 1.",
+      "debug": {
+        "trace": [
+          {
+            "step": "unsupported_request",
+            "effective_user_input": "Schließe den Schalter Schalter 1.",
+            "source_subrequest": null,
+            "result": "<circular_reference>"
+          }
+        ],
+        "classification": {
+          "intent": "unsupported_cim_request",
+          "confidence": "high",
+          "target_kind": "asset",
+          "request_mode": "clarification_needed",
+          "safe_to_execute": false,
+          "missing_context": [
+            "Action requests (e.g., 'close switch') are not supported. Only queries are allowed."
+          ],
+          "required_steps": [],
+          "reasoning": "The request is an action request ('close switch') and not a query. The CIM domain agent only supports queries, not control actions.",
+          "status": "ok",
+          "classification_mode": "primary_llm_classifier"
+        },
+        "plan": [
+          {
+            "step": "unsupported_request",
+            "description": "Return a controlled unsupported-workflow message"
+          }
+        ],
+        "run_summary": {
+          "user_input": "Schließe den Schalter Schalter 1.",
+          "classification_summary": {
+            "intent": "unsupported_cim_request",
+            "request_mode": "clarification_needed",
+            "safe_to_execute": false,
+            "target_kind": "asset",
+            "confidence": "high",
+            "classification_mode": "primary_llm_classifier",
+            "missing_context": [
+              "Action requests (e.g., 'close switch') are not supported. Only queries are allowed."
+            ]
+          },
+          "planned_steps": [
+            "unsupported_request"
+          ],
+          "selected_type": null,
+          "selected_equipment_id": null,
+          "selected_equipment_name": null,
+          "parsed_query_summary": null,
+          "final_status": "error",
+          "final_answer": "Die Anfrage wurde zur CIM-Seite geroutet, ist aktuell aber noch nicht sicher oder unterstützt ausführbar. Fehlender Kontext: Action requests (e.g., 'close switch') are not supported. Only queries are allowed.."
+        }
+      },
+      "raw_answer": "Die Anfrage wurde zur CIM-Seite geroutet, ist aktuell aber noch nicht sicher oder unterstützt ausführbar. Fehlender Kontext: Action requests (e.g., 'close switch') are not supported. Only queries are allowed.."
+    }
+  }
+}

@@ -1,0 +1,792 @@
+{
+  "run_id": 89,
+  "timestamp": "2026-05-23T17:27:05.848831",
+  "user_input": "Zu welcher zusammenhängenden Komponente gehört Trafo 19-20 bei den CIM-Daten?",
+  "duration_seconds": 23.185,
+  "token_usage": {
+    "prompt_tokens": 16365,
+    "completion_tokens": 1532,
+    "total_tokens": 17897,
+    "details": {
+      "llama3.1:8b": {
+        "output_tokens": 1532,
+        "input_tokens": 16365,
+        "total_tokens": 17897
+      }
+    }
+  },
+  "decision_trace": {
+    "domain": "HISTORICAL",
+    "planning_mode": "",
+    "workflow": "",
+    "confidence": "",
+    "safe_to_execute": "",
+    "num_steps": 0,
+    "steps": "",
+    "planner_reasoning": "",
+    "resolved_object": "<omitted:str>",
+    "resolved_object_confidence": "",
+    "selected_attributes": "",
+    "attribute_confidence": "",
+    "num_tool_calls": 7,
+    "executed_tools": "scan_snapshot_inventory | resolve_cim_object | query_cim | summarize_cim_result | scan_snapshot_inventory | resolve_cim_object | read_cim_base_values",
+    "failed_tool": "read_cim_base_values",
+    "equipment_resolution_mode": "",
+    "attribute_resolution_mode": "preselected_attributes",
+    "comparison_resolution_mode": ""
+  },
+  "router_output": {
+    "route": "HISTORICAL",
+    "result": {
+      "status": "error",
+      "tool": "read_cim_base_values",
+      "cim_root": "C:\\Users\\STELLER\\Documents\\Masterarbeit\\CIM-Dateien\\tobias_CIM_daten\\data\\extracted",
+      "error": "no_resolved_base_values_found",
+      "answer": "Keine lesbaren Werte für die Basisattribute gefunden. Fehlercode: no_resolved_base_values_found.",
+      "base_attribute_debug": {
+        "selected_attributes": [],
+        "selected_candidates": [
+          "lowVoltageLimit",
+          "highVoltageLimit"
+        ],
+        "resolution_mode": "preselected_attributes",
+        "available_attributes": [],
+        "requested_attributes": [
+          "lowVoltageLimit",
+          "highVoltageLimit"
+        ],
+        "preselected_values": {},
+        "preselected_resolution_debug": {
+          "lowVoltageLimit": {
+            "status": "not_found",
+            "candidate": "lowVoltageLimit",
+            "value": null,
+            "searched_scopes": [
+              "direct_or_canonical_reader",
+              "direct_object_attribute",
+              "expanded_structural_lookup",
+              "expanded_voltage_limit_lookup"
+            ],
+            "resolution_path": "not_found"
+          },
+          "highVoltageLimit": {
+            "status": "not_found",
+            "candidate": "highVoltageLimit",
+            "value": null,
+            "searched_scopes": [
+              "direct_or_canonical_reader",
+              "direct_object_attribute",
+              "expanded_structural_lookup",
+              "expanded_voltage_limit_lookup"
+            ],
+            "resolution_path": "not_found"
+          }
+        },
+        "semantic_preselection": {
+          "status": "ok",
+          "requested_attributes": [
+            "lowVoltageLimit",
+            "highVoltageLimit"
+          ],
+          "should_use_preselected_attributes": true,
+          "llm_decision": {
+            "requested_attributes": [
+              "lowVoltageLimit",
+              "highVoltageLimit"
+            ],
+            "should_use_preselected_attributes": true,
+            "rationale": "User explicitly asked for voltage limits"
+          }
+        }
+      },
+      "attribute_resolution_debug": {
+        "lowVoltageLimit": {
+          "status": "not_found",
+          "candidate": "lowVoltageLimit",
+          "value": null,
+          "searched_scopes": [
+            "direct_or_canonical_reader",
+            "direct_object_attribute",
+            "expanded_structural_lookup",
+            "expanded_voltage_limit_lookup"
+          ],
+          "resolution_path": "not_found"
+        },
+        "highVoltageLimit": {
+          "status": "not_found",
+          "candidate": "highVoltageLimit",
+          "value": null,
+          "searched_scopes": [
+            "direct_or_canonical_reader",
+            "direct_object_attribute",
+            "expanded_structural_lookup",
+            "expanded_voltage_limit_lookup"
+          ],
+          "resolution_path": "not_found"
+        }
+      },
+      "agent": "CIMDomainAgent",
+      "debug": {
+        "trace": [
+          {
+            "step": "scan_snapshot_inventory",
+            "effective_user_input": "Welche direkten Nachbarn hat Trafo 19-20?",
+            "effective_context_user_input": "Welche direkten Nachbarn hat Trafo 19-20?",
+            "previous_context": null,
+            "source_subrequest": "subrequest_1",
+            "tool_spec": {
+              "name": "scan_snapshot_inventory",
+              "description": "Scan snapshot inventory and build base network index",
+              "capability_tags": [
+                "inventory",
+                "network_index",
+                "equipment_catalog",
+                "read_only"
+              ],
+              "mutating": false
+            },
+            "result": {
+              "status": "ok",
+              "tool": "scan_snapshot_inventory",
+              "cim_root": "C:\\Users\\STELLER\\Documents\\Masterarbeit\\CIM-Dateien\\tobias_CIM_daten\\data\\extracted",
+              "snapshot_inventory": {
+                "root_folder": "C:\\Users\\STELLER\\Documents\\Masterarbeit\\CIM-Dateien\\tobias_CIM_daten\\data\\extracted",
+                "snapshots": [
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>"
+                ]
+              },
+              "base_snapshot": "<omitted:dict>",
+              "network_index": "<omitted:dict>",
+              "equipment_catalog_summary": {
+                "equipment_types": [
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>"
+                ],
+                "equipment_type_counts": {
+                  "SynchronousMachineTimeConstantReactance": "<max_depth>",
+                  "LoadAggregate": "<max_depth>",
+                  "LoadStatic": "<max_depth>",
+                  "TopologicalIsland": "<max_depth>",
+                  "BusbarSection": "<max_depth>",
+                  "VoltageLimit": "<max_depth>",
+                  "OperationalLimitSet": "<max_depth>",
+                  "ACLineSegment": "<max_depth>",
+                  "CurrentLimit": "<max_depth>",
+                  "OperationalLimitType": "<max_depth>",
+                  "ConformLoad": "<max_depth>",
+                  "ConformLoadGroup": "<max_depth>",
+                  "SubLoadArea": "<max_depth>",
+                  "LoadArea": "<max_depth>",
+                  "LoadResponseCharacteristic": "<max_depth>",
+                  "PowerTransformerEnd": "<max_depth>",
+                  "SynchronousMachine": "<max_depth>",
+                  "PowerTransformer": "<max_depth>",
+                  "RatioTapChanger": "<max_depth>",
+                  "RegulatingControl": "<max_depth>",
+                  "HydroGeneratingUnit": "<max_depth>",
+                  "NuclearGeneratingUnit": "<max_depth>",
+                  "FossilFuel": "<max_depth>",
+                  "ThermalGeneratingUnit": "<max_depth>",
+                  "GeneratingUnit": "<max_depth>"
+                },
+                "num_equipment_objects": 453
+              }
+            }
+          },
+          {
+            "step": "resolve_cim_object",
+            "effective_user_input": "Welche direkten Nachbarn hat Trafo 19-20?",
+            "effective_context_user_input": "Welche direkten Nachbarn hat Trafo 19-20?",
+            "previous_context": null,
+            "source_subrequest": "subrequest_1",
+            "tool_spec": {
+              "name": "resolve_cim_object",
+              "description": "Resolve asset or equipment from user query and parse time/state intent",
+              "capability_tags": [
+                "object_resolution",
+                "query_parsing",
+                "equipment_catalog",
+                "llm_match",
+                "read_only"
+              ],
+              "mutating": false
+            },
+            "result": {
+              "status": "ok",
+              "tool": "resolve_cim_object",
+              "cim_root": "C:\\Users\\STELLER\\Documents\\Masterarbeit\\CIM-Dateien\\tobias_CIM_daten\\data\\extracted",
+              "user_input": "Welche direkten Nachbarn hat Trafo 19-20?",
+              "parsed_query": {
+                "equipment_detected": [
+                  "<max_depth>"
+                ],
+                "state_detected": [
+                  "<max_depth>"
+                ],
+                "metric": null,
+                "equipment_selection": [
+                  "<max_depth>"
+                ],
+                "time_start": null,
+                "time_end": null,
+                "time_label": "",
+                "intent": "topology_query",
+                "request_mode": "standard_topology_query",
+                "is_topology_query": true
+              },
+              "resolved_object": "<omitted:PowerTransformer>",
+              "equipment_obj": "<non_serializable:PowerTransformer>",
+              "resolution_mode": "interpret_user_query",
+              "equipment_resolution_debug": {
+                "parsed_query_equipment_selection": [
+                  "<max_depth>"
+                ]
+              }
+            }
+          },
+          {
+            "step": "query_cim",
+            "effective_user_input": "Welche direkten Nachbarn hat Trafo 19-20?",
+            "effective_context_user_input": "Welche direkten Nachbarn hat Trafo 19-20?",
+            "previous_context": null,
+            "source_subrequest": "subrequest_1",
+            "tool_spec": {
+              "name": "query_cim",
+              "description": "Run CIM analysis query using parsed query, network index and snapshot cache",
+              "capability_tags": [
+                "analysis",
+                "read_only"
+              ],
+              "mutating": false
+            },
+            "result": {
+              "status": "ok",
+              "tool": "query_cim",
+              "cim_root": "C:\\Users\\STELLER\\Documents\\Masterarbeit\\CIM-Dateien\\tobias_CIM_daten\\data\\extracted",
+              "parsed_query": {
+                "equipment_detected": [
+                  "<max_depth>"
+                ],
+                "state_detected": [],
+                "metric": null,
+                "equipment_selection": [
+                  "<max_depth>"
+                ],
+                "time_start": null,
+                "time_end": null,
+                "time_label": "",
+                "intent": "topology_query",
+                "request_mode": "standard_topology_query",
+                "is_topology_query": true,
+                "topology_intent": {
+                  "is_topology": "<max_depth>",
+                  "intent": "<max_depth>",
+                  "graph_level": "<max_depth>"
+                }
+              },
+              "answer": "Die direkten Nachbarn von Trafo 19-20 sind:\n\n* Bus 33\n* G 04\n* Line 16 - 19\n* Trf 19 - 33 (ist jedoch derselbe wie der befragte Trafo, daher nicht direkt)\n\nDie Auswertung enthält keine Informationen über Spannungs- oder Leistungswerte.",
+              "query_result_data": {}
+            }
+          },
+          {
+            "step": "summarize_cim_result",
+            "effective_user_input": "Welche direkten Nachbarn hat Trafo 19-20?",
+            "effective_context_user_input": "Welche direkten Nachbarn hat Trafo 19-20?",
+            "previous_context": null,
+            "source_subrequest": "subrequest_1",
+            "tool_spec": {
+              "name": "summarize_cim_result",
+              "description": "Return final CIM result with debug information",
+              "capability_tags": [
+                "result",
+                "read_only"
+              ],
+              "mutating": false
+            },
+            "result": {
+              "status": "ok",
+              "tool": "summarize_cim_result",
+              "cim_root": "C:\\Users\\STELLER\\Documents\\Masterarbeit\\CIM-Dateien\\tobias_CIM_daten\\data\\extracted",
+              "user_input": "Welche direkten Nachbarn hat Trafo 19-20?",
+              "answer": "Die direkten Nachbarn von Trafo 19-20 sind Bus 33, G 04 und Line 16 - 19.",
+              "debug": {
+                "num_inventory_snapshots": 3,
+                "index_source_snapshot": "CIM_GridAssist_1",
+                "index_source_time_str": "2026-01-09T14:15:00+00:00",
+                "required_state_types": [],
+                "num_loaded_snapshots": 0,
+                "loaded_snapshot_names": [],
+                "snapshot_cache_summary": {},
+                "parsed_query": {
+                  "equipment_detected": "<max_depth>",
+                  "state_detected": "<max_depth>",
+                  "metric": "<max_depth>",
+                  "equipment_selection": "<max_depth>",
+                  "time_start": "<max_depth>",
+                  "time_end": "<max_depth>",
+                  "time_label": "<max_depth>",
+                  "intent": "<max_depth>",
+                  "request_mode": "<max_depth>",
+                  "is_topology_query": "<max_depth>",
+                  "topology_intent": "<max_depth>"
+                },
+                "resolved_object": "<omitted:PowerTransformer>",
+                "resolution_mode": "interpret_user_query",
+                "equipment_resolution_debug": {
+                  "parsed_query_equipment_selection": "<max_depth>"
+                },
+                "equipment_catalog_summary": {
+                  "equipment_types": "<max_depth>",
+                  "equipment_type_counts": "<max_depth>",
+                  "num_equipment_objects": "<max_depth>"
+                },
+                "comparison_resolution": {},
+                "comparison_result": {},
+                "requested_base_attributes": []
+              }
+            }
+          },
+          {
+            "step": "scan_snapshot_inventory",
+            "effective_user_input": "Wie ist die Eigenschaft von Trafo 19-20 bei CIM-Daten?",
+            "effective_context_user_input": "Wie ist die Eigenschaft von Trafo 19-20 bei CIM-Daten?",
+            "previous_context": null,
+            "source_subrequest": "subrequest_2",
+            "tool_spec": {
+              "name": "scan_snapshot_inventory",
+              "description": "Scan snapshot inventory and build base network index",
+              "capability_tags": [
+                "inventory",
+                "network_index",
+                "equipment_catalog",
+                "read_only"
+              ],
+              "mutating": false
+            },
+            "result": {
+              "status": "ok",
+              "tool": "scan_snapshot_inventory",
+              "cim_root": "C:\\Users\\STELLER\\Documents\\Masterarbeit\\CIM-Dateien\\tobias_CIM_daten\\data\\extracted",
+              "snapshot_inventory": {
+                "root_folder": "C:\\Users\\STELLER\\Documents\\Masterarbeit\\CIM-Dateien\\tobias_CIM_daten\\data\\extracted",
+                "snapshots": [
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>"
+                ]
+              },
+              "base_snapshot": "<omitted:dict>",
+              "network_index": "<omitted:dict>",
+              "equipment_catalog_summary": {
+                "equipment_types": [
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>"
+                ],
+                "equipment_type_counts": {
+                  "SynchronousMachineTimeConstantReactance": "<max_depth>",
+                  "LoadAggregate": "<max_depth>",
+                  "LoadStatic": "<max_depth>",
+                  "TopologicalIsland": "<max_depth>",
+                  "BusbarSection": "<max_depth>",
+                  "VoltageLimit": "<max_depth>",
+                  "OperationalLimitSet": "<max_depth>",
+                  "ACLineSegment": "<max_depth>",
+                  "CurrentLimit": "<max_depth>",
+                  "OperationalLimitType": "<max_depth>",
+                  "ConformLoad": "<max_depth>",
+                  "ConformLoadGroup": "<max_depth>",
+                  "SubLoadArea": "<max_depth>",
+                  "LoadArea": "<max_depth>",
+                  "LoadResponseCharacteristic": "<max_depth>",
+                  "PowerTransformerEnd": "<max_depth>",
+                  "SynchronousMachine": "<max_depth>",
+                  "PowerTransformer": "<max_depth>",
+                  "RatioTapChanger": "<max_depth>",
+                  "RegulatingControl": "<max_depth>",
+                  "HydroGeneratingUnit": "<max_depth>",
+                  "NuclearGeneratingUnit": "<max_depth>",
+                  "FossilFuel": "<max_depth>",
+                  "ThermalGeneratingUnit": "<max_depth>",
+                  "GeneratingUnit": "<max_depth>"
+                },
+                "num_equipment_objects": 453
+              }
+            }
+          },
+          {
+            "step": "resolve_cim_object",
+            "effective_user_input": "Wie ist die Eigenschaft von Trafo 19-20 bei CIM-Daten?",
+            "effective_context_user_input": "Wie ist die Eigenschaft von Trafo 19-20 bei CIM-Daten?",
+            "previous_context": null,
+            "source_subrequest": "subrequest_2",
+            "tool_spec": {
+              "name": "resolve_cim_object",
+              "description": "Resolve asset or equipment from user query and parse time/state intent",
+              "capability_tags": [
+                "object_resolution",
+                "query_parsing",
+                "equipment_catalog",
+                "llm_match",
+                "read_only"
+              ],
+              "mutating": false
+            },
+            "result": {
+              "status": "ok",
+              "tool": "resolve_cim_object",
+              "cim_root": "C:\\Users\\STELLER\\Documents\\Masterarbeit\\CIM-Dateien\\tobias_CIM_daten\\data\\extracted",
+              "user_input": "Wie ist die Eigenschaft von Trafo 19-20 bei CIM-Daten?",
+              "parsed_query": {
+                "equipment_detected": [
+                  "<max_depth>"
+                ],
+                "state_detected": [
+                  "<max_depth>"
+                ],
+                "metric": "P",
+                "equipment_selection": [
+                  "<max_depth>"
+                ],
+                "time_start": null,
+                "time_end": null,
+                "time_label": "",
+                "intent": "asset_lookup",
+                "request_mode": "standard_base",
+                "is_topology_query": false
+              },
+              "resolved_object": "<omitted:PowerTransformer>",
+              "equipment_obj": "<non_serializable:PowerTransformer>",
+              "resolution_mode": "interpret_user_query",
+              "equipment_resolution_debug": {
+                "parsed_query_equipment_selection": [
+                  "<max_depth>"
+                ]
+              }
+            }
+          },
+          {
+            "step": "read_cim_base_values",
+            "effective_user_input": "Wie ist die Eigenschaft von Trafo 19-20 bei CIM-Daten?",
+            "effective_context_user_input": "Wie ist die Eigenschaft von Trafo 19-20 bei CIM-Daten?",
+            "previous_context": null,
+            "source_subrequest": "subrequest_2",
+            "tool_spec": {
+              "name": "read_cim_base_values",
+              "description": "Read static CIM base or nameplate attributes from a resolved equipment object",
+              "capability_tags": [
+                "base_values",
+                "nameplate_data",
+                "read_only"
+              ],
+              "mutating": false
+            },
+            "result": "<circular_reference>"
+          }
+        ],
+        "classification": {
+          "intent": "topology_query",
+          "confidence": "high",
+          "target_kind": "topology",
+          "request_mode": "standard_topology_query",
+          "safe_to_execute": true,
+          "missing_context": [],
+          "required_steps": [],
+          "reasoning": "The user is asking for the direct neighbors of a specific transformer in the CIM data, which is a typical example of a topology query.",
+          "status": "ok",
+          "classification_mode": "primary_llm_classifier"
+        },
+        "plan": [
+          {
+            "step": "scan_snapshot_inventory",
+            "description": "Scan snapshot inventory and build base network index",
+            "capability_tags": [
+              "inventory",
+              "network_index",
+              "equipment_catalog",
+              "read_only"
+            ],
+            "mutating": false,
+            "user_input_override": "Welche direkten Nachbarn hat Trafo 19-20?",
+            "source_subrequest": "subrequest_1",
+            "subrequest_classification": {
+              "intent": "topology_query",
+              "confidence": "high",
+              "target_kind": "topology",
+              "request_mode": "standard_topology_query",
+              "safe_to_execute": true,
+              "missing_context": [],
+              "required_steps": [],
+              "reasoning": "The request asks for direct neighbors of a specific asset, which is a typical topology query.",
+              "status": "ok",
+              "classification_mode": "primary_llm_classifier"
+            }
+          },
+          {
+            "step": "resolve_cim_object",
+            "description": "Resolve asset or equipment from user query and parse time/state intent",
+            "capability_tags": [
+              "object_resolution",
+              "query_parsing",
+              "equipment_catalog",
+              "llm_match",
+              "read_only"
+            ],
+            "mutating": false,
+            "user_input_override": "Welche direkten Nachbarn hat Trafo 19-20?",
+            "source_subrequest": "subrequest_1",
+            "subrequest_classification": {
+              "intent": "topology_query",
+              "confidence": "high",
+              "target_kind": "topology",
+              "request_mode": "standard_topology_query",
+              "safe_to_execute": true,
+              "missing_context": [],
+              "required_steps": [],
+              "reasoning": "The request asks for direct neighbors of a specific asset, which is a typical topology query.",
+              "status": "ok",
+              "classification_mode": "primary_llm_classifier"
+            }
+          },
+          {
+            "step": "query_cim",
+            "description": "Run CIM analysis query using parsed query, network index and snapshot cache",
+            "capability_tags": [
+              "analysis",
+              "read_only"
+            ],
+            "mutating": false,
+            "user_input_override": "Welche direkten Nachbarn hat Trafo 19-20?",
+            "source_subrequest": "subrequest_1",
+            "subrequest_classification": {
+              "intent": "topology_query",
+              "confidence": "high",
+              "target_kind": "topology",
+              "request_mode": "standard_topology_query",
+              "safe_to_execute": true,
+              "missing_context": [],
+              "required_steps": [],
+              "reasoning": "The request asks for direct neighbors of a specific asset, which is a typical topology query.",
+              "status": "ok",
+              "classification_mode": "primary_llm_classifier"
+            }
+          },
+          {
+            "step": "summarize_cim_result",
+            "description": "Return final CIM result with debug information",
+            "capability_tags": [
+              "result",
+              "read_only"
+            ],
+            "mutating": false,
+            "user_input_override": "Welche direkten Nachbarn hat Trafo 19-20?",
+            "source_subrequest": "subrequest_1",
+            "subrequest_classification": {
+              "intent": "topology_query",
+              "confidence": "high",
+              "target_kind": "topology",
+              "request_mode": "standard_topology_query",
+              "safe_to_execute": true,
+              "missing_context": [],
+              "required_steps": [],
+              "reasoning": "The request asks for direct neighbors of a specific asset, which is a typical topology query.",
+              "status": "ok",
+              "classification_mode": "primary_llm_classifier"
+            }
+          },
+          {
+            "step": "scan_snapshot_inventory",
+            "description": "Scan snapshot inventory and build base network index",
+            "capability_tags": [
+              "inventory",
+              "network_index",
+              "equipment_catalog",
+              "read_only"
+            ],
+            "mutating": false,
+            "user_input_override": "Wie ist die Eigenschaft von Trafo 19-20 bei CIM-Daten?",
+            "source_subrequest": "subrequest_2",
+            "subrequest_classification": {
+              "intent": "asset_lookup",
+              "confidence": "high",
+              "target_kind": "asset",
+              "request_mode": "standard_base",
+              "safe_to_execute": true,
+              "missing_context": [],
+              "required_steps": [],
+              "reasoning": "The user is asking for a specific property of a transformer in the CIM data.",
+              "status": "ok",
+              "classification_mode": "primary_llm_classifier"
+            }
+          },
+          {
+            "step": "resolve_cim_object",
+            "description": "Resolve asset or equipment from user query and parse time/state intent",
+            "capability_tags": [
+              "object_resolution",
+              "query_parsing",
+              "equipment_catalog",
+              "llm_match",
+              "read_only"
+            ],
+            "mutating": false,
+            "user_input_override": "Wie ist die Eigenschaft von Trafo 19-20 bei CIM-Daten?",
+            "source_subrequest": "subrequest_2",
+            "subrequest_classification": {
+              "intent": "asset_lookup",
+              "confidence": "high",
+              "target_kind": "asset",
+              "request_mode": "standard_base",
+              "safe_to_execute": true,
+              "missing_context": [],
+              "required_steps": [],
+              "reasoning": "The user is asking for a specific property of a transformer in the CIM data.",
+              "status": "ok",
+              "classification_mode": "primary_llm_classifier"
+            }
+          },
+          {
+            "step": "read_cim_base_values",
+            "description": "Read static CIM base or nameplate attributes from a resolved equipment object",
+            "capability_tags": [
+              "base_values",
+              "nameplate_data",
+              "read_only"
+            ],
+            "mutating": false,
+            "user_input_override": "Wie ist die Eigenschaft von Trafo 19-20 bei CIM-Daten?",
+            "source_subrequest": "subrequest_2",
+            "subrequest_classification": {
+              "intent": "asset_lookup",
+              "confidence": "high",
+              "target_kind": "asset",
+              "request_mode": "standard_base",
+              "safe_to_execute": true,
+              "missing_context": [],
+              "required_steps": [],
+              "reasoning": "The user is asking for a specific property of a transformer in the CIM data.",
+              "status": "ok",
+              "classification_mode": "primary_llm_classifier"
+            }
+          },
+          {
+            "step": "summarize_cim_result",
+            "description": "Return final CIM result with debug information",
+            "capability_tags": [
+              "result",
+              "read_only"
+            ],
+            "mutating": false,
+            "user_input_override": "Wie ist die Eigenschaft von Trafo 19-20 bei CIM-Daten?",
+            "source_subrequest": "subrequest_2",
+            "subrequest_classification": {
+              "intent": "asset_lookup",
+              "confidence": "high",
+              "target_kind": "asset",
+              "request_mode": "standard_base",
+              "safe_to_execute": true,
+              "missing_context": [],
+              "required_steps": [],
+              "reasoning": "The user is asking for a specific property of a transformer in the CIM data.",
+              "status": "ok",
+              "classification_mode": "primary_llm_classifier"
+            }
+          }
+        ],
+        "run_summary": {
+          "user_input": "Trafo 19-20 bei CIM-Daten",
+          "classification_summary": {
+            "intent": "topology_query",
+            "request_mode": "standard_topology_query",
+            "safe_to_execute": true,
+            "target_kind": "topology",
+            "confidence": "high",
+            "classification_mode": "primary_llm_classifier",
+            "missing_context": []
+          },
+          "planned_steps": [
+            "scan_snapshot_inventory",
+            "resolve_cim_object",
+            "query_cim",
+            "summarize_cim_result",
+            "scan_snapshot_inventory",
+            "resolve_cim_object",
+            "read_cim_base_values",
+            "summarize_cim_result"
+          ],
+          "selected_type": null,
+          "selected_equipment_id": null,
+          "selected_equipment_name": "Trf 19 - 20",
+          "parsed_query_summary": {
+            "equipment_detected": [
+              "PowerTransformer"
+            ],
+            "state_detected": [
+              "SvPowerFlow"
+            ],
+            "metric": "P",
+            "time_label": "",
+            "equipment_selection": [
+              {
+                "equipment_type": "PowerTransformer",
+                "equipment_key": "trafo19-20",
+                "equipment_name": "Trf 19 - 20",
+                "equipment_id": "_d3acef3d-077f-4dd2-a18b-5262ddd4383a"
+              }
+            ]
+          },
+          "final_status": "error",
+          "final_answer": "Für die angefragten Basisattribute konnten keine lesbaren Werte gefunden werden."
+        }
+      },
+      "raw_answer": "Für die angefragten Basisattribute konnten keine lesbaren Werte gefunden werden."
+    }
+  }
+}

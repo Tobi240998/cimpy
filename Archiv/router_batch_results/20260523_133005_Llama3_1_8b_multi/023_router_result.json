@@ -1,0 +1,120 @@
+{
+  "run_id": 23,
+  "timestamp": "2026-05-23T14:09:32.385894",
+  "user_input": "Schalte den Schalter Schalter 1 um.",
+  "duration_seconds": 6.956,
+  "token_usage": {
+    "prompt_tokens": 3656,
+    "completion_tokens": 583,
+    "total_tokens": 4239,
+    "details": {
+      "llama3.1:8b": {
+        "output_tokens": 583,
+        "input_tokens": 3656,
+        "total_tokens": 4239
+      }
+    }
+  },
+  "decision_trace": {
+    "domain": "HISTORICAL",
+    "planning_mode": "",
+    "workflow": "",
+    "confidence": "low",
+    "safe_to_execute": "False",
+    "num_steps": 0,
+    "steps": "",
+    "planner_reasoning": "Die Anfrage beinhaltet eine direkte Aktion auf ein physisches Gerät, was nicht unterstützt wird.",
+    "resolved_object": "<omitted:str>",
+    "resolved_object_confidence": "",
+    "selected_attributes": "",
+    "attribute_confidence": "",
+    "num_tool_calls": 1,
+    "executed_tools": "unsupported_request",
+    "failed_tool": "unsupported_request",
+    "equipment_resolution_mode": "",
+    "attribute_resolution_mode": "",
+    "comparison_resolution_mode": ""
+  },
+  "router_output": {
+    "route": "HISTORICAL",
+    "result": {
+      "status": "error",
+      "tool": "cim_agent",
+      "agent": "CIMDomainAgent",
+      "error": "unsupported_cim_request",
+      "answer": "Die Anfrage konnte nicht bearbeitet werden, da sie für die historische Route nicht unterstützt ist. Fehlergrund: unsupported_cim_request.",
+      "classification": {
+        "intent": "unsupported_cim_request",
+        "confidence": "low",
+        "target_kind": "unknown",
+        "request_mode": "clarification_needed",
+        "safe_to_execute": false,
+        "missing_context": [
+          "physische Geräte",
+          "direkte Aktion"
+        ],
+        "required_steps": [],
+        "reasoning": "Die Anfrage beinhaltet eine direkte Aktion auf ein physisches Gerät, was nicht unterstützt wird.",
+        "status": "ok",
+        "classification_mode": "primary_llm_classifier"
+      },
+      "user_input": "Schalte den Schalter Schalter 1 um.",
+      "debug": {
+        "trace": [
+          {
+            "step": "unsupported_request",
+            "effective_user_input": "Schalte den Schalter Schalter 1 um.",
+            "source_subrequest": null,
+            "result": "<circular_reference>"
+          }
+        ],
+        "classification": {
+          "intent": "unsupported_cim_request",
+          "confidence": "low",
+          "target_kind": "unknown",
+          "request_mode": "clarification_needed",
+          "safe_to_execute": false,
+          "missing_context": [
+            "physische Geräte",
+            "direkte Aktion"
+          ],
+          "required_steps": [],
+          "reasoning": "Die Anfrage beinhaltet eine direkte Aktion auf ein physisches Gerät, was nicht unterstützt wird.",
+          "status": "ok",
+          "classification_mode": "primary_llm_classifier"
+        },
+        "plan": [
+          {
+            "step": "unsupported_request",
+            "description": "Return a controlled unsupported-workflow message"
+          }
+        ],
+        "run_summary": {
+          "user_input": "Schalte den Schalter Schalter 1 um.",
+          "classification_summary": {
+            "intent": "unsupported_cim_request",
+            "request_mode": "clarification_needed",
+            "safe_to_execute": false,
+            "target_kind": "unknown",
+            "confidence": "low",
+            "classification_mode": "primary_llm_classifier",
+            "missing_context": [
+              "physische Geräte",
+              "direkte Aktion"
+            ]
+          },
+          "planned_steps": [
+            "unsupported_request"
+          ],
+          "selected_type": null,
+          "selected_equipment_id": null,
+          "selected_equipment_name": null,
+          "parsed_query_summary": null,
+          "final_status": "error",
+          "final_answer": "Die Anfrage wurde zur CIM-Seite geroutet, ist aktuell aber noch nicht sicher oder unterstützt ausführbar. Fehlender Kontext: physische Geräte, direkte Aktion."
+        }
+      },
+      "raw_answer": "Die Anfrage wurde zur CIM-Seite geroutet, ist aktuell aber noch nicht sicher oder unterstützt ausführbar. Fehlender Kontext: physische Geräte, direkte Aktion."
+    }
+  }
+}

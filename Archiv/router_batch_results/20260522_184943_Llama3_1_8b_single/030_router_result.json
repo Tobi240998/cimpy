@@ -1,0 +1,53 @@
+{
+  "run_id": 30,
+  "timestamp": "2026-05-23T18:42:21.781080",
+  "user_input": "Was ist bei Powerfactory direkt mit Bus 5 verbunden?",
+  "duration_seconds": 2.632,
+  "token_usage": {
+    "prompt_tokens": 4454,
+    "completion_tokens": 133,
+    "total_tokens": 4587,
+    "details": {
+      "llama3.1:8b": {
+        "total_tokens": 4587,
+        "output_tokens": 133,
+        "input_tokens": 4454
+      }
+    }
+  },
+  "decision_trace": {
+    "domain": "powerfactory",
+    "planning_mode": "standard_workflow",
+    "workflow": "pf.query_topology_neighbors",
+    "confidence": "",
+    "safe_to_execute": "True",
+    "num_steps": 0,
+    "steps": "",
+    "planner_reasoning": "",
+    "resolved_object": "<omitted:str>",
+    "resolved_object_confidence": "",
+    "selected_attributes": "",
+    "attribute_confidence": "",
+    "num_tool_calls": 0,
+    "executed_tools": "",
+    "failed_tool": ""
+  },
+  "router_output": {
+    "route": "ERROR",
+    "status": "error",
+    "result": {
+      "status": "error",
+      "answer": "Unbekannter Standard-Workflow: pf.query_topology_neighbors",
+      "planner_decision": {
+        "domain": "powerfactory",
+        "planning_mode": "standard_workflow",
+        "workflow": "pf.query_topology_neighbors",
+        "custom_steps": [],
+        "safe_to_execute": true,
+        "missing_context": [],
+        "clarification_question": "",
+        "reasoning": ""
+      }
+    }
+  }
+}

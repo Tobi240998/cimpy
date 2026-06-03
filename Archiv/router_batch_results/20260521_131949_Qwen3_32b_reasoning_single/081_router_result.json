@@ -1,0 +1,810 @@
+{
+  "run_id": 81,
+  "timestamp": "2026-05-21T16:20:45.906699",
+  "user_input": "Wie ist die Auslastung von Line in PF?",
+  "duration_seconds": 102.257,
+  "token_usage": {
+    "prompt_tokens": 8096,
+    "completion_tokens": 2480,
+    "total_tokens": 10576,
+    "details": {
+      "qwen3:32b": {
+        "output_tokens": 2480,
+        "input_tokens": 8096,
+        "total_tokens": 10576
+      }
+    }
+  },
+  "decision_trace": {
+    "domain": "powerfactory",
+    "planning_mode": "standard_workflow",
+    "workflow": "pf.query_element_data",
+    "confidence": "",
+    "safe_to_execute": "True",
+    "num_steps": 8,
+    "steps": "powerfactory.build_unified_inventory | powerfactory.interpret_data_query_instruction | powerfactory.classify_data_source | powerfactory.resolve_objects_from_inventory_llm | powerfactory.list_available_object_attributes | powerfactory.select_pf_object_attributes_llm | powerfactory.read_pf_object_attributes | powerfactory.summarize_pf_object_data_result",
+    "planner_reasoning": "The user explicitly mentions PowerFactory (PF) and asks for line loading information, which falls under querying element data (load-flow results). The 'pf.query_element_data' workflow is designed for retrieving operational values like line loading from the active project.",
+    "resolved_object": "<omitted:str>",
+    "resolved_object_confidence": "",
+    "selected_attributes": "",
+    "attribute_confidence": "",
+    "num_tool_calls": 4,
+    "executed_tools": "build_unified_inventory | interpret_data_query_instruction | classify_data_source | resolve_objects_from_inventory_llm",
+    "failed_tool": "resolve_objects_from_inventory_llm"
+  },
+  "router_output": {
+    "route": "POWERFACTORY",
+    "domain": "powerfactory",
+    "plan": {
+      "domain": "powerfactory",
+      "user_input": "Wie ist die Auslastung von Line in PF?",
+      "steps": [
+        {
+          "domain": "powerfactory",
+          "tool": "build_unified_inventory",
+          "args": {},
+          "save_as": null,
+          "description": "standard_workflow: pf.query_element_data",
+          "mutating": false
+        },
+        {
+          "domain": "powerfactory",
+          "tool": "interpret_data_query_instruction",
+          "args": {},
+          "save_as": null,
+          "description": "standard_workflow: pf.query_element_data",
+          "mutating": false
+        },
+        {
+          "domain": "powerfactory",
+          "tool": "classify_data_source",
+          "args": {},
+          "save_as": null,
+          "description": "standard_workflow: pf.query_element_data",
+          "mutating": false
+        },
+        {
+          "domain": "powerfactory",
+          "tool": "resolve_objects_from_inventory_llm",
+          "args": {},
+          "save_as": null,
+          "description": "standard_workflow: pf.query_element_data",
+          "mutating": false
+        },
+        {
+          "domain": "powerfactory",
+          "tool": "list_available_object_attributes",
+          "args": {},
+          "save_as": null,
+          "description": "standard_workflow: pf.query_element_data",
+          "mutating": false
+        },
+        {
+          "domain": "powerfactory",
+          "tool": "select_pf_object_attributes_llm",
+          "args": {},
+          "save_as": null,
+          "description": "standard_workflow: pf.query_element_data",
+          "mutating": false
+        },
+        {
+          "domain": "powerfactory",
+          "tool": "read_pf_object_attributes",
+          "args": {},
+          "save_as": null,
+          "description": "standard_workflow: pf.query_element_data",
+          "mutating": false
+        },
+        {
+          "domain": "powerfactory",
+          "tool": "summarize_pf_object_data_result",
+          "args": {},
+          "save_as": null,
+          "description": "standard_workflow: pf.query_element_data",
+          "mutating": false
+        }
+      ],
+      "classification": {
+        "domain": "powerfactory",
+        "planning_mode": "standard_workflow",
+        "workflow": "pf.query_element_data",
+        "custom_steps": [],
+        "safe_to_execute": true,
+        "missing_context": [],
+        "clarification_question": "",
+        "reasoning": "The user explicitly mentions PowerFactory (PF) and asks for line loading information, which falls under querying element data (load-flow results). The 'pf.query_element_data' workflow is designed for retrieving operational values like line loading from the active project."
+      },
+      "reasoning": "The user explicitly mentions PowerFactory (PF) and asks for line loading information, which falls under querying element data (load-flow results). The 'pf.query_element_data' workflow is designed for retrieving operational values like line loading from the active project."
+    },
+    "planner_decision": {
+      "domain": "powerfactory",
+      "planning_mode": "standard_workflow",
+      "workflow": "pf.query_element_data",
+      "custom_steps": [],
+      "safe_to_execute": true,
+      "missing_context": [],
+      "clarification_question": "",
+      "reasoning": "The user explicitly mentions PowerFactory (PF) and asks for line loading information, which falls under querying element data (load-flow results). The 'pf.query_element_data' workflow is designed for retrieving operational values like line loading from the active project."
+    },
+    "result": {
+      "status": "error",
+      "tool": "resolve_objects_from_inventory_llm",
+      "project": "<omitted:str>",
+      "instruction": {
+        "query_type": "element_data",
+        "entity_type": "line",
+        "entity_name_raw": "Wie ist die Auslastung von Line in PF?",
+        "entity_name_candidates": [
+          "Line"
+        ],
+        "attribute_request_text": "Wie ist die Auslastung von Line in PF?",
+        "available_types": [
+          "bus",
+          "generator",
+          "line",
+          "load",
+          "switch",
+          "transformer"
+        ],
+        "requested_attribute_names": [],
+        "requested_attribute_name_extraction": {
+          "status": "skipped",
+          "requested_attribute_names": [],
+          "llm_decision": {
+            "reason": "Skipped technical attribute-name extraction because attribute_match_mode=semantic_description."
+          },
+          "chain_mode": "skipped_by_attribute_match_mode"
+        },
+        "data_source_preference": "result",
+        "data_source_note": "Lastflussergebnisse wurden explizit oder sicher angefordert.",
+        "data_source_decision": {
+          "status": "ok",
+          "selected_data_source": "result",
+          "confidence": "high",
+          "rationale": "The term 'Auslastung' (loading) without explicit qualification typically refers to load-flow results in PowerFactory. The absence of qualifiers like 'Nenn-' or 'Soll-' indicates it is not base data.",
+          "should_execute": true,
+          "decision_mode": "llm",
+          "llm_decision": {
+            "selected_data_source": "result",
+            "confidence": "high",
+            "rationale": "The term 'Auslastung' (loading) without explicit qualification typically refers to load-flow results in PowerFactory. The absence of qualifiers like 'Nenn-' or 'Soll-' indicates it is not base data.",
+            "should_execute": true,
+            "attribute_match_mode": "semantic_description",
+            "attribute_match_confidence": "high",
+            "attribute_match_rationale": "The user used the natural-language term 'Auslastung' instead of a technical attribute name like 'c:loading'.",
+            "attribute_cardinality": "one",
+            "attribute_cardinality_rationale": "The request asks for 'die Auslastung' (singular), indicating a single value."
+          },
+          "chain_mode": "native_structured_output",
+          "attribute_match_mode": "semantic_description",
+          "attribute_match_confidence": "high",
+          "attribute_match_rationale": "The user used the natural-language term 'Auslastung' instead of a technical attribute name like 'c:loading'.",
+          "attribute_cardinality": "one",
+          "attribute_cardinality_rationale": "The request asks for 'die Auslastung' (singular), indicating a single value.",
+          "fallback_applied": false,
+          "effective_data_source": "result",
+          "data_source_note": "Lastflussergebnisse wurden explizit oder sicher angefordert."
+        },
+        "attribute_match_mode": {
+          "status": "ok",
+          "mode": "semantic_description",
+          "confidence": "high",
+          "should_execute": true,
+          "rationale": "The user used the natural-language term 'Auslastung' (loading) instead of a technical attribute name like 'c:loading'.",
+          "source": "data_source_decision"
+        },
+        "attribute_cardinality": "one",
+        "attribute_cardinality_rationale": "The request asks for 'die Auslastung' (singular), indicating a single value."
+      },
+      "error": "invalid_object_selection",
+      "details": "Das LLM hat keinen gültigen exakten Namen aus der Kandidatenliste zurückgegeben.",
+      "llm_decision": {
+        "selected_object_name": null,
+        "selected_object_names": [],
+        "selection_mode": null,
+        "confidence": "low",
+        "rationale": "The user's request refers to 'Line' in singular without specifying a particular line or explicitly requesting all lines. The available candidates include specific lines and the __ALL__ option, but the ambiguity in the request prevents a safe selection.",
+        "alternatives": [
+          "Line 4-5",
+          "Line 4-6",
+          "Line 5-7",
+          "Line 6-9",
+          "Line 7-8",
+          "Line 8-9"
+        ],
+        "should_execute": false
+      },
+      "candidate_names": [
+        "Line 4-5",
+        "Line 4-6",
+        "Line 5-7",
+        "Line 6-9",
+        "Line 7-8",
+        "Line 8-9"
+      ],
+      "agent": "SingleAgent",
+      "available_tools": [
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>"
+      ],
+      "answer": "Die Anfrage konnte nicht sauber ausgeführt werden, da der Name \"Line in PF\" nicht als gültiger exakter Objektname aus der Kandidatenliste erkannt wurde. Fehlergrund: invalid_object_selection.",
+      "debug": {
+        "planning": {},
+        "trace": [
+          {
+            "step": "build_unified_inventory",
+            "effective_user_input": "Wie ist die Auslastung von Line in PF?",
+            "source_subrequest": null,
+            "tool_spec": {
+              "name": "build_unified_inventory",
+              "description": "Build a unified non-topology PowerFactory inventory for supported object types.",
+              "capability_tags": [],
+              "mutating": false
+            },
+            "tool_kwargs": {
+              "services": "<omitted:dict>",
+              "allowed_types": [
+                "bus",
+                "load",
+                "line",
+                "transformer",
+                "generator",
+                "switch"
+              ]
+            },
+            "result": {
+              "status": "ok",
+              "tool": "build_unified_inventory",
+              "project": "<omitted:str>",
+              "inventory": {
+                "available_types": [
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>"
+                ],
+                "counts_by_type": {
+                  "bus": "<max_depth>",
+                  "load": "<max_depth>",
+                  "line": "<max_depth>",
+                  "transformer": "<max_depth>",
+                  "generator": "<max_depth>",
+                  "switch": "<max_depth>"
+                },
+                "items_by_type": {
+                  "bus": "<max_depth>",
+                  "load": "<max_depth>",
+                  "line": "<max_depth>",
+                  "transformer": "<max_depth>",
+                  "generator": "<max_depth>",
+                  "switch": "<max_depth>"
+                },
+                "samples_by_type": {
+                  "bus": "<max_depth>",
+                  "load": "<max_depth>",
+                  "line": "<max_depth>",
+                  "transformer": "<max_depth>",
+                  "generator": "<max_depth>",
+                  "switch": "<max_depth>"
+                }
+              },
+              "allowed_types": [
+                "bus",
+                "load",
+                "line",
+                "transformer",
+                "generator",
+                "switch"
+              ]
+            }
+          },
+          {
+            "step": "interpret_data_query_instruction",
+            "effective_user_input": "Wie ist die Auslastung von Line in PF?",
+            "source_subrequest": null,
+            "tool_spec": {
+              "name": "interpret_data_query_instruction",
+              "description": "Interpret a natural-language data query into a structured PowerFactory data-query instruction.",
+              "capability_tags": [],
+              "mutating": false
+            },
+            "tool_kwargs": {
+              "services": "<omitted:dict>",
+              "user_input": "Wie ist die Auslastung von Line in PF?",
+              "inventory": {
+                "available_types": [
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>"
+                ],
+                "counts_by_type": {
+                  "bus": "<max_depth>",
+                  "load": "<max_depth>",
+                  "line": "<max_depth>",
+                  "transformer": "<max_depth>",
+                  "generator": "<max_depth>",
+                  "switch": "<max_depth>"
+                },
+                "items_by_type": {
+                  "bus": "<max_depth>",
+                  "load": "<max_depth>",
+                  "line": "<max_depth>",
+                  "transformer": "<max_depth>",
+                  "generator": "<max_depth>",
+                  "switch": "<max_depth>"
+                },
+                "samples_by_type": {
+                  "bus": "<max_depth>",
+                  "load": "<max_depth>",
+                  "line": "<max_depth>",
+                  "transformer": "<max_depth>",
+                  "generator": "<max_depth>",
+                  "switch": "<max_depth>"
+                }
+              }
+            },
+            "result": {
+              "status": "ok",
+              "tool": "interpret_data_query_instruction",
+              "project": "<omitted:str>",
+              "user_input": "Wie ist die Auslastung von Line in PF?",
+              "instruction": {
+                "query_type": "element_data",
+                "entity_type": "line",
+                "entity_name_raw": "Wie ist die Auslastung von Line in PF?",
+                "entity_name_candidates": [
+                  "<max_depth>"
+                ],
+                "attribute_request_text": "Wie ist die Auslastung von Line in PF?",
+                "available_types": [
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>"
+                ],
+                "requested_attribute_names": [],
+                "requested_attribute_name_extraction": {
+                  "status": "<max_depth>",
+                  "requested_attribute_names": "<max_depth>",
+                  "llm_decision": "<max_depth>",
+                  "chain_mode": "<max_depth>"
+                },
+                "data_source_preference": "result",
+                "data_source_note": "Lastflussergebnisse wurden explizit oder sicher angefordert.",
+                "data_source_decision": {
+                  "status": "<max_depth>",
+                  "selected_data_source": "<max_depth>",
+                  "confidence": "<max_depth>",
+                  "rationale": "<max_depth>",
+                  "should_execute": "<max_depth>",
+                  "decision_mode": "<max_depth>",
+                  "llm_decision": "<max_depth>",
+                  "chain_mode": "<max_depth>",
+                  "attribute_match_mode": "<max_depth>",
+                  "attribute_match_confidence": "<max_depth>",
+                  "attribute_match_rationale": "<max_depth>",
+                  "attribute_cardinality": "<max_depth>",
+                  "attribute_cardinality_rationale": "<max_depth>",
+                  "fallback_applied": "<max_depth>",
+                  "effective_data_source": "<max_depth>",
+                  "data_source_note": "<max_depth>"
+                },
+                "attribute_match_mode": {
+                  "status": "<max_depth>",
+                  "mode": "<max_depth>",
+                  "confidence": "<max_depth>",
+                  "should_execute": "<max_depth>",
+                  "rationale": "<max_depth>",
+                  "source": "<max_depth>"
+                },
+                "attribute_cardinality": "one",
+                "attribute_cardinality_rationale": "The request explicitly asks for 'die Auslastung' (singular), indicating a single value."
+              },
+              "llm_decision": {
+                "selected_entity_type": "line",
+                "confidence": "high",
+                "rationale": "The user explicitly asked about 'Line' in PowerFactory, which directly matches the available entity type 'line'.",
+                "missing_context": [],
+                "should_execute": true
+              },
+              "requested_attribute_name_extraction": {
+                "status": "skipped",
+                "requested_attribute_names": [],
+                "llm_decision": {
+                  "reason": "<max_depth>"
+                },
+                "chain_mode": "skipped_by_attribute_match_mode"
+              },
+              "confidence": "high",
+              "rationale": "The user explicitly asked about 'Line' in PowerFactory, which directly matches the available entity type 'line'."
+            }
+          },
+          {
+            "step": "classify_data_source",
+            "effective_user_input": "Wie ist die Auslastung von Line in PF?",
+            "source_subrequest": null,
+            "tool_spec": {
+              "name": "classify_data_source",
+              "description": "Classify whether the data query should use base data or load-flow result data.",
+              "capability_tags": [],
+              "mutating": false
+            },
+            "tool_kwargs": {
+              "services": "<omitted:dict>",
+              "instruction": {
+                "query_type": "element_data",
+                "entity_type": "line",
+                "entity_name_raw": "Wie ist die Auslastung von Line in PF?",
+                "entity_name_candidates": [
+                  "<max_depth>"
+                ],
+                "attribute_request_text": "Wie ist die Auslastung von Line in PF?",
+                "available_types": [
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>"
+                ],
+                "requested_attribute_names": [],
+                "requested_attribute_name_extraction": {
+                  "status": "<max_depth>",
+                  "requested_attribute_names": "<max_depth>",
+                  "llm_decision": "<max_depth>",
+                  "chain_mode": "<max_depth>"
+                },
+                "data_source_preference": "result",
+                "data_source_note": "Lastflussergebnisse wurden explizit oder sicher angefordert.",
+                "data_source_decision": {
+                  "status": "<max_depth>",
+                  "selected_data_source": "<max_depth>",
+                  "confidence": "<max_depth>",
+                  "rationale": "<max_depth>",
+                  "should_execute": "<max_depth>",
+                  "decision_mode": "<max_depth>",
+                  "llm_decision": "<max_depth>",
+                  "chain_mode": "<max_depth>",
+                  "attribute_match_mode": "<max_depth>",
+                  "attribute_match_confidence": "<max_depth>",
+                  "attribute_match_rationale": "<max_depth>",
+                  "attribute_cardinality": "<max_depth>",
+                  "attribute_cardinality_rationale": "<max_depth>",
+                  "fallback_applied": "<max_depth>",
+                  "effective_data_source": "<max_depth>",
+                  "data_source_note": "<max_depth>"
+                },
+                "attribute_match_mode": {
+                  "status": "<max_depth>",
+                  "mode": "<max_depth>",
+                  "confidence": "<max_depth>",
+                  "should_execute": "<max_depth>",
+                  "rationale": "<max_depth>",
+                  "source": "<max_depth>"
+                },
+                "attribute_cardinality": "one",
+                "attribute_cardinality_rationale": "The request explicitly asks for 'die Auslastung' (singular), indicating a single value."
+              }
+            },
+            "result": {
+              "status": "ok",
+              "tool": "classify_data_source",
+              "project": "<omitted:str>",
+              "instruction": {
+                "query_type": "element_data",
+                "entity_type": "line",
+                "entity_name_raw": "Wie ist die Auslastung von Line in PF?",
+                "entity_name_candidates": [
+                  "<max_depth>"
+                ],
+                "attribute_request_text": "Wie ist die Auslastung von Line in PF?",
+                "available_types": [
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>"
+                ],
+                "requested_attribute_names": [],
+                "requested_attribute_name_extraction": {
+                  "status": "<max_depth>",
+                  "requested_attribute_names": "<max_depth>",
+                  "llm_decision": "<max_depth>",
+                  "chain_mode": "<max_depth>"
+                },
+                "data_source_preference": "result",
+                "data_source_note": "Lastflussergebnisse wurden explizit oder sicher angefordert.",
+                "data_source_decision": {
+                  "status": "<max_depth>",
+                  "selected_data_source": "<max_depth>",
+                  "confidence": "<max_depth>",
+                  "rationale": "<max_depth>",
+                  "should_execute": "<max_depth>",
+                  "decision_mode": "<max_depth>",
+                  "llm_decision": "<max_depth>",
+                  "chain_mode": "<max_depth>",
+                  "attribute_match_mode": "<max_depth>",
+                  "attribute_match_confidence": "<max_depth>",
+                  "attribute_match_rationale": "<max_depth>",
+                  "attribute_cardinality": "<max_depth>",
+                  "attribute_cardinality_rationale": "<max_depth>",
+                  "fallback_applied": "<max_depth>",
+                  "effective_data_source": "<max_depth>",
+                  "data_source_note": "<max_depth>"
+                },
+                "attribute_match_mode": {
+                  "status": "<max_depth>",
+                  "mode": "<max_depth>",
+                  "confidence": "<max_depth>",
+                  "should_execute": "<max_depth>",
+                  "rationale": "<max_depth>",
+                  "source": "<max_depth>"
+                },
+                "attribute_cardinality": "one",
+                "attribute_cardinality_rationale": "The request asks for 'die Auslastung' (singular), indicating a single value."
+              },
+              "selected_data_source": "result",
+              "effective_data_source": "result",
+              "data_source_note": "Lastflussergebnisse wurden explizit oder sicher angefordert.",
+              "data_source_decision": {
+                "status": "ok",
+                "selected_data_source": "result",
+                "confidence": "high",
+                "rationale": "The term 'Auslastung' (loading) without explicit qualification typically refers to load-flow results in PowerFactory. The absence of qualifiers like 'Nenn-' or 'Soll-' indicates it is not base data.",
+                "should_execute": true,
+                "decision_mode": "llm",
+                "llm_decision": {
+                  "selected_data_source": "<max_depth>",
+                  "confidence": "<max_depth>",
+                  "rationale": "<max_depth>",
+                  "should_execute": "<max_depth>",
+                  "attribute_match_mode": "<max_depth>",
+                  "attribute_match_confidence": "<max_depth>",
+                  "attribute_match_rationale": "<max_depth>",
+                  "attribute_cardinality": "<max_depth>",
+                  "attribute_cardinality_rationale": "<max_depth>"
+                },
+                "chain_mode": "native_structured_output",
+                "attribute_match_mode": "semantic_description",
+                "attribute_match_confidence": "high",
+                "attribute_match_rationale": "The user used the natural-language term 'Auslastung' instead of a technical attribute name like 'c:loading'.",
+                "attribute_cardinality": "one",
+                "attribute_cardinality_rationale": "The request asks for 'die Auslastung' (singular), indicating a single value.",
+                "fallback_applied": false,
+                "effective_data_source": "result",
+                "data_source_note": "Lastflussergebnisse wurden explizit oder sicher angefordert."
+              }
+            }
+          },
+          {
+            "step": "resolve_objects_from_inventory_llm",
+            "effective_user_input": "Wie ist die Auslastung von Line in PF?",
+            "source_subrequest": null,
+            "tool_spec": {
+              "name": "resolve_objects_from_inventory_llm",
+              "description": "Resolve PowerFactory objects by LLM-based exact candidate selection from a unified non-topology inventory.",
+              "capability_tags": [],
+              "mutating": false
+            },
+            "tool_kwargs": {
+              "services": "<omitted:dict>",
+              "instruction": {
+                "query_type": "element_data",
+                "entity_type": "line",
+                "entity_name_raw": "Wie ist die Auslastung von Line in PF?",
+                "entity_name_candidates": [
+                  "<max_depth>"
+                ],
+                "attribute_request_text": "Wie ist die Auslastung von Line in PF?",
+                "available_types": [
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>"
+                ],
+                "requested_attribute_names": [],
+                "requested_attribute_name_extraction": {
+                  "status": "<max_depth>",
+                  "requested_attribute_names": "<max_depth>",
+                  "llm_decision": "<max_depth>",
+                  "chain_mode": "<max_depth>"
+                },
+                "data_source_preference": "result",
+                "data_source_note": "Lastflussergebnisse wurden explizit oder sicher angefordert.",
+                "data_source_decision": {
+                  "status": "<max_depth>",
+                  "selected_data_source": "<max_depth>",
+                  "confidence": "<max_depth>",
+                  "rationale": "<max_depth>",
+                  "should_execute": "<max_depth>",
+                  "decision_mode": "<max_depth>",
+                  "llm_decision": "<max_depth>",
+                  "chain_mode": "<max_depth>",
+                  "attribute_match_mode": "<max_depth>",
+                  "attribute_match_confidence": "<max_depth>",
+                  "attribute_match_rationale": "<max_depth>",
+                  "attribute_cardinality": "<max_depth>",
+                  "attribute_cardinality_rationale": "<max_depth>",
+                  "fallback_applied": "<max_depth>",
+                  "effective_data_source": "<max_depth>",
+                  "data_source_note": "<max_depth>"
+                },
+                "attribute_match_mode": {
+                  "status": "<max_depth>",
+                  "mode": "<max_depth>",
+                  "confidence": "<max_depth>",
+                  "should_execute": "<max_depth>",
+                  "rationale": "<max_depth>",
+                  "source": "<max_depth>"
+                },
+                "attribute_cardinality": "one",
+                "attribute_cardinality_rationale": "The request asks for 'die Auslastung' (singular), indicating a single value."
+              },
+              "inventory": {
+                "available_types": [
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>"
+                ],
+                "counts_by_type": {
+                  "bus": "<max_depth>",
+                  "load": "<max_depth>",
+                  "line": "<max_depth>",
+                  "transformer": "<max_depth>",
+                  "generator": "<max_depth>",
+                  "switch": "<max_depth>"
+                },
+                "items_by_type": {
+                  "bus": "<max_depth>",
+                  "load": "<max_depth>",
+                  "line": "<max_depth>",
+                  "transformer": "<max_depth>",
+                  "generator": "<max_depth>",
+                  "switch": "<max_depth>"
+                },
+                "samples_by_type": {
+                  "bus": "<max_depth>",
+                  "load": "<max_depth>",
+                  "line": "<max_depth>",
+                  "transformer": "<max_depth>",
+                  "generator": "<max_depth>",
+                  "switch": "<max_depth>"
+                }
+              }
+            },
+            "result": {
+              "status": "error",
+              "tool": "resolve_objects_from_inventory_llm",
+              "project": "<omitted:str>",
+              "instruction": {
+                "query_type": "element_data",
+                "entity_type": "line",
+                "entity_name_raw": "Wie ist die Auslastung von Line in PF?",
+                "entity_name_candidates": [
+                  "<max_depth>"
+                ],
+                "attribute_request_text": "Wie ist die Auslastung von Line in PF?",
+                "available_types": [
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>"
+                ],
+                "requested_attribute_names": [],
+                "requested_attribute_name_extraction": {
+                  "status": "<max_depth>",
+                  "requested_attribute_names": "<max_depth>",
+                  "llm_decision": "<max_depth>",
+                  "chain_mode": "<max_depth>"
+                },
+                "data_source_preference": "result",
+                "data_source_note": "Lastflussergebnisse wurden explizit oder sicher angefordert.",
+                "data_source_decision": {
+                  "status": "<max_depth>",
+                  "selected_data_source": "<max_depth>",
+                  "confidence": "<max_depth>",
+                  "rationale": "<max_depth>",
+                  "should_execute": "<max_depth>",
+                  "decision_mode": "<max_depth>",
+                  "llm_decision": "<max_depth>",
+                  "chain_mode": "<max_depth>",
+                  "attribute_match_mode": "<max_depth>",
+                  "attribute_match_confidence": "<max_depth>",
+                  "attribute_match_rationale": "<max_depth>",
+                  "attribute_cardinality": "<max_depth>",
+                  "attribute_cardinality_rationale": "<max_depth>",
+                  "fallback_applied": "<max_depth>",
+                  "effective_data_source": "<max_depth>",
+                  "data_source_note": "<max_depth>"
+                },
+                "attribute_match_mode": {
+                  "status": "<max_depth>",
+                  "mode": "<max_depth>",
+                  "confidence": "<max_depth>",
+                  "should_execute": "<max_depth>",
+                  "rationale": "<max_depth>",
+                  "source": "<max_depth>"
+                },
+                "attribute_cardinality": "one",
+                "attribute_cardinality_rationale": "The request asks for 'die Auslastung' (singular), indicating a single value."
+              },
+              "error": "invalid_object_selection",
+              "details": "Das LLM hat keinen gültigen exakten Namen aus der Kandidatenliste zurückgegeben.",
+              "llm_decision": {
+                "selected_object_name": null,
+                "selected_object_names": [],
+                "selection_mode": null,
+                "confidence": "low",
+                "rationale": "The user's request refers to 'Line' in singular without specifying a particular line or explicitly requesting all lines. The available candidates include specific lines and the __ALL__ option, but the ambiguity in the request prevents a safe selection.",
+                "alternatives": [
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>"
+                ],
+                "should_execute": false
+              },
+              "candidate_names": [
+                "Line 4-5",
+                "Line 4-6",
+                "Line 5-7",
+                "Line 6-9",
+                "Line 7-8",
+                "Line 8-9"
+              ]
+            }
+          }
+        ]
+      },
+      "raw_answer": "Die Anfrage konnte nicht sauber ausgeführt werden (invalid_object_selection). Details: Das LLM hat keinen gültigen exakten Namen aus der Kandidatenliste zurückgegeben."
+    }
+  }
+}

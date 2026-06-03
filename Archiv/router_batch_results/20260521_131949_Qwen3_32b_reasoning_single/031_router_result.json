@@ -1,0 +1,44 @@
+{
+  "run_id": 31,
+  "timestamp": "2026-05-21T13:57:59.168762",
+  "user_input": "Zeig mir die unmittelbaren Nachbarn von Bus 5 in Powerfactory.",
+  "duration_seconds": 25.526,
+  "token_usage": {
+    "prompt_tokens": 4484,
+    "completion_tokens": 706,
+    "total_tokens": 5190,
+    "details": {
+      "qwen3:32b": {
+        "output_tokens": 706,
+        "input_tokens": 4484,
+        "total_tokens": 5190
+      }
+    }
+  },
+  "decision_trace": {
+    "domain": "ERROR",
+    "planning_mode": "",
+    "workflow": "",
+    "confidence": "",
+    "safe_to_execute": "",
+    "num_steps": 0,
+    "steps": "",
+    "planner_reasoning": "",
+    "resolved_object": "<omitted:str>",
+    "resolved_object_confidence": "",
+    "selected_attributes": "",
+    "attribute_confidence": "",
+    "num_tool_calls": 0,
+    "executed_tools": "",
+    "failed_tool": ""
+  },
+  "router_output": {
+    "route": "ERROR",
+    "status": "error",
+    "result": {
+      "status": "error",
+      "answer": "Der UnifiedPlanner hat keine gültige strukturierte Ausgabe erzeugt.",
+      "planner_error": "Failed to parse UnifiedPlannerDecision from completion {\"domain\": \"powerfactory\", \"planning_mode\": \"standard_workflow\", \"workflow\": \"pf.topology_query\", \"custom_steps\": null, \"safe_to_execute\": true, \"missing_context\": [], \"clarification_question\": \"\", \"reasoning\": \"The user explicitly requested PowerFactory and asks for immediate neighbors of a bus, which is a topology query. The 'pf.topology_query' workflow is designed for analyzing connectivity and neighbor relationships in PowerFactory projects.\"}. Got: 1 validation error for UnifiedPlannerDecision\ncustom_steps\n  Input should be a valid list [type=list_type, input_value=None, input_type=NoneType]\n    For further information visit https://errors.pydantic.dev/2.12/v/list_type\nFor troubleshooting, visit: https://docs.langchain.com/oss/python/langchain/errors/OUTPUT_PARSING_FAILURE "
+    }
+  }
+}

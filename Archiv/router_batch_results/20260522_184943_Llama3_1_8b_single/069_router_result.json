@@ -1,0 +1,53 @@
+{
+  "run_id": 69,
+  "timestamp": "2026-05-23T18:54:18.769057",
+  "user_input": "Zeige die Basisdaten-Nennspannung für alle Busse in Powerfactory.",
+  "duration_seconds": 2.795,
+  "token_usage": {
+    "prompt_tokens": 4464,
+    "completion_tokens": 136,
+    "total_tokens": 4600,
+    "details": {
+      "llama3.1:8b": {
+        "total_tokens": 4600,
+        "output_tokens": 136,
+        "input_tokens": 4464
+      }
+    }
+  },
+  "decision_trace": {
+    "domain": "powerfactory",
+    "planning_mode": "standard_workflow",
+    "workflow": "None",
+    "confidence": "",
+    "safe_to_execute": "True",
+    "num_steps": 0,
+    "steps": "",
+    "planner_reasoning": "",
+    "resolved_object": "<omitted:str>",
+    "resolved_object_confidence": "",
+    "selected_attributes": "",
+    "attribute_confidence": "",
+    "num_tool_calls": 0,
+    "executed_tools": "",
+    "failed_tool": ""
+  },
+  "router_output": {
+    "route": "ERROR",
+    "status": "error",
+    "result": {
+      "status": "error",
+      "answer": "Unbekannter Standard-Workflow: None",
+      "planner_decision": {
+        "domain": "powerfactory",
+        "planning_mode": "standard_workflow",
+        "workflow": null,
+        "custom_steps": [],
+        "safe_to_execute": true,
+        "missing_context": [],
+        "clarification_question": "",
+        "reasoning": ""
+      }
+    }
+  }
+}

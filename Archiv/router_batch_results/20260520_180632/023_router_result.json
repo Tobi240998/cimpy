@@ -1,0 +1,117 @@
+{
+  "run_id": 23,
+  "timestamp": "2026-05-23T13:08:43.668351",
+  "user_input": "Schalte den Schalter Schalter 1 um.",
+  "duration_seconds": 11.464,
+  "token_usage": {
+    "prompt_tokens": 3896,
+    "completion_tokens": 283,
+    "total_tokens": 4179,
+    "details": {
+      "gemma3:27b": {
+        "output_tokens": 283,
+        "total_tokens": 4179,
+        "input_tokens": 3896
+      }
+    }
+  },
+  "decision_trace": {
+    "domain": "HISTORICAL",
+    "planning_mode": "",
+    "workflow": "",
+    "confidence": "low",
+    "safe_to_execute": "False",
+    "num_steps": 0,
+    "steps": "",
+    "planner_reasoning": "The request asks to 'switch' a switch, which implies a write operation. The CIM domain agent only supports read access to CIM data and cannot perform actions.",
+    "resolved_object": "<omitted:str>",
+    "resolved_object_confidence": "",
+    "selected_attributes": "",
+    "attribute_confidence": "",
+    "num_tool_calls": 1,
+    "executed_tools": "unsupported_request",
+    "failed_tool": "unsupported_request",
+    "equipment_resolution_mode": "",
+    "attribute_resolution_mode": "",
+    "comparison_resolution_mode": ""
+  },
+  "router_output": {
+    "route": "HISTORICAL",
+    "result": {
+      "status": "error",
+      "tool": "cim_agent",
+      "agent": "CIMDomainAgent",
+      "error": "unsupported_cim_request",
+      "answer": "Die Anfrage wurde zur CIM-Seite geroutet, ist aktuell aber noch nicht sicher oder unterstützt ausführbar. Fehlender Kontext: Action 'umschalten' is not supported. Only read access to CIM data is available.",
+      "classification": {
+        "intent": "unsupported_cim_request",
+        "confidence": "low",
+        "target_kind": "asset",
+        "request_mode": "clarification_needed",
+        "safe_to_execute": false,
+        "missing_context": [
+          "Action 'umschalten' is not supported. Only read access to CIM data is available."
+        ],
+        "required_steps": [],
+        "reasoning": "The request asks to 'switch' a switch, which implies a write operation. The CIM domain agent only supports read access to CIM data and cannot perform actions.",
+        "status": "ok",
+        "classification_mode": "primary_llm_classifier"
+      },
+      "user_input": "Schalte den Schalter Schalter 1 um.",
+      "debug": {
+        "trace": [
+          {
+            "step": "unsupported_request",
+            "effective_user_input": "Schalte den Schalter Schalter 1 um.",
+            "source_subrequest": null,
+            "result": "<circular_reference>"
+          }
+        ],
+        "classification": {
+          "intent": "unsupported_cim_request",
+          "confidence": "low",
+          "target_kind": "asset",
+          "request_mode": "clarification_needed",
+          "safe_to_execute": false,
+          "missing_context": [
+            "Action 'umschalten' is not supported. Only read access to CIM data is available."
+          ],
+          "required_steps": [],
+          "reasoning": "The request asks to 'switch' a switch, which implies a write operation. The CIM domain agent only supports read access to CIM data and cannot perform actions.",
+          "status": "ok",
+          "classification_mode": "primary_llm_classifier"
+        },
+        "plan": [
+          {
+            "step": "unsupported_request",
+            "description": "Return a controlled unsupported-workflow message"
+          }
+        ],
+        "run_summary": {
+          "user_input": "Schalte den Schalter Schalter 1 um.",
+          "classification_summary": {
+            "intent": "unsupported_cim_request",
+            "request_mode": "clarification_needed",
+            "safe_to_execute": false,
+            "target_kind": "asset",
+            "confidence": "low",
+            "classification_mode": "primary_llm_classifier",
+            "missing_context": [
+              "Action 'umschalten' is not supported. Only read access to CIM data is available."
+            ]
+          },
+          "planned_steps": [
+            "unsupported_request"
+          ],
+          "selected_type": null,
+          "selected_equipment_id": null,
+          "selected_equipment_name": null,
+          "parsed_query_summary": null,
+          "final_status": "error",
+          "final_answer": "Die Anfrage wurde zur CIM-Seite geroutet, ist aktuell aber noch nicht sicher oder unterstützt ausführbar. Fehlender Kontext: Action 'umschalten' is not supported. Only read access to CIM data is available.."
+        }
+      },
+      "raw_answer": "Die Anfrage wurde zur CIM-Seite geroutet, ist aktuell aber noch nicht sicher oder unterstützt ausführbar. Fehlender Kontext: Action 'umschalten' is not supported. Only read access to CIM data is available.."
+    }
+  }
+}

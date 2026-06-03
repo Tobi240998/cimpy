@@ -1,0 +1,533 @@
+{
+  "run_id": 49,
+  "timestamp": "2026-05-23T18:47:34.406702",
+  "user_input": "Wie sind die Auslastungen der Leitungen in PowerFactory?",
+  "duration_seconds": 5.254,
+  "token_usage": {
+    "prompt_tokens": 5834,
+    "completion_tokens": 235,
+    "total_tokens": 6069,
+    "details": {
+      "llama3.1:8b": {
+        "total_tokens": 6069,
+        "output_tokens": 235,
+        "input_tokens": 5834
+      }
+    }
+  },
+  "decision_trace": {
+    "domain": "powerfactory",
+    "planning_mode": "standard_workflow",
+    "workflow": "pf.topology_query",
+    "confidence": "",
+    "safe_to_execute": "True",
+    "num_steps": 6,
+    "steps": "powerfactory.build_topology_graph | powerfactory.build_topology_inventory | powerfactory.interpret_entity_instruction | powerfactory.resolve_entity_from_inventory | powerfactory.query_topology_neighbors | powerfactory.summarize_topology_result",
+    "planner_reasoning": "",
+    "resolved_object": "<omitted:str>",
+    "resolved_object_confidence": "",
+    "selected_attributes": "",
+    "attribute_confidence": "",
+    "num_tool_calls": 4,
+    "executed_tools": "build_topology_graph | build_topology_inventory | interpret_entity_instruction | resolve_entity_from_inventory",
+    "failed_tool": "resolve_entity_from_inventory"
+  },
+  "router_output": {
+    "route": "POWERFACTORY",
+    "domain": "powerfactory",
+    "plan": {
+      "domain": "powerfactory",
+      "user_input": "Wie sind die Auslastungen der Leitungen in PowerFactory?",
+      "steps": [
+        {
+          "domain": "powerfactory",
+          "tool": "build_topology_graph",
+          "args": {},
+          "save_as": null,
+          "description": "standard_workflow: pf.topology_query",
+          "mutating": false
+        },
+        {
+          "domain": "powerfactory",
+          "tool": "build_topology_inventory",
+          "args": {},
+          "save_as": null,
+          "description": "standard_workflow: pf.topology_query",
+          "mutating": false
+        },
+        {
+          "domain": "powerfactory",
+          "tool": "interpret_entity_instruction",
+          "args": {},
+          "save_as": null,
+          "description": "standard_workflow: pf.topology_query",
+          "mutating": false
+        },
+        {
+          "domain": "powerfactory",
+          "tool": "resolve_entity_from_inventory",
+          "args": {},
+          "save_as": null,
+          "description": "standard_workflow: pf.topology_query",
+          "mutating": false
+        },
+        {
+          "domain": "powerfactory",
+          "tool": "query_topology_neighbors",
+          "args": {},
+          "save_as": null,
+          "description": "standard_workflow: pf.topology_query",
+          "mutating": false
+        },
+        {
+          "domain": "powerfactory",
+          "tool": "summarize_topology_result",
+          "args": {},
+          "save_as": null,
+          "description": "standard_workflow: pf.topology_query",
+          "mutating": false
+        }
+      ],
+      "classification": {
+        "domain": "powerfactory",
+        "planning_mode": "standard_workflow",
+        "workflow": "pf.topology_query",
+        "custom_steps": [],
+        "safe_to_execute": true,
+        "missing_context": [],
+        "clarification_question": "",
+        "reasoning": ""
+      },
+      "reasoning": ""
+    },
+    "planner_decision": {
+      "domain": "powerfactory",
+      "planning_mode": "standard_workflow",
+      "workflow": "pf.topology_query",
+      "custom_steps": [],
+      "safe_to_execute": true,
+      "missing_context": [],
+      "clarification_question": "",
+      "reasoning": ""
+    },
+    "result": {
+      "status": "error",
+      "tool": "resolve_entity_from_inventory",
+      "project": "<omitted:str>",
+      "instruction": {
+        "query_type": "neighbors",
+        "entity_type": "line",
+        "entity_name_raw": "Wie sind die Auslastungen der Leitungen in PowerFactory?",
+        "entity_name_candidates": [
+          "Leitung"
+        ],
+        "available_types": [
+          "bus",
+          "generator",
+          "line",
+          "load",
+          "transformer"
+        ],
+        "debug_entity_name_candidates": [
+          "Leitung"
+        ]
+      },
+      "error": "no_matching_asset",
+      "details": "Kein passendes Asset aus der Entity-Instruction konnte im Inventar gematcht werden.",
+      "entity_name_candidates": [
+        "Leitung"
+      ],
+      "attempted_queries": [
+        {
+          "asset_query": "Leitung",
+          "entity_type": "line",
+          "match_count": 0,
+          "top_matches": []
+        }
+      ],
+      "agent": "SingleAgent",
+      "available_tools": [
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>"
+      ],
+      "answer": "Die Anfrage konnte nicht ausgeführt werden, da kein passendes Asset gefunden wurde. Fehlermeldung: no_matching_asset.",
+      "debug": {
+        "planning": {},
+        "trace": [
+          {
+            "step": "build_topology_graph",
+            "effective_user_input": "Wie sind die Auslastungen der Leitungen in PowerFactory?",
+            "source_subrequest": null,
+            "tool_spec": {
+              "name": "build_topology_graph",
+              "description": "Build a topology graph from the active PowerFactory project.",
+              "capability_tags": [],
+              "mutating": false
+            },
+            "tool_kwargs": {
+              "services": "<omitted:dict>",
+              "contract_cubicles": true
+            },
+            "result": {
+              "status": "ok",
+              "tool": "build_topology_graph",
+              "project": "<omitted:str>",
+              "graph_mode": "contracted",
+              "wiring_graph": "<non_serializable:MultiGraph>",
+              "topology_graph": "<omitted:MultiGraph>",
+              "graph_summary": {
+                "num_nodes": 24,
+                "num_edges": 24,
+                "num_connected_components": 1,
+                "largest_component_sizes": [
+                  "<max_depth>"
+                ],
+                "degree_distribution_top10": [
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>"
+                ],
+                "node_classes_top20": [
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>"
+                ]
+              },
+              "inventory": {
+                "available_types": [
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>"
+                ],
+                "counts_by_type": {
+                  "bus": "<max_depth>",
+                  "generator": "<max_depth>",
+                  "line": "<max_depth>",
+                  "load": "<max_depth>",
+                  "transformer": "<max_depth>"
+                },
+                "items_by_type": {
+                  "bus": "<max_depth>",
+                  "generator": "<max_depth>",
+                  "transformer": "<max_depth>",
+                  "line": "<max_depth>",
+                  "load": "<max_depth>"
+                },
+                "samples_by_type": {
+                  "bus": "<max_depth>",
+                  "generator": "<max_depth>",
+                  "transformer": "<max_depth>",
+                  "line": "<max_depth>",
+                  "load": "<max_depth>"
+                }
+              },
+              "build_debug": {
+                "counts": {
+                  "cubics_total": "<max_depth>",
+                  "cubics_with_terminal": "<max_depth>",
+                  "stas_total": "<max_depth>",
+                  "stas_with_obj_id": "<max_depth>",
+                  "elms_total": "<max_depth>",
+                  "elms_line_like": "<max_depth>",
+                  "elms_transformer_like": "<max_depth>"
+                },
+                "samples": {
+                  "cubic_names": "<max_depth>",
+                  "sta_names": "<max_depth>",
+                  "elm_names": "<max_depth>",
+                  "node_name_samples": "<max_depth>"
+                },
+                "analysis_graph": {
+                  "graph_mode": "<max_depth>",
+                  "num_nodes": "<max_depth>",
+                  "num_edges": "<max_depth>"
+                }
+              }
+            }
+          },
+          {
+            "step": "build_topology_inventory",
+            "effective_user_input": "Wie sind die Auslastungen der Leitungen in PowerFactory?",
+            "source_subrequest": null,
+            "tool_spec": {
+              "name": "build_topology_inventory",
+              "description": "Build a typed inventory from the current PowerFactory topology graph.",
+              "capability_tags": [],
+              "mutating": false
+            },
+            "tool_kwargs": {
+              "services": "<omitted:dict>",
+              "topology_graph_result": {
+                "status": "ok",
+                "tool": "build_topology_graph",
+                "project": "<omitted:str>",
+                "graph_mode": "contracted",
+                "wiring_graph": "<networkx.classes.multigraph.MultiGraph object at 0x000002132F6B5B10>",
+                "topology_graph": "<omitted:str>",
+                "graph_summary": {
+                  "num_nodes": "<max_depth>",
+                  "num_edges": "<max_depth>",
+                  "num_connected_components": "<max_depth>",
+                  "largest_component_sizes": "<max_depth>",
+                  "degree_distribution_top10": "<max_depth>",
+                  "node_classes_top20": "<max_depth>"
+                },
+                "inventory": {
+                  "available_types": "<max_depth>",
+                  "counts_by_type": "<max_depth>",
+                  "items_by_type": "<max_depth>",
+                  "samples_by_type": "<max_depth>"
+                },
+                "build_debug": {
+                  "counts": "<max_depth>",
+                  "samples": "<max_depth>",
+                  "analysis_graph": "<max_depth>"
+                }
+              }
+            },
+            "result": {
+              "status": "ok",
+              "tool": "build_topology_inventory",
+              "project": "<omitted:str>",
+              "inventory": {
+                "available_types": [
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>"
+                ],
+                "counts_by_type": {
+                  "bus": "<max_depth>",
+                  "generator": "<max_depth>",
+                  "line": "<max_depth>",
+                  "load": "<max_depth>",
+                  "transformer": "<max_depth>"
+                },
+                "items_by_type": {
+                  "bus": "<max_depth>",
+                  "generator": "<max_depth>",
+                  "transformer": "<max_depth>",
+                  "line": "<max_depth>",
+                  "load": "<max_depth>"
+                },
+                "samples_by_type": {
+                  "bus": "<max_depth>",
+                  "generator": "<max_depth>",
+                  "transformer": "<max_depth>",
+                  "line": "<max_depth>",
+                  "load": "<max_depth>"
+                }
+              }
+            }
+          },
+          {
+            "step": "interpret_entity_instruction",
+            "effective_user_input": "Wie sind die Auslastungen der Leitungen in PowerFactory?",
+            "source_subrequest": null,
+            "tool_spec": {
+              "name": "interpret_entity_instruction",
+              "description": "Interpret a natural-language topology request into a structured generic PowerFactory entity instruction.",
+              "capability_tags": [],
+              "mutating": false
+            },
+            "tool_kwargs": {
+              "services": "<omitted:dict>",
+              "user_input": "Wie sind die Auslastungen der Leitungen in PowerFactory?",
+              "inventory": {
+                "available_types": [
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>"
+                ],
+                "counts_by_type": {
+                  "bus": "<max_depth>",
+                  "generator": "<max_depth>",
+                  "line": "<max_depth>",
+                  "load": "<max_depth>",
+                  "transformer": "<max_depth>"
+                },
+                "items_by_type": {
+                  "bus": "<max_depth>",
+                  "generator": "<max_depth>",
+                  "transformer": "<max_depth>",
+                  "line": "<max_depth>",
+                  "load": "<max_depth>"
+                },
+                "samples_by_type": {
+                  "bus": "<max_depth>",
+                  "generator": "<max_depth>",
+                  "transformer": "<max_depth>",
+                  "line": "<max_depth>",
+                  "load": "<max_depth>"
+                }
+              }
+            },
+            "result": {
+              "status": "ok",
+              "tool": "interpret_entity_instruction",
+              "user_input": "Wie sind die Auslastungen der Leitungen in PowerFactory?",
+              "project": "<omitted:str>",
+              "instruction": {
+                "query_type": "neighbors",
+                "entity_type": "line",
+                "entity_name_raw": "Wie sind die Auslastungen der Leitungen in PowerFactory?",
+                "entity_name_candidates": [
+                  "<max_depth>"
+                ],
+                "available_types": [
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>"
+                ],
+                "debug_entity_name_candidates": [
+                  "<max_depth>"
+                ]
+              }
+            }
+          },
+          {
+            "step": "resolve_entity_from_inventory",
+            "effective_user_input": "Wie sind die Auslastungen der Leitungen in PowerFactory?",
+            "source_subrequest": null,
+            "tool_spec": {
+              "name": "resolve_entity_from_inventory",
+              "description": "Resolve the requested generic asset from a typed topology inventory.",
+              "capability_tags": [],
+              "mutating": false
+            },
+            "tool_kwargs": {
+              "services": "<omitted:dict>",
+              "instruction": {
+                "query_type": "neighbors",
+                "entity_type": "line",
+                "entity_name_raw": "Wie sind die Auslastungen der Leitungen in PowerFactory?",
+                "entity_name_candidates": [
+                  "<max_depth>"
+                ],
+                "available_types": [
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>"
+                ],
+                "debug_entity_name_candidates": [
+                  "<max_depth>"
+                ]
+              },
+              "inventory": {
+                "available_types": [
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>"
+                ],
+                "counts_by_type": {
+                  "bus": "<max_depth>",
+                  "generator": "<max_depth>",
+                  "line": "<max_depth>",
+                  "load": "<max_depth>",
+                  "transformer": "<max_depth>"
+                },
+                "items_by_type": {
+                  "bus": "<max_depth>",
+                  "generator": "<max_depth>",
+                  "transformer": "<max_depth>",
+                  "line": "<max_depth>",
+                  "load": "<max_depth>"
+                },
+                "samples_by_type": {
+                  "bus": "<max_depth>",
+                  "generator": "<max_depth>",
+                  "transformer": "<max_depth>",
+                  "line": "<max_depth>",
+                  "load": "<max_depth>"
+                }
+              },
+              "topology_graph": "<omitted:str>",
+              "max_matches": 10
+            },
+            "result": {
+              "status": "error",
+              "tool": "resolve_entity_from_inventory",
+              "project": "<omitted:str>",
+              "instruction": {
+                "query_type": "neighbors",
+                "entity_type": "line",
+                "entity_name_raw": "Wie sind die Auslastungen der Leitungen in PowerFactory?",
+                "entity_name_candidates": [
+                  "<max_depth>"
+                ],
+                "available_types": [
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>"
+                ],
+                "debug_entity_name_candidates": [
+                  "<max_depth>"
+                ]
+              },
+              "error": "no_matching_asset",
+              "details": "Kein passendes Asset aus der Entity-Instruction konnte im Inventar gematcht werden.",
+              "entity_name_candidates": [
+                "Leitung"
+              ],
+              "attempted_queries": [
+                {
+                  "asset_query": "<max_depth>",
+                  "entity_type": "<max_depth>",
+                  "match_count": "<max_depth>",
+                  "top_matches": "<max_depth>"
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "raw_answer": "Die Anfrage konnte nicht sauber ausgeführt werden (no_matching_asset). Details: Kein passendes Asset aus der Entity-Instruction konnte im Inventar gematcht werden."
+    }
+  }
+}

@@ -1,0 +1,44 @@
+{
+  "run_id": 35,
+  "timestamp": "2026-05-24T12:35:48.033454",
+  "user_input": "Was ist die rated voltage von Bus 1 bei Powerfactory?",
+  "duration_seconds": 38.626,
+  "token_usage": {
+    "prompt_tokens": 4473,
+    "completion_tokens": 3805,
+    "total_tokens": 8278,
+    "details": {
+      "qwen3:30b-a3b": {
+        "output_tokens": 3805,
+        "total_tokens": 8278,
+        "input_tokens": 4473
+      }
+    }
+  },
+  "decision_trace": {
+    "domain": "ERROR",
+    "planning_mode": "",
+    "workflow": "",
+    "confidence": "",
+    "safe_to_execute": "",
+    "num_steps": 0,
+    "steps": "",
+    "planner_reasoning": "",
+    "resolved_object": "<omitted:str>",
+    "resolved_object_confidence": "",
+    "selected_attributes": "",
+    "attribute_confidence": "",
+    "num_tool_calls": 0,
+    "executed_tools": "",
+    "failed_tool": ""
+  },
+  "router_output": {
+    "route": "ERROR",
+    "status": "error",
+    "result": {
+      "status": "error",
+      "answer": "Der UnifiedPlanner hat keine gültige strukturierte Ausgabe erzeugt.",
+      "planner_error": "Invalid json output: \nFor troubleshooting, visit: https://docs.langchain.com/oss/python/langchain/errors/OUTPUT_PARSING_FAILURE "
+    }
+  }
+}

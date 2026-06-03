@@ -1,0 +1,392 @@
+{
+  "run_id": 52,
+  "timestamp": "2026-05-23T16:27:23.743584",
+  "user_input": "Welche Attribute sind für Bus 1 in PowerFactory verfügbar?",
+  "duration_seconds": 11.588,
+  "token_usage": {
+    "prompt_tokens": 7344,
+    "completion_tokens": 726,
+    "total_tokens": 8070,
+    "details": {
+      "llama3.1:8b": {
+        "output_tokens": 726,
+        "input_tokens": 7344,
+        "total_tokens": 8070
+      }
+    }
+  },
+  "decision_trace": {
+    "domain": "HISTORICAL",
+    "planning_mode": "",
+    "workflow": "",
+    "confidence": "",
+    "safe_to_execute": "",
+    "num_steps": 0,
+    "steps": "",
+    "planner_reasoning": "",
+    "resolved_object": "<omitted:str>",
+    "resolved_object_confidence": "",
+    "selected_attributes": "",
+    "attribute_confidence": "",
+    "num_tool_calls": 3,
+    "executed_tools": "scan_snapshot_inventory | resolve_cim_object | read_cim_base_values",
+    "failed_tool": "read_cim_base_values",
+    "equipment_resolution_mode": "",
+    "attribute_resolution_mode": "preselected_attributes",
+    "comparison_resolution_mode": ""
+  },
+  "router_output": {
+    "route": "HISTORICAL",
+    "result": {
+      "status": "error",
+      "tool": "read_cim_base_values",
+      "cim_root": "C:\\Users\\STELLER\\Documents\\Masterarbeit\\CIM-Dateien\\tobias_CIM_daten\\data\\extracted",
+      "error": "no_resolved_base_values_found",
+      "answer": "Die für Bus 1 in PowerFactory verfügbaren Attribute konnten nicht ermittelt werden, da keine lesbaren Werte gefunden wurden. (Error: no_resolved_base_values_found)",
+      "base_attribute_debug": {
+        "selected_attributes": [],
+        "selected_candidates": [
+          "lowVoltageLimit",
+          "highVoltageLimit"
+        ],
+        "resolution_mode": "preselected_attributes",
+        "available_attributes": [],
+        "requested_attributes": [
+          "lowVoltageLimit",
+          "highVoltageLimit"
+        ],
+        "preselected_values": {},
+        "preselected_resolution_debug": {
+          "lowVoltageLimit": {
+            "status": "not_found",
+            "candidate": "lowVoltageLimit",
+            "value": null,
+            "searched_scopes": [
+              "direct_or_canonical_reader",
+              "direct_object_attribute",
+              "expanded_structural_lookup",
+              "expanded_voltage_limit_lookup"
+            ],
+            "resolution_path": "not_found"
+          },
+          "highVoltageLimit": {
+            "status": "not_found",
+            "candidate": "highVoltageLimit",
+            "value": null,
+            "searched_scopes": [
+              "direct_or_canonical_reader",
+              "direct_object_attribute",
+              "expanded_structural_lookup",
+              "expanded_voltage_limit_lookup"
+            ],
+            "resolution_path": "not_found"
+          }
+        },
+        "semantic_preselection": {
+          "status": "ok",
+          "requested_attributes": [
+            "lowVoltageLimit",
+            "highVoltageLimit"
+          ],
+          "should_use_preselected_attributes": true,
+          "llm_decision": {
+            "requested_attributes": [
+              "lowVoltageLimit",
+              "highVoltageLimit"
+            ],
+            "should_use_preselected_attributes": true,
+            "rationale": ""
+          }
+        }
+      },
+      "attribute_resolution_debug": {
+        "lowVoltageLimit": {
+          "status": "not_found",
+          "candidate": "lowVoltageLimit",
+          "value": null,
+          "searched_scopes": [
+            "direct_or_canonical_reader",
+            "direct_object_attribute",
+            "expanded_structural_lookup",
+            "expanded_voltage_limit_lookup"
+          ],
+          "resolution_path": "not_found"
+        },
+        "highVoltageLimit": {
+          "status": "not_found",
+          "candidate": "highVoltageLimit",
+          "value": null,
+          "searched_scopes": [
+            "direct_or_canonical_reader",
+            "direct_object_attribute",
+            "expanded_structural_lookup",
+            "expanded_voltage_limit_lookup"
+          ],
+          "resolution_path": "not_found"
+        }
+      },
+      "agent": "CIMDomainAgent",
+      "debug": {
+        "trace": [
+          {
+            "step": "scan_snapshot_inventory",
+            "effective_user_input": "Welche Attribute sind für Bus 1 in PowerFactory verfügbar?",
+            "effective_context_user_input": "Welche Attribute sind für Bus 1 in PowerFactory verfügbar?",
+            "previous_context": null,
+            "source_subrequest": null,
+            "tool_spec": {
+              "name": "scan_snapshot_inventory",
+              "description": "Scan snapshot inventory and build base network index",
+              "capability_tags": [
+                "inventory",
+                "network_index",
+                "equipment_catalog",
+                "read_only"
+              ],
+              "mutating": false
+            },
+            "result": {
+              "status": "ok",
+              "tool": "scan_snapshot_inventory",
+              "cim_root": "C:\\Users\\STELLER\\Documents\\Masterarbeit\\CIM-Dateien\\tobias_CIM_daten\\data\\extracted",
+              "snapshot_inventory": {
+                "root_folder": "C:\\Users\\STELLER\\Documents\\Masterarbeit\\CIM-Dateien\\tobias_CIM_daten\\data\\extracted",
+                "snapshots": [
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>"
+                ]
+              },
+              "base_snapshot": "<omitted:dict>",
+              "network_index": "<omitted:dict>",
+              "equipment_catalog_summary": {
+                "equipment_types": [
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>"
+                ],
+                "equipment_type_counts": {
+                  "SynchronousMachineTimeConstantReactance": "<max_depth>",
+                  "LoadAggregate": "<max_depth>",
+                  "LoadStatic": "<max_depth>",
+                  "TopologicalIsland": "<max_depth>",
+                  "BusbarSection": "<max_depth>",
+                  "VoltageLimit": "<max_depth>",
+                  "OperationalLimitSet": "<max_depth>",
+                  "ACLineSegment": "<max_depth>",
+                  "CurrentLimit": "<max_depth>",
+                  "OperationalLimitType": "<max_depth>",
+                  "ConformLoad": "<max_depth>",
+                  "ConformLoadGroup": "<max_depth>",
+                  "SubLoadArea": "<max_depth>",
+                  "LoadArea": "<max_depth>",
+                  "LoadResponseCharacteristic": "<max_depth>",
+                  "PowerTransformerEnd": "<max_depth>",
+                  "SynchronousMachine": "<max_depth>",
+                  "PowerTransformer": "<max_depth>",
+                  "RatioTapChanger": "<max_depth>",
+                  "RegulatingControl": "<max_depth>",
+                  "HydroGeneratingUnit": "<max_depth>",
+                  "NuclearGeneratingUnit": "<max_depth>",
+                  "FossilFuel": "<max_depth>",
+                  "ThermalGeneratingUnit": "<max_depth>",
+                  "GeneratingUnit": "<max_depth>"
+                },
+                "num_equipment_objects": 453
+              }
+            }
+          },
+          {
+            "step": "resolve_cim_object",
+            "effective_user_input": "Welche Attribute sind für Bus 1 in PowerFactory verfügbar?",
+            "effective_context_user_input": "Welche Attribute sind für Bus 1 in PowerFactory verfügbar?",
+            "previous_context": null,
+            "source_subrequest": null,
+            "tool_spec": {
+              "name": "resolve_cim_object",
+              "description": "Resolve asset or equipment from user query and parse time/state intent",
+              "capability_tags": [
+                "object_resolution",
+                "query_parsing",
+                "equipment_catalog",
+                "llm_match",
+                "read_only"
+              ],
+              "mutating": false
+            },
+            "result": {
+              "status": "ok",
+              "tool": "resolve_cim_object",
+              "cim_root": "C:\\Users\\STELLER\\Documents\\Masterarbeit\\CIM-Dateien\\tobias_CIM_daten\\data\\extracted",
+              "user_input": "Welche Attribute sind für Bus 1 in PowerFactory verfügbar?",
+              "parsed_query": {
+                "equipment_detected": [
+                  "<max_depth>"
+                ],
+                "state_detected": [
+                  "<max_depth>"
+                ],
+                "metric": "P",
+                "equipment_selection": [
+                  "<max_depth>"
+                ],
+                "time_start": null,
+                "time_end": null,
+                "time_label": "",
+                "intent": "asset_lookup",
+                "request_mode": "standard_base",
+                "is_topology_query": false
+              },
+              "resolved_object": "<omitted:ACLineSegment>",
+              "equipment_obj": "<non_serializable:ACLineSegment>",
+              "resolution_mode": "interpret_user_query",
+              "equipment_resolution_debug": {
+                "parsed_query_equipment_selection": [
+                  "<max_depth>"
+                ]
+              }
+            }
+          },
+          {
+            "step": "read_cim_base_values",
+            "effective_user_input": "Welche Attribute sind für Bus 1 in PowerFactory verfügbar?",
+            "effective_context_user_input": "Welche Attribute sind für Bus 1 in PowerFactory verfügbar?",
+            "previous_context": null,
+            "source_subrequest": null,
+            "tool_spec": {
+              "name": "read_cim_base_values",
+              "description": "Read static CIM base or nameplate attributes from a resolved equipment object",
+              "capability_tags": [
+                "base_values",
+                "nameplate_data",
+                "read_only"
+              ],
+              "mutating": false
+            },
+            "result": "<circular_reference>"
+          }
+        ],
+        "classification": {
+          "intent": "asset_lookup",
+          "confidence": "high",
+          "target_kind": "asset",
+          "request_mode": "standard_base",
+          "safe_to_execute": true,
+          "missing_context": [],
+          "required_steps": [],
+          "reasoning": "The user is asking for the available attributes of a specific bus, which falls under standard base attribute requests.",
+          "status": "ok",
+          "classification_mode": "primary_llm_classifier"
+        },
+        "plan": [
+          {
+            "step": "scan_snapshot_inventory",
+            "description": "Scan snapshot inventory and build base network index",
+            "capability_tags": [
+              "inventory",
+              "network_index",
+              "equipment_catalog",
+              "read_only"
+            ],
+            "mutating": false
+          },
+          {
+            "step": "resolve_cim_object",
+            "description": "Resolve asset or equipment from user query and parse time/state intent",
+            "capability_tags": [
+              "object_resolution",
+              "query_parsing",
+              "equipment_catalog",
+              "llm_match",
+              "read_only"
+            ],
+            "mutating": false
+          },
+          {
+            "step": "read_cim_base_values",
+            "description": "Read static CIM base or nameplate attributes from a resolved equipment object",
+            "capability_tags": [
+              "base_values",
+              "nameplate_data",
+              "read_only"
+            ],
+            "mutating": false
+          },
+          {
+            "step": "summarize_cim_result",
+            "description": "Return final CIM result with debug information",
+            "capability_tags": [
+              "result",
+              "read_only"
+            ],
+            "mutating": false
+          }
+        ],
+        "run_summary": {
+          "user_input": "Welche Attribute sind für Bus 1 in PowerFactory verfügbar?",
+          "classification_summary": {
+            "intent": "asset_lookup",
+            "request_mode": "standard_base",
+            "safe_to_execute": true,
+            "target_kind": "asset",
+            "confidence": "high",
+            "classification_mode": "primary_llm_classifier",
+            "missing_context": []
+          },
+          "planned_steps": [
+            "scan_snapshot_inventory",
+            "resolve_cim_object",
+            "read_cim_base_values",
+            "summarize_cim_result"
+          ],
+          "selected_type": null,
+          "selected_equipment_id": null,
+          "selected_equipment_name": "Line 01 - 02",
+          "parsed_query_summary": {
+            "equipment_detected": [
+              "ACLineSegment"
+            ],
+            "state_detected": [
+              "SvPowerFlow"
+            ],
+            "metric": "P",
+            "time_label": "",
+            "equipment_selection": [
+              {
+                "equipment_type": "ACLineSegment",
+                "equipment_key": "line01-02",
+                "equipment_name": "Line 01 - 02",
+                "equipment_id": "_25d0fe35-401a-46dc-b29f-8692c792c7ff"
+              }
+            ]
+          },
+          "final_status": "error",
+          "final_answer": "Für die angefragten Basisattribute konnten keine lesbaren Werte gefunden werden."
+        }
+      },
+      "raw_answer": "Für die angefragten Basisattribute konnten keine lesbaren Werte gefunden werden."
+    }
+  }
+}

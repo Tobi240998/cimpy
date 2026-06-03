@@ -1,0 +1,120 @@
+{
+  "run_id": 6,
+  "timestamp": "2026-05-23T11:11:15.435089",
+  "user_input": "Füge 2 MW bei Load A hinzu.",
+  "duration_seconds": 12.108,
+  "token_usage": {
+    "prompt_tokens": 3894,
+    "completion_tokens": 294,
+    "total_tokens": 4188,
+    "details": {
+      "gemma3:27b": {
+        "output_tokens": 294,
+        "total_tokens": 4188,
+        "input_tokens": 3894
+      }
+    }
+  },
+  "decision_trace": {
+    "domain": "HISTORICAL",
+    "planning_mode": "",
+    "workflow": "",
+    "confidence": "medium",
+    "safe_to_execute": "False",
+    "num_steps": 0,
+    "steps": "",
+    "planner_reasoning": "The request involves a modification of a CIM asset (Load A) and requires a plan for execution. It's not a standard read request.  Missing context about the time and scenario of the change makes it unsafe to execute directly.",
+    "resolved_object": "<omitted:str>",
+    "resolved_object_confidence": "",
+    "selected_attributes": "",
+    "attribute_confidence": "",
+    "num_tool_calls": 1,
+    "executed_tools": "unsupported_request",
+    "failed_tool": "unsupported_request",
+    "equipment_resolution_mode": "",
+    "attribute_resolution_mode": "",
+    "comparison_resolution_mode": ""
+  },
+  "router_output": {
+    "route": "HISTORICAL",
+    "result": {
+      "status": "error",
+      "tool": "cim_agent",
+      "agent": "CIMDomainAgent",
+      "error": "unsupported_cim_request",
+      "answer": "The request was routed to the CIM side, but is currently not secure or supported for execution. Missing context: Time window for the change, Contingency or scenario for the change. Error: unsupported_cim_request.",
+      "classification": {
+        "intent": "asset_lookup",
+        "confidence": "medium",
+        "target_kind": "asset",
+        "request_mode": "custom_plan",
+        "safe_to_execute": false,
+        "missing_context": [
+          "Time window for the change",
+          "Contingency or scenario for the change"
+        ],
+        "required_steps": [],
+        "reasoning": "The request involves a modification of a CIM asset (Load A) and requires a plan for execution. It's not a standard read request.  Missing context about the time and scenario of the change makes it unsafe to execute directly.",
+        "status": "ok",
+        "classification_mode": "primary_llm_classifier"
+      },
+      "user_input": "Füge 2 MW bei Load A hinzu.",
+      "debug": {
+        "trace": [
+          {
+            "step": "unsupported_request",
+            "effective_user_input": "Füge 2 MW bei Load A hinzu.",
+            "source_subrequest": null,
+            "result": "<circular_reference>"
+          }
+        ],
+        "classification": {
+          "intent": "asset_lookup",
+          "confidence": "medium",
+          "target_kind": "asset",
+          "request_mode": "custom_plan",
+          "safe_to_execute": false,
+          "missing_context": [
+            "Time window for the change",
+            "Contingency or scenario for the change"
+          ],
+          "required_steps": [],
+          "reasoning": "The request involves a modification of a CIM asset (Load A) and requires a plan for execution. It's not a standard read request.  Missing context about the time and scenario of the change makes it unsafe to execute directly.",
+          "status": "ok",
+          "classification_mode": "primary_llm_classifier"
+        },
+        "plan": [
+          {
+            "step": "unsupported_request",
+            "description": "Return a controlled unsupported-workflow message"
+          }
+        ],
+        "run_summary": {
+          "user_input": "Füge 2 MW bei Load A hinzu.",
+          "classification_summary": {
+            "intent": "asset_lookup",
+            "request_mode": "custom_plan",
+            "safe_to_execute": false,
+            "target_kind": "asset",
+            "confidence": "medium",
+            "classification_mode": "primary_llm_classifier",
+            "missing_context": [
+              "Time window for the change",
+              "Contingency or scenario for the change"
+            ]
+          },
+          "planned_steps": [
+            "unsupported_request"
+          ],
+          "selected_type": null,
+          "selected_equipment_id": null,
+          "selected_equipment_name": null,
+          "parsed_query_summary": null,
+          "final_status": "error",
+          "final_answer": "Die Anfrage wurde zur CIM-Seite geroutet, ist aktuell aber noch nicht sicher oder unterstützt ausführbar. Fehlender Kontext: Time window for the change, Contingency or scenario for the change."
+        }
+      },
+      "raw_answer": "Die Anfrage wurde zur CIM-Seite geroutet, ist aktuell aber noch nicht sicher oder unterstützt ausführbar. Fehlender Kontext: Time window for the change, Contingency or scenario for the change."
+    }
+  }
+}

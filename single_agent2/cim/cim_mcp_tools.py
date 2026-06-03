@@ -365,7 +365,7 @@ def _build_comparison_resolution_chain():
     llm = get_llm()
     return prompt | llm | parser, parser
 
-# Refactoring: Heuristik durch Keyword-Fallback
+
 def _resolve_comparison_definition(user_input: str, resolved_object: Any, parsed_query: Dict[str, Any] | None = None) -> Dict[str, Any]:
     parsed_query = parsed_query or {}
     equipment_class = resolved_object.__class__.__name__ if resolved_object is not None else None
@@ -1443,7 +1443,7 @@ def _list_equipment_of_type_with_services(
     }
 
 
-# Fallback für Bus Voltage-Limit Vergleich; Refactoring: Heuristik und ineffizient, dass nochmal alles geladen wird 
+# Fallback für Bus Voltage-Limit Vergleich
 def _resolve_voltage_limit_values_via_global_lookup(
     services: Dict[str, Any],
     bus_obj: Any,
@@ -2315,7 +2315,7 @@ def _resolve_comparison_target_object(resolved_object: Any) -> Dict[str, Any]:
             "resolved_object": resolved_object,
         }
 
-# bildet eine User-Anfrage auf einen unterstützten Vergleichstyp ab, z. B. Trafo-Auslastung oder Spannungsgrenzenvergleich; Refactoring: Heuristik bei Fallback 
+# bildet eine User-Anfrage auf einen unterstützten Vergleichstyp ab, z. B. Trafo-Auslastung oder Spannungsgrenzenvergleich
 def _resolve_cim_comparison_with_services(
     services: Dict[str, Any],
     user_input: str,
@@ -2647,7 +2647,7 @@ def _load_snapshot_cache_with_services(
     }
 
 
-# führt die eigentliche Domänenabfrage aus; Refactoring: Heuristik über llm_cim_orchestrator.handle_user_query(). _query_cim_with_services verwendet dafür handle_user_query
+# führt die eigentliche Domänenabfrage aus
 def _query_cim_with_services(
     services: Dict[str, Any],
     user_input: str,

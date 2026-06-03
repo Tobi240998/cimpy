@@ -1,0 +1,48 @@
+{
+  "run_id": 93,
+  "timestamp": "2026-05-21T07:44:56.782144",
+  "user_input": "Zeig mir den Spannungsverlauf am 09.01.2026 von Transformator 19/20 aus den historischen Daten.",
+  "duration_seconds": 17.293,
+  "token_usage": {
+    "prompt_tokens": 853,
+    "completion_tokens": 572,
+    "total_tokens": 1425,
+    "details": {
+      "qwen3:32b": {
+        "input_tokens": 853,
+        "output_tokens": 572,
+        "total_tokens": 1425
+      }
+    }
+  },
+  "decision_trace": {
+    "domain": "ASK_USER",
+    "planning_mode": "",
+    "workflow": "",
+    "confidence": "",
+    "safe_to_execute": "",
+    "num_steps": 0,
+    "steps": "",
+    "planner_reasoning": "",
+    "resolved_object": "<omitted:str>",
+    "resolved_object_confidence": "",
+    "selected_attributes": "",
+    "attribute_confidence": "",
+    "num_tool_calls": 0,
+    "executed_tools": "",
+    "failed_tool": "",
+    "equipment_resolution_mode": "",
+    "attribute_resolution_mode": "",
+    "comparison_resolution_mode": ""
+  },
+  "router_output": {
+    "route": "ASK_USER",
+    "question": "Bitte geben Sie den Zeitraum innerhalb des 09.01.2026 an, für den Sie den Spannungsverlauf von Transformator 19/20 benötigen (z.B. 'ganzer Tag', '08:00-12:00' oder 'Maximalwert')",
+    "missing_fields": [
+      "time_range"
+    ],
+    "partial": {
+      "user_input": "Zeig mir den Spannungsverlauf am 09.01.2026 von Transformator 19/20 aus den historischen Daten"
+    }
+  }
+}

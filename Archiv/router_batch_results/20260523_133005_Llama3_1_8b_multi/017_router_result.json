@@ -1,0 +1,111 @@
+{
+  "run_id": 17,
+  "timestamp": "2026-05-23T13:55:53.926330",
+  "user_input": "Öffne den Schalter Schalter 1.",
+  "duration_seconds": 8.678,
+  "token_usage": {
+    "prompt_tokens": 3624,
+    "completion_tokens": 360,
+    "total_tokens": 3984,
+    "details": {
+      "llama3.1:8b": {
+        "output_tokens": 360,
+        "input_tokens": 3624,
+        "total_tokens": 3984
+      }
+    }
+  },
+  "decision_trace": {
+    "domain": "HISTORICAL",
+    "planning_mode": "",
+    "workflow": "",
+    "confidence": "low",
+    "safe_to_execute": "False",
+    "num_steps": 0,
+    "steps": "",
+    "planner_reasoning": "Die Anfrage beinhaltet eine direkte Aktion auf ein physisches Gerät, was nicht unterstützt wird.",
+    "resolved_object": "<omitted:str>",
+    "resolved_object_confidence": "",
+    "selected_attributes": "",
+    "attribute_confidence": "",
+    "num_tool_calls": 1,
+    "executed_tools": "unsupported_request",
+    "failed_tool": "unsupported_request",
+    "equipment_resolution_mode": "",
+    "attribute_resolution_mode": "",
+    "comparison_resolution_mode": ""
+  },
+  "router_output": {
+    "route": "HISTORICAL",
+    "result": {
+      "status": "error",
+      "tool": "cim_agent",
+      "agent": "CIMDomainAgent",
+      "error": "unsupported_cim_request",
+      "answer": "Der Schalter \"Schalter 1\" kann nicht geöffnet werden. Die Anfrage wird von der CIM-Seite bearbeitet, ist jedoch zurzeit nicht verfügbar.",
+      "classification": {
+        "intent": "unsupported_cim_request",
+        "confidence": "low",
+        "target_kind": "unknown",
+        "request_mode": "clarification_needed",
+        "safe_to_execute": false,
+        "missing_context": [],
+        "required_steps": [],
+        "reasoning": "Die Anfrage beinhaltet eine direkte Aktion auf ein physisches Gerät, was nicht unterstützt wird.",
+        "status": "ok",
+        "classification_mode": "primary_llm_classifier"
+      },
+      "user_input": "Öffne den Schalter Schalter 1.",
+      "debug": {
+        "trace": [
+          {
+            "step": "unsupported_request",
+            "effective_user_input": "Öffne den Schalter Schalter 1.",
+            "source_subrequest": null,
+            "result": "<circular_reference>"
+          }
+        ],
+        "classification": {
+          "intent": "unsupported_cim_request",
+          "confidence": "low",
+          "target_kind": "unknown",
+          "request_mode": "clarification_needed",
+          "safe_to_execute": false,
+          "missing_context": [],
+          "required_steps": [],
+          "reasoning": "Die Anfrage beinhaltet eine direkte Aktion auf ein physisches Gerät, was nicht unterstützt wird.",
+          "status": "ok",
+          "classification_mode": "primary_llm_classifier"
+        },
+        "plan": [
+          {
+            "step": "unsupported_request",
+            "description": "Return a controlled unsupported-workflow message"
+          }
+        ],
+        "run_summary": {
+          "user_input": "Öffne den Schalter Schalter 1.",
+          "classification_summary": {
+            "intent": "unsupported_cim_request",
+            "request_mode": "clarification_needed",
+            "safe_to_execute": false,
+            "target_kind": "unknown",
+            "confidence": "low",
+            "classification_mode": "primary_llm_classifier",
+            "missing_context": []
+          },
+          "planned_steps": [
+            "unsupported_request"
+          ],
+          "selected_type": null,
+          "selected_equipment_id": null,
+          "selected_equipment_name": null,
+          "parsed_query_summary": null,
+          "final_status": "error",
+          "final_answer": "Die Anfrage wurde zur CIM-Seite geroutet, ist aktuell aber noch nicht sicher oder unterstützt ausführbar."
+        }
+      },
+      "raw_answer": "Die Anfrage wurde zur CIM-Seite geroutet, ist aktuell aber noch nicht sicher oder unterstützt ausführbar."
+    }
+  }
+}

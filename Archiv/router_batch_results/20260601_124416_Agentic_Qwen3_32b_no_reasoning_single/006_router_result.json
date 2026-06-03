@@ -1,0 +1,44 @@
+{
+  "run_id": 6,
+  "timestamp": "2026-06-01T12:45:28.829804",
+  "user_input": "Wie viele Schalter sind aktuell in Powerfactory geöffnet?",
+  "duration_seconds": 10.172,
+  "token_usage": {
+    "prompt_tokens": 4486,
+    "completion_tokens": 197,
+    "total_tokens": 4683,
+    "details": {
+      "qwen3:32b": {
+        "output_tokens": 197,
+        "input_tokens": 4486,
+        "total_tokens": 4683
+      }
+    }
+  },
+  "decision_trace": {
+    "domain": "ERROR",
+    "planning_mode": "",
+    "workflow": "",
+    "confidence": "",
+    "safe_to_execute": "",
+    "num_steps": 0,
+    "steps": "",
+    "planner_reasoning": "",
+    "resolved_object": "<omitted:str>",
+    "resolved_object_confidence": "",
+    "selected_attributes": "",
+    "attribute_confidence": "",
+    "num_tool_calls": 0,
+    "executed_tools": "",
+    "failed_tool": ""
+  },
+  "router_output": {
+    "route": "ERROR",
+    "status": "error",
+    "result": {
+      "status": "error",
+      "answer": "Der UnifiedPlanner hat keine gültige strukturierte Ausgabe erzeugt.",
+      "planner_error": "Failed to parse UnifiedPlannerDecision from completion {\"domain\": \"powerfactory\", \"planning_mode\": \"standard_workflow\", \"workflow\": \"pf.topology_query\", \"custom_steps\": null, \"safe_to_execute\": true, \"missing_context\": [], \"clarification_question\": \"\", \"reasoning\": \"The user is asking about the number of switches currently open in the active PowerFactory project. This is a topology-related query and can be addressed using the 'pf.topology_query' standard workflow.\"}. Got: 1 validation error for UnifiedPlannerDecision\ncustom_steps\n  Input should be a valid list [type=list_type, input_value=None, input_type=NoneType]\n    For further information visit https://errors.pydantic.dev/2.12/v/list_type\nFor troubleshooting, visit: https://docs.langchain.com/oss/python/langchain/errors/OUTPUT_PARSING_FAILURE "
+    }
+  }
+}

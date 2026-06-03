@@ -1,0 +1,48 @@
+{
+  "run_id": 7,
+  "timestamp": "2026-06-01T07:52:46.234237",
+  "user_input": "Welcher Bus weist in Powerfactory aktuell die niedrigste Spannung auf?",
+  "duration_seconds": 0.841,
+  "token_usage": {
+    "prompt_tokens": 710,
+    "completion_tokens": 53,
+    "total_tokens": 763,
+    "details": {
+      "llama3.1:8b": {
+        "input_tokens": 710,
+        "output_tokens": 53,
+        "total_tokens": 763
+      }
+    }
+  },
+  "decision_trace": {
+    "domain": "ASK_USER",
+    "planning_mode": "",
+    "workflow": "",
+    "confidence": "",
+    "safe_to_execute": "",
+    "num_steps": 0,
+    "steps": "",
+    "planner_reasoning": "",
+    "resolved_object": "<omitted:str>",
+    "resolved_object_confidence": "",
+    "selected_attributes": "",
+    "attribute_confidence": "",
+    "num_tool_calls": 0,
+    "executed_tools": "",
+    "failed_tool": "",
+    "equipment_resolution_mode": "",
+    "attribute_resolution_mode": "",
+    "comparison_resolution_mode": ""
+  },
+  "router_output": {
+    "route": "ASK_USER",
+    "question": "Für welchen Bus möchten Sie die aktuelle Spannung?",
+    "missing_fields": [
+      "data_source"
+    ],
+    "partial": {
+      "tool": "powerfactory"
+    }
+  }
+}

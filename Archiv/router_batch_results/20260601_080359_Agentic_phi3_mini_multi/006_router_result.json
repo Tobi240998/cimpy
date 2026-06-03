@@ -1,0 +1,117 @@
+{
+  "run_id": 6,
+  "timestamp": "2026-06-01T09:03:34.571769",
+  "user_input": "Wie viele Schalter sind aktuell in Powerfactory geöffnet?",
+  "duration_seconds": 4.498,
+  "token_usage": {
+    "prompt_tokens": 4393,
+    "completion_tokens": 699,
+    "total_tokens": 5092,
+    "details": {
+      "phi3:mini": {
+        "output_tokens": 699,
+        "input_tokens": 4393,
+        "total_tokens": 5092
+      }
+    }
+  },
+  "decision_trace": {
+    "domain": "HISTORICAL",
+    "planning_mode": "",
+    "workflow": "",
+    "confidence": "medium",
+    "safe_to_execute": "False",
+    "num_steps": 0,
+    "steps": "",
+    "planner_reasoning": "The user's request lacks specific temporal context and concrete data points. To execute this safely within PowerFactory capabilities without additional information would be speculative.",
+    "resolved_object": "<omitted:str>",
+    "resolved_object_confidence": "",
+    "selected_attributes": "",
+    "attribute_confidence": "",
+    "num_tool_calls": 1,
+    "executed_tools": "unsupported_request",
+    "failed_tool": "unsupported_request",
+    "equipment_resolution_mode": "",
+    "attribute_resolution_mode": "",
+    "comparison_resolution_mode": ""
+  },
+  "router_output": {
+    "route": "HISTORICAL",
+    "result": {
+      "status": "error",
+      "tool": "cim_agent",
+      "agent": "CIMDomainAgent",
+      "error": "unsupported_cim_request",
+      "answer": "Es gab einen Fehler bei der Anfrage, da sie zur CIM-Seite geroutet wurde und noch nicht als unterstützter oder sicherer Ausdruck erkannt wird. Es fehlen auch spezifische Informationen über ein bestimmtes Datum oder Zeitraum für die Schalteraktivität in Powerfactory.",
+      "classification": {
+        "intent": "historical_analysis",
+        "confidence": "medium",
+        "target_kind": "metric",
+        "request_mode": "standard_sv",
+        "safe_to_execute": false,
+        "missing_context": [
+          "Specific date or time frame for the count"
+        ],
+        "required_steps": [],
+        "reasoning": "The user's request lacks specific temporal context and concrete data points. To execute this safely within PowerFactory capabilities without additional information would be speculative.",
+        "status": "ok",
+        "classification_mode": "primary_llm_classifier"
+      },
+      "user_input": "Wie viele Schalter sind aktuell in Powerfactory geöffnet?",
+      "debug": {
+        "trace": [
+          {
+            "step": "unsupported_request",
+            "effective_user_input": "Wie viele Schalter sind aktuell in Powerfactory geöffnet?",
+            "source_subrequest": null,
+            "result": "<circular_reference>"
+          }
+        ],
+        "classification": {
+          "intent": "historical_analysis",
+          "confidence": "medium",
+          "target_kind": "metric",
+          "request_mode": "standard_sv",
+          "safe_to_execute": false,
+          "missing_context": [
+            "Specific date or time frame for the count"
+          ],
+          "required_steps": [],
+          "reasoning": "The user's request lacks specific temporal context and concrete data points. To execute this safely within PowerFactory capabilities without additional information would be speculative.",
+          "status": "ok",
+          "classification_mode": "primary_llm_classifier"
+        },
+        "plan": [
+          {
+            "step": "unsupported_request",
+            "description": "Return a controlled unsupported-workflow message"
+          }
+        ],
+        "run_summary": {
+          "user_input": "Wie viele Schalter sind aktuell in Powerfactory geöffnet?",
+          "classification_summary": {
+            "intent": "historical_analysis",
+            "request_mode": "standard_sv",
+            "safe_to_execute": false,
+            "target_kind": "metric",
+            "confidence": "medium",
+            "classification_mode": "primary_llm_classifier",
+            "missing_context": [
+              "Specific date or time frame for the count"
+            ]
+          },
+          "planned_steps": [
+            "unsupported_request"
+          ],
+          "selected_type": null,
+          "selected_equipment_id": null,
+          "selected_equipment_name": null,
+          "parsed_query_summary": null,
+          "final_status": "error",
+          "final_answer": "Die Anfrage wurde zur CIM-Seite geroutet, ist aktuell aber noch nicht sicher oder unterstützt ausführbar. Fehlender Kontext: Specific date or time frame for the count."
+        }
+      },
+      "raw_answer": "Die Anfrage wurde zur CIM-Seite geroutet, ist aktuell aber noch nicht sicher oder unterstützt ausführbar. Fehlender Kontext: Specific date or time frame for the count."
+    }
+  }
+}

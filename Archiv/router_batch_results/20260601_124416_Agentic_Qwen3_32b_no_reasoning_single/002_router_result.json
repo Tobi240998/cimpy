@@ -1,0 +1,44 @@
+{
+  "run_id": 2,
+  "timestamp": "2026-06-01T12:44:44.145468",
+  "user_input": "Welcher Transformator hatte am 09.01.2026 die höchste durchschnittliche Auslastung?",
+  "duration_seconds": 12.217,
+  "token_usage": {
+    "prompt_tokens": 4514,
+    "completion_tokens": 273,
+    "total_tokens": 4787,
+    "details": {
+      "qwen3:32b": {
+        "output_tokens": 273,
+        "input_tokens": 4514,
+        "total_tokens": 4787
+      }
+    }
+  },
+  "decision_trace": {
+    "domain": "ERROR",
+    "planning_mode": "",
+    "workflow": "",
+    "confidence": "",
+    "safe_to_execute": "",
+    "num_steps": 0,
+    "steps": "",
+    "planner_reasoning": "",
+    "resolved_object": "<omitted:str>",
+    "resolved_object_confidence": "",
+    "selected_attributes": "",
+    "attribute_confidence": "",
+    "num_tool_calls": 0,
+    "executed_tools": "",
+    "failed_tool": ""
+  },
+  "router_output": {
+    "route": "ERROR",
+    "status": "error",
+    "result": {
+      "status": "error",
+      "answer": "Der UnifiedPlanner hat keine gültige strukturierte Ausgabe erzeugt.",
+      "planner_error": "Failed to parse UnifiedPlannerDecision from completion {\"domain\": \"cim\", \"planning_mode\": \"standard_workflow\", \"workflow\": \"cim.standard_comparison\", \"custom_steps\": null, \"safe_to_execute\": true, \"missing_context\": [], \"clarification_question\": \"\", \"reasoning\": \"Die Anfrage bezieht sich auf die durchschnittliche Auslastung eines Transformators zu einem bestimmten Datum (09.01.2026) und fragt nach dem Transformator mit der höchsten Auslastung. Dies ist ein Vergleich von dynamischen Werten (Auslastung) über mehrere Objekte (Transformator) zu einem bestimmten Zeitpunkt. Daher ist der Workflow 'cim.standard_comparison' der passende Standardworkflow.\"}. Got: 1 validation error for UnifiedPlannerDecision\ncustom_steps\n  Input should be a valid list [type=list_type, input_value=None, input_type=NoneType]\n    For further information visit https://errors.pydantic.dev/2.12/v/list_type\nFor troubleshooting, visit: https://docs.langchain.com/oss/python/langchain/errors/OUTPUT_PARSING_FAILURE "
+    }
+  }
+}

@@ -1,0 +1,48 @@
+{
+  "run_id": 56,
+  "timestamp": "2026-05-23T16:28:21.868959",
+  "user_input": "Liste die verfügbaren Attribute von Leitung 4-5 in Powerfactory auf.",
+  "duration_seconds": 0.855,
+  "token_usage": {
+    "prompt_tokens": 712,
+    "completion_tokens": 55,
+    "total_tokens": 767,
+    "details": {
+      "llama3.1:8b": {
+        "input_tokens": 712,
+        "output_tokens": 55,
+        "total_tokens": 767
+      }
+    }
+  },
+  "decision_trace": {
+    "domain": "ASK_USER",
+    "planning_mode": "",
+    "workflow": "",
+    "confidence": "",
+    "safe_to_execute": "",
+    "num_steps": 0,
+    "steps": "",
+    "planner_reasoning": "",
+    "resolved_object": "<omitted:str>",
+    "resolved_object_confidence": "",
+    "selected_attributes": "",
+    "attribute_confidence": "",
+    "num_tool_calls": 0,
+    "executed_tools": "",
+    "failed_tool": "",
+    "equipment_resolution_mode": "",
+    "attribute_resolution_mode": "",
+    "comparison_resolution_mode": ""
+  },
+  "router_output": {
+    "route": "ASK_USER",
+    "question": "Welche Quelle soll verwendet werden?",
+    "missing_fields": [
+      "data_source"
+    ],
+    "partial": {
+      "object_id": "Line 04-05"
+    }
+  }
+}

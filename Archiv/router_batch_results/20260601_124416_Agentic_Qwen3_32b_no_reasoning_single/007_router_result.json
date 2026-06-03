@@ -1,0 +1,44 @@
+{
+  "run_id": 7,
+  "timestamp": "2026-06-01T12:45:40.506742",
+  "user_input": "Welcher Bus weist in Powerfactory aktuell die niedrigste Spannung auf?",
+  "duration_seconds": 11.675,
+  "token_usage": {
+    "prompt_tokens": 4494,
+    "completion_tokens": 245,
+    "total_tokens": 4739,
+    "details": {
+      "qwen3:32b": {
+        "output_tokens": 245,
+        "input_tokens": 4494,
+        "total_tokens": 4739
+      }
+    }
+  },
+  "decision_trace": {
+    "domain": "ERROR",
+    "planning_mode": "",
+    "workflow": "",
+    "confidence": "",
+    "safe_to_execute": "",
+    "num_steps": 0,
+    "steps": "",
+    "planner_reasoning": "",
+    "resolved_object": "<omitted:str>",
+    "resolved_object_confidence": "",
+    "selected_attributes": "",
+    "attribute_confidence": "",
+    "num_tool_calls": 0,
+    "executed_tools": "",
+    "failed_tool": ""
+  },
+  "router_output": {
+    "route": "ERROR",
+    "status": "error",
+    "result": {
+      "status": "error",
+      "answer": "Der UnifiedPlanner hat keine gültige strukturierte Ausgabe erzeugt.",
+      "planner_error": "Failed to parse UnifiedPlannerDecision from completion {\"domain\": \"powerfactory\", \"planning_mode\": \"standard_workflow\", \"workflow\": \"pf.query_element_data\", \"custom_steps\": null, \"safe_to_execute\": true, \"missing_context\": [], \"clarification_question\": \"\", \"reasoning\": \"Die Anfrage bezieht sich auf die aktuelle Spannung in PowerFactory, was darauf hindeutet, dass ein Lastfluss-Modell oder ein aktuelles Simulationsmodell verwendet wird. Der Workflow 'pf.query_element_data' ist geeignet, um die aktuellen Werte von Objekten wie Bussen abzufragen, einschließlich der Spannung.\"}. Got: 1 validation error for UnifiedPlannerDecision\ncustom_steps\n  Input should be a valid list [type=list_type, input_value=None, input_type=NoneType]\n    For further information visit https://errors.pydantic.dev/2.12/v/list_type\nFor troubleshooting, visit: https://docs.langchain.com/oss/python/langchain/errors/OUTPUT_PARSING_FAILURE "
+    }
+  }
+}

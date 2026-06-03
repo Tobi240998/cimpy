@@ -1,0 +1,117 @@
+{
+  "run_id": 83,
+  "timestamp": "2026-05-20T21:29:14.390033",
+  "user_input": "Wie ist die Spannung in PF?",
+  "duration_seconds": 45.667,
+  "token_usage": {
+    "prompt_tokens": 3707,
+    "completion_tokens": 1397,
+    "total_tokens": 5104,
+    "details": {
+      "qwen3:32b": {
+        "total_tokens": 5104,
+        "input_tokens": 3707,
+        "output_tokens": 1397
+      }
+    }
+  },
+  "decision_trace": {
+    "domain": "HISTORICAL",
+    "planning_mode": "",
+    "workflow": "",
+    "confidence": "high",
+    "safe_to_execute": "False",
+    "num_steps": 0,
+    "steps": "",
+    "planner_reasoning": "The request asks for voltage (a dynamic state value) but does not specify the concrete asset (e.g., which bus/node in PowerFactory). Without the specific asset identifier, the request lacks essential context for execution.",
+    "resolved_object": "<omitted:str>",
+    "resolved_object_confidence": "",
+    "selected_attributes": "",
+    "attribute_confidence": "",
+    "num_tool_calls": 1,
+    "executed_tools": "unsupported_request",
+    "failed_tool": "unsupported_request",
+    "equipment_resolution_mode": "",
+    "attribute_resolution_mode": "",
+    "comparison_resolution_mode": ""
+  },
+  "router_output": {
+    "route": "HISTORICAL",
+    "result": {
+      "status": "error",
+      "tool": "cim_agent",
+      "agent": "CIMDomainAgent",
+      "error": "unsupported_cim_request",
+      "answer": "Die Anfrage konnte nicht verarbeitet werden, da sie zur CIM-Seite geroutet wurde, dort aber aktuell nicht unterstützt wird. Grund: Fehlender Kontext – ein spezifisches Asset (z. B. ein Bus oder Knoten) in PF muss angegeben werden, um die Spannung abzufragen. Fehler: unsupported_cim_request.",
+      "classification": {
+        "intent": "historical_analysis",
+        "confidence": "high",
+        "target_kind": "metric",
+        "request_mode": "standard_sv",
+        "safe_to_execute": false,
+        "missing_context": [
+          "specific asset (e.g., bus, node) in PF"
+        ],
+        "required_steps": [],
+        "reasoning": "The request asks for voltage (a dynamic state value) but does not specify the concrete asset (e.g., which bus/node in PowerFactory). Without the specific asset identifier, the request lacks essential context for execution.",
+        "status": "ok",
+        "classification_mode": "primary_llm_classifier"
+      },
+      "user_input": "Wie ist die Spannung in PF?",
+      "debug": {
+        "trace": [
+          {
+            "step": "unsupported_request",
+            "effective_user_input": "Wie ist die Spannung in PF?",
+            "source_subrequest": null,
+            "result": "<circular_reference>"
+          }
+        ],
+        "classification": {
+          "intent": "historical_analysis",
+          "confidence": "high",
+          "target_kind": "metric",
+          "request_mode": "standard_sv",
+          "safe_to_execute": false,
+          "missing_context": [
+            "specific asset (e.g., bus, node) in PF"
+          ],
+          "required_steps": [],
+          "reasoning": "The request asks for voltage (a dynamic state value) but does not specify the concrete asset (e.g., which bus/node in PowerFactory). Without the specific asset identifier, the request lacks essential context for execution.",
+          "status": "ok",
+          "classification_mode": "primary_llm_classifier"
+        },
+        "plan": [
+          {
+            "step": "unsupported_request",
+            "description": "Return a controlled unsupported-workflow message"
+          }
+        ],
+        "run_summary": {
+          "user_input": "Wie ist die Spannung in PF?",
+          "classification_summary": {
+            "intent": "historical_analysis",
+            "request_mode": "standard_sv",
+            "safe_to_execute": false,
+            "target_kind": "metric",
+            "confidence": "high",
+            "classification_mode": "primary_llm_classifier",
+            "missing_context": [
+              "specific asset (e.g., bus, node) in PF"
+            ]
+          },
+          "planned_steps": [
+            "unsupported_request"
+          ],
+          "selected_type": null,
+          "selected_equipment_id": null,
+          "selected_equipment_name": null,
+          "parsed_query_summary": null,
+          "final_status": "error",
+          "final_answer": "Die Anfrage wurde zur CIM-Seite geroutet, ist aktuell aber noch nicht sicher oder unterstützt ausführbar. Fehlender Kontext: specific asset (e.g., bus, node) in PF."
+        }
+      },
+      "raw_answer": "Die Anfrage wurde zur CIM-Seite geroutet, ist aktuell aber noch nicht sicher oder unterstützt ausführbar. Fehlender Kontext: specific asset (e.g., bus, node) in PF."
+    }
+  }
+}

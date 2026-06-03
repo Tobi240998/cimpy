@@ -1,0 +1,117 @@
+{
+  "run_id": 10,
+  "timestamp": "2026-05-23T19:31:20.511543",
+  "user_input": "Mache Load B um 3 MW kleiner.",
+  "duration_seconds": 8.672,
+  "token_usage": {
+    "prompt_tokens": 3747,
+    "completion_tokens": 262,
+    "total_tokens": 4009,
+    "details": {
+      "mistral-small:24b": {
+        "total_tokens": 4009,
+        "output_tokens": 262,
+        "input_tokens": 3747
+      }
+    }
+  },
+  "decision_trace": {
+    "domain": "HISTORICAL",
+    "planning_mode": "",
+    "workflow": "",
+    "confidence": "high",
+    "safe_to_execute": "False",
+    "num_steps": 0,
+    "steps": "",
+    "planner_reasoning": "The user's request involves modifying a load, which is outside the scope of supported CIM requests. The system does not support actions that alter the state or attributes of assets.",
+    "resolved_object": "<omitted:str>",
+    "resolved_object_confidence": "",
+    "selected_attributes": "",
+    "attribute_confidence": "",
+    "num_tool_calls": 1,
+    "executed_tools": "unsupported_request",
+    "failed_tool": "unsupported_request",
+    "equipment_resolution_mode": "",
+    "attribute_resolution_mode": "",
+    "comparison_resolution_mode": ""
+  },
+  "router_output": {
+    "route": "HISTORICAL",
+    "result": {
+      "status": "error",
+      "tool": "cim_agent",
+      "agent": "CIMDomainAgent",
+      "error": "unsupported_cim_request",
+      "answer": "Fehler: Die Anfrage wurde zur CIM-Seite geroutet, ist aktuell aber noch nicht sicher oder unterstützt ausführbar. Fehlender Kontext: The request specifies an action to modify the load, which is not supported..",
+      "classification": {
+        "intent": "unsupported_cim_request",
+        "confidence": "high",
+        "target_kind": "unknown",
+        "request_mode": "clarification_needed",
+        "safe_to_execute": false,
+        "missing_context": [
+          "The request specifies an action to modify the load, which is not supported."
+        ],
+        "required_steps": [],
+        "reasoning": "The user's request involves modifying a load, which is outside the scope of supported CIM requests. The system does not support actions that alter the state or attributes of assets.",
+        "status": "ok",
+        "classification_mode": "primary_llm_classifier"
+      },
+      "user_input": "Mache Load B um 3 MW kleiner.",
+      "debug": {
+        "trace": [
+          {
+            "step": "unsupported_request",
+            "effective_user_input": "Mache Load B um 3 MW kleiner.",
+            "source_subrequest": null,
+            "result": "<circular_reference>"
+          }
+        ],
+        "classification": {
+          "intent": "unsupported_cim_request",
+          "confidence": "high",
+          "target_kind": "unknown",
+          "request_mode": "clarification_needed",
+          "safe_to_execute": false,
+          "missing_context": [
+            "The request specifies an action to modify the load, which is not supported."
+          ],
+          "required_steps": [],
+          "reasoning": "The user's request involves modifying a load, which is outside the scope of supported CIM requests. The system does not support actions that alter the state or attributes of assets.",
+          "status": "ok",
+          "classification_mode": "primary_llm_classifier"
+        },
+        "plan": [
+          {
+            "step": "unsupported_request",
+            "description": "Return a controlled unsupported-workflow message"
+          }
+        ],
+        "run_summary": {
+          "user_input": "Mache Load B um 3 MW kleiner.",
+          "classification_summary": {
+            "intent": "unsupported_cim_request",
+            "request_mode": "clarification_needed",
+            "safe_to_execute": false,
+            "target_kind": "unknown",
+            "confidence": "high",
+            "classification_mode": "primary_llm_classifier",
+            "missing_context": [
+              "The request specifies an action to modify the load, which is not supported."
+            ]
+          },
+          "planned_steps": [
+            "unsupported_request"
+          ],
+          "selected_type": null,
+          "selected_equipment_id": null,
+          "selected_equipment_name": null,
+          "parsed_query_summary": null,
+          "final_status": "error",
+          "final_answer": "Die Anfrage wurde zur CIM-Seite geroutet, ist aktuell aber noch nicht sicher oder unterstützt ausführbar. Fehlender Kontext: The request specifies an action to modify the load, which is not supported.."
+        }
+      },
+      "raw_answer": "Die Anfrage wurde zur CIM-Seite geroutet, ist aktuell aber noch nicht sicher oder unterstützt ausführbar. Fehlender Kontext: The request specifies an action to modify the load, which is not supported.."
+    }
+  }
+}

@@ -1,0 +1,49 @@
+{
+  "run_id": 92,
+  "timestamp": "2026-05-22T15:38:41.329116",
+  "user_input": "Wie hat sich am 09.01.2026 in den CIM-Daten die Spannung an Trafo 19-20 über die Zeit entwickelt?",
+  "duration_seconds": 21.435,
+  "token_usage": {
+    "prompt_tokens": 736,
+    "completion_tokens": 694,
+    "total_tokens": 1430,
+    "details": {
+      "qwen3:32b": {
+        "input_tokens": 736,
+        "output_tokens": 694,
+        "total_tokens": 1430
+      }
+    }
+  },
+  "decision_trace": {
+    "domain": "ASK_USER",
+    "planning_mode": "",
+    "workflow": "",
+    "confidence": "",
+    "safe_to_execute": "",
+    "num_steps": 0,
+    "steps": "",
+    "planner_reasoning": "",
+    "resolved_object": "<omitted:str>",
+    "resolved_object_confidence": "",
+    "selected_attributes": "",
+    "attribute_confidence": "",
+    "num_tool_calls": 0,
+    "executed_tools": "",
+    "failed_tool": "",
+    "equipment_resolution_mode": "",
+    "attribute_resolution_mode": "",
+    "comparison_resolution_mode": ""
+  },
+  "router_output": {
+    "route": "ASK_USER",
+    "question": "Bitte geben Sie den Zeitraum innerhalb des 09.01.2026 an, für den Sie die Spannungsdaten von Trafo 19-20 benötigen (z.B. 'ganzer Tag', '08:00-12:00' oder 'Maximalwert')",
+    "missing_fields": [
+      "time_range"
+    ],
+    "partial": {
+      "user_input": "Wie hat sich am 09.01.2026 in den CIM-Daten die Spannung an Trafo 19-20 über die Zeit entwickelt?",
+      "date": "2026-01-09"
+    }
+  }
+}

@@ -1,0 +1,44 @@
+{
+  "run_id": 2,
+  "timestamp": "2026-06-01T10:47:30.903311",
+  "user_input": "Welcher Transformator hatte am 09.01.2026 die höchste durchschnittliche Auslastung?",
+  "duration_seconds": 25.88,
+  "token_usage": {
+    "prompt_tokens": 4502,
+    "completion_tokens": 713,
+    "total_tokens": 5215,
+    "details": {
+      "qwen3:32b": {
+        "output_tokens": 713,
+        "total_tokens": 5215,
+        "input_tokens": 4502
+      }
+    }
+  },
+  "decision_trace": {
+    "domain": "ERROR",
+    "planning_mode": "",
+    "workflow": "",
+    "confidence": "",
+    "safe_to_execute": "",
+    "num_steps": 0,
+    "steps": "",
+    "planner_reasoning": "",
+    "resolved_object": "<omitted:str>",
+    "resolved_object_confidence": "",
+    "selected_attributes": "",
+    "attribute_confidence": "",
+    "num_tool_calls": 0,
+    "executed_tools": "",
+    "failed_tool": ""
+  },
+  "router_output": {
+    "route": "ERROR",
+    "status": "error",
+    "result": {
+      "status": "error",
+      "answer": "Der UnifiedPlanner hat keine gültige strukturierte Ausgabe erzeugt.",
+      "planner_error": "Failed to parse UnifiedPlannerDecision from completion {\"domain\": \"cim\", \"planning_mode\": \"standard_workflow\", \"workflow\": \"cim.standard_comparison\", \"custom_steps\": null, \"safe_to_execute\": true, \"missing_context\": [], \"clarification_question\": \"\", \"reasoning\": \"The request asks for the highest average loading of transformers on a specific historical date (09.01.2026). This requires comparing dynamic state values (loading) across CIM snapshots, which aligns with the 'cim.standard_comparison' workflow. The date explicitly indicates historical CIM data, not real-time PowerFactory operations.\"}. Got: 1 validation error for UnifiedPlannerDecision\ncustom_steps\n  Input should be a valid list [type=list_type, input_value=None, input_type=NoneType]\n    For further information visit https://errors.pydantic.dev/2.12/v/list_type\nFor troubleshooting, visit: https://docs.langchain.com/oss/python/langchain/errors/OUTPUT_PARSING_FAILURE "
+    }
+  }
+}

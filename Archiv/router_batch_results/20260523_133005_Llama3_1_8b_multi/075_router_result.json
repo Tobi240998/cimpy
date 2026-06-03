@@ -1,0 +1,578 @@
+{
+  "run_id": 75,
+  "timestamp": "2026-05-23T16:42:26.372473",
+  "user_input": "Öffne den Schalter Schalter 1 und gib danach die Busspannungen zurück.",
+  "duration_seconds": 16.411,
+  "token_usage": {
+    "prompt_tokens": 11627,
+    "completion_tokens": 1067,
+    "total_tokens": 12694,
+    "details": {
+      "llama3.1:8b": {
+        "output_tokens": 1067,
+        "input_tokens": 11627,
+        "total_tokens": 12694
+      }
+    }
+  },
+  "decision_trace": {
+    "domain": "HISTORICAL",
+    "planning_mode": "",
+    "workflow": "",
+    "confidence": "",
+    "safe_to_execute": "",
+    "num_steps": 0,
+    "steps": "",
+    "planner_reasoning": "",
+    "resolved_object": "<omitted:str>",
+    "resolved_object_confidence": "",
+    "selected_attributes": "",
+    "attribute_confidence": "",
+    "num_tool_calls": 3,
+    "executed_tools": "scan_snapshot_inventory | resolve_cim_object | read_cim_base_values",
+    "failed_tool": "read_cim_base_values",
+    "equipment_resolution_mode": "",
+    "attribute_resolution_mode": "preselected_attributes",
+    "comparison_resolution_mode": ""
+  },
+  "router_output": {
+    "route": "HISTORICAL",
+    "result": {
+      "status": "error",
+      "tool": "read_cim_base_values",
+      "cim_root": "C:\\Users\\STELLER\\Documents\\Masterarbeit\\CIM-Dateien\\tobias_CIM_daten\\data\\extracted",
+      "error": "no_resolved_base_values_found",
+      "answer": "Keine Busspannungen können zurückgegeben werden, da für die Basisattribute keine lesbaren Werte gefunden wurden. Fehlercode: no_resolved_base_values_found.",
+      "base_attribute_debug": {
+        "selected_attributes": [],
+        "selected_candidates": [
+          "lowVoltageLimit",
+          "highVoltageLimit"
+        ],
+        "resolution_mode": "preselected_attributes",
+        "available_attributes": [],
+        "requested_attributes": [
+          "lowVoltageLimit",
+          "highVoltageLimit"
+        ],
+        "preselected_values": {},
+        "preselected_resolution_debug": {
+          "lowVoltageLimit": {
+            "status": "not_found",
+            "candidate": "lowVoltageLimit",
+            "value": null,
+            "searched_scopes": [
+              "direct_or_canonical_reader",
+              "direct_object_attribute",
+              "expanded_structural_lookup",
+              "expanded_voltage_limit_lookup"
+            ],
+            "resolution_path": "not_found"
+          },
+          "highVoltageLimit": {
+            "status": "not_found",
+            "candidate": "highVoltageLimit",
+            "value": null,
+            "searched_scopes": [
+              "direct_or_canonical_reader",
+              "direct_object_attribute",
+              "expanded_structural_lookup",
+              "expanded_voltage_limit_lookup"
+            ],
+            "resolution_path": "not_found"
+          }
+        },
+        "semantic_preselection": {
+          "status": "ok",
+          "requested_attributes": [
+            "lowVoltageLimit",
+            "highVoltageLimit"
+          ],
+          "should_use_preselected_attributes": true,
+          "llm_decision": {
+            "requested_attributes": [
+              "lowVoltageLimit",
+              "highVoltageLimit"
+            ],
+            "should_use_preselected_attributes": true,
+            "rationale": "User explicitly asked for voltage limits"
+          }
+        }
+      },
+      "attribute_resolution_debug": {
+        "lowVoltageLimit": {
+          "status": "not_found",
+          "candidate": "lowVoltageLimit",
+          "value": null,
+          "searched_scopes": [
+            "direct_or_canonical_reader",
+            "direct_object_attribute",
+            "expanded_structural_lookup",
+            "expanded_voltage_limit_lookup"
+          ],
+          "resolution_path": "not_found"
+        },
+        "highVoltageLimit": {
+          "status": "not_found",
+          "candidate": "highVoltageLimit",
+          "value": null,
+          "searched_scopes": [
+            "direct_or_canonical_reader",
+            "direct_object_attribute",
+            "expanded_structural_lookup",
+            "expanded_voltage_limit_lookup"
+          ],
+          "resolution_path": "not_found"
+        }
+      },
+      "agent": "CIMDomainAgent",
+      "debug": {
+        "trace": [
+          {
+            "step": "scan_snapshot_inventory",
+            "effective_user_input": "Öffne den Schalter Schalter 1",
+            "effective_context_user_input": "Öffne den Schalter Schalter 1",
+            "previous_context": null,
+            "source_subrequest": "subrequest_1",
+            "tool_spec": {
+              "name": "scan_snapshot_inventory",
+              "description": "Scan snapshot inventory and build base network index",
+              "capability_tags": [
+                "inventory",
+                "network_index",
+                "equipment_catalog",
+                "read_only"
+              ],
+              "mutating": false
+            },
+            "result": {
+              "status": "ok",
+              "tool": "scan_snapshot_inventory",
+              "cim_root": "C:\\Users\\STELLER\\Documents\\Masterarbeit\\CIM-Dateien\\tobias_CIM_daten\\data\\extracted",
+              "snapshot_inventory": {
+                "root_folder": "C:\\Users\\STELLER\\Documents\\Masterarbeit\\CIM-Dateien\\tobias_CIM_daten\\data\\extracted",
+                "snapshots": [
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>"
+                ]
+              },
+              "base_snapshot": "<omitted:dict>",
+              "network_index": "<omitted:dict>",
+              "equipment_catalog_summary": {
+                "equipment_types": [
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>"
+                ],
+                "equipment_type_counts": {
+                  "SynchronousMachineTimeConstantReactance": "<max_depth>",
+                  "LoadAggregate": "<max_depth>",
+                  "LoadStatic": "<max_depth>",
+                  "TopologicalIsland": "<max_depth>",
+                  "BusbarSection": "<max_depth>",
+                  "VoltageLimit": "<max_depth>",
+                  "OperationalLimitSet": "<max_depth>",
+                  "ACLineSegment": "<max_depth>",
+                  "CurrentLimit": "<max_depth>",
+                  "OperationalLimitType": "<max_depth>",
+                  "ConformLoad": "<max_depth>",
+                  "ConformLoadGroup": "<max_depth>",
+                  "SubLoadArea": "<max_depth>",
+                  "LoadArea": "<max_depth>",
+                  "LoadResponseCharacteristic": "<max_depth>",
+                  "PowerTransformerEnd": "<max_depth>",
+                  "SynchronousMachine": "<max_depth>",
+                  "PowerTransformer": "<max_depth>",
+                  "RatioTapChanger": "<max_depth>",
+                  "RegulatingControl": "<max_depth>",
+                  "HydroGeneratingUnit": "<max_depth>",
+                  "NuclearGeneratingUnit": "<max_depth>",
+                  "FossilFuel": "<max_depth>",
+                  "ThermalGeneratingUnit": "<max_depth>",
+                  "GeneratingUnit": "<max_depth>"
+                },
+                "num_equipment_objects": 453
+              }
+            }
+          },
+          {
+            "step": "resolve_cim_object",
+            "effective_user_input": "Öffne den Schalter Schalter 1",
+            "effective_context_user_input": "Öffne den Schalter Schalter 1",
+            "previous_context": null,
+            "source_subrequest": "subrequest_1",
+            "tool_spec": {
+              "name": "resolve_cim_object",
+              "description": "Resolve asset or equipment from user query and parse time/state intent",
+              "capability_tags": [
+                "object_resolution",
+                "query_parsing",
+                "equipment_catalog",
+                "llm_match",
+                "read_only"
+              ],
+              "mutating": false
+            },
+            "result": {
+              "status": "ok",
+              "tool": "resolve_cim_object",
+              "cim_root": "C:\\Users\\STELLER\\Documents\\Masterarbeit\\CIM-Dateien\\tobias_CIM_daten\\data\\extracted",
+              "user_input": "Öffne den Schalter Schalter 1",
+              "parsed_query": {
+                "equipment_detected": [
+                  "<max_depth>"
+                ],
+                "state_detected": [
+                  "<max_depth>"
+                ],
+                "metric": null,
+                "equipment_selection": [
+                  "<max_depth>"
+                ],
+                "time_start": null,
+                "time_end": null,
+                "time_label": "",
+                "intent": "historical_analysis",
+                "request_mode": "standard_base",
+                "is_topology_query": false
+              },
+              "resolved_object": "<omitted:RegulatingControl>",
+              "equipment_obj": "<non_serializable:RegulatingControl>",
+              "resolution_mode": "interpret_user_query",
+              "equipment_resolution_debug": {
+                "parsed_query_equipment_selection": [
+                  "<max_depth>"
+                ]
+              }
+            }
+          },
+          {
+            "step": "read_cim_base_values",
+            "effective_user_input": "Öffne den Schalter Schalter 1",
+            "effective_context_user_input": "Öffne den Schalter Schalter 1",
+            "previous_context": null,
+            "source_subrequest": "subrequest_1",
+            "tool_spec": {
+              "name": "read_cim_base_values",
+              "description": "Read static CIM base or nameplate attributes from a resolved equipment object",
+              "capability_tags": [
+                "base_values",
+                "nameplate_data",
+                "read_only"
+              ],
+              "mutating": false
+            },
+            "result": "<circular_reference>"
+          }
+        ],
+        "classification": {
+          "intent": "unsupported_cim_request",
+          "confidence": "high",
+          "target_kind": "unknown",
+          "request_mode": "clarification_needed",
+          "safe_to_execute": false,
+          "missing_context": [
+            "physische Aktionen"
+          ],
+          "required_steps": [],
+          "reasoning": "Die Anforderung beinhaltet eine physische Aktion, die nicht in der CIM-Datenbank enthalten ist.",
+          "status": "ok",
+          "classification_mode": "primary_llm_classifier"
+        },
+        "plan": [
+          {
+            "step": "scan_snapshot_inventory",
+            "description": "Scan snapshot inventory and build base network index",
+            "capability_tags": [
+              "inventory",
+              "network_index",
+              "equipment_catalog",
+              "read_only"
+            ],
+            "mutating": false,
+            "user_input_override": "Öffne den Schalter Schalter 1",
+            "source_subrequest": "subrequest_1",
+            "subrequest_classification": {
+              "intent": "historical_analysis",
+              "confidence": "medium",
+              "target_kind": "metric",
+              "request_mode": "standard_base",
+              "safe_to_execute": true,
+              "missing_context": [],
+              "required_steps": [],
+              "reasoning": "fallback_llm_mode_classifier: The user is asking for a static attribute of the switch, which is consistent with the standard_base request mode. | primary_classifier_error=Invalid json output: Ich kann nicht dabei helfen, Anweisungen für die Manipulation von physischen Geräten zu geben. Kann ich Ihnen bei etwas anderem helfen?\nFor troubleshooting, visit: https://docs.langchain.com/oss/python/langchain/errors/OUTPUT_PARSING_FAILURE",
+              "status": "ok",
+              "classification_mode": "fallback_llm_mode_classifier"
+            }
+          },
+          {
+            "step": "resolve_cim_object",
+            "description": "Resolve asset or equipment from user query and parse time/state intent",
+            "capability_tags": [
+              "object_resolution",
+              "query_parsing",
+              "equipment_catalog",
+              "llm_match",
+              "read_only"
+            ],
+            "mutating": false,
+            "user_input_override": "Öffne den Schalter Schalter 1",
+            "source_subrequest": "subrequest_1",
+            "subrequest_classification": {
+              "intent": "historical_analysis",
+              "confidence": "medium",
+              "target_kind": "metric",
+              "request_mode": "standard_base",
+              "safe_to_execute": true,
+              "missing_context": [],
+              "required_steps": [],
+              "reasoning": "fallback_llm_mode_classifier: The user is asking for a static attribute of the switch, which is consistent with the standard_base request mode. | primary_classifier_error=Invalid json output: Ich kann nicht dabei helfen, Anweisungen für die Manipulation von physischen Geräten zu geben. Kann ich Ihnen bei etwas anderem helfen?\nFor troubleshooting, visit: https://docs.langchain.com/oss/python/langchain/errors/OUTPUT_PARSING_FAILURE",
+              "status": "ok",
+              "classification_mode": "fallback_llm_mode_classifier"
+            }
+          },
+          {
+            "step": "read_cim_base_values",
+            "description": "Read static CIM base or nameplate attributes from a resolved equipment object",
+            "capability_tags": [
+              "base_values",
+              "nameplate_data",
+              "read_only"
+            ],
+            "mutating": false,
+            "user_input_override": "Öffne den Schalter Schalter 1",
+            "source_subrequest": "subrequest_1",
+            "subrequest_classification": {
+              "intent": "historical_analysis",
+              "confidence": "medium",
+              "target_kind": "metric",
+              "request_mode": "standard_base",
+              "safe_to_execute": true,
+              "missing_context": [],
+              "required_steps": [],
+              "reasoning": "fallback_llm_mode_classifier: The user is asking for a static attribute of the switch, which is consistent with the standard_base request mode. | primary_classifier_error=Invalid json output: Ich kann nicht dabei helfen, Anweisungen für die Manipulation von physischen Geräten zu geben. Kann ich Ihnen bei etwas anderem helfen?\nFor troubleshooting, visit: https://docs.langchain.com/oss/python/langchain/errors/OUTPUT_PARSING_FAILURE",
+              "status": "ok",
+              "classification_mode": "fallback_llm_mode_classifier"
+            }
+          },
+          {
+            "step": "summarize_cim_result",
+            "description": "Return final CIM result with debug information",
+            "capability_tags": [
+              "result",
+              "read_only"
+            ],
+            "mutating": false,
+            "user_input_override": "Öffne den Schalter Schalter 1",
+            "source_subrequest": "subrequest_1",
+            "subrequest_classification": {
+              "intent": "historical_analysis",
+              "confidence": "medium",
+              "target_kind": "metric",
+              "request_mode": "standard_base",
+              "safe_to_execute": true,
+              "missing_context": [],
+              "required_steps": [],
+              "reasoning": "fallback_llm_mode_classifier: The user is asking for a static attribute of the switch, which is consistent with the standard_base request mode. | primary_classifier_error=Invalid json output: Ich kann nicht dabei helfen, Anweisungen für die Manipulation von physischen Geräten zu geben. Kann ich Ihnen bei etwas anderem helfen?\nFor troubleshooting, visit: https://docs.langchain.com/oss/python/langchain/errors/OUTPUT_PARSING_FAILURE",
+              "status": "ok",
+              "classification_mode": "fallback_llm_mode_classifier"
+            }
+          },
+          {
+            "step": "scan_snapshot_inventory",
+            "description": "Scan snapshot inventory and build base network index",
+            "capability_tags": [
+              "inventory",
+              "network_index",
+              "equipment_catalog",
+              "read_only"
+            ],
+            "mutating": false,
+            "user_input_override": "Gib die Busspannungen zurück",
+            "source_subrequest": "subrequest_2",
+            "subrequest_classification": {
+              "intent": "historical_analysis",
+              "confidence": "high",
+              "target_kind": "metric",
+              "request_mode": "standard_sv",
+              "safe_to_execute": true,
+              "missing_context": [],
+              "required_steps": [],
+              "reasoning": "The user requests the bus voltages, which implies a dynamic state value request.",
+              "status": "ok",
+              "classification_mode": "primary_llm_classifier"
+            }
+          },
+          {
+            "step": "resolve_cim_object",
+            "description": "Resolve asset or equipment from user query and parse time/state intent",
+            "capability_tags": [
+              "object_resolution",
+              "query_parsing",
+              "equipment_catalog",
+              "llm_match",
+              "read_only"
+            ],
+            "mutating": false,
+            "user_input_override": "Gib die Busspannungen zurück",
+            "source_subrequest": "subrequest_2",
+            "subrequest_classification": {
+              "intent": "historical_analysis",
+              "confidence": "high",
+              "target_kind": "metric",
+              "request_mode": "standard_sv",
+              "safe_to_execute": true,
+              "missing_context": [],
+              "required_steps": [],
+              "reasoning": "The user requests the bus voltages, which implies a dynamic state value request.",
+              "status": "ok",
+              "classification_mode": "primary_llm_classifier"
+            }
+          },
+          {
+            "step": "load_snapshot_cache",
+            "description": "Load relevant snapshots for the parsed time window and build snapshot cache",
+            "capability_tags": [
+              "snapshot_loading",
+              "state_cache",
+              "read_only"
+            ],
+            "mutating": false,
+            "user_input_override": "Gib die Busspannungen zurück",
+            "source_subrequest": "subrequest_2",
+            "subrequest_classification": {
+              "intent": "historical_analysis",
+              "confidence": "high",
+              "target_kind": "metric",
+              "request_mode": "standard_sv",
+              "safe_to_execute": true,
+              "missing_context": [],
+              "required_steps": [],
+              "reasoning": "The user requests the bus voltages, which implies a dynamic state value request.",
+              "status": "ok",
+              "classification_mode": "primary_llm_classifier"
+            }
+          },
+          {
+            "step": "query_cim",
+            "description": "Run CIM analysis query using parsed query, network index and snapshot cache",
+            "capability_tags": [
+              "analysis",
+              "read_only"
+            ],
+            "mutating": false,
+            "user_input_override": "Gib die Busspannungen zurück",
+            "source_subrequest": "subrequest_2",
+            "subrequest_classification": {
+              "intent": "historical_analysis",
+              "confidence": "high",
+              "target_kind": "metric",
+              "request_mode": "standard_sv",
+              "safe_to_execute": true,
+              "missing_context": [],
+              "required_steps": [],
+              "reasoning": "The user requests the bus voltages, which implies a dynamic state value request.",
+              "status": "ok",
+              "classification_mode": "primary_llm_classifier"
+            }
+          },
+          {
+            "step": "summarize_cim_result",
+            "description": "Return final CIM result with debug information",
+            "capability_tags": [
+              "result",
+              "read_only"
+            ],
+            "mutating": false,
+            "user_input_override": "Gib die Busspannungen zurück",
+            "source_subrequest": "subrequest_2",
+            "subrequest_classification": {
+              "intent": "historical_analysis",
+              "confidence": "high",
+              "target_kind": "metric",
+              "request_mode": "standard_sv",
+              "safe_to_execute": true,
+              "missing_context": [],
+              "required_steps": [],
+              "reasoning": "The user requests the bus voltages, which implies a dynamic state value request.",
+              "status": "ok",
+              "classification_mode": "primary_llm_classifier"
+            }
+          }
+        ],
+        "run_summary": {
+          "user_input": "Öffne den Schalter Schalter 1 und gib danach die Busspannungen zurück.",
+          "classification_summary": {
+            "intent": "unsupported_cim_request",
+            "request_mode": "clarification_needed",
+            "safe_to_execute": false,
+            "target_kind": "unknown",
+            "confidence": "high",
+            "classification_mode": "primary_llm_classifier",
+            "missing_context": [
+              "physische Aktionen"
+            ]
+          },
+          "planned_steps": [
+            "scan_snapshot_inventory",
+            "resolve_cim_object",
+            "read_cim_base_values",
+            "summarize_cim_result",
+            "scan_snapshot_inventory",
+            "resolve_cim_object",
+            "load_snapshot_cache",
+            "query_cim",
+            "summarize_cim_result"
+          ],
+          "selected_type": null,
+          "selected_equipment_id": null,
+          "selected_equipment_name": "G 01",
+          "parsed_query_summary": {
+            "equipment_detected": [
+              "RegulatingControl"
+            ],
+            "state_detected": [
+              "SvPowerFlow"
+            ],
+            "metric": null,
+            "time_label": "",
+            "equipment_selection": [
+              {
+                "equipment_type": "RegulatingControl",
+                "equipment_key": "g01",
+                "equipment_name": "G 01",
+                "equipment_id": "_e0334df7-fc61-442d-4af3-f6f4978dd819"
+              }
+            ]
+          },
+          "final_status": "error",
+          "final_answer": "Für die angefragten Basisattribute konnten keine lesbaren Werte gefunden werden."
+        }
+      },
+      "raw_answer": "Für die angefragten Basisattribute konnten keine lesbaren Werte gefunden werden."
+    }
+  }
+}

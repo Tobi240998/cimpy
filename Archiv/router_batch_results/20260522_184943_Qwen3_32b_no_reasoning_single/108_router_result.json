@@ -1,0 +1,44 @@
+{
+  "run_id": 108,
+  "timestamp": "2026-05-23T03:19:11.349709",
+  "user_input": "Zu welchen Zeitpunkten war Transformator 19/20 am 09.01.26 am stärksten bzw. am schwächsten ausgelastet?",
+  "duration_seconds": 28.078,
+  "token_usage": {
+    "prompt_tokens": 4530,
+    "completion_tokens": 792,
+    "total_tokens": 5322,
+    "details": {
+      "qwen3:32b": {
+        "input_tokens": 4530,
+        "total_tokens": 5322,
+        "output_tokens": 792
+      }
+    }
+  },
+  "decision_trace": {
+    "domain": "ERROR",
+    "planning_mode": "",
+    "workflow": "",
+    "confidence": "",
+    "safe_to_execute": "",
+    "num_steps": 0,
+    "steps": "",
+    "planner_reasoning": "",
+    "resolved_object": "<omitted:str>",
+    "resolved_object_confidence": "",
+    "selected_attributes": "",
+    "attribute_confidence": "",
+    "num_tool_calls": 0,
+    "executed_tools": "",
+    "failed_tool": ""
+  },
+  "router_output": {
+    "route": "ERROR",
+    "status": "error",
+    "result": {
+      "status": "error",
+      "answer": "Der UnifiedPlanner hat keine gültige strukturierte Ausgabe erzeugt.",
+      "planner_error": "Failed to parse UnifiedPlannerDecision from completion {\"domain\": \"cim\", \"planning_mode\": \"standard_workflow\", \"workflow\": \"cim.standard_comparison\", \"custom_steps\": null, \"safe_to_execute\": true, \"missing_context\": [], \"clarification_question\": \"\", \"reasoning\": \"The request asks for the strongest and weakest loading times of Transformer 19/20 on a specific date (09.01.26). This requires comparing historical snapshot data to determine peak and minimum loading values, which aligns with the CIM standard_comparison workflow. The date reference and focus on loading (a dynamic state value) confirm the CIM domain.\"}. Got: 1 validation error for UnifiedPlannerDecision\ncustom_steps\n  Input should be a valid list [type=list_type, input_value=None, input_type=NoneType]\n    For further information visit https://errors.pydantic.dev/2.12/v/list_type\nFor troubleshooting, visit: https://docs.langchain.com/oss/python/langchain/errors/OUTPUT_PARSING_FAILURE "
+    }
+  }
+}

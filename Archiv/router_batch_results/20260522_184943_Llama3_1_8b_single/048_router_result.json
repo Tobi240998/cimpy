@@ -1,0 +1,822 @@
+{
+  "run_id": 48,
+  "timestamp": "2026-05-23T18:47:29.147842",
+  "user_input": "Was ist die loading von Line 4-5 in PF?",
+  "duration_seconds": 19.506,
+  "token_usage": {
+    "prompt_tokens": 7590,
+    "completion_tokens": 947,
+    "total_tokens": 8537,
+    "details": {
+      "llama3.1:8b": {
+        "total_tokens": 8537,
+        "output_tokens": 947,
+        "input_tokens": 7590
+      }
+    }
+  },
+  "decision_trace": {
+    "domain": "powerfactory",
+    "planning_mode": "standard_workflow",
+    "workflow": "pf.query_element_data",
+    "confidence": "",
+    "safe_to_execute": "True",
+    "num_steps": 8,
+    "steps": "powerfactory.build_unified_inventory | powerfactory.interpret_data_query_instruction | powerfactory.classify_data_source | powerfactory.resolve_objects_from_inventory_llm | powerfactory.list_available_object_attributes | powerfactory.select_pf_object_attributes_llm | powerfactory.read_pf_object_attributes | powerfactory.summarize_pf_object_data_result",
+    "planner_reasoning": "",
+    "resolved_object": "<omitted:str>",
+    "resolved_object_confidence": "",
+    "selected_attributes": "",
+    "attribute_confidence": "",
+    "num_tool_calls": 4,
+    "executed_tools": "build_unified_inventory | interpret_data_query_instruction | classify_data_source | resolve_objects_from_inventory_llm",
+    "failed_tool": "resolve_objects_from_inventory_llm"
+  },
+  "router_output": {
+    "route": "POWERFACTORY",
+    "domain": "powerfactory",
+    "plan": {
+      "domain": "powerfactory",
+      "user_input": "Was ist die loading von Line 4-5 in PF?",
+      "steps": [
+        {
+          "domain": "powerfactory",
+          "tool": "build_unified_inventory",
+          "args": {},
+          "save_as": null,
+          "description": "standard_workflow: pf.query_element_data",
+          "mutating": false
+        },
+        {
+          "domain": "powerfactory",
+          "tool": "interpret_data_query_instruction",
+          "args": {},
+          "save_as": null,
+          "description": "standard_workflow: pf.query_element_data",
+          "mutating": false
+        },
+        {
+          "domain": "powerfactory",
+          "tool": "classify_data_source",
+          "args": {},
+          "save_as": null,
+          "description": "standard_workflow: pf.query_element_data",
+          "mutating": false
+        },
+        {
+          "domain": "powerfactory",
+          "tool": "resolve_objects_from_inventory_llm",
+          "args": {},
+          "save_as": null,
+          "description": "standard_workflow: pf.query_element_data",
+          "mutating": false
+        },
+        {
+          "domain": "powerfactory",
+          "tool": "list_available_object_attributes",
+          "args": {},
+          "save_as": null,
+          "description": "standard_workflow: pf.query_element_data",
+          "mutating": false
+        },
+        {
+          "domain": "powerfactory",
+          "tool": "select_pf_object_attributes_llm",
+          "args": {},
+          "save_as": null,
+          "description": "standard_workflow: pf.query_element_data",
+          "mutating": false
+        },
+        {
+          "domain": "powerfactory",
+          "tool": "read_pf_object_attributes",
+          "args": {},
+          "save_as": null,
+          "description": "standard_workflow: pf.query_element_data",
+          "mutating": false
+        },
+        {
+          "domain": "powerfactory",
+          "tool": "summarize_pf_object_data_result",
+          "args": {},
+          "save_as": null,
+          "description": "standard_workflow: pf.query_element_data",
+          "mutating": false
+        }
+      ],
+      "classification": {
+        "domain": "powerfactory",
+        "planning_mode": "standard_workflow",
+        "workflow": "pf.query_element_data",
+        "custom_steps": [],
+        "safe_to_execute": true,
+        "missing_context": [],
+        "clarification_question": "",
+        "reasoning": ""
+      },
+      "reasoning": ""
+    },
+    "planner_decision": {
+      "domain": "powerfactory",
+      "planning_mode": "standard_workflow",
+      "workflow": "pf.query_element_data",
+      "custom_steps": [],
+      "safe_to_execute": true,
+      "missing_context": [],
+      "clarification_question": "",
+      "reasoning": ""
+    },
+    "result": {
+      "status": "error",
+      "tool": "resolve_objects_from_inventory_llm",
+      "project": "<omitted:str>",
+      "instruction": {
+        "query_type": "element_data",
+        "entity_type": "load",
+        "entity_name_raw": "Was ist die loading von Line 4-5 in PF?",
+        "entity_name_candidates": [
+          "Line 4-5"
+        ],
+        "attribute_request_text": "Was ist die loading von Line 4-5 in PF?",
+        "available_types": [
+          "bus",
+          "generator",
+          "line",
+          "load",
+          "switch",
+          "transformer"
+        ],
+        "requested_attribute_names": [
+          "Line 4-5"
+        ],
+        "requested_attribute_name_extraction": {
+          "status": "ok",
+          "requested_attribute_names": [
+            "Line 4-5"
+          ],
+          "llm_decision": {
+            "requested_attribute_names": [
+              "Line 4-5"
+            ],
+            "confidence": "high",
+            "rationale": "direct question about PowerFactory",
+            "should_execute": true
+          },
+          "chain_mode": "native_structured_output"
+        },
+        "data_source_preference": "result",
+        "data_source_note": "Lastflussergebnisse wurden explizit oder sicher angefordert.",
+        "data_source_decision": {
+          "status": "ok",
+          "selected_data_source": "result",
+          "confidence": "high",
+          "rationale": "The user asks for a load-flow result, specifically the loading of a line (Line 4-5) in PowerFactory.",
+          "should_execute": true,
+          "decision_mode": "llm",
+          "llm_decision": {
+            "selected_data_source": "result",
+            "confidence": "high",
+            "rationale": "The user asks for a load-flow result, specifically the loading of a line (Line 4-5) in PowerFactory.",
+            "should_execute": true,
+            "attribute_match_mode": "technical_name",
+            "attribute_match_confidence": "high",
+            "attribute_match_rationale": "The user explicitly wrote the technical name 'loading' and referenced a specific line (Line 4-5) in PowerFactory.",
+            "attribute_cardinality": "one",
+            "attribute_cardinality_rationale": "The user asks for a single value, specifically the loading of Line 4-5."
+          },
+          "chain_mode": "native_structured_output",
+          "attribute_match_mode": "technical_name",
+          "attribute_match_confidence": "high",
+          "attribute_match_rationale": "The user explicitly wrote the technical name 'loading' and referenced a specific line (Line 4-5) in PowerFactory.",
+          "attribute_cardinality": "one",
+          "attribute_cardinality_rationale": "The user asks for a single value, specifically the loading of Line 4-5.",
+          "fallback_applied": false,
+          "effective_data_source": "result",
+          "data_source_note": "Lastflussergebnisse wurden explizit oder sicher angefordert."
+        },
+        "attribute_match_mode": {
+          "status": "ok",
+          "mode": "technical_name",
+          "confidence": "high",
+          "should_execute": true,
+          "rationale": "The user explicitly wrote the technical name 'loading' and referenced a specific line (Line 4-5) in PowerFactory.",
+          "source": "data_source_decision"
+        },
+        "attribute_cardinality": "one",
+        "attribute_cardinality_rationale": "The user asks for a single value, specifically the loading of Line 4-5."
+      },
+      "error": "invalid_object_selection",
+      "details": "Das LLM hat keinen gültigen exakten Namen aus der Kandidatenliste zurückgegeben.",
+      "llm_decision": {
+        "selected_object_name": null,
+        "selected_object_names": [],
+        "selection_mode": "all",
+        "confidence": "high",
+        "rationale": "The request explicitly mentions 'Line 4-5' which suggests a range of objects, so __ALL__ is the safe choice.",
+        "alternatives": [
+          "Load A",
+          "Load B",
+          "Load C"
+        ],
+        "should_execute": true
+      },
+      "candidate_names": [
+        "Load A",
+        "Load B",
+        "Load C"
+      ],
+      "agent": "SingleAgent",
+      "available_tools": [
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>"
+      ],
+      "answer": "Die Anfrage konnte nicht ausgeführt werden. Fehlergrund: invalid_object_selection.",
+      "debug": {
+        "planning": {},
+        "trace": [
+          {
+            "step": "build_unified_inventory",
+            "effective_user_input": "Was ist die loading von Line 4-5 in PF?",
+            "source_subrequest": null,
+            "tool_spec": {
+              "name": "build_unified_inventory",
+              "description": "Build a unified non-topology PowerFactory inventory for supported object types.",
+              "capability_tags": [],
+              "mutating": false
+            },
+            "tool_kwargs": {
+              "services": "<omitted:dict>",
+              "allowed_types": [
+                "bus",
+                "load",
+                "line",
+                "transformer",
+                "generator",
+                "switch"
+              ]
+            },
+            "result": {
+              "status": "ok",
+              "tool": "build_unified_inventory",
+              "project": "<omitted:str>",
+              "inventory": {
+                "available_types": [
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>"
+                ],
+                "counts_by_type": {
+                  "bus": "<max_depth>",
+                  "load": "<max_depth>",
+                  "line": "<max_depth>",
+                  "transformer": "<max_depth>",
+                  "generator": "<max_depth>",
+                  "switch": "<max_depth>"
+                },
+                "items_by_type": {
+                  "bus": "<max_depth>",
+                  "load": "<max_depth>",
+                  "line": "<max_depth>",
+                  "transformer": "<max_depth>",
+                  "generator": "<max_depth>",
+                  "switch": "<max_depth>"
+                },
+                "samples_by_type": {
+                  "bus": "<max_depth>",
+                  "load": "<max_depth>",
+                  "line": "<max_depth>",
+                  "transformer": "<max_depth>",
+                  "generator": "<max_depth>",
+                  "switch": "<max_depth>"
+                }
+              },
+              "allowed_types": [
+                "bus",
+                "load",
+                "line",
+                "transformer",
+                "generator",
+                "switch"
+              ]
+            }
+          },
+          {
+            "step": "interpret_data_query_instruction",
+            "effective_user_input": "Was ist die loading von Line 4-5 in PF?",
+            "source_subrequest": null,
+            "tool_spec": {
+              "name": "interpret_data_query_instruction",
+              "description": "Interpret a natural-language data query into a structured PowerFactory data-query instruction.",
+              "capability_tags": [],
+              "mutating": false
+            },
+            "tool_kwargs": {
+              "services": "<omitted:dict>",
+              "user_input": "Was ist die loading von Line 4-5 in PF?",
+              "inventory": {
+                "available_types": [
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>"
+                ],
+                "counts_by_type": {
+                  "bus": "<max_depth>",
+                  "load": "<max_depth>",
+                  "line": "<max_depth>",
+                  "transformer": "<max_depth>",
+                  "generator": "<max_depth>",
+                  "switch": "<max_depth>"
+                },
+                "items_by_type": {
+                  "bus": "<max_depth>",
+                  "load": "<max_depth>",
+                  "line": "<max_depth>",
+                  "transformer": "<max_depth>",
+                  "generator": "<max_depth>",
+                  "switch": "<max_depth>"
+                },
+                "samples_by_type": {
+                  "bus": "<max_depth>",
+                  "load": "<max_depth>",
+                  "line": "<max_depth>",
+                  "transformer": "<max_depth>",
+                  "generator": "<max_depth>",
+                  "switch": "<max_depth>"
+                }
+              }
+            },
+            "result": {
+              "status": "ok",
+              "tool": "interpret_data_query_instruction",
+              "project": "<omitted:str>",
+              "user_input": "Was ist die loading von Line 4-5 in PF?",
+              "instruction": {
+                "query_type": "element_data",
+                "entity_type": "load",
+                "entity_name_raw": "Was ist die loading von Line 4-5 in PF?",
+                "entity_name_candidates": [
+                  "<max_depth>"
+                ],
+                "attribute_request_text": "Was ist die loading von Line 4-5 in PF?",
+                "available_types": [
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>"
+                ],
+                "requested_attribute_names": [
+                  "<max_depth>"
+                ],
+                "requested_attribute_name_extraction": {
+                  "status": "<max_depth>",
+                  "requested_attribute_names": "<max_depth>",
+                  "llm_decision": "<max_depth>",
+                  "chain_mode": "<max_depth>"
+                },
+                "data_source_preference": "result",
+                "data_source_note": "Lastflussergebnisse wurden explizit oder sicher angefordert.",
+                "data_source_decision": {
+                  "status": "<max_depth>",
+                  "selected_data_source": "<max_depth>",
+                  "confidence": "<max_depth>",
+                  "rationale": "<max_depth>",
+                  "should_execute": "<max_depth>",
+                  "decision_mode": "<max_depth>",
+                  "llm_decision": "<max_depth>",
+                  "chain_mode": "<max_depth>",
+                  "attribute_match_mode": "<max_depth>",
+                  "attribute_match_confidence": "<max_depth>",
+                  "attribute_match_rationale": "<max_depth>",
+                  "attribute_cardinality": "<max_depth>",
+                  "attribute_cardinality_rationale": "<max_depth>",
+                  "fallback_applied": "<max_depth>",
+                  "effective_data_source": "<max_depth>",
+                  "data_source_note": "<max_depth>"
+                },
+                "attribute_match_mode": {
+                  "status": "<max_depth>",
+                  "mode": "<max_depth>",
+                  "confidence": "<max_depth>",
+                  "should_execute": "<max_depth>",
+                  "rationale": "<max_depth>",
+                  "source": "<max_depth>"
+                },
+                "attribute_cardinality": "one",
+                "attribute_cardinality_rationale": "The user asks for a single value, specifically the loading of Line 4-5."
+              },
+              "llm_decision": {
+                "selected_entity_type": "load",
+                "confidence": "high",
+                "rationale": "The query mentions 'loading' which is related to loads in PowerFactory.",
+                "missing_context": [],
+                "should_execute": true
+              },
+              "requested_attribute_name_extraction": {
+                "status": "ok",
+                "requested_attribute_names": [
+                  "<max_depth>"
+                ],
+                "llm_decision": {
+                  "requested_attribute_names": "<max_depth>",
+                  "confidence": "<max_depth>",
+                  "rationale": "<max_depth>",
+                  "should_execute": "<max_depth>"
+                },
+                "chain_mode": "native_structured_output"
+              },
+              "confidence": "high",
+              "rationale": "The query mentions 'loading' which is related to loads in PowerFactory."
+            }
+          },
+          {
+            "step": "classify_data_source",
+            "effective_user_input": "Was ist die loading von Line 4-5 in PF?",
+            "source_subrequest": null,
+            "tool_spec": {
+              "name": "classify_data_source",
+              "description": "Classify whether the data query should use base data or load-flow result data.",
+              "capability_tags": [],
+              "mutating": false
+            },
+            "tool_kwargs": {
+              "services": "<omitted:dict>",
+              "instruction": {
+                "query_type": "element_data",
+                "entity_type": "load",
+                "entity_name_raw": "Was ist die loading von Line 4-5 in PF?",
+                "entity_name_candidates": [
+                  "<max_depth>"
+                ],
+                "attribute_request_text": "Was ist die loading von Line 4-5 in PF?",
+                "available_types": [
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>"
+                ],
+                "requested_attribute_names": [
+                  "<max_depth>"
+                ],
+                "requested_attribute_name_extraction": {
+                  "status": "<max_depth>",
+                  "requested_attribute_names": "<max_depth>",
+                  "llm_decision": "<max_depth>",
+                  "chain_mode": "<max_depth>"
+                },
+                "data_source_preference": "result",
+                "data_source_note": "Lastflussergebnisse wurden explizit oder sicher angefordert.",
+                "data_source_decision": {
+                  "status": "<max_depth>",
+                  "selected_data_source": "<max_depth>",
+                  "confidence": "<max_depth>",
+                  "rationale": "<max_depth>",
+                  "should_execute": "<max_depth>",
+                  "decision_mode": "<max_depth>",
+                  "llm_decision": "<max_depth>",
+                  "chain_mode": "<max_depth>",
+                  "attribute_match_mode": "<max_depth>",
+                  "attribute_match_confidence": "<max_depth>",
+                  "attribute_match_rationale": "<max_depth>",
+                  "attribute_cardinality": "<max_depth>",
+                  "attribute_cardinality_rationale": "<max_depth>",
+                  "fallback_applied": "<max_depth>",
+                  "effective_data_source": "<max_depth>",
+                  "data_source_note": "<max_depth>"
+                },
+                "attribute_match_mode": {
+                  "status": "<max_depth>",
+                  "mode": "<max_depth>",
+                  "confidence": "<max_depth>",
+                  "should_execute": "<max_depth>",
+                  "rationale": "<max_depth>",
+                  "source": "<max_depth>"
+                },
+                "attribute_cardinality": "one",
+                "attribute_cardinality_rationale": "The user asks for a single value, specifically the loading of Line 4-5."
+              }
+            },
+            "result": {
+              "status": "ok",
+              "tool": "classify_data_source",
+              "project": "<omitted:str>",
+              "instruction": {
+                "query_type": "element_data",
+                "entity_type": "load",
+                "entity_name_raw": "Was ist die loading von Line 4-5 in PF?",
+                "entity_name_candidates": [
+                  "<max_depth>"
+                ],
+                "attribute_request_text": "Was ist die loading von Line 4-5 in PF?",
+                "available_types": [
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>"
+                ],
+                "requested_attribute_names": [
+                  "<max_depth>"
+                ],
+                "requested_attribute_name_extraction": {
+                  "status": "<max_depth>",
+                  "requested_attribute_names": "<max_depth>",
+                  "llm_decision": "<max_depth>",
+                  "chain_mode": "<max_depth>"
+                },
+                "data_source_preference": "result",
+                "data_source_note": "Lastflussergebnisse wurden explizit oder sicher angefordert.",
+                "data_source_decision": {
+                  "status": "<max_depth>",
+                  "selected_data_source": "<max_depth>",
+                  "confidence": "<max_depth>",
+                  "rationale": "<max_depth>",
+                  "should_execute": "<max_depth>",
+                  "decision_mode": "<max_depth>",
+                  "llm_decision": "<max_depth>",
+                  "chain_mode": "<max_depth>",
+                  "attribute_match_mode": "<max_depth>",
+                  "attribute_match_confidence": "<max_depth>",
+                  "attribute_match_rationale": "<max_depth>",
+                  "attribute_cardinality": "<max_depth>",
+                  "attribute_cardinality_rationale": "<max_depth>",
+                  "fallback_applied": "<max_depth>",
+                  "effective_data_source": "<max_depth>",
+                  "data_source_note": "<max_depth>"
+                },
+                "attribute_match_mode": {
+                  "status": "<max_depth>",
+                  "mode": "<max_depth>",
+                  "confidence": "<max_depth>",
+                  "should_execute": "<max_depth>",
+                  "rationale": "<max_depth>",
+                  "source": "<max_depth>"
+                },
+                "attribute_cardinality": "one",
+                "attribute_cardinality_rationale": "The user asks for a single value, specifically the loading of Line 4-5."
+              },
+              "selected_data_source": "result",
+              "effective_data_source": "result",
+              "data_source_note": "Lastflussergebnisse wurden explizit oder sicher angefordert.",
+              "data_source_decision": {
+                "status": "ok",
+                "selected_data_source": "result",
+                "confidence": "high",
+                "rationale": "The user asks for a load-flow result, specifically the loading of a line (Line 4-5) in PowerFactory.",
+                "should_execute": true,
+                "decision_mode": "llm",
+                "llm_decision": {
+                  "selected_data_source": "<max_depth>",
+                  "confidence": "<max_depth>",
+                  "rationale": "<max_depth>",
+                  "should_execute": "<max_depth>",
+                  "attribute_match_mode": "<max_depth>",
+                  "attribute_match_confidence": "<max_depth>",
+                  "attribute_match_rationale": "<max_depth>",
+                  "attribute_cardinality": "<max_depth>",
+                  "attribute_cardinality_rationale": "<max_depth>"
+                },
+                "chain_mode": "native_structured_output",
+                "attribute_match_mode": "technical_name",
+                "attribute_match_confidence": "high",
+                "attribute_match_rationale": "The user explicitly wrote the technical name 'loading' and referenced a specific line (Line 4-5) in PowerFactory.",
+                "attribute_cardinality": "one",
+                "attribute_cardinality_rationale": "The user asks for a single value, specifically the loading of Line 4-5.",
+                "fallback_applied": false,
+                "effective_data_source": "result",
+                "data_source_note": "Lastflussergebnisse wurden explizit oder sicher angefordert."
+              }
+            }
+          },
+          {
+            "step": "resolve_objects_from_inventory_llm",
+            "effective_user_input": "Was ist die loading von Line 4-5 in PF?",
+            "source_subrequest": null,
+            "tool_spec": {
+              "name": "resolve_objects_from_inventory_llm",
+              "description": "Resolve PowerFactory objects by LLM-based exact candidate selection from a unified non-topology inventory.",
+              "capability_tags": [],
+              "mutating": false
+            },
+            "tool_kwargs": {
+              "services": "<omitted:dict>",
+              "instruction": {
+                "query_type": "element_data",
+                "entity_type": "load",
+                "entity_name_raw": "Was ist die loading von Line 4-5 in PF?",
+                "entity_name_candidates": [
+                  "<max_depth>"
+                ],
+                "attribute_request_text": "Was ist die loading von Line 4-5 in PF?",
+                "available_types": [
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>"
+                ],
+                "requested_attribute_names": [
+                  "<max_depth>"
+                ],
+                "requested_attribute_name_extraction": {
+                  "status": "<max_depth>",
+                  "requested_attribute_names": "<max_depth>",
+                  "llm_decision": "<max_depth>",
+                  "chain_mode": "<max_depth>"
+                },
+                "data_source_preference": "result",
+                "data_source_note": "Lastflussergebnisse wurden explizit oder sicher angefordert.",
+                "data_source_decision": {
+                  "status": "<max_depth>",
+                  "selected_data_source": "<max_depth>",
+                  "confidence": "<max_depth>",
+                  "rationale": "<max_depth>",
+                  "should_execute": "<max_depth>",
+                  "decision_mode": "<max_depth>",
+                  "llm_decision": "<max_depth>",
+                  "chain_mode": "<max_depth>",
+                  "attribute_match_mode": "<max_depth>",
+                  "attribute_match_confidence": "<max_depth>",
+                  "attribute_match_rationale": "<max_depth>",
+                  "attribute_cardinality": "<max_depth>",
+                  "attribute_cardinality_rationale": "<max_depth>",
+                  "fallback_applied": "<max_depth>",
+                  "effective_data_source": "<max_depth>",
+                  "data_source_note": "<max_depth>"
+                },
+                "attribute_match_mode": {
+                  "status": "<max_depth>",
+                  "mode": "<max_depth>",
+                  "confidence": "<max_depth>",
+                  "should_execute": "<max_depth>",
+                  "rationale": "<max_depth>",
+                  "source": "<max_depth>"
+                },
+                "attribute_cardinality": "one",
+                "attribute_cardinality_rationale": "The user asks for a single value, specifically the loading of Line 4-5."
+              },
+              "inventory": {
+                "available_types": [
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>"
+                ],
+                "counts_by_type": {
+                  "bus": "<max_depth>",
+                  "load": "<max_depth>",
+                  "line": "<max_depth>",
+                  "transformer": "<max_depth>",
+                  "generator": "<max_depth>",
+                  "switch": "<max_depth>"
+                },
+                "items_by_type": {
+                  "bus": "<max_depth>",
+                  "load": "<max_depth>",
+                  "line": "<max_depth>",
+                  "transformer": "<max_depth>",
+                  "generator": "<max_depth>",
+                  "switch": "<max_depth>"
+                },
+                "samples_by_type": {
+                  "bus": "<max_depth>",
+                  "load": "<max_depth>",
+                  "line": "<max_depth>",
+                  "transformer": "<max_depth>",
+                  "generator": "<max_depth>",
+                  "switch": "<max_depth>"
+                }
+              }
+            },
+            "result": {
+              "status": "error",
+              "tool": "resolve_objects_from_inventory_llm",
+              "project": "<omitted:str>",
+              "instruction": {
+                "query_type": "element_data",
+                "entity_type": "load",
+                "entity_name_raw": "Was ist die loading von Line 4-5 in PF?",
+                "entity_name_candidates": [
+                  "<max_depth>"
+                ],
+                "attribute_request_text": "Was ist die loading von Line 4-5 in PF?",
+                "available_types": [
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>"
+                ],
+                "requested_attribute_names": [
+                  "<max_depth>"
+                ],
+                "requested_attribute_name_extraction": {
+                  "status": "<max_depth>",
+                  "requested_attribute_names": "<max_depth>",
+                  "llm_decision": "<max_depth>",
+                  "chain_mode": "<max_depth>"
+                },
+                "data_source_preference": "result",
+                "data_source_note": "Lastflussergebnisse wurden explizit oder sicher angefordert.",
+                "data_source_decision": {
+                  "status": "<max_depth>",
+                  "selected_data_source": "<max_depth>",
+                  "confidence": "<max_depth>",
+                  "rationale": "<max_depth>",
+                  "should_execute": "<max_depth>",
+                  "decision_mode": "<max_depth>",
+                  "llm_decision": "<max_depth>",
+                  "chain_mode": "<max_depth>",
+                  "attribute_match_mode": "<max_depth>",
+                  "attribute_match_confidence": "<max_depth>",
+                  "attribute_match_rationale": "<max_depth>",
+                  "attribute_cardinality": "<max_depth>",
+                  "attribute_cardinality_rationale": "<max_depth>",
+                  "fallback_applied": "<max_depth>",
+                  "effective_data_source": "<max_depth>",
+                  "data_source_note": "<max_depth>"
+                },
+                "attribute_match_mode": {
+                  "status": "<max_depth>",
+                  "mode": "<max_depth>",
+                  "confidence": "<max_depth>",
+                  "should_execute": "<max_depth>",
+                  "rationale": "<max_depth>",
+                  "source": "<max_depth>"
+                },
+                "attribute_cardinality": "one",
+                "attribute_cardinality_rationale": "The user asks for a single value, specifically the loading of Line 4-5."
+              },
+              "error": "invalid_object_selection",
+              "details": "Das LLM hat keinen gültigen exakten Namen aus der Kandidatenliste zurückgegeben.",
+              "llm_decision": {
+                "selected_object_name": null,
+                "selected_object_names": [],
+                "selection_mode": "all",
+                "confidence": "high",
+                "rationale": "The request explicitly mentions 'Line 4-5' which suggests a range of objects, so __ALL__ is the safe choice.",
+                "alternatives": [
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>"
+                ],
+                "should_execute": true
+              },
+              "candidate_names": [
+                "Load A",
+                "Load B",
+                "Load C"
+              ]
+            }
+          }
+        ]
+      },
+      "raw_answer": "Die Anfrage konnte nicht sauber ausgeführt werden (invalid_object_selection). Details: Das LLM hat keinen gültigen exakten Namen aus der Kandidatenliste zurückgegeben."
+    }
+  }
+}

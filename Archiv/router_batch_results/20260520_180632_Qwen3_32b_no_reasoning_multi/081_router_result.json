@@ -1,0 +1,48 @@
+{
+  "run_id": 81,
+  "timestamp": "2026-05-22T15:22:37.412823",
+  "user_input": "Wie ist die Auslastung von Line in PF?",
+  "duration_seconds": 16.275,
+  "token_usage": {
+    "prompt_tokens": 709,
+    "completion_tokens": 524,
+    "total_tokens": 1233,
+    "details": {
+      "qwen3:32b": {
+        "input_tokens": 709,
+        "output_tokens": 524,
+        "total_tokens": 1233
+      }
+    }
+  },
+  "decision_trace": {
+    "domain": "ASK_USER",
+    "planning_mode": "",
+    "workflow": "",
+    "confidence": "",
+    "safe_to_execute": "",
+    "num_steps": 0,
+    "steps": "",
+    "planner_reasoning": "",
+    "resolved_object": "<omitted:str>",
+    "resolved_object_confidence": "",
+    "selected_attributes": "",
+    "attribute_confidence": "",
+    "num_tool_calls": 0,
+    "executed_tools": "",
+    "failed_tool": "",
+    "equipment_resolution_mode": "",
+    "attribute_resolution_mode": "",
+    "comparison_resolution_mode": ""
+  },
+  "router_output": {
+    "route": "ASK_USER",
+    "question": "Welche Linie (Line) bezieht sich auf die Auslastung?",
+    "missing_fields": [
+      "line_name"
+    ],
+    "partial": {
+      "user_input": "Wie ist die Auslastung von Line in PF?"
+    }
+  }
+}

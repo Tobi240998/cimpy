@@ -1,0 +1,48 @@
+{
+  "run_id": 114,
+  "timestamp": "2026-05-22T18:07:11.713222",
+  "user_input": "Zu welcher topologischen Komponente gehört Load 27? Wie hoch war die Wirkleistung von Load 27 am 09.01.2026?",
+  "duration_seconds": 21.802,
+  "token_usage": {
+    "prompt_tokens": 740,
+    "completion_tokens": 709,
+    "total_tokens": 1449,
+    "details": {
+      "qwen3:32b": {
+        "input_tokens": 740,
+        "output_tokens": 709,
+        "total_tokens": 1449
+      }
+    }
+  },
+  "decision_trace": {
+    "domain": "ASK_USER",
+    "planning_mode": "",
+    "workflow": "",
+    "confidence": "",
+    "safe_to_execute": "",
+    "num_steps": 0,
+    "steps": "",
+    "planner_reasoning": "",
+    "resolved_object": "<omitted:str>",
+    "resolved_object_confidence": "",
+    "selected_attributes": "",
+    "attribute_confidence": "",
+    "num_tool_calls": 0,
+    "executed_tools": "",
+    "failed_tool": "",
+    "equipment_resolution_mode": "",
+    "attribute_resolution_mode": "",
+    "comparison_resolution_mode": ""
+  },
+  "router_output": {
+    "route": "ASK_USER",
+    "question": "Zu welcher Quelle bezieht sich Ihre Frage zur topologischen Komponente von Load 27? Bitte geben Sie an, ob es sich um historische CIM-Daten oder das aktuelle PowerFactory-Projekt handelt.",
+    "missing_fields": [
+      "data_source"
+    ],
+    "partial": {
+      "user_input": "Zu welcher topologischen Komponente gehört Load 27? Wie hoch war die Wirkleistung von Load 27 am 09.01.2026?"
+    }
+  }
+}

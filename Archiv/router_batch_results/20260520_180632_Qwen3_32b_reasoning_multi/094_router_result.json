@@ -1,0 +1,49 @@
+{
+  "run_id": 94,
+  "timestamp": "2026-05-21T07:45:11.121948",
+  "user_input": "Welche Spannung liegt im Zeitverlauf am 09.01.2026 an Trf 19 20 an?",
+  "duration_seconds": 14.337,
+  "token_usage": {
+    "prompt_tokens": 846,
+    "completion_tokens": 474,
+    "total_tokens": 1320,
+    "details": {
+      "qwen3:32b": {
+        "input_tokens": 846,
+        "output_tokens": 474,
+        "total_tokens": 1320
+      }
+    }
+  },
+  "decision_trace": {
+    "domain": "ASK_USER",
+    "planning_mode": "",
+    "workflow": "",
+    "confidence": "",
+    "safe_to_execute": "",
+    "num_steps": 0,
+    "steps": "",
+    "planner_reasoning": "",
+    "resolved_object": "<omitted:str>",
+    "resolved_object_confidence": "",
+    "selected_attributes": "",
+    "attribute_confidence": "",
+    "num_tool_calls": 0,
+    "executed_tools": "",
+    "failed_tool": "",
+    "equipment_resolution_mode": "",
+    "attribute_resolution_mode": "",
+    "comparison_resolution_mode": ""
+  },
+  "router_output": {
+    "route": "ASK_USER",
+    "question": "Bitte geben Sie den Zeitraum innerhalb des 09.01.2026 an, für den Sie den Spannungsverlauf von Trf 19 20 benötigen (z.B. 'ganzer Tag', '08:00-12:00' oder 'Maximalwert')",
+    "missing_fields": [
+      "time_range"
+    ],
+    "partial": {
+      "user_input": "Welche Spannung liegt im Zeitverlauf am 09.01.2026 an Trf 19 20 an?",
+      "date": "09.01.2026"
+    }
+  }
+}

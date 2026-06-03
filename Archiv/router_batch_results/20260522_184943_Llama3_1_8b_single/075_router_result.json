@@ -1,0 +1,539 @@
+{
+  "run_id": 75,
+  "timestamp": "2026-05-23T18:56:01.803068",
+  "user_input": "Öffne den Schalter Schalter 1 und gib danach die Busspannungen zurück.",
+  "duration_seconds": 18.75,
+  "token_usage": {
+    "prompt_tokens": 12213,
+    "completion_tokens": 1438,
+    "total_tokens": 13651,
+    "details": {
+      "llama3.1:8b": {
+        "total_tokens": 13651,
+        "output_tokens": 1438,
+        "input_tokens": 12213
+      }
+    }
+  },
+  "decision_trace": {
+    "domain": "composite",
+    "planning_mode": "",
+    "workflow": "",
+    "confidence": "",
+    "safe_to_execute": "",
+    "num_steps": 0,
+    "steps": "",
+    "planner_reasoning": "",
+    "resolved_object": "<omitted:str>",
+    "resolved_object_confidence": "",
+    "selected_attributes": "",
+    "attribute_confidence": "",
+    "num_tool_calls": 0,
+    "executed_tools": "",
+    "failed_tool": ""
+  },
+  "router_output": {
+    "route": "COMPOSITE",
+    "domain": "composite",
+    "status": "ok",
+    "is_composite": true,
+    "composite_decision": {
+      "status": "ok",
+      "is_composite": true,
+      "subrequests": [
+        {
+          "user_input": "Öffne den Schalter Schalter 1",
+          "depends_on_previous": false
+        },
+        {
+          "user_input": "gib danach die Busspannungen zurück",
+          "depends_on_previous": true
+        }
+      ],
+      "reasoning": "Der User bittet um zwei separate Aktionen: Zuerst muss der Schalter geöffnet werden, dann müssen die Busspannungen zurückgegeben werden. Die zweite Aktion hängt von der ersten ab."
+    },
+    "result": {
+      "status": "ok",
+      "answer": "1. Die Schalteroperation 'open' wurde für 'Switch 1' (StaSwitch) ausgeführt. Zustand vorher: closed. Zustand nachher: open. Anschließend wurde ein Lastfluss gerechnet.\n2. Die Anfrage konnte nicht sauber ausgeführt werden (invalid_object_selection). Details: Das LLM hat keinen gültigen exakten Namen aus der Kandidatenliste zurückgegeben.",
+      "subresults": [
+        {
+          "index": 1,
+          "user_input": "Öffne den Schalter Schalter 1",
+          "effective_input": "Öffne den Schalter Schalter 1",
+          "depends_on_previous": false,
+          "output": {
+            "route": "POWERFACTORY",
+            "domain": "powerfactory",
+            "plan": {
+              "domain": "powerfactory",
+              "user_input": "Öffne den Schalter Schalter 1",
+              "steps": [
+                {
+                  "domain": "<max_depth>",
+                  "tool": "<max_depth>",
+                  "args": "<max_depth>",
+                  "save_as": "<max_depth>",
+                  "description": "<max_depth>",
+                  "mutating": "<max_depth>"
+                },
+                {
+                  "domain": "<max_depth>",
+                  "tool": "<max_depth>",
+                  "args": "<max_depth>",
+                  "save_as": "<max_depth>",
+                  "description": "<max_depth>",
+                  "mutating": "<max_depth>"
+                },
+                {
+                  "domain": "<max_depth>",
+                  "tool": "<max_depth>",
+                  "args": "<max_depth>",
+                  "save_as": "<max_depth>",
+                  "description": "<max_depth>",
+                  "mutating": "<max_depth>"
+                },
+                {
+                  "domain": "<max_depth>",
+                  "tool": "<max_depth>",
+                  "args": "<max_depth>",
+                  "save_as": "<max_depth>",
+                  "description": "<max_depth>",
+                  "mutating": "<max_depth>"
+                },
+                {
+                  "domain": "<max_depth>",
+                  "tool": "<max_depth>",
+                  "args": "<max_depth>",
+                  "save_as": "<max_depth>",
+                  "description": "<max_depth>",
+                  "mutating": "<max_depth>"
+                }
+              ],
+              "classification": {
+                "domain": "powerfactory",
+                "planning_mode": "standard_workflow",
+                "workflow": "pf.change_switch_state",
+                "custom_steps": [],
+                "safe_to_execute": true,
+                "missing_context": [],
+                "clarification_question": "",
+                "reasoning": ""
+              },
+              "reasoning": ""
+            },
+            "planner_decision": {
+              "domain": "powerfactory",
+              "planning_mode": "standard_workflow",
+              "workflow": "pf.change_switch_state",
+              "custom_steps": [],
+              "safe_to_execute": true,
+              "missing_context": [],
+              "clarification_question": "",
+              "reasoning": ""
+            },
+            "result": {
+              "status": "ok",
+              "tool": "powerfactory",
+              "agent": "SingleAgent",
+              "project": "<omitted:str>",
+              "studycase": "<omitted:str>",
+              "user_input": "Öffne den Schalter Schalter 1",
+              "classification": {
+                "domain": "powerfactory",
+                "planning_mode": "standard_workflow",
+                "workflow": "pf.change_switch_state",
+                "custom_steps": [],
+                "safe_to_execute": true,
+                "missing_context": [],
+                "clarification_question": "",
+                "reasoning": ""
+              },
+              "plan": [
+                {
+                  "step": "<max_depth>",
+                  "description": "<max_depth>"
+                },
+                {
+                  "step": "<max_depth>",
+                  "description": "<max_depth>"
+                },
+                {
+                  "step": "<max_depth>",
+                  "description": "<max_depth>"
+                },
+                {
+                  "step": "<max_depth>",
+                  "description": "<max_depth>"
+                },
+                {
+                  "step": "<max_depth>",
+                  "description": "<max_depth>"
+                }
+              ],
+              "available_tools": [
+                "<non_serializable:UnifiedToolSpec>",
+                "<non_serializable:UnifiedToolSpec>",
+                "<non_serializable:UnifiedToolSpec>",
+                "<non_serializable:UnifiedToolSpec>",
+                "<non_serializable:UnifiedToolSpec>",
+                "<non_serializable:UnifiedToolSpec>",
+                "<non_serializable:UnifiedToolSpec>",
+                "<non_serializable:UnifiedToolSpec>",
+                "<non_serializable:UnifiedToolSpec>",
+                "<non_serializable:UnifiedToolSpec>",
+                "<non_serializable:UnifiedToolSpec>",
+                "<non_serializable:UnifiedToolSpec>",
+                "<non_serializable:UnifiedToolSpec>",
+                "<non_serializable:UnifiedToolSpec>",
+                "<non_serializable:UnifiedToolSpec>",
+                "<non_serializable:UnifiedToolSpec>",
+                "<non_serializable:UnifiedToolSpec>",
+                "<non_serializable:UnifiedToolSpec>",
+                "<non_serializable:UnifiedToolSpec>",
+                "<non_serializable:UnifiedToolSpec>",
+                "<non_serializable:UnifiedToolSpec>",
+                "<non_serializable:UnifiedToolSpec>",
+                "<non_serializable:UnifiedToolSpec>",
+                "<non_serializable:UnifiedToolSpec>",
+                "<non_serializable:UnifiedToolSpec>",
+                "<non_serializable:UnifiedToolSpec>",
+                "<non_serializable:UnifiedToolSpec>",
+                "<non_serializable:UnifiedToolSpec>",
+                "<non_serializable:UnifiedToolSpec>",
+                "<non_serializable:UnifiedToolSpec>",
+                "<non_serializable:UnifiedToolSpec>",
+                "<non_serializable:UnifiedToolSpec>",
+                "<non_serializable:UnifiedToolSpec>"
+              ],
+              "instruction": null,
+              "resolved_load": null,
+              "data": {},
+              "catalog": [],
+              "messages": [
+                "Die Schalteroperation 'open' wurde für 'Switch 1' (StaSwitch) ausgeführt. Zustand vorher: closed. Zustand nachher: open. Anschließend wurde ein Lastfluss gerechnet."
+              ],
+              "answer": "Die Schalteroperation \"open\" wurde erfolgreich für den Schalter \"Switch 1\" durchgeführt. Der Zustand des Schalters vor der Operation war geschlossen, danach offen. Ein Lastfluss wurde berechnet.",
+              "summary": {
+                "status": "ok",
+                "tool": "merged_powerfactory_summary",
+                "answer": "Die Schalteroperation 'open' wurde für 'Switch 1' (StaSwitch) ausgeführt. Zustand vorher: closed. Zustand nachher: open. Anschließend wurde ein Lastfluss gerechnet.",
+                "messages": [
+                  "<max_depth>"
+                ],
+                "summary_count": 1,
+                "plan_steps": [
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>"
+                ]
+              },
+              "summary_parts": [
+                {
+                  "status": "<max_depth>",
+                  "tool": "<max_depth>",
+                  "project": "<omitted:str>",
+                  "answer": "<max_depth>",
+                  "messages": "<max_depth>"
+                }
+              ],
+              "topology": {
+                "graph_mode": null,
+                "graph_summary": {},
+                "build_debug": {},
+                "inventory": {},
+                "instruction": null,
+                "resolution": null,
+                "selected_node": null,
+                "neighbor_count": 0,
+                "neighbors": [],
+                "matches": []
+              },
+              "switch": {
+                "instruction": {
+                  "query_type": "<max_depth>",
+                  "operation": "<max_depth>",
+                  "entity_type": "<max_depth>",
+                  "entity_name_raw": "<max_depth>",
+                  "entity_name_candidates": "<max_depth>",
+                  "available_types": "<max_depth>",
+                  "debug_switch_decision": "<max_depth>"
+                },
+                "resolution": {
+                  "status": "<max_depth>",
+                  "tool": "<max_depth>",
+                  "project": "<omitted:str>",
+                  "instruction": "<max_depth>",
+                  "asset_query": "<max_depth>",
+                  "selected_match": "<max_depth>",
+                  "selected_matches": "<max_depth>",
+                  "selected_object_names": "<max_depth>",
+                  "selection_mode": "<max_depth>",
+                  "matches": "<max_depth>",
+                  "llm_decision": "<max_depth>",
+                  "entity_type": "<max_depth>"
+                },
+                "execution": {
+                  "status": "<max_depth>",
+                  "tool": "<max_depth>",
+                  "project": "<omitted:str>",
+                  "studycase": "<omitted:str>",
+                  "instruction": "<max_depth>",
+                  "resolution": "<max_depth>",
+                  "switch": "<max_depth>",
+                  "state_before": "<max_depth>",
+                  "state_after": "<max_depth>",
+                  "state_before_raw": "<max_depth>",
+                  "state_after_raw": "<max_depth>",
+                  "apply_result": "<max_depth>",
+                  "loadflow": "<max_depth>"
+                },
+                "summary": {
+                  "status": "<max_depth>",
+                  "tool": "<max_depth>",
+                  "project": "<omitted:str>",
+                  "answer": "<max_depth>",
+                  "messages": "<max_depth>"
+                }
+              },
+              "data_query": {
+                "inventory": null,
+                "instruction": null,
+                "resolution": {
+                  "status": "<max_depth>",
+                  "tool": "<max_depth>",
+                  "project": "<omitted:str>",
+                  "instruction": "<max_depth>",
+                  "asset_query": "<max_depth>",
+                  "selected_match": "<max_depth>",
+                  "selected_matches": "<max_depth>",
+                  "selected_object_names": "<max_depth>",
+                  "selection_mode": "<max_depth>",
+                  "matches": "<max_depth>",
+                  "llm_decision": "<max_depth>",
+                  "entity_type": "<max_depth>"
+                },
+                "attribute_listing": null,
+                "attribute_selection": null,
+                "execution": null,
+                "summary": null
+              },
+              "debug": {
+                "planning": {},
+                "selected_equipment": {
+                  "resolved_load": "<max_depth>",
+                  "entity_resolution": "<max_depth>",
+                  "object_resolution": "<max_depth>"
+                },
+                "trace": [
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>"
+                ]
+              },
+              "raw_answer": "Die Schalteroperation 'open' wurde für 'Switch 1' (StaSwitch) ausgeführt. Zustand vorher: closed. Zustand nachher: open. Anschließend wurde ein Lastfluss gerechnet."
+            }
+          }
+        },
+        {
+          "index": 2,
+          "user_input": "gib danach die Busspannungen zurück",
+          "effective_input": "Originale Gesamtanfrage: Öffne den Schalter Schalter 1 und gib danach die Busspannungen zurück.\n\nVorheriger Kontext:\n\nTeil 1: Die Schalteroperation 'open' wurde für 'Switch 1' (StaSwitch) ausgeführt. Zustand vorher: closed. Zustand nachher: open. Anschließend wurde ein Lastfluss gerechnet.\n\nAktuelle Teilanfrage:\ngib danach die Busspannungen zurück",
+          "depends_on_previous": true,
+          "output": {
+            "route": "POWERFACTORY",
+            "domain": "powerfactory",
+            "plan": {
+              "domain": "powerfactory",
+              "user_input": "Originale Gesamtanfrage: Öffne den Schalter Schalter 1 und gib danach die Busspannungen zurück.\n\nVorheriger Kontext:\n\nTeil 1: Die Schalteroperation 'open' wurde für 'Switch 1' (StaSwitch) ausgeführt. Zustand vorher: closed. Zustand nachher: open. Anschließend wurde ein Lastfluss gerechnet.\n\nAktuelle Teilanfrage:\ngib danach die Busspannungen zurück",
+              "steps": [
+                {
+                  "domain": "<max_depth>",
+                  "tool": "<max_depth>",
+                  "args": "<max_depth>",
+                  "save_as": "<max_depth>",
+                  "description": "<max_depth>",
+                  "mutating": "<max_depth>"
+                },
+                {
+                  "domain": "<max_depth>",
+                  "tool": "<max_depth>",
+                  "args": "<max_depth>",
+                  "save_as": "<max_depth>",
+                  "description": "<max_depth>",
+                  "mutating": "<max_depth>"
+                },
+                {
+                  "domain": "<max_depth>",
+                  "tool": "<max_depth>",
+                  "args": "<max_depth>",
+                  "save_as": "<max_depth>",
+                  "description": "<max_depth>",
+                  "mutating": "<max_depth>"
+                },
+                {
+                  "domain": "<max_depth>",
+                  "tool": "<max_depth>",
+                  "args": "<max_depth>",
+                  "save_as": "<max_depth>",
+                  "description": "<max_depth>",
+                  "mutating": "<max_depth>"
+                },
+                {
+                  "domain": "<max_depth>",
+                  "tool": "<max_depth>",
+                  "args": "<max_depth>",
+                  "save_as": "<max_depth>",
+                  "description": "<max_depth>",
+                  "mutating": "<max_depth>"
+                }
+              ],
+              "classification": {
+                "domain": "powerfactory",
+                "planning_mode": "standard_workflow",
+                "workflow": "pf.change_switch_state",
+                "custom_steps": [],
+                "safe_to_execute": true,
+                "missing_context": [],
+                "clarification_question": "",
+                "reasoning": ""
+              },
+              "reasoning": ""
+            },
+            "planner_decision": {
+              "domain": "powerfactory",
+              "planning_mode": "standard_workflow",
+              "workflow": "pf.change_switch_state",
+              "custom_steps": [],
+              "safe_to_execute": true,
+              "missing_context": [],
+              "clarification_question": "",
+              "reasoning": ""
+            },
+            "result": {
+              "status": "error",
+              "tool": "resolve_objects_from_inventory_llm",
+              "project": "<omitted:str>",
+              "instruction": {
+                "query_type": "switch_operation",
+                "operation": "close",
+                "entity_type": "switch",
+                "entity_name_raw": "Originale Gesamtanfrage: Öffne den Schalter Schalter 1 und gib danach die Busspannungen zurück.\n\nVorheriger Kontext:\n\nTeil 1: Die Schalteroperation 'open' wurde für 'Switch 1' (StaSwitch) ausgeführt. Zustand vorher: closed. Zustand nachher: open. Anschließend wurde ein Lastfluss gerechnet.\n\nAktuelle Teilanfrage:\ngib danach die Busspannungen zurück",
+                "entity_name_candidates": [
+                  "<max_depth>",
+                  "<max_depth>"
+                ],
+                "available_types": [
+                  "<max_depth>"
+                ],
+                "debug_switch_decision": {
+                  "operation": "<max_depth>",
+                  "should_execute": "<max_depth>",
+                  "confidence": "<max_depth>",
+                  "rationale": "<max_depth>"
+                }
+              },
+              "error": "invalid_object_selection",
+              "details": "Das LLM hat keinen gültigen exakten Namen aus der Kandidatenliste zurückgegeben.",
+              "llm_decision": {
+                "selected_object_name": "__ALL__",
+                "selected_object_names": [
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>"
+                ],
+                "selection_mode": "all",
+                "confidence": "high",
+                "rationale": "The request clearly targets all available switches in the system.",
+                "alternatives": [],
+                "should_execute": true
+              },
+              "candidate_names": [
+                "Switch",
+                "Switch",
+                "Switch",
+                "Switch",
+                "Switch",
+                "Switch",
+                "Switch",
+                "Switch",
+                "Switch",
+                "Switch",
+                "Switch",
+                "Switch",
+                "Switch",
+                "Switch",
+                "Switch",
+                "Switch",
+                "Switch 1",
+                "Switch 2"
+              ],
+              "agent": "SingleAgent",
+              "available_tools": [
+                "<non_serializable:UnifiedToolSpec>",
+                "<non_serializable:UnifiedToolSpec>",
+                "<non_serializable:UnifiedToolSpec>",
+                "<non_serializable:UnifiedToolSpec>",
+                "<non_serializable:UnifiedToolSpec>",
+                "<non_serializable:UnifiedToolSpec>",
+                "<non_serializable:UnifiedToolSpec>",
+                "<non_serializable:UnifiedToolSpec>",
+                "<non_serializable:UnifiedToolSpec>",
+                "<non_serializable:UnifiedToolSpec>",
+                "<non_serializable:UnifiedToolSpec>",
+                "<non_serializable:UnifiedToolSpec>",
+                "<non_serializable:UnifiedToolSpec>",
+                "<non_serializable:UnifiedToolSpec>",
+                "<non_serializable:UnifiedToolSpec>",
+                "<non_serializable:UnifiedToolSpec>",
+                "<non_serializable:UnifiedToolSpec>",
+                "<non_serializable:UnifiedToolSpec>",
+                "<non_serializable:UnifiedToolSpec>",
+                "<non_serializable:UnifiedToolSpec>",
+                "<non_serializable:UnifiedToolSpec>",
+                "<non_serializable:UnifiedToolSpec>",
+                "<non_serializable:UnifiedToolSpec>",
+                "<non_serializable:UnifiedToolSpec>",
+                "<non_serializable:UnifiedToolSpec>",
+                "<non_serializable:UnifiedToolSpec>",
+                "<non_serializable:UnifiedToolSpec>",
+                "<non_serializable:UnifiedToolSpec>",
+                "<non_serializable:UnifiedToolSpec>",
+                "<non_serializable:UnifiedToolSpec>",
+                "<non_serializable:UnifiedToolSpec>",
+                "<non_serializable:UnifiedToolSpec>",
+                "<non_serializable:UnifiedToolSpec>"
+              ],
+              "answer": "Die Anfrage konnte nicht ausgeführt werden. Fehlergrund: Ungültige Objektwahl.\n\n(Fehlermeldung ist bereits im Ergebnis enthalten, daher wird sie direkt wiedergegeben.)",
+              "debug": {
+                "planning": {},
+                "trace": [
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>"
+                ]
+              },
+              "raw_answer": "Die Anfrage konnte nicht sauber ausgeführt werden (invalid_object_selection). Details: Das LLM hat keinen gültigen exakten Namen aus der Kandidatenliste zurückgegeben."
+            }
+          }
+        }
+      ]
+    }
+  }
+}

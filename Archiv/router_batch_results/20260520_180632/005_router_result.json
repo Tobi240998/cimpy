@@ -1,0 +1,117 @@
+{
+  "run_id": 5,
+  "timestamp": "2026-05-23T11:11:03.322030",
+  "user_input": "Erhöhe Last A um 2 MW.",
+  "duration_seconds": 12.542,
+  "token_usage": {
+    "prompt_tokens": 3912,
+    "completion_tokens": 311,
+    "total_tokens": 4223,
+    "details": {
+      "gemma3:27b": {
+        "output_tokens": 311,
+        "total_tokens": 4223,
+        "input_tokens": 3912
+      }
+    }
+  },
+  "decision_trace": {
+    "domain": "HISTORICAL",
+    "planning_mode": "",
+    "workflow": "",
+    "confidence": "low",
+    "safe_to_execute": "False",
+    "num_steps": 0,
+    "steps": "",
+    "planner_reasoning": "The request asks to *increase* a load, which is a control action. The CIM domain agent cannot perform control actions. It can only query and analyze data.",
+    "resolved_object": "<omitted:str>",
+    "resolved_object_confidence": "",
+    "selected_attributes": "",
+    "attribute_confidence": "",
+    "num_tool_calls": 1,
+    "executed_tools": "unsupported_request",
+    "failed_tool": "unsupported_request",
+    "equipment_resolution_mode": "",
+    "attribute_resolution_mode": "",
+    "comparison_resolution_mode": ""
+  },
+  "router_output": {
+    "route": "HISTORICAL",
+    "result": {
+      "status": "error",
+      "tool": "cim_agent",
+      "agent": "CIMDomainAgent",
+      "error": "unsupported_cim_request",
+      "answer": "Die Anfrage wurde zur CIM-Seite geroutet, ist aktuell aber noch nicht sicher oder unterstützt ausführbar. Fehlender Kontext: This request requires a control action, which is not supported. It is unclear if this is a simulation or a real control request..",
+      "classification": {
+        "intent": "unsupported_cim_request",
+        "confidence": "low",
+        "target_kind": "asset",
+        "request_mode": "clarification_needed",
+        "safe_to_execute": false,
+        "missing_context": [
+          "This request requires a control action, which is not supported. It is unclear if this is a simulation or a real control request."
+        ],
+        "required_steps": [],
+        "reasoning": "The request asks to *increase* a load, which is a control action. The CIM domain agent cannot perform control actions. It can only query and analyze data.",
+        "status": "ok",
+        "classification_mode": "primary_llm_classifier"
+      },
+      "user_input": "Erhöhe Last A um 2 MW.",
+      "debug": {
+        "trace": [
+          {
+            "step": "unsupported_request",
+            "effective_user_input": "Erhöhe Last A um 2 MW.",
+            "source_subrequest": null,
+            "result": "<circular_reference>"
+          }
+        ],
+        "classification": {
+          "intent": "unsupported_cim_request",
+          "confidence": "low",
+          "target_kind": "asset",
+          "request_mode": "clarification_needed",
+          "safe_to_execute": false,
+          "missing_context": [
+            "This request requires a control action, which is not supported. It is unclear if this is a simulation or a real control request."
+          ],
+          "required_steps": [],
+          "reasoning": "The request asks to *increase* a load, which is a control action. The CIM domain agent cannot perform control actions. It can only query and analyze data.",
+          "status": "ok",
+          "classification_mode": "primary_llm_classifier"
+        },
+        "plan": [
+          {
+            "step": "unsupported_request",
+            "description": "Return a controlled unsupported-workflow message"
+          }
+        ],
+        "run_summary": {
+          "user_input": "Erhöhe Last A um 2 MW.",
+          "classification_summary": {
+            "intent": "unsupported_cim_request",
+            "request_mode": "clarification_needed",
+            "safe_to_execute": false,
+            "target_kind": "asset",
+            "confidence": "low",
+            "classification_mode": "primary_llm_classifier",
+            "missing_context": [
+              "This request requires a control action, which is not supported. It is unclear if this is a simulation or a real control request."
+            ]
+          },
+          "planned_steps": [
+            "unsupported_request"
+          ],
+          "selected_type": null,
+          "selected_equipment_id": null,
+          "selected_equipment_name": null,
+          "parsed_query_summary": null,
+          "final_status": "error",
+          "final_answer": "Die Anfrage wurde zur CIM-Seite geroutet, ist aktuell aber noch nicht sicher oder unterstützt ausführbar. Fehlender Kontext: This request requires a control action, which is not supported. It is unclear if this is a simulation or a real control request.."
+        }
+      },
+      "raw_answer": "Die Anfrage wurde zur CIM-Seite geroutet, ist aktuell aber noch nicht sicher oder unterstützt ausführbar. Fehlender Kontext: This request requires a control action, which is not supported. It is unclear if this is a simulation or a real control request.."
+    }
+  }
+}

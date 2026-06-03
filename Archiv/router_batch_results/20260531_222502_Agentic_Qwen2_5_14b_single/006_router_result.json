@@ -1,0 +1,39 @@
+{
+  "run_id": 6,
+  "timestamp": "2026-05-31T22:28:33.741732",
+  "user_input": "Wie viele Schalter sind aktuell in Powerfactory geöffnet?",
+  "duration_seconds": 6.141,
+  "token_usage": {
+    "prompt_tokens": 0,
+    "completion_tokens": 0,
+    "total_tokens": 0,
+    "details": {}
+  },
+  "decision_trace": {
+    "domain": "ERROR",
+    "planning_mode": "",
+    "workflow": "",
+    "confidence": "",
+    "safe_to_execute": "",
+    "num_steps": 0,
+    "steps": "",
+    "planner_reasoning": "",
+    "resolved_object": "<omitted:str>",
+    "resolved_object_confidence": "",
+    "selected_attributes": "",
+    "attribute_confidence": "",
+    "num_tool_calls": 0,
+    "executed_tools": "",
+    "failed_tool": ""
+  },
+  "router_output": {
+    "route": "ERROR",
+    "result": {
+      "status": "error",
+      "error": "IndexError",
+      "details": "list index out of range",
+      "traceback": "Traceback (most recent call last):\n  File \"C:\\Users\\STELLER\\Documents\\Masterarbeit\\Test CIM\\cimpy fork\\cimpy\\run_router_batch_single_agent2.py\", line 796, in main\n    out = orch.handle(user_input)\n  File \"C:\\Users\\STELLER\\Documents\\Masterarbeit\\Test CIM\\cimpy fork\\cimpy\\single_agent2\\llm_routing\\orchestrator.py\", line 11, in handle\n    return self.agent.run(user_input)\n  File \"C:\\Users\\STELLER\\Documents\\Masterarbeit\\Test CIM\\cimpy fork\\cimpy\\single_agent2\\llm_routing\\single_domain_agent.py\", line 67, in run\n    return self._run_single(user_input)\n  File \"C:\\Users\\STELLER\\Documents\\Masterarbeit\\Test CIM\\cimpy fork\\cimpy\\single_agent2\\llm_routing\\single_domain_agent.py\", line 104, in _run_single\n    result = self.executor.execute(plan)\n  File \"C:\\Users\\STELLER\\Documents\\Masterarbeit\\Test CIM\\cimpy fork\\cimpy\\single_agent2\\llm_routing\\unified_executor.py\", line 41, in execute\n    return self._execute_powerfactory(plan)\n  File \"C:\\Users\\STELLER\\Documents\\Masterarbeit\\Test CIM\\cimpy fork\\cimpy\\single_agent2\\llm_routing\\unified_executor.py\", line 171, in _execute_powerfactory\n    result = self.registry.invoke(full_tool_name, tool_kwargs)\n  File \"C:\\Users\\STELLER\\Documents\\Masterarbeit\\Test CIM\\cimpy fork\\cimpy\\single_agent2\\llm_routing\\unified_tool_registry.py\", line 122, in invoke\n    return entry.handler(payload)\n  File \"C:\\Users\\STELLER\\Documents\\Masterarbeit\\Test CIM\\cimpy fork\\cimpy\\single_agent2\\llm_routing\\unified_tool_registry.py\", line 58, in handler\n    return pf_registry.invoke(name, payload)\n  File \"C:\\Users\\STELLER\\Documents\\Masterarbeit\\Test CIM\\cimpy fork\\cimpy\\single_agent2\\pf\\powerfactory_tool_registry.py\", line 626, in invoke\n    return spec.handler(**payload)\n  File \"C:\\Users\\STELLER\\Documents\\Masterarbeit\\Test CIM\\cimpy fork\\cimpy\\single_agent2\\pf\\powerfactory_tool_registry.py\", line 697, in _tool_resolve_entity_from_inventory\n    return _resolve_entity_from_inventory_with_services(\n  File \"C:\\Users\\STELLER\\Documents\\Masterarbeit\\Test CIM\\cimpy fork\\cimpy\\single_agent2\\pf\\powerfactory_mcp_tools.py\", line 721, in _resolve_entity_from_inventory_with_services\n    selected_match = selected_matches[0]\nIndexError: list index out of range\n",
+      "answer": "Batch-Ausführung fehlgeschlagen: IndexError: list index out of range"
+    }
+  }
+}

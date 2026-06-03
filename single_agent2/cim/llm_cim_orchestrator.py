@@ -173,7 +173,7 @@ def _resolve_equipment_from_selection(parsed: dict, network_index: dict):
     equipment_obj = network_index["equipment_name_index"][equipment_type][equipment_key]
     return equipment_obj, equipment_type, equipment_key
 
-# Refactoring: nochmal prüfen, ob Einheiten wirklich vorher festgesetzt werden müssen 
+
 def _default_metric_for_equipment_type(equipment_type: str | None):
     if equipment_type == "PowerTransformer":
         return "S"

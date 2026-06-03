@@ -1,0 +1,48 @@
+{
+  "run_id": 120,
+  "timestamp": "2026-05-23T10:58:33.568887",
+  "user_input": "Wie groß ist die aktuelle Einspeisung von Generator 3?",
+  "duration_seconds": 27.295,
+  "token_usage": {
+    "prompt_tokens": 713,
+    "completion_tokens": 893,
+    "total_tokens": 1606,
+    "details": {
+      "qwen3:32b": {
+        "input_tokens": 713,
+        "output_tokens": 893,
+        "total_tokens": 1606
+      }
+    }
+  },
+  "decision_trace": {
+    "domain": "ASK_USER",
+    "planning_mode": "",
+    "workflow": "",
+    "confidence": "",
+    "safe_to_execute": "",
+    "num_steps": 0,
+    "steps": "",
+    "planner_reasoning": "",
+    "resolved_object": "<omitted:str>",
+    "resolved_object_confidence": "",
+    "selected_attributes": "",
+    "attribute_confidence": "",
+    "num_tool_calls": 0,
+    "executed_tools": "",
+    "failed_tool": "",
+    "equipment_resolution_mode": "",
+    "attribute_resolution_mode": "",
+    "comparison_resolution_mode": ""
+  },
+  "router_output": {
+    "route": "ASK_USER",
+    "question": "Bezieht sich die Frage auf den aktuellen Zustand im PowerFactory-Projekt oder auf historische CIM-Daten?",
+    "missing_fields": [
+      "data_source"
+    ],
+    "partial": {
+      "user_input": "Wie groß ist die aktuelle Einspeisung von Generator 3?"
+    }
+  }
+}

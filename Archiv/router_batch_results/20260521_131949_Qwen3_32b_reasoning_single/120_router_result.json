@@ -1,0 +1,46 @@
+{
+  "run_id": 120,
+  "timestamp": "2026-05-22T08:23:47.895847",
+  "user_input": "Wie groß ist die aktuelle Einspeisung von Generator 3?",
+  "duration_seconds": 34.978,
+  "token_usage": {
+    "prompt_tokens": 4476,
+    "completion_tokens": 1007,
+    "total_tokens": 5483,
+    "details": {
+      "qwen3:32b": {
+        "output_tokens": 1007,
+        "input_tokens": 4476,
+        "total_tokens": 5483
+      }
+    }
+  },
+  "decision_trace": {
+    "domain": "ASK_USER",
+    "planning_mode": "",
+    "workflow": "",
+    "confidence": "",
+    "safe_to_execute": "",
+    "num_steps": 0,
+    "steps": "",
+    "planner_reasoning": "",
+    "resolved_object": "<omitted:str>",
+    "resolved_object_confidence": "",
+    "selected_attributes": "",
+    "attribute_confidence": "",
+    "num_tool_calls": 0,
+    "executed_tools": "",
+    "failed_tool": ""
+  },
+  "router_output": {
+    "route": "ASK_USER",
+    "status": "needs_clarification",
+    "question": "Sind Sie auf die aktuelle Einspeisung aus einem CIM-Zeitsnapshot oder aus der laufenden PowerFactory-Simulation bezüglich?",
+    "missing_fields": [
+      "data source (CIM snapshot vs. PowerFactory active project)"
+    ],
+    "partial": {
+      "user_input": "Wie groß ist die aktuelle Einspeisung von Generator 3?"
+    }
+  }
+}

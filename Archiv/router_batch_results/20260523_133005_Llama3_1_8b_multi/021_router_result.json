@@ -1,0 +1,111 @@
+{
+  "run_id": 21,
+  "timestamp": "2026-05-23T14:09:16.293314",
+  "user_input": "Schalte Schalter 1 ein.",
+  "duration_seconds": 5.165,
+  "token_usage": {
+    "prompt_tokens": 3602,
+    "completion_tokens": 377,
+    "total_tokens": 3979,
+    "details": {
+      "llama3.1:8b": {
+        "output_tokens": 377,
+        "input_tokens": 3602,
+        "total_tokens": 3979
+      }
+    }
+  },
+  "decision_trace": {
+    "domain": "HISTORICAL",
+    "planning_mode": "",
+    "workflow": "",
+    "confidence": "low",
+    "safe_to_execute": "False",
+    "num_steps": 0,
+    "steps": "",
+    "planner_reasoning": "Die Aktion ist nicht CIM-basiert und kann daher nicht ausgeführt werden.",
+    "resolved_object": "<omitted:str>",
+    "resolved_object_confidence": "",
+    "selected_attributes": "",
+    "attribute_confidence": "",
+    "num_tool_calls": 1,
+    "executed_tools": "unsupported_request",
+    "failed_tool": "unsupported_request",
+    "equipment_resolution_mode": "",
+    "attribute_resolution_mode": "",
+    "comparison_resolution_mode": ""
+  },
+  "router_output": {
+    "route": "HISTORICAL",
+    "result": {
+      "status": "error",
+      "tool": "cim_agent",
+      "agent": "CIMDomainAgent",
+      "error": "unsupported_cim_request",
+      "answer": "Die Anfrage konnte nicht bearbeitet werden. Die CIM-Seite unterstützt diese Funktion noch nicht.",
+      "classification": {
+        "intent": "asset_lookup",
+        "confidence": "low",
+        "target_kind": "asset",
+        "request_mode": "clarification_needed",
+        "safe_to_execute": false,
+        "missing_context": [],
+        "required_steps": [],
+        "reasoning": "Die Aktion ist nicht CIM-basiert und kann daher nicht ausgeführt werden.",
+        "status": "ok",
+        "classification_mode": "primary_llm_classifier"
+      },
+      "user_input": "Schalte Schalter 1 ein.",
+      "debug": {
+        "trace": [
+          {
+            "step": "unsupported_request",
+            "effective_user_input": "Schalte Schalter 1 ein.",
+            "source_subrequest": null,
+            "result": "<circular_reference>"
+          }
+        ],
+        "classification": {
+          "intent": "asset_lookup",
+          "confidence": "low",
+          "target_kind": "asset",
+          "request_mode": "clarification_needed",
+          "safe_to_execute": false,
+          "missing_context": [],
+          "required_steps": [],
+          "reasoning": "Die Aktion ist nicht CIM-basiert und kann daher nicht ausgeführt werden.",
+          "status": "ok",
+          "classification_mode": "primary_llm_classifier"
+        },
+        "plan": [
+          {
+            "step": "unsupported_request",
+            "description": "Return a controlled unsupported-workflow message"
+          }
+        ],
+        "run_summary": {
+          "user_input": "Schalte Schalter 1 ein.",
+          "classification_summary": {
+            "intent": "asset_lookup",
+            "request_mode": "clarification_needed",
+            "safe_to_execute": false,
+            "target_kind": "asset",
+            "confidence": "low",
+            "classification_mode": "primary_llm_classifier",
+            "missing_context": []
+          },
+          "planned_steps": [
+            "unsupported_request"
+          ],
+          "selected_type": null,
+          "selected_equipment_id": null,
+          "selected_equipment_name": null,
+          "parsed_query_summary": null,
+          "final_status": "error",
+          "final_answer": "Die Anfrage wurde zur CIM-Seite geroutet, ist aktuell aber noch nicht sicher oder unterstützt ausführbar."
+        }
+      },
+      "raw_answer": "Die Anfrage wurde zur CIM-Seite geroutet, ist aktuell aber noch nicht sicher oder unterstützt ausführbar."
+    }
+  }
+}

@@ -1,0 +1,49 @@
+{
+  "run_id": 103,
+  "timestamp": "2026-05-22T16:25:45.360584",
+  "user_input": "Welche reaktive Leistung hat Last 27 über die Zeit am 09.01.2026?",
+  "duration_seconds": 11.26,
+  "token_usage": {
+    "prompt_tokens": 726,
+    "completion_tokens": 366,
+    "total_tokens": 1092,
+    "details": {
+      "qwen3:32b": {
+        "input_tokens": 726,
+        "output_tokens": 366,
+        "total_tokens": 1092
+      }
+    }
+  },
+  "decision_trace": {
+    "domain": "ASK_USER",
+    "planning_mode": "",
+    "workflow": "",
+    "confidence": "",
+    "safe_to_execute": "",
+    "num_steps": 0,
+    "steps": "",
+    "planner_reasoning": "",
+    "resolved_object": "<omitted:str>",
+    "resolved_object_confidence": "",
+    "selected_attributes": "",
+    "attribute_confidence": "",
+    "num_tool_calls": 0,
+    "executed_tools": "",
+    "failed_tool": "",
+    "equipment_resolution_mode": "",
+    "attribute_resolution_mode": "",
+    "comparison_resolution_mode": ""
+  },
+  "router_output": {
+    "route": "ASK_USER",
+    "question": "Bitte geben Sie den Zeitraum (Start- und Endzeit) für den 09.01.2026 an, für den Sie die reaktive Leistung von Last 27 benötigen.",
+    "missing_fields": [
+      "time_range"
+    ],
+    "partial": {
+      "user_input": "Welche reaktive Leistung hat Last 27 über die Zeit am 09.01.2026?",
+      "data_source": "historical"
+    }
+  }
+}

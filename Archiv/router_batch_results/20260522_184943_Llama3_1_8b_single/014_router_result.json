@@ -1,0 +1,75 @@
+{
+  "run_id": 14,
+  "timestamp": "2026-05-23T18:40:37.981922",
+  "user_input": "Reduziere Last A um 2 MW und gib danach die Auslastungen aller Leitungen zurück.",
+  "duration_seconds": 3.28,
+  "token_usage": {
+    "prompt_tokens": 4460,
+    "completion_tokens": 202,
+    "total_tokens": 4662,
+    "details": {
+      "llama3.1:8b": {
+        "total_tokens": 4662,
+        "output_tokens": 202,
+        "input_tokens": 4460
+      }
+    }
+  },
+  "decision_trace": {
+    "domain": "ERROR",
+    "planning_mode": "",
+    "workflow": "",
+    "confidence": "",
+    "safe_to_execute": "",
+    "num_steps": 0,
+    "steps": "",
+    "planner_reasoning": "",
+    "resolved_object": "<omitted:str>",
+    "resolved_object_confidence": "",
+    "selected_attributes": "",
+    "attribute_confidence": "",
+    "num_tool_calls": 0,
+    "executed_tools": "",
+    "failed_tool": ""
+  },
+  "router_output": {
+    "route": "ERROR",
+    "status": "error",
+    "result": {
+      "status": "error",
+      "answer": "Die zusammengesetzte Anfrage konnte nicht vollständig ausgeführt werden.",
+      "composite": {
+        "status": "ok",
+        "is_composite": true,
+        "subrequests": [
+          {
+            "user_input": "Reduziere Last A um 2 MW",
+            "depends_on_previous": false
+          },
+          {
+            "user_input": "gib danach die Auslastungen aller Leitungen zurück",
+            "depends_on_previous": true
+          }
+        ],
+        "reasoning": "The request contains two distinct tasks: reducing load A by 2 MW and then querying the utilization of all lines. The second task depends on the result of the first task."
+      },
+      "subresults": [
+        {
+          "index": 1,
+          "user_input": "Reduziere Last A um 2 MW",
+          "effective_input": "Reduziere Last A um 2 MW",
+          "depends_on_previous": false,
+          "output": {
+            "route": "ERROR",
+            "status": "error",
+            "result": {
+              "status": "error",
+              "answer": "Der UnifiedPlanner hat keine gültige strukturierte Ausgabe erzeugt.",
+              "planner_error": "Invalid json output: Based on the user request, I will choose a planning mode and tools to fulfill the request.\n\nPlanning Mode: standard_workflow\nTools: PowerFactory (pf)\n\nWorkflow: pf.change_load\n\nReasoning: The user requests to reduce load A by 2 MW. This is a clear instruction for a load change in PowerFactory, which matches the description of the pf.change_load workflow.\nFor troubleshooting, visit: https://docs.langchain.com/oss/python/langchain/errors/OUTPUT_PARSING_FAILURE "
+            }
+          }
+        }
+      ]
+    }
+  }
+}

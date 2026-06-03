@@ -1,0 +1,2955 @@
+{
+  "run_id": 112,
+  "timestamp": "2026-05-23T18:30:04.044423",
+  "user_input": "Welche aktive Leistung hatte Last 27 am 09.01.26 zwischen 14 und 15 Uhr?",
+  "duration_seconds": 18.519,
+  "token_usage": {
+    "prompt_tokens": 7341,
+    "completion_tokens": 1077,
+    "total_tokens": 8418,
+    "details": {
+      "llama3.1:8b": {
+        "output_tokens": 1077,
+        "input_tokens": 7341,
+        "total_tokens": 8418
+      }
+    }
+  },
+  "decision_trace": {
+    "domain": "POWERFACTORY",
+    "planning_mode": "",
+    "workflow": "",
+    "confidence": "",
+    "safe_to_execute": "",
+    "num_steps": 0,
+    "steps": "",
+    "planner_reasoning": "",
+    "resolved_object": "<omitted:str>",
+    "resolved_object_confidence": "",
+    "selected_attributes": "",
+    "attribute_confidence": "",
+    "num_tool_calls": 6,
+    "executed_tools": "build_unified_inventory | interpret_data_query_instruction | classify_data_source | resolve_objects_from_inventory_llm | list_available_object_attributes | select_pf_object_attributes_llm",
+    "failed_tool": "select_pf_object_attributes_llm",
+    "equipment_resolution_mode": "",
+    "attribute_resolution_mode": "",
+    "comparison_resolution_mode": ""
+  },
+  "router_output": {
+    "route": "POWERFACTORY",
+    "result": {
+      "status": "error",
+      "tool": "select_pf_object_attributes_llm",
+      "project": "<omitted:str>",
+      "instruction": {
+        "query_type": "element_data",
+        "entity_type": "load",
+        "entity_name_raw": "Welche aktive Leistung hatte Last 27 am 09.01.26 zwischen 14 und 15 Uhr?",
+        "entity_name_candidates": [
+          "Last 27"
+        ],
+        "attribute_request_text": "Welche aktive Leistung hatte Last 27 am 09.01.26 zwischen 14 und 15 Uhr?",
+        "available_types": [
+          "bus",
+          "generator",
+          "line",
+          "load",
+          "switch",
+          "transformer"
+        ],
+        "requested_attribute_names": [],
+        "requested_attribute_name_extraction": {
+          "status": "skipped",
+          "requested_attribute_names": [],
+          "llm_decision": {
+            "reason": "Skipped technical attribute-name extraction because attribute_match_mode=semantic_description."
+          },
+          "chain_mode": "skipped_by_attribute_match_mode"
+        },
+        "data_source_preference": "result",
+        "data_source_note": "Lastflussergebnisse wurden explizit oder sicher angefordert.",
+        "data_source_decision": {
+          "status": "ok",
+          "selected_data_source": "result",
+          "confidence": "high",
+          "rationale": "load-flow results",
+          "should_execute": true,
+          "decision_mode": "llm",
+          "llm_decision": {
+            "selected_data_source": "result",
+            "confidence": "high",
+            "rationale": "load-flow results",
+            "should_execute": true,
+            "attribute_match_mode": "semantic_description",
+            "attribute_match_confidence": "high",
+            "attribute_match_rationale": "natural-language descriptions used",
+            "attribute_cardinality": "one",
+            "attribute_cardinality_rationale": "single value requested"
+          },
+          "chain_mode": "native_structured_output",
+          "attribute_match_mode": "semantic_description",
+          "attribute_match_confidence": "high",
+          "attribute_match_rationale": "natural-language descriptions used",
+          "attribute_cardinality": "one",
+          "attribute_cardinality_rationale": "single value requested",
+          "fallback_applied": false,
+          "effective_data_source": "result",
+          "data_source_note": "Lastflussergebnisse wurden explizit oder sicher angefordert."
+        },
+        "attribute_match_mode": {
+          "status": "ok",
+          "mode": "semantic_description",
+          "confidence": "high",
+          "should_execute": true,
+          "rationale": "The user is using natural-language descriptions, such as 'aktive Leistung' and 'Last 27', which are clear indicators of the attribute being requested.",
+          "source": "data_source_decision"
+        },
+        "attribute_cardinality": "one",
+        "attribute_cardinality_rationale": "single value requested",
+        "selected_attribute_handles": []
+      },
+      "resolution": {
+        "status": "ok",
+        "tool": "resolve_objects_from_inventory_llm",
+        "project": "<omitted:str>",
+        "instruction": {
+          "query_type": "element_data",
+          "entity_type": "load",
+          "entity_name_raw": "Welche aktive Leistung hatte Last 27 am 09.01.26 zwischen 14 und 15 Uhr?",
+          "entity_name_candidates": [
+            "Last 27"
+          ],
+          "attribute_request_text": "Welche aktive Leistung hatte Last 27 am 09.01.26 zwischen 14 und 15 Uhr?",
+          "available_types": [
+            "bus",
+            "generator",
+            "line",
+            "load",
+            "switch",
+            "transformer"
+          ],
+          "requested_attribute_names": [],
+          "requested_attribute_name_extraction": {
+            "status": "skipped",
+            "requested_attribute_names": [],
+            "llm_decision": {
+              "reason": "Skipped technical attribute-name extraction because attribute_match_mode=semantic_description."
+            },
+            "chain_mode": "skipped_by_attribute_match_mode"
+          },
+          "data_source_preference": "result",
+          "data_source_note": "Lastflussergebnisse wurden explizit oder sicher angefordert.",
+          "data_source_decision": {
+            "status": "ok",
+            "selected_data_source": "result",
+            "confidence": "high",
+            "rationale": "load-flow results",
+            "should_execute": true,
+            "decision_mode": "llm",
+            "llm_decision": {
+              "selected_data_source": "result",
+              "confidence": "high",
+              "rationale": "load-flow results",
+              "should_execute": true,
+              "attribute_match_mode": "semantic_description",
+              "attribute_match_confidence": "high",
+              "attribute_match_rationale": "natural-language descriptions used",
+              "attribute_cardinality": "one",
+              "attribute_cardinality_rationale": "single value requested"
+            },
+            "chain_mode": "native_structured_output",
+            "attribute_match_mode": "semantic_description",
+            "attribute_match_confidence": "high",
+            "attribute_match_rationale": "natural-language descriptions used",
+            "attribute_cardinality": "one",
+            "attribute_cardinality_rationale": "single value requested",
+            "fallback_applied": false,
+            "effective_data_source": "result",
+            "data_source_note": "Lastflussergebnisse wurden explizit oder sicher angefordert."
+          },
+          "attribute_match_mode": {
+            "status": "ok",
+            "mode": "semantic_description",
+            "confidence": "high",
+            "should_execute": true,
+            "rationale": "The user is using natural-language descriptions, such as 'aktive Leistung' and 'Last 27', which are clear indicators of the attribute being requested.",
+            "source": "data_source_decision"
+          },
+          "attribute_cardinality": "one",
+          "attribute_cardinality_rationale": "single value requested"
+        },
+        "asset_query": "Load A",
+        "selected_match": {
+          "node_id": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Load A.ElmLod",
+          "name": "Load A",
+          "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Load A.ElmLod",
+          "pf_class": "ElmLod",
+          "kind": "pf_object",
+          "degree": 0,
+          "inventory_type": "load"
+        },
+        "selected_matches": [
+          {
+            "node_id": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Load A.ElmLod",
+            "name": "Load A",
+            "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Load A.ElmLod",
+            "pf_class": "ElmLod",
+            "kind": "pf_object",
+            "degree": 0,
+            "inventory_type": "load"
+          }
+        ],
+        "selected_object_names": [
+          "Load A"
+        ],
+        "selection_mode": "one",
+        "matches": [
+          {
+            "node_id": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Load A.ElmLod",
+            "name": "Load A",
+            "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Load A.ElmLod",
+            "pf_class": "ElmLod",
+            "kind": "pf_object",
+            "degree": 0,
+            "inventory_type": "load"
+          }
+        ],
+        "llm_decision": {
+          "selected_object_name": "Load A",
+          "selected_object_names": [
+            "Load A"
+          ],
+          "selection_mode": "one",
+          "confidence": "high",
+          "rationale": "The request targets a specific load, and 'Load A' is the only object in the candidate list that matches this description.",
+          "alternatives": [],
+          "should_execute": true
+        },
+        "entity_type": "load"
+      },
+      "attribute_listing": {
+        "status": "ok",
+        "tool": "list_available_object_attributes",
+        "project": "<omitted:str>",
+        "studycase": "<omitted:str>",
+        "instruction": {
+          "query_type": "element_data",
+          "entity_type": "load",
+          "entity_name_raw": "Welche aktive Leistung hatte Last 27 am 09.01.26 zwischen 14 und 15 Uhr?",
+          "entity_name_candidates": [
+            "Last 27"
+          ],
+          "attribute_request_text": "Welche aktive Leistung hatte Last 27 am 09.01.26 zwischen 14 und 15 Uhr?",
+          "available_types": [
+            "bus",
+            "generator",
+            "line",
+            "load",
+            "switch",
+            "transformer"
+          ],
+          "requested_attribute_names": [],
+          "requested_attribute_name_extraction": {
+            "status": "skipped",
+            "requested_attribute_names": [],
+            "llm_decision": {
+              "reason": "Skipped technical attribute-name extraction because attribute_match_mode=semantic_description."
+            },
+            "chain_mode": "skipped_by_attribute_match_mode"
+          },
+          "data_source_preference": "result",
+          "data_source_note": "Lastflussergebnisse wurden explizit oder sicher angefordert.",
+          "data_source_decision": {
+            "status": "ok",
+            "selected_data_source": "result",
+            "confidence": "high",
+            "rationale": "load-flow results",
+            "should_execute": true,
+            "decision_mode": "llm",
+            "llm_decision": {
+              "selected_data_source": "result",
+              "confidence": "high",
+              "rationale": "load-flow results",
+              "should_execute": true,
+              "attribute_match_mode": "semantic_description",
+              "attribute_match_confidence": "high",
+              "attribute_match_rationale": "natural-language descriptions used",
+              "attribute_cardinality": "one",
+              "attribute_cardinality_rationale": "single value requested"
+            },
+            "chain_mode": "native_structured_output",
+            "attribute_match_mode": "semantic_description",
+            "attribute_match_confidence": "high",
+            "attribute_match_rationale": "natural-language descriptions used",
+            "attribute_cardinality": "one",
+            "attribute_cardinality_rationale": "single value requested",
+            "fallback_applied": false,
+            "effective_data_source": "result",
+            "data_source_note": "Lastflussergebnisse wurden explizit oder sicher angefordert."
+          },
+          "attribute_match_mode": {
+            "status": "ok",
+            "mode": "semantic_description",
+            "confidence": "high",
+            "should_execute": true,
+            "rationale": "The user is using natural-language descriptions, such as 'aktive Leistung' and 'Last 27', which are clear indicators of the attribute being requested.",
+            "source": "data_source_decision"
+          },
+          "attribute_cardinality": "one",
+          "attribute_cardinality_rationale": "single value requested"
+        },
+        "resolution": {
+          "status": "ok",
+          "tool": "resolve_objects_from_inventory_llm",
+          "project": "<omitted:str>",
+          "instruction": {
+            "query_type": "element_data",
+            "entity_type": "load",
+            "entity_name_raw": "Welche aktive Leistung hatte Last 27 am 09.01.26 zwischen 14 und 15 Uhr?",
+            "entity_name_candidates": [
+              "Last 27"
+            ],
+            "attribute_request_text": "Welche aktive Leistung hatte Last 27 am 09.01.26 zwischen 14 und 15 Uhr?",
+            "available_types": [
+              "bus",
+              "generator",
+              "line",
+              "load",
+              "switch",
+              "transformer"
+            ],
+            "requested_attribute_names": [],
+            "requested_attribute_name_extraction": {
+              "status": "skipped",
+              "requested_attribute_names": [],
+              "llm_decision": {
+                "reason": "Skipped technical attribute-name extraction because attribute_match_mode=semantic_description."
+              },
+              "chain_mode": "skipped_by_attribute_match_mode"
+            },
+            "data_source_preference": "result",
+            "data_source_note": "Lastflussergebnisse wurden explizit oder sicher angefordert.",
+            "data_source_decision": {
+              "status": "ok",
+              "selected_data_source": "result",
+              "confidence": "high",
+              "rationale": "load-flow results",
+              "should_execute": true,
+              "decision_mode": "llm",
+              "llm_decision": {
+                "selected_data_source": "result",
+                "confidence": "high",
+                "rationale": "load-flow results",
+                "should_execute": true,
+                "attribute_match_mode": "semantic_description",
+                "attribute_match_confidence": "high",
+                "attribute_match_rationale": "natural-language descriptions used",
+                "attribute_cardinality": "one",
+                "attribute_cardinality_rationale": "single value requested"
+              },
+              "chain_mode": "native_structured_output",
+              "attribute_match_mode": "semantic_description",
+              "attribute_match_confidence": "high",
+              "attribute_match_rationale": "natural-language descriptions used",
+              "attribute_cardinality": "one",
+              "attribute_cardinality_rationale": "single value requested",
+              "fallback_applied": false,
+              "effective_data_source": "result",
+              "data_source_note": "Lastflussergebnisse wurden explizit oder sicher angefordert."
+            },
+            "attribute_match_mode": {
+              "status": "ok",
+              "mode": "semantic_description",
+              "confidence": "high",
+              "should_execute": true,
+              "rationale": "The user is using natural-language descriptions, such as 'aktive Leistung' and 'Last 27', which are clear indicators of the attribute being requested.",
+              "source": "data_source_decision"
+            },
+            "attribute_cardinality": "one",
+            "attribute_cardinality_rationale": "single value requested"
+          },
+          "asset_query": "Load A",
+          "selected_match": {
+            "node_id": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Load A.ElmLod",
+            "name": "Load A",
+            "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Load A.ElmLod",
+            "pf_class": "ElmLod",
+            "kind": "pf_object",
+            "degree": 0,
+            "inventory_type": "load"
+          },
+          "selected_matches": [
+            {
+              "node_id": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Load A.ElmLod",
+              "name": "Load A",
+              "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Load A.ElmLod",
+              "pf_class": "ElmLod",
+              "kind": "pf_object",
+              "degree": 0,
+              "inventory_type": "load"
+            }
+          ],
+          "selected_object_names": [
+            "Load A"
+          ],
+          "selection_mode": "one",
+          "matches": [
+            {
+              "node_id": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Load A.ElmLod",
+              "name": "Load A",
+              "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Load A.ElmLod",
+              "pf_class": "ElmLod",
+              "kind": "pf_object",
+              "degree": 0,
+              "inventory_type": "load"
+            }
+          ],
+          "llm_decision": {
+            "selected_object_name": "Load A",
+            "selected_object_names": [
+              "Load A"
+            ],
+            "selection_mode": "one",
+            "confidence": "high",
+            "rationale": "The request targets a specific load, and 'Load A' is the only object in the candidate list that matches this description.",
+            "alternatives": [],
+            "should_execute": true
+          },
+          "entity_type": "load"
+        },
+        "object": {
+          "name": "Load A",
+          "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Load A.ElmLod",
+          "pf_class": "ElmLod"
+        },
+        "attribute_options": [],
+        "loadflow": {
+          "executed": true,
+          "loadflow_command": "Load Flow Calculation",
+          "loadflow_result": 0
+        },
+        "attribute_search_mode": "result",
+        "debug": {
+          "project": "<omitted:str>",
+          "entity_type": "load",
+          "object_name": "Load A",
+          "request_text": "Welche aktive Leistung hatte Last 27 am 09.01.26 zwischen 14 und 15 Uhr?",
+          "data_source_decision": {
+            "status": "ok",
+            "selected_data_source": "result",
+            "confidence": "high",
+            "rationale": "load-flow results",
+            "should_execute": true,
+            "decision_mode": "llm",
+            "llm_decision": {
+              "selected_data_source": "result",
+              "confidence": "high",
+              "rationale": "load-flow results",
+              "should_execute": true,
+              "attribute_match_mode": "semantic_description",
+              "attribute_match_confidence": "high",
+              "attribute_match_rationale": "natural-language descriptions used",
+              "attribute_cardinality": "one",
+              "attribute_cardinality_rationale": "single value requested"
+            },
+            "chain_mode": "native_structured_output",
+            "attribute_match_mode": "semantic_description",
+            "attribute_match_confidence": "high",
+            "attribute_match_rationale": "natural-language descriptions used",
+            "attribute_cardinality": "one",
+            "attribute_cardinality_rationale": "single value requested",
+            "fallback_applied": false,
+            "effective_data_source": "result",
+            "data_source_note": "Lastflussergebnisse wurden explizit oder sicher angefordert."
+          },
+          "data_source_preference_effective": "result",
+          "attribute_search_mode": "result",
+          "num_attribute_options": 0,
+          "attribute_option_preview": [],
+          "loadflow": {
+            "executed": true,
+            "loadflow_command": "Load Flow Calculation",
+            "loadflow_result": 0
+          }
+        }
+      },
+      "error": "result_attribute_selection_not_safe",
+      "details": "Die Resultat-Attributauswahl konnte nicht sicher genug aufgelöst werden.",
+      "selection_debug": {
+        "project": "<omitted:str>",
+        "entity_type": "load",
+        "object_name": "Load A",
+        "request_text": "Welche aktive Leistung hatte Last 27 am 09.01.26 zwischen 14 und 15 Uhr?",
+        "requested_attribute_names": [],
+        "requested_attribute_name_extraction": {
+          "status": "skipped",
+          "requested_attribute_names": [],
+          "llm_decision": {
+            "reason": "Skipped technical attribute-name extraction because attribute_match_mode=semantic_description."
+          },
+          "chain_mode": "skipped_by_attribute_match_mode"
+        },
+        "available_result_attribute_count": 0,
+        "predefined_result_attribute_count": 0,
+        "predefined_result_attribute_handles_preview": [],
+        "predefined_llm_result": {
+          "status": "error",
+          "selected_attribute_handles": [],
+          "selected_field_names": [],
+          "matched_candidates": [],
+          "should_execute": false,
+          "confidence": "low",
+          "rationale": "Keine vordefinierten Resultatfelder für diesen Entity-Typ verfügbar.",
+          "llm_decision": {},
+          "chain_mode": "not_applicable"
+        },
+        "exact_match_result": {
+          "status": "ok",
+          "selected_attribute_names": [],
+          "selected_attribute_handles": [],
+          "matched_candidates": [],
+          "should_execute": false,
+          "confidence": "low",
+          "rationale": "Kein exakter Treffer auf attribute_name."
+        },
+        "full_option_llm_result": {
+          "status": "error",
+          "selected_attribute_handles": [],
+          "matched_candidates": [],
+          "should_execute": false,
+          "confidence": "low",
+          "rationale": "Keine Resultat-Attributoptionen verfügbar.",
+          "llm_decision": {},
+          "chain_mode": "not_applicable"
+        },
+        "selection_mode": "no_match",
+        "selection_notes": [],
+        "final_selected_handles": [],
+        "final_rationale": "",
+        "final_should_execute": false,
+        "final_confidence": "low"
+      },
+      "agent": "PowerFactoryDomainAgent",
+      "available_tools": [
+        {
+          "name": "build_topology_graph",
+          "description": "Build a topology graph from the active PowerFactory project.",
+          "input_schema": {
+            "type": "object",
+            "properties": {
+              "services": "<omitted:dict>",
+              "contract_cubicles": {
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "services"
+            ]
+          },
+          "output_schema_hint": {
+            "status": "ok|error",
+            "tool": "build_topology_graph",
+            "graph_mode": "contracted|wiring",
+            "graph_summary": "dict",
+            "inventory": "dict",
+            "build_debug": "dict"
+          },
+          "capability_tags": [
+            "powerfactory",
+            "topology",
+            "graph",
+            "read_only"
+          ],
+          "mutating": false,
+          "requires_state": [],
+          "produces_state": [
+            "graph_result"
+          ],
+          "is_summary": false,
+          "domain_notes": []
+        },
+        {
+          "name": "build_topology_inventory",
+          "description": "Build a typed inventory from the current PowerFactory topology graph.",
+          "input_schema": {
+            "type": "object",
+            "properties": {
+              "services": "<omitted:dict>",
+              "topology_graph_result": {
+                "type": "object"
+              }
+            },
+            "required": [
+              "services",
+              "topology_graph_result"
+            ]
+          },
+          "output_schema_hint": {
+            "status": "ok|error",
+            "tool": "build_topology_inventory",
+            "inventory": "dict"
+          },
+          "capability_tags": [
+            "powerfactory",
+            "topology",
+            "inventory",
+            "read_only"
+          ],
+          "mutating": false,
+          "requires_state": [
+            "graph_result"
+          ],
+          "produces_state": [
+            "inventory_result"
+          ],
+          "is_summary": false,
+          "domain_notes": []
+        },
+        {
+          "name": "build_unified_inventory",
+          "description": "Build a unified non-topology PowerFactory inventory for supported object types.",
+          "input_schema": {
+            "type": "object",
+            "properties": {
+              "services": "<omitted:dict>",
+              "allowed_types": {
+                "type": "array"
+              }
+            },
+            "required": [
+              "services"
+            ]
+          },
+          "output_schema_hint": {
+            "status": "ok|error",
+            "tool": "build_unified_inventory",
+            "inventory": "dict"
+          },
+          "capability_tags": [
+            "powerfactory",
+            "inventory",
+            "read_only"
+          ],
+          "mutating": false,
+          "requires_state": [],
+          "produces_state": [
+            "unified_inventory_result",
+            "inventory_result"
+          ],
+          "is_summary": false,
+          "domain_notes": []
+        },
+        {
+          "name": "classify_data_source",
+          "description": "Classify whether the data query should use base data or load-flow result data.",
+          "input_schema": {
+            "type": "object",
+            "properties": {
+              "services": "<omitted:dict>",
+              "instruction": {
+                "type": "object"
+              }
+            },
+            "required": [
+              "services",
+              "instruction"
+            ]
+          },
+          "output_schema_hint": {
+            "status": "ok|error",
+            "tool": "classify_data_source",
+            "instruction": "dict",
+            "effective_data_source": "base|result"
+          },
+          "capability_tags": [
+            "powerfactory",
+            "data_query",
+            "classification",
+            "llm"
+          ],
+          "mutating": false,
+          "requires_state": [
+            "data_query_instruction"
+          ],
+          "produces_state": [
+            "data_query_instruction",
+            "data_source_decision"
+          ],
+          "is_summary": false,
+          "domain_notes": []
+        },
+        {
+          "name": "execute_change_load",
+          "description": "Apply a load change in PowerFactory and run load flow before/after.",
+          "input_schema": {
+            "type": "object",
+            "properties": {
+              "services": "<omitted:dict>",
+              "instruction": {
+                "type": "object"
+              }
+            },
+            "required": [
+              "services",
+              "instruction"
+            ]
+          },
+          "output_schema_hint": {
+            "status": "ok|error",
+            "tool": "execute_change_load",
+            "data": {
+              "u_before": "dict[str, float]",
+              "u_after": "dict[str, float]",
+              "delta_u": "dict[str, float]"
+            }
+          },
+          "capability_tags": [
+            "powerfactory",
+            "execution",
+            "loadflow",
+            "load"
+          ],
+          "mutating": true,
+          "requires_state": [
+            "instruction"
+          ],
+          "produces_state": [
+            "execution"
+          ],
+          "is_summary": false,
+          "domain_notes": []
+        },
+        {
+          "name": "execute_switch_operation",
+          "description": "Execute an open/close/toggle operation on a resolved switch object in PowerFactory.",
+          "input_schema": {
+            "type": "object",
+            "properties": {
+              "services": "<omitted:dict>",
+              "instruction": {
+                "type": "object"
+              },
+              "resolution": {
+                "type": "object"
+              },
+              "run_loadflow_after": {
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "services",
+              "instruction",
+              "resolution"
+            ]
+          },
+          "output_schema_hint": {
+            "status": "ok|error",
+            "tool": "execute_switch_operation",
+            "switch": "dict",
+            "state_before": "string|None",
+            "state_after": "string|None",
+            "loadflow": "dict"
+          },
+          "capability_tags": [
+            "powerfactory",
+            "execution",
+            "switch",
+            "topology"
+          ],
+          "mutating": true,
+          "requires_state": [
+            "switch_instruction",
+            "object_resolution"
+          ],
+          "produces_state": [
+            "switch_execution"
+          ],
+          "is_summary": false,
+          "domain_notes": []
+        },
+        {
+          "name": "get_load_catalog",
+          "description": "Read the available catalog of PowerFactory objects of the requested type from the active project.",
+          "input_schema": {
+            "type": "object",
+            "properties": {
+              "services": "<omitted:dict>",
+              "user_input": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "services"
+            ]
+          },
+          "output_schema_hint": {
+            "status": "ok|error",
+            "tool": "get_load_catalog",
+            "requested_type": "load|transformer|line|bus|switch|generator",
+            "loads": "list[object-metadata]"
+          },
+          "capability_tags": [
+            "powerfactory",
+            "read",
+            "catalog",
+            "inventory"
+          ],
+          "mutating": false,
+          "requires_state": [],
+          "produces_state": [
+            "catalog_result"
+          ],
+          "is_summary": false,
+          "domain_notes": []
+        },
+        {
+          "name": "interpret_data_query_instruction",
+          "description": "Interpret a natural-language data query into a structured PowerFactory data-query instruction.",
+          "input_schema": {
+            "type": "object",
+            "properties": {
+              "services": "<omitted:dict>",
+              "user_input": {
+                "type": "string"
+              },
+              "inventory": {
+                "type": "object"
+              }
+            },
+            "required": [
+              "services",
+              "user_input",
+              "inventory"
+            ]
+          },
+          "output_schema_hint": {
+            "status": "ok|error",
+            "tool": "interpret_data_query_instruction",
+            "instruction": "dict"
+          },
+          "capability_tags": [
+            "powerfactory",
+            "data_query",
+            "planning",
+            "llm"
+          ],
+          "mutating": false,
+          "requires_state": [
+            "unified_inventory_result"
+          ],
+          "produces_state": [
+            "data_query_instruction"
+          ],
+          "is_summary": false,
+          "domain_notes": []
+        },
+        {
+          "name": "interpret_entity_instruction",
+          "description": "Interpret a natural-language topology request into a structured generic PowerFactory entity instruction.",
+          "input_schema": {
+            "type": "object",
+            "properties": {
+              "services": "<omitted:dict>",
+              "user_input": {
+                "type": "string"
+              },
+              "inventory": {
+                "type": "object"
+              }
+            },
+            "required": [
+              "services",
+              "user_input",
+              "inventory"
+            ]
+          },
+          "output_schema_hint": {
+            "status": "ok|error",
+            "tool": "interpret_entity_instruction",
+            "instruction": "dict"
+          },
+          "capability_tags": [
+            "powerfactory",
+            "planning",
+            "nlp",
+            "topology",
+            "entity"
+          ],
+          "mutating": false,
+          "requires_state": [
+            "inventory_result"
+          ],
+          "produces_state": [
+            "entity_instruction"
+          ],
+          "is_summary": false,
+          "domain_notes": []
+        },
+        {
+          "name": "interpret_instruction",
+          "description": "Interpret a natural-language user request into a structured load-change instruction.",
+          "input_schema": {
+            "type": "object",
+            "properties": {
+              "services": "<omitted:dict>",
+              "user_input": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "services",
+              "user_input"
+            ]
+          },
+          "output_schema_hint": {
+            "status": "ok|error",
+            "tool": "interpret_instruction",
+            "instruction": "dict"
+          },
+          "capability_tags": [
+            "powerfactory",
+            "planning",
+            "nlp",
+            "load"
+          ],
+          "mutating": false,
+          "requires_state": [],
+          "produces_state": [
+            "instruction"
+          ],
+          "is_summary": false,
+          "domain_notes": []
+        },
+        {
+          "name": "interpret_switch_instruction",
+          "description": "Interpret a natural-language switch request into a structured switch operation instruction.",
+          "input_schema": {
+            "type": "object",
+            "properties": {
+              "services": "<omitted:dict>",
+              "user_input": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "services",
+              "user_input"
+            ]
+          },
+          "output_schema_hint": {
+            "status": "ok|error",
+            "tool": "interpret_switch_instruction",
+            "instruction": "dict"
+          },
+          "capability_tags": [
+            "powerfactory",
+            "planning",
+            "nlp",
+            "switch"
+          ],
+          "mutating": false,
+          "requires_state": [],
+          "produces_state": [
+            "switch_instruction"
+          ],
+          "is_summary": false,
+          "domain_notes": []
+        },
+        {
+          "name": "list_available_object_attributes",
+          "description": "List semantic and raw attribute options for the selected PowerFactory object.",
+          "input_schema": {
+            "type": "object",
+            "properties": {
+              "services": "<omitted:dict>",
+              "instruction": {
+                "type": "object"
+              },
+              "resolution": {
+                "type": "object"
+              }
+            },
+            "required": [
+              "services",
+              "instruction",
+              "resolution"
+            ]
+          },
+          "output_schema_hint": {
+            "status": "ok|error",
+            "tool": "list_available_object_attributes",
+            "attribute_options": "list"
+          },
+          "capability_tags": [
+            "powerfactory",
+            "data_query",
+            "attributes",
+            "read_only"
+          ],
+          "mutating": false,
+          "requires_state": [
+            "data_query_instruction",
+            "object_resolution"
+          ],
+          "produces_state": [
+            "data_attribute_listing"
+          ],
+          "is_summary": false,
+          "domain_notes": []
+        },
+        {
+          "name": "query_topology_neighbors",
+          "description": "Query the direct neighbors of an asset in the PowerFactory topology graph.",
+          "input_schema": {
+            "type": "object",
+            "properties": {
+              "services": "<omitted:dict>",
+              "topology_graph": "<omitted:dict>",
+              "asset_query": {
+                "type": "string"
+              },
+              "selected_node_id": {
+                "type": "string"
+              },
+              "matches": {
+                "type": "array"
+              },
+              "max_matches": {
+                "type": "integer"
+              }
+            },
+            "required": [
+              "services",
+              "topology_graph"
+            ]
+          },
+          "output_schema_hint": {
+            "status": "ok|error",
+            "tool": "query_topology_neighbors",
+            "selected_node": "dict",
+            "neighbors": "list[dict]"
+          },
+          "capability_tags": [
+            "powerfactory",
+            "topology",
+            "neighbors",
+            "read_only"
+          ],
+          "mutating": false,
+          "requires_state": [
+            "graph_result",
+            "entity_resolution"
+          ],
+          "produces_state": [
+            "topology_result"
+          ],
+          "is_summary": false,
+          "domain_notes": []
+        },
+        {
+          "name": "read_pf_object_attributes",
+          "description": "Read selected attributes from a resolved PowerFactory object with dynamic loadflow fallback.",
+          "input_schema": {
+            "type": "object",
+            "properties": {
+              "services": "<omitted:dict>",
+              "instruction": {
+                "type": "object"
+              },
+              "resolution": {
+                "type": "object"
+              }
+            },
+            "required": [
+              "services",
+              "instruction",
+              "resolution"
+            ]
+          },
+          "output_schema_hint": {
+            "status": "ok|error",
+            "tool": "read_pf_object_attributes",
+            "data": "dict"
+          },
+          "capability_tags": [
+            "powerfactory",
+            "data_query",
+            "read_only"
+          ],
+          "mutating": false,
+          "requires_state": [
+            "data_query_instruction",
+            "object_resolution",
+            "data_attribute_selection"
+          ],
+          "produces_state": [
+            "data_query_execution"
+          ],
+          "is_summary": false,
+          "domain_notes": [
+            "Do not use this step before attribute selection is available."
+          ]
+        },
+        {
+          "name": "resolve_entity_from_inventory",
+          "description": "Resolve the requested generic asset from a typed topology inventory.",
+          "input_schema": {
+            "type": "object",
+            "properties": {
+              "services": "<omitted:dict>",
+              "instruction": {
+                "type": "object"
+              },
+              "inventory": {
+                "type": "object"
+              },
+              "topology_graph": "<omitted:dict>",
+              "max_matches": {
+                "type": "integer"
+              }
+            },
+            "required": [
+              "services",
+              "instruction",
+              "inventory",
+              "topology_graph"
+            ]
+          },
+          "output_schema_hint": {
+            "status": "ok|error",
+            "tool": "resolve_entity_from_inventory",
+            "asset_query": "string",
+            "selected_match": "dict",
+            "matches": "list[dict]"
+          },
+          "capability_tags": [
+            "powerfactory",
+            "topology",
+            "entity",
+            "inventory",
+            "resolution",
+            "read_only"
+          ],
+          "mutating": false,
+          "requires_state": [
+            "entity_instruction",
+            "inventory_result",
+            "graph_result"
+          ],
+          "produces_state": [
+            "entity_resolution"
+          ],
+          "is_summary": false,
+          "domain_notes": []
+        },
+        {
+          "name": "resolve_load",
+          "description": "Resolve the target load object inside the active PowerFactory project.",
+          "input_schema": {
+            "type": "object",
+            "properties": {
+              "services": "<omitted:dict>",
+              "instruction": {
+                "type": "object"
+              }
+            },
+            "required": [
+              "services",
+              "instruction"
+            ]
+          },
+          "output_schema_hint": {
+            "status": "ok|error",
+            "tool": "resolve_load",
+            "resolution": "dict"
+          },
+          "capability_tags": [
+            "powerfactory",
+            "resolution",
+            "load"
+          ],
+          "mutating": false,
+          "requires_state": [
+            "instruction"
+          ],
+          "produces_state": [
+            "resolution"
+          ],
+          "is_summary": false,
+          "domain_notes": []
+        },
+        {
+          "name": "resolve_objects_from_inventory_llm",
+          "description": "Resolve PowerFactory objects by LLM-based exact candidate selection from a unified non-topology inventory.",
+          "input_schema": {
+            "type": "object",
+            "properties": {
+              "services": "<omitted:dict>",
+              "instruction": {
+                "type": "object"
+              },
+              "inventory": {
+                "type": "object"
+              }
+            },
+            "required": [
+              "services",
+              "instruction",
+              "inventory"
+            ]
+          },
+          "output_schema_hint": {
+            "status": "ok|error",
+            "tool": "resolve_objects_from_inventory_llm",
+            "selected_match": "dict",
+            "selected_matches": "list[dict]",
+            "selection_mode": "one|all"
+          },
+          "capability_tags": [
+            "powerfactory",
+            "resolution",
+            "llm_match",
+            "read_only"
+          ],
+          "mutating": false,
+          "requires_state": [
+            "unified_inventory_result"
+          ],
+          "produces_state": [
+            "object_resolution"
+          ],
+          "is_summary": false,
+          "domain_notes": []
+        },
+        {
+          "name": "select_pf_object_attributes_llm",
+          "description": "Select the best matching attribute handles from the available option list.",
+          "input_schema": {
+            "type": "object",
+            "properties": {
+              "services": "<omitted:dict>",
+              "instruction": {
+                "type": "object"
+              },
+              "resolution": {
+                "type": "object"
+              },
+              "attribute_listing": {
+                "type": "object"
+              }
+            },
+            "required": [
+              "services",
+              "instruction",
+              "resolution",
+              "attribute_listing"
+            ]
+          },
+          "output_schema_hint": {
+            "status": "ok|error",
+            "tool": "select_pf_object_attributes_llm",
+            "selected_attribute_handles": "list"
+          },
+          "capability_tags": [
+            "powerfactory",
+            "data_query",
+            "attributes",
+            "llm_match",
+            "read_only"
+          ],
+          "mutating": false,
+          "requires_state": [
+            "data_query_instruction",
+            "object_resolution",
+            "data_attribute_listing"
+          ],
+          "produces_state": [
+            "data_attribute_selection"
+          ],
+          "is_summary": false,
+          "domain_notes": []
+        },
+        {
+          "name": "summarize_load_catalog",
+          "description": "Build a concise user-facing catalog answer.",
+          "input_schema": {
+            "type": "object",
+            "properties": {
+              "services": "<omitted:dict>",
+              "catalog_result": {
+                "type": "object"
+              }
+            },
+            "required": [
+              "services",
+              "catalog_result"
+            ]
+          },
+          "output_schema_hint": {
+            "status": "ok|error",
+            "tool": "summarize_load_catalog",
+            "answer": "string"
+          },
+          "capability_tags": [
+            "powerfactory",
+            "summary",
+            "catalog"
+          ],
+          "mutating": false,
+          "requires_state": [
+            "catalog_result"
+          ],
+          "produces_state": [
+            "summary"
+          ],
+          "is_summary": true,
+          "domain_notes": []
+        },
+        {
+          "name": "summarize_pf_object_data_result",
+          "description": "Summarize queried PowerFactory object data for the end user.",
+          "input_schema": {
+            "type": "object",
+            "properties": {
+              "services": "<omitted:dict>",
+              "result_payload": {
+                "type": "object"
+              },
+              "user_input": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "services",
+              "result_payload",
+              "user_input"
+            ]
+          },
+          "output_schema_hint": {
+            "status": "ok|error",
+            "tool": "summarize_pf_object_data_result",
+            "answer": "string"
+          },
+          "capability_tags": [
+            "powerfactory",
+            "data_query",
+            "summary"
+          ],
+          "mutating": false,
+          "requires_state": [
+            "data_query_execution"
+          ],
+          "produces_state": [
+            "data_query_summary",
+            "summary"
+          ],
+          "is_summary": true,
+          "domain_notes": []
+        },
+        {
+          "name": "summarize_powerfactory_result",
+          "description": "Summarize result data from a PowerFactory load workflow for the end user.",
+          "input_schema": {
+            "type": "object",
+            "properties": {
+              "services": "<omitted:dict>",
+              "result_payload": {
+                "type": "object"
+              },
+              "user_input": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "services",
+              "result_payload",
+              "user_input"
+            ]
+          },
+          "output_schema_hint": {
+            "status": "ok|error",
+            "tool": "summarize_powerfactory_result",
+            "answer": "string"
+          },
+          "capability_tags": [
+            "powerfactory",
+            "summary",
+            "result"
+          ],
+          "mutating": false,
+          "requires_state": [
+            "execution"
+          ],
+          "produces_state": [
+            "summary"
+          ],
+          "is_summary": true,
+          "domain_notes": []
+        },
+        {
+          "name": "summarize_switch_result",
+          "description": "Summarize the result of a switch state change for the end user.",
+          "input_schema": {
+            "type": "object",
+            "properties": {
+              "services": "<omitted:dict>",
+              "result_payload": {
+                "type": "object"
+              },
+              "user_input": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "services",
+              "result_payload",
+              "user_input"
+            ]
+          },
+          "output_schema_hint": {
+            "status": "ok|error",
+            "tool": "summarize_switch_result",
+            "answer": "string"
+          },
+          "capability_tags": [
+            "powerfactory",
+            "summary",
+            "switch"
+          ],
+          "mutating": false,
+          "requires_state": [
+            "switch_execution"
+          ],
+          "produces_state": [
+            "switch_summary",
+            "summary"
+          ],
+          "is_summary": true,
+          "domain_notes": []
+        },
+        {
+          "name": "summarize_topology_result",
+          "description": "Build a concise user-facing topology answer.",
+          "input_schema": {
+            "type": "object",
+            "properties": {
+              "services": "<omitted:dict>",
+              "topology_result": {
+                "type": "object"
+              },
+              "graph_result": {
+                "type": "object"
+              },
+              "inventory_result": {
+                "type": "object"
+              },
+              "entity_instruction": {
+                "type": "object"
+              },
+              "entity_resolution": {
+                "type": "object"
+              }
+            },
+            "required": [
+              "services",
+              "topology_result"
+            ]
+          },
+          "output_schema_hint": {
+            "status": "ok|error",
+            "tool": "summarize_topology_result",
+            "answer": "string"
+          },
+          "capability_tags": [
+            "powerfactory",
+            "summary",
+            "topology"
+          ],
+          "mutating": false,
+          "requires_state": [
+            "topology_result"
+          ],
+          "produces_state": [
+            "summary"
+          ],
+          "is_summary": true,
+          "domain_notes": []
+        },
+        {
+          "name": "unsupported_request",
+          "description": "Return a controlled message for unsupported PowerFactory intent.",
+          "input_schema": {
+            "type": "object",
+            "properties": {
+              "services": "<omitted:dict>",
+              "user_input": {
+                "type": "string"
+              },
+              "classification": {
+                "type": "object"
+              }
+            },
+            "required": [
+              "services",
+              "user_input",
+              "classification"
+            ]
+          },
+          "output_schema_hint": {
+            "status": "error",
+            "tool": "powerfactory",
+            "answer": "string"
+          },
+          "capability_tags": [
+            "powerfactory",
+            "control"
+          ],
+          "mutating": false,
+          "requires_state": [],
+          "produces_state": [],
+          "is_summary": false,
+          "domain_notes": []
+        }
+      ],
+      "answer": "Die Anfrage konnte nicht durchgeführt werden. Fehlergrund: result_attribute_selection_not_safe.",
+      "debug": {
+        "planning": {
+          "debug_mode": true,
+          "project_name": "Nine-bus System(2)",
+          "initial_classification": {
+            "status": "ok",
+            "classification_mode": "llm",
+            "intent": "query_element_data",
+            "confidence": "high",
+            "target_kind": "load",
+            "safe_to_execute": true,
+            "missing_context": [],
+            "required_steps": [
+              "interpret_data_query_instruction",
+              "resolve_objects_from_inventory_llm",
+              "list_available_object_attributes",
+              "select_pf_object_attributes_llm",
+              "read_pf_object_attributes"
+            ],
+            "reasoning": "The user is asking for a specific attribute (aktive Leistung) of a load object (Last 27). The request includes a date and time range, which suggests that the user wants to query historical data. Therefore, I have selected the 'query_element_data' intent."
+          },
+          "decomposition": {
+            "status": "ok",
+            "is_composite": false,
+            "subrequests": [],
+            "reasoning": "The original request is primarily asking for a specific attribute (aktive Leistung) of a load object (Last 27), which suggests it's a single user goal. The date and time range in the request indicates that the user wants to query historical data, but this does not imply multiple distinct tasks."
+          },
+          "subrequests": [],
+          "plan_source": "standard",
+          "final_plan_steps": [
+            "build_unified_inventory",
+            "interpret_data_query_instruction",
+            "classify_data_source",
+            "resolve_objects_from_inventory_llm",
+            "list_available_object_attributes",
+            "select_pf_object_attributes_llm",
+            "read_pf_object_attributes",
+            "summarize_pf_object_data_result"
+          ],
+          "standard_plan_steps": [
+            "build_unified_inventory",
+            "interpret_data_query_instruction",
+            "classify_data_source",
+            "resolve_objects_from_inventory_llm",
+            "list_available_object_attributes",
+            "select_pf_object_attributes_llm",
+            "read_pf_object_attributes",
+            "summarize_pf_object_data_result"
+          ],
+          "classification_plan_steps": [
+            "build_unified_inventory",
+            "interpret_data_query_instruction",
+            "resolve_objects_from_inventory_llm",
+            "list_available_object_attributes",
+            "select_pf_object_attributes_llm",
+            "read_pf_object_attributes"
+          ]
+        },
+        "trace": [
+          {
+            "step": "build_unified_inventory",
+            "effective_user_input": "Welche aktive Leistung hatte Last 27 am 09.01.26 zwischen 14 und 15 Uhr?",
+            "effective_classification": {
+              "status": "ok",
+              "classification_mode": "llm",
+              "intent": "query_element_data",
+              "confidence": "high",
+              "target_kind": "load",
+              "safe_to_execute": true,
+              "missing_context": [],
+              "required_steps": [
+                "interpret_data_query_instruction",
+                "resolve_objects_from_inventory_llm",
+                "list_available_object_attributes",
+                "select_pf_object_attributes_llm",
+                "read_pf_object_attributes"
+              ],
+              "reasoning": "The user is asking for a specific attribute (aktive Leistung) of a load object (Last 27). The request includes a date and time range, which suggests that the user wants to query historical data. Therefore, I have selected the 'query_element_data' intent."
+            },
+            "source_subrequest": null,
+            "tool_spec": {
+              "name": "build_unified_inventory",
+              "description": "Build a unified non-topology PowerFactory inventory for supported object types.",
+              "capability_tags": [
+                "powerfactory",
+                "inventory",
+                "read_only"
+              ],
+              "mutating": false
+            },
+            "tool_kwargs": {
+              "services": "<omitted:dict>",
+              "allowed_types": [
+                "bus",
+                "load",
+                "line",
+                "transformer",
+                "generator",
+                "switch"
+              ]
+            },
+            "result": {
+              "status": "ok",
+              "tool": "build_unified_inventory",
+              "project": "<omitted:str>",
+              "inventory": {
+                "available_types": [
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>"
+                ],
+                "counts_by_type": {
+                  "bus": "<max_depth>",
+                  "load": "<max_depth>",
+                  "line": "<max_depth>",
+                  "transformer": "<max_depth>",
+                  "generator": "<max_depth>",
+                  "switch": "<max_depth>"
+                },
+                "items_by_type": {
+                  "bus": "<max_depth>",
+                  "load": "<max_depth>",
+                  "line": "<max_depth>",
+                  "transformer": "<max_depth>",
+                  "generator": "<max_depth>",
+                  "switch": "<max_depth>"
+                },
+                "samples_by_type": {
+                  "bus": "<max_depth>",
+                  "load": "<max_depth>",
+                  "line": "<max_depth>",
+                  "transformer": "<max_depth>",
+                  "generator": "<max_depth>",
+                  "switch": "<max_depth>"
+                }
+              },
+              "allowed_types": [
+                "bus",
+                "load",
+                "line",
+                "transformer",
+                "generator",
+                "switch"
+              ]
+            }
+          },
+          {
+            "step": "interpret_data_query_instruction",
+            "effective_user_input": "Welche aktive Leistung hatte Last 27 am 09.01.26 zwischen 14 und 15 Uhr?",
+            "effective_classification": {
+              "status": "ok",
+              "classification_mode": "llm",
+              "intent": "query_element_data",
+              "confidence": "high",
+              "target_kind": "load",
+              "safe_to_execute": true,
+              "missing_context": [],
+              "required_steps": [
+                "interpret_data_query_instruction",
+                "resolve_objects_from_inventory_llm",
+                "list_available_object_attributes",
+                "select_pf_object_attributes_llm",
+                "read_pf_object_attributes"
+              ],
+              "reasoning": "The user is asking for a specific attribute (aktive Leistung) of a load object (Last 27). The request includes a date and time range, which suggests that the user wants to query historical data. Therefore, I have selected the 'query_element_data' intent."
+            },
+            "source_subrequest": null,
+            "tool_spec": {
+              "name": "interpret_data_query_instruction",
+              "description": "Interpret a natural-language data query into a structured PowerFactory data-query instruction.",
+              "capability_tags": [
+                "powerfactory",
+                "data_query",
+                "planning",
+                "llm"
+              ],
+              "mutating": false
+            },
+            "tool_kwargs": {
+              "services": "<omitted:dict>",
+              "user_input": "Welche aktive Leistung hatte Last 27 am 09.01.26 zwischen 14 und 15 Uhr?",
+              "inventory": {
+                "available_types": [
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>"
+                ],
+                "counts_by_type": {
+                  "bus": "<max_depth>",
+                  "load": "<max_depth>",
+                  "line": "<max_depth>",
+                  "transformer": "<max_depth>",
+                  "generator": "<max_depth>",
+                  "switch": "<max_depth>"
+                },
+                "items_by_type": {
+                  "bus": "<max_depth>",
+                  "load": "<max_depth>",
+                  "line": "<max_depth>",
+                  "transformer": "<max_depth>",
+                  "generator": "<max_depth>",
+                  "switch": "<max_depth>"
+                },
+                "samples_by_type": {
+                  "bus": "<max_depth>",
+                  "load": "<max_depth>",
+                  "line": "<max_depth>",
+                  "transformer": "<max_depth>",
+                  "generator": "<max_depth>",
+                  "switch": "<max_depth>"
+                }
+              }
+            },
+            "result": {
+              "status": "ok",
+              "tool": "interpret_data_query_instruction",
+              "project": "<omitted:str>",
+              "user_input": "Welche aktive Leistung hatte Last 27 am 09.01.26 zwischen 14 und 15 Uhr?",
+              "instruction": {
+                "query_type": "element_data",
+                "entity_type": "load",
+                "entity_name_raw": "Welche aktive Leistung hatte Last 27 am 09.01.26 zwischen 14 und 15 Uhr?",
+                "entity_name_candidates": [
+                  "<max_depth>"
+                ],
+                "attribute_request_text": "Welche aktive Leistung hatte Last 27 am 09.01.26 zwischen 14 und 15 Uhr?",
+                "available_types": [
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>"
+                ],
+                "requested_attribute_names": [],
+                "requested_attribute_name_extraction": {
+                  "status": "<max_depth>",
+                  "requested_attribute_names": "<max_depth>",
+                  "llm_decision": "<max_depth>",
+                  "chain_mode": "<max_depth>"
+                },
+                "data_source_preference": "result",
+                "data_source_note": "Lastflussergebnisse wurden explizit oder sicher angefordert.",
+                "data_source_decision": {
+                  "status": "<max_depth>",
+                  "selected_data_source": "<max_depth>",
+                  "confidence": "<max_depth>",
+                  "rationale": "<max_depth>",
+                  "should_execute": "<max_depth>",
+                  "decision_mode": "<max_depth>",
+                  "llm_decision": "<max_depth>",
+                  "chain_mode": "<max_depth>",
+                  "attribute_match_mode": "<max_depth>",
+                  "attribute_match_confidence": "<max_depth>",
+                  "attribute_match_rationale": "<max_depth>",
+                  "attribute_cardinality": "<max_depth>",
+                  "attribute_cardinality_rationale": "<max_depth>",
+                  "fallback_applied": "<max_depth>",
+                  "effective_data_source": "<max_depth>",
+                  "data_source_note": "<max_depth>"
+                },
+                "attribute_match_mode": {
+                  "status": "<max_depth>",
+                  "mode": "<max_depth>",
+                  "confidence": "<max_depth>",
+                  "should_execute": "<max_depth>",
+                  "rationale": "<max_depth>",
+                  "source": "<max_depth>"
+                },
+                "attribute_cardinality": "one",
+                "attribute_cardinality_rationale": "The user asks for a single value, specifically the active power of Load 27."
+              },
+              "llm_decision": {
+                "selected_entity_type": "load",
+                "confidence": "high",
+                "rationale": "The query asks for a 'Last' value, which is typically associated with loads.",
+                "missing_context": [
+                  "<max_depth>",
+                  "<max_depth>"
+                ],
+                "should_execute": true
+              },
+              "requested_attribute_name_extraction": {
+                "status": "skipped",
+                "requested_attribute_names": [],
+                "llm_decision": {
+                  "reason": "<max_depth>"
+                },
+                "chain_mode": "skipped_by_attribute_match_mode"
+              },
+              "confidence": "high",
+              "rationale": "The query asks for a 'Last' value, which is typically associated with loads."
+            }
+          },
+          {
+            "step": "classify_data_source",
+            "effective_user_input": "Welche aktive Leistung hatte Last 27 am 09.01.26 zwischen 14 und 15 Uhr?",
+            "effective_classification": {
+              "status": "ok",
+              "classification_mode": "llm",
+              "intent": "query_element_data",
+              "confidence": "high",
+              "target_kind": "load",
+              "safe_to_execute": true,
+              "missing_context": [],
+              "required_steps": [
+                "interpret_data_query_instruction",
+                "resolve_objects_from_inventory_llm",
+                "list_available_object_attributes",
+                "select_pf_object_attributes_llm",
+                "read_pf_object_attributes"
+              ],
+              "reasoning": "The user is asking for a specific attribute (aktive Leistung) of a load object (Last 27). The request includes a date and time range, which suggests that the user wants to query historical data. Therefore, I have selected the 'query_element_data' intent."
+            },
+            "source_subrequest": null,
+            "tool_spec": {
+              "name": "classify_data_source",
+              "description": "Classify whether the data query should use base data or load-flow result data.",
+              "capability_tags": [
+                "powerfactory",
+                "data_query",
+                "classification",
+                "llm"
+              ],
+              "mutating": false
+            },
+            "tool_kwargs": {
+              "services": "<omitted:dict>",
+              "instruction": {
+                "query_type": "element_data",
+                "entity_type": "load",
+                "entity_name_raw": "Welche aktive Leistung hatte Last 27 am 09.01.26 zwischen 14 und 15 Uhr?",
+                "entity_name_candidates": [
+                  "<max_depth>"
+                ],
+                "attribute_request_text": "Welche aktive Leistung hatte Last 27 am 09.01.26 zwischen 14 und 15 Uhr?",
+                "available_types": [
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>"
+                ],
+                "requested_attribute_names": [],
+                "requested_attribute_name_extraction": {
+                  "status": "<max_depth>",
+                  "requested_attribute_names": "<max_depth>",
+                  "llm_decision": "<max_depth>",
+                  "chain_mode": "<max_depth>"
+                },
+                "data_source_preference": "result",
+                "data_source_note": "Lastflussergebnisse wurden explizit oder sicher angefordert.",
+                "data_source_decision": {
+                  "status": "<max_depth>",
+                  "selected_data_source": "<max_depth>",
+                  "confidence": "<max_depth>",
+                  "rationale": "<max_depth>",
+                  "should_execute": "<max_depth>",
+                  "decision_mode": "<max_depth>",
+                  "llm_decision": "<max_depth>",
+                  "chain_mode": "<max_depth>",
+                  "attribute_match_mode": "<max_depth>",
+                  "attribute_match_confidence": "<max_depth>",
+                  "attribute_match_rationale": "<max_depth>",
+                  "attribute_cardinality": "<max_depth>",
+                  "attribute_cardinality_rationale": "<max_depth>",
+                  "fallback_applied": "<max_depth>",
+                  "effective_data_source": "<max_depth>",
+                  "data_source_note": "<max_depth>"
+                },
+                "attribute_match_mode": {
+                  "status": "<max_depth>",
+                  "mode": "<max_depth>",
+                  "confidence": "<max_depth>",
+                  "should_execute": "<max_depth>",
+                  "rationale": "<max_depth>",
+                  "source": "<max_depth>"
+                },
+                "attribute_cardinality": "one",
+                "attribute_cardinality_rationale": "The user asks for a single value, specifically the active power of Load 27."
+              }
+            },
+            "result": {
+              "status": "ok",
+              "tool": "classify_data_source",
+              "project": "<omitted:str>",
+              "instruction": {
+                "query_type": "element_data",
+                "entity_type": "load",
+                "entity_name_raw": "Welche aktive Leistung hatte Last 27 am 09.01.26 zwischen 14 und 15 Uhr?",
+                "entity_name_candidates": [
+                  "<max_depth>"
+                ],
+                "attribute_request_text": "Welche aktive Leistung hatte Last 27 am 09.01.26 zwischen 14 und 15 Uhr?",
+                "available_types": [
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>"
+                ],
+                "requested_attribute_names": [],
+                "requested_attribute_name_extraction": {
+                  "status": "<max_depth>",
+                  "requested_attribute_names": "<max_depth>",
+                  "llm_decision": "<max_depth>",
+                  "chain_mode": "<max_depth>"
+                },
+                "data_source_preference": "result",
+                "data_source_note": "Lastflussergebnisse wurden explizit oder sicher angefordert.",
+                "data_source_decision": {
+                  "status": "<max_depth>",
+                  "selected_data_source": "<max_depth>",
+                  "confidence": "<max_depth>",
+                  "rationale": "<max_depth>",
+                  "should_execute": "<max_depth>",
+                  "decision_mode": "<max_depth>",
+                  "llm_decision": "<max_depth>",
+                  "chain_mode": "<max_depth>",
+                  "attribute_match_mode": "<max_depth>",
+                  "attribute_match_confidence": "<max_depth>",
+                  "attribute_match_rationale": "<max_depth>",
+                  "attribute_cardinality": "<max_depth>",
+                  "attribute_cardinality_rationale": "<max_depth>",
+                  "fallback_applied": "<max_depth>",
+                  "effective_data_source": "<max_depth>",
+                  "data_source_note": "<max_depth>"
+                },
+                "attribute_match_mode": {
+                  "status": "<max_depth>",
+                  "mode": "<max_depth>",
+                  "confidence": "<max_depth>",
+                  "should_execute": "<max_depth>",
+                  "rationale": "<max_depth>",
+                  "source": "<max_depth>"
+                },
+                "attribute_cardinality": "one",
+                "attribute_cardinality_rationale": "single value requested"
+              },
+              "selected_data_source": "result",
+              "effective_data_source": "result",
+              "data_source_note": "Lastflussergebnisse wurden explizit oder sicher angefordert.",
+              "data_source_decision": {
+                "status": "ok",
+                "selected_data_source": "result",
+                "confidence": "high",
+                "rationale": "load-flow results",
+                "should_execute": true,
+                "decision_mode": "llm",
+                "llm_decision": {
+                  "selected_data_source": "<max_depth>",
+                  "confidence": "<max_depth>",
+                  "rationale": "<max_depth>",
+                  "should_execute": "<max_depth>",
+                  "attribute_match_mode": "<max_depth>",
+                  "attribute_match_confidence": "<max_depth>",
+                  "attribute_match_rationale": "<max_depth>",
+                  "attribute_cardinality": "<max_depth>",
+                  "attribute_cardinality_rationale": "<max_depth>"
+                },
+                "chain_mode": "native_structured_output",
+                "attribute_match_mode": "semantic_description",
+                "attribute_match_confidence": "high",
+                "attribute_match_rationale": "natural-language descriptions used",
+                "attribute_cardinality": "one",
+                "attribute_cardinality_rationale": "single value requested",
+                "fallback_applied": false,
+                "effective_data_source": "result",
+                "data_source_note": "Lastflussergebnisse wurden explizit oder sicher angefordert."
+              }
+            }
+          },
+          {
+            "step": "resolve_objects_from_inventory_llm",
+            "effective_user_input": "Welche aktive Leistung hatte Last 27 am 09.01.26 zwischen 14 und 15 Uhr?",
+            "effective_classification": {
+              "status": "ok",
+              "classification_mode": "llm",
+              "intent": "query_element_data",
+              "confidence": "high",
+              "target_kind": "load",
+              "safe_to_execute": true,
+              "missing_context": [],
+              "required_steps": [
+                "interpret_data_query_instruction",
+                "resolve_objects_from_inventory_llm",
+                "list_available_object_attributes",
+                "select_pf_object_attributes_llm",
+                "read_pf_object_attributes"
+              ],
+              "reasoning": "The user is asking for a specific attribute (aktive Leistung) of a load object (Last 27). The request includes a date and time range, which suggests that the user wants to query historical data. Therefore, I have selected the 'query_element_data' intent."
+            },
+            "source_subrequest": null,
+            "tool_spec": {
+              "name": "resolve_objects_from_inventory_llm",
+              "description": "Resolve PowerFactory objects by LLM-based exact candidate selection from a unified non-topology inventory.",
+              "capability_tags": [
+                "powerfactory",
+                "resolution",
+                "llm_match",
+                "read_only"
+              ],
+              "mutating": false
+            },
+            "tool_kwargs": {
+              "services": "<omitted:dict>",
+              "instruction": {
+                "query_type": "element_data",
+                "entity_type": "load",
+                "entity_name_raw": "Welche aktive Leistung hatte Last 27 am 09.01.26 zwischen 14 und 15 Uhr?",
+                "entity_name_candidates": [
+                  "<max_depth>"
+                ],
+                "attribute_request_text": "Welche aktive Leistung hatte Last 27 am 09.01.26 zwischen 14 und 15 Uhr?",
+                "available_types": [
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>"
+                ],
+                "requested_attribute_names": [],
+                "requested_attribute_name_extraction": {
+                  "status": "<max_depth>",
+                  "requested_attribute_names": "<max_depth>",
+                  "llm_decision": "<max_depth>",
+                  "chain_mode": "<max_depth>"
+                },
+                "data_source_preference": "result",
+                "data_source_note": "Lastflussergebnisse wurden explizit oder sicher angefordert.",
+                "data_source_decision": {
+                  "status": "<max_depth>",
+                  "selected_data_source": "<max_depth>",
+                  "confidence": "<max_depth>",
+                  "rationale": "<max_depth>",
+                  "should_execute": "<max_depth>",
+                  "decision_mode": "<max_depth>",
+                  "llm_decision": "<max_depth>",
+                  "chain_mode": "<max_depth>",
+                  "attribute_match_mode": "<max_depth>",
+                  "attribute_match_confidence": "<max_depth>",
+                  "attribute_match_rationale": "<max_depth>",
+                  "attribute_cardinality": "<max_depth>",
+                  "attribute_cardinality_rationale": "<max_depth>",
+                  "fallback_applied": "<max_depth>",
+                  "effective_data_source": "<max_depth>",
+                  "data_source_note": "<max_depth>"
+                },
+                "attribute_match_mode": {
+                  "status": "<max_depth>",
+                  "mode": "<max_depth>",
+                  "confidence": "<max_depth>",
+                  "should_execute": "<max_depth>",
+                  "rationale": "<max_depth>",
+                  "source": "<max_depth>"
+                },
+                "attribute_cardinality": "one",
+                "attribute_cardinality_rationale": "single value requested"
+              },
+              "inventory": {
+                "available_types": [
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>"
+                ],
+                "counts_by_type": {
+                  "bus": "<max_depth>",
+                  "load": "<max_depth>",
+                  "line": "<max_depth>",
+                  "transformer": "<max_depth>",
+                  "generator": "<max_depth>",
+                  "switch": "<max_depth>"
+                },
+                "items_by_type": {
+                  "bus": "<max_depth>",
+                  "load": "<max_depth>",
+                  "line": "<max_depth>",
+                  "transformer": "<max_depth>",
+                  "generator": "<max_depth>",
+                  "switch": "<max_depth>"
+                },
+                "samples_by_type": {
+                  "bus": "<max_depth>",
+                  "load": "<max_depth>",
+                  "line": "<max_depth>",
+                  "transformer": "<max_depth>",
+                  "generator": "<max_depth>",
+                  "switch": "<max_depth>"
+                }
+              }
+            },
+            "result": {
+              "status": "ok",
+              "tool": "resolve_objects_from_inventory_llm",
+              "project": "<omitted:str>",
+              "instruction": {
+                "query_type": "element_data",
+                "entity_type": "load",
+                "entity_name_raw": "Welche aktive Leistung hatte Last 27 am 09.01.26 zwischen 14 und 15 Uhr?",
+                "entity_name_candidates": [
+                  "<max_depth>"
+                ],
+                "attribute_request_text": "Welche aktive Leistung hatte Last 27 am 09.01.26 zwischen 14 und 15 Uhr?",
+                "available_types": [
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>"
+                ],
+                "requested_attribute_names": [],
+                "requested_attribute_name_extraction": {
+                  "status": "<max_depth>",
+                  "requested_attribute_names": "<max_depth>",
+                  "llm_decision": "<max_depth>",
+                  "chain_mode": "<max_depth>"
+                },
+                "data_source_preference": "result",
+                "data_source_note": "Lastflussergebnisse wurden explizit oder sicher angefordert.",
+                "data_source_decision": {
+                  "status": "<max_depth>",
+                  "selected_data_source": "<max_depth>",
+                  "confidence": "<max_depth>",
+                  "rationale": "<max_depth>",
+                  "should_execute": "<max_depth>",
+                  "decision_mode": "<max_depth>",
+                  "llm_decision": "<max_depth>",
+                  "chain_mode": "<max_depth>",
+                  "attribute_match_mode": "<max_depth>",
+                  "attribute_match_confidence": "<max_depth>",
+                  "attribute_match_rationale": "<max_depth>",
+                  "attribute_cardinality": "<max_depth>",
+                  "attribute_cardinality_rationale": "<max_depth>",
+                  "fallback_applied": "<max_depth>",
+                  "effective_data_source": "<max_depth>",
+                  "data_source_note": "<max_depth>"
+                },
+                "attribute_match_mode": {
+                  "status": "<max_depth>",
+                  "mode": "<max_depth>",
+                  "confidence": "<max_depth>",
+                  "should_execute": "<max_depth>",
+                  "rationale": "<max_depth>",
+                  "source": "<max_depth>"
+                },
+                "attribute_cardinality": "one",
+                "attribute_cardinality_rationale": "single value requested"
+              },
+              "asset_query": "Load A",
+              "selected_match": {
+                "node_id": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Load A.ElmLod",
+                "name": "Load A",
+                "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Load A.ElmLod",
+                "pf_class": "ElmLod",
+                "kind": "pf_object",
+                "degree": 0,
+                "inventory_type": "load"
+              },
+              "selected_matches": [
+                {
+                  "node_id": "<max_depth>",
+                  "name": "<max_depth>",
+                  "full_name": "<max_depth>",
+                  "pf_class": "<max_depth>",
+                  "kind": "<max_depth>",
+                  "degree": "<max_depth>",
+                  "inventory_type": "<max_depth>"
+                }
+              ],
+              "selected_object_names": [
+                "Load A"
+              ],
+              "selection_mode": "one",
+              "matches": [
+                {
+                  "node_id": "<max_depth>",
+                  "name": "<max_depth>",
+                  "full_name": "<max_depth>",
+                  "pf_class": "<max_depth>",
+                  "kind": "<max_depth>",
+                  "degree": "<max_depth>",
+                  "inventory_type": "<max_depth>"
+                }
+              ],
+              "llm_decision": {
+                "selected_object_name": "Load A",
+                "selected_object_names": [
+                  "<max_depth>"
+                ],
+                "selection_mode": "one",
+                "confidence": "high",
+                "rationale": "The request targets a specific load, and 'Load A' is the only object in the candidate list that matches this description.",
+                "alternatives": [],
+                "should_execute": true
+              },
+              "entity_type": "load"
+            }
+          },
+          {
+            "step": "list_available_object_attributes",
+            "effective_user_input": "Welche aktive Leistung hatte Last 27 am 09.01.26 zwischen 14 und 15 Uhr?",
+            "effective_classification": {
+              "status": "ok",
+              "classification_mode": "llm",
+              "intent": "query_element_data",
+              "confidence": "high",
+              "target_kind": "load",
+              "safe_to_execute": true,
+              "missing_context": [],
+              "required_steps": [
+                "interpret_data_query_instruction",
+                "resolve_objects_from_inventory_llm",
+                "list_available_object_attributes",
+                "select_pf_object_attributes_llm",
+                "read_pf_object_attributes"
+              ],
+              "reasoning": "The user is asking for a specific attribute (aktive Leistung) of a load object (Last 27). The request includes a date and time range, which suggests that the user wants to query historical data. Therefore, I have selected the 'query_element_data' intent."
+            },
+            "source_subrequest": null,
+            "tool_spec": {
+              "name": "list_available_object_attributes",
+              "description": "List semantic and raw attribute options for the selected PowerFactory object.",
+              "capability_tags": [
+                "powerfactory",
+                "data_query",
+                "attributes",
+                "read_only"
+              ],
+              "mutating": false
+            },
+            "tool_kwargs": {
+              "services": "<omitted:dict>",
+              "instruction": {
+                "query_type": "element_data",
+                "entity_type": "load",
+                "entity_name_raw": "Welche aktive Leistung hatte Last 27 am 09.01.26 zwischen 14 und 15 Uhr?",
+                "entity_name_candidates": [
+                  "<max_depth>"
+                ],
+                "attribute_request_text": "Welche aktive Leistung hatte Last 27 am 09.01.26 zwischen 14 und 15 Uhr?",
+                "available_types": [
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>"
+                ],
+                "requested_attribute_names": [],
+                "requested_attribute_name_extraction": {
+                  "status": "<max_depth>",
+                  "requested_attribute_names": "<max_depth>",
+                  "llm_decision": "<max_depth>",
+                  "chain_mode": "<max_depth>"
+                },
+                "data_source_preference": "result",
+                "data_source_note": "Lastflussergebnisse wurden explizit oder sicher angefordert.",
+                "data_source_decision": {
+                  "status": "<max_depth>",
+                  "selected_data_source": "<max_depth>",
+                  "confidence": "<max_depth>",
+                  "rationale": "<max_depth>",
+                  "should_execute": "<max_depth>",
+                  "decision_mode": "<max_depth>",
+                  "llm_decision": "<max_depth>",
+                  "chain_mode": "<max_depth>",
+                  "attribute_match_mode": "<max_depth>",
+                  "attribute_match_confidence": "<max_depth>",
+                  "attribute_match_rationale": "<max_depth>",
+                  "attribute_cardinality": "<max_depth>",
+                  "attribute_cardinality_rationale": "<max_depth>",
+                  "fallback_applied": "<max_depth>",
+                  "effective_data_source": "<max_depth>",
+                  "data_source_note": "<max_depth>"
+                },
+                "attribute_match_mode": {
+                  "status": "<max_depth>",
+                  "mode": "<max_depth>",
+                  "confidence": "<max_depth>",
+                  "should_execute": "<max_depth>",
+                  "rationale": "<max_depth>",
+                  "source": "<max_depth>"
+                },
+                "attribute_cardinality": "one",
+                "attribute_cardinality_rationale": "single value requested"
+              },
+              "resolution": {
+                "status": "ok",
+                "tool": "resolve_objects_from_inventory_llm",
+                "project": "<omitted:str>",
+                "instruction": {
+                  "query_type": "<max_depth>",
+                  "entity_type": "<max_depth>",
+                  "entity_name_raw": "<max_depth>",
+                  "entity_name_candidates": "<max_depth>",
+                  "attribute_request_text": "<max_depth>",
+                  "available_types": "<max_depth>",
+                  "requested_attribute_names": "<max_depth>",
+                  "requested_attribute_name_extraction": "<max_depth>",
+                  "data_source_preference": "<max_depth>",
+                  "data_source_note": "<max_depth>",
+                  "data_source_decision": "<max_depth>",
+                  "attribute_match_mode": "<max_depth>",
+                  "attribute_cardinality": "<max_depth>",
+                  "attribute_cardinality_rationale": "<max_depth>"
+                },
+                "asset_query": "Load A",
+                "selected_match": {
+                  "node_id": "<max_depth>",
+                  "name": "<max_depth>",
+                  "full_name": "<max_depth>",
+                  "pf_class": "<max_depth>",
+                  "kind": "<max_depth>",
+                  "degree": "<max_depth>",
+                  "inventory_type": "<max_depth>"
+                },
+                "selected_matches": [
+                  "<max_depth>"
+                ],
+                "selected_object_names": [
+                  "<max_depth>"
+                ],
+                "selection_mode": "one",
+                "matches": [
+                  "<max_depth>"
+                ],
+                "llm_decision": {
+                  "selected_object_name": "<max_depth>",
+                  "selected_object_names": "<max_depth>",
+                  "selection_mode": "<max_depth>",
+                  "confidence": "<max_depth>",
+                  "rationale": "<max_depth>",
+                  "alternatives": "<max_depth>",
+                  "should_execute": "<max_depth>"
+                },
+                "entity_type": "load"
+              }
+            },
+            "result": {
+              "status": "ok",
+              "tool": "list_available_object_attributes",
+              "project": "<omitted:str>",
+              "studycase": "<omitted:str>",
+              "instruction": {
+                "query_type": "element_data",
+                "entity_type": "load",
+                "entity_name_raw": "Welche aktive Leistung hatte Last 27 am 09.01.26 zwischen 14 und 15 Uhr?",
+                "entity_name_candidates": [
+                  "<max_depth>"
+                ],
+                "attribute_request_text": "Welche aktive Leistung hatte Last 27 am 09.01.26 zwischen 14 und 15 Uhr?",
+                "available_types": [
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>"
+                ],
+                "requested_attribute_names": [],
+                "requested_attribute_name_extraction": {
+                  "status": "<max_depth>",
+                  "requested_attribute_names": "<max_depth>",
+                  "llm_decision": "<max_depth>",
+                  "chain_mode": "<max_depth>"
+                },
+                "data_source_preference": "result",
+                "data_source_note": "Lastflussergebnisse wurden explizit oder sicher angefordert.",
+                "data_source_decision": {
+                  "status": "<max_depth>",
+                  "selected_data_source": "<max_depth>",
+                  "confidence": "<max_depth>",
+                  "rationale": "<max_depth>",
+                  "should_execute": "<max_depth>",
+                  "decision_mode": "<max_depth>",
+                  "llm_decision": "<max_depth>",
+                  "chain_mode": "<max_depth>",
+                  "attribute_match_mode": "<max_depth>",
+                  "attribute_match_confidence": "<max_depth>",
+                  "attribute_match_rationale": "<max_depth>",
+                  "attribute_cardinality": "<max_depth>",
+                  "attribute_cardinality_rationale": "<max_depth>",
+                  "fallback_applied": "<max_depth>",
+                  "effective_data_source": "<max_depth>",
+                  "data_source_note": "<max_depth>"
+                },
+                "attribute_match_mode": {
+                  "status": "<max_depth>",
+                  "mode": "<max_depth>",
+                  "confidence": "<max_depth>",
+                  "should_execute": "<max_depth>",
+                  "rationale": "<max_depth>",
+                  "source": "<max_depth>"
+                },
+                "attribute_cardinality": "one",
+                "attribute_cardinality_rationale": "single value requested"
+              },
+              "resolution": {
+                "status": "ok",
+                "tool": "resolve_objects_from_inventory_llm",
+                "project": "<omitted:str>",
+                "instruction": {
+                  "query_type": "<max_depth>",
+                  "entity_type": "<max_depth>",
+                  "entity_name_raw": "<max_depth>",
+                  "entity_name_candidates": "<max_depth>",
+                  "attribute_request_text": "<max_depth>",
+                  "available_types": "<max_depth>",
+                  "requested_attribute_names": "<max_depth>",
+                  "requested_attribute_name_extraction": "<max_depth>",
+                  "data_source_preference": "<max_depth>",
+                  "data_source_note": "<max_depth>",
+                  "data_source_decision": "<max_depth>",
+                  "attribute_match_mode": "<max_depth>",
+                  "attribute_cardinality": "<max_depth>",
+                  "attribute_cardinality_rationale": "<max_depth>"
+                },
+                "asset_query": "Load A",
+                "selected_match": {
+                  "node_id": "<max_depth>",
+                  "name": "<max_depth>",
+                  "full_name": "<max_depth>",
+                  "pf_class": "<max_depth>",
+                  "kind": "<max_depth>",
+                  "degree": "<max_depth>",
+                  "inventory_type": "<max_depth>"
+                },
+                "selected_matches": [
+                  "<max_depth>"
+                ],
+                "selected_object_names": [
+                  "<max_depth>"
+                ],
+                "selection_mode": "one",
+                "matches": [
+                  "<max_depth>"
+                ],
+                "llm_decision": {
+                  "selected_object_name": "<max_depth>",
+                  "selected_object_names": "<max_depth>",
+                  "selection_mode": "<max_depth>",
+                  "confidence": "<max_depth>",
+                  "rationale": "<max_depth>",
+                  "alternatives": "<max_depth>",
+                  "should_execute": "<max_depth>"
+                },
+                "entity_type": "load"
+              },
+              "object": {
+                "name": "Load A",
+                "full_name": "\\STELLER.IntUser\\Nine-bus System(2).IntPrj\\Network Model.IntPrjfolder\\Network Data.IntPrjfolder\\Nine-bus System.ElmNet\\Load A.ElmLod",
+                "pf_class": "ElmLod"
+              },
+              "attribute_options": [],
+              "loadflow": {
+                "executed": true,
+                "loadflow_command": "Load Flow Calculation",
+                "loadflow_result": 0
+              },
+              "attribute_search_mode": "result",
+              "debug": {
+                "project": "<omitted:str>",
+                "entity_type": "load",
+                "object_name": "Load A",
+                "request_text": "Welche aktive Leistung hatte Last 27 am 09.01.26 zwischen 14 und 15 Uhr?",
+                "data_source_decision": {
+                  "status": "<max_depth>",
+                  "selected_data_source": "<max_depth>",
+                  "confidence": "<max_depth>",
+                  "rationale": "<max_depth>",
+                  "should_execute": "<max_depth>",
+                  "decision_mode": "<max_depth>",
+                  "llm_decision": "<max_depth>",
+                  "chain_mode": "<max_depth>",
+                  "attribute_match_mode": "<max_depth>",
+                  "attribute_match_confidence": "<max_depth>",
+                  "attribute_match_rationale": "<max_depth>",
+                  "attribute_cardinality": "<max_depth>",
+                  "attribute_cardinality_rationale": "<max_depth>",
+                  "fallback_applied": "<max_depth>",
+                  "effective_data_source": "<max_depth>",
+                  "data_source_note": "<max_depth>"
+                },
+                "data_source_preference_effective": "result",
+                "attribute_search_mode": "result",
+                "num_attribute_options": 0,
+                "attribute_option_preview": [],
+                "loadflow": {
+                  "executed": "<max_depth>",
+                  "loadflow_command": "<max_depth>",
+                  "loadflow_result": "<max_depth>"
+                }
+              }
+            }
+          },
+          {
+            "step": "select_pf_object_attributes_llm",
+            "effective_user_input": "Welche aktive Leistung hatte Last 27 am 09.01.26 zwischen 14 und 15 Uhr?",
+            "effective_classification": {
+              "status": "ok",
+              "classification_mode": "llm",
+              "intent": "query_element_data",
+              "confidence": "high",
+              "target_kind": "load",
+              "safe_to_execute": true,
+              "missing_context": [],
+              "required_steps": [
+                "interpret_data_query_instruction",
+                "resolve_objects_from_inventory_llm",
+                "list_available_object_attributes",
+                "select_pf_object_attributes_llm",
+                "read_pf_object_attributes"
+              ],
+              "reasoning": "The user is asking for a specific attribute (aktive Leistung) of a load object (Last 27). The request includes a date and time range, which suggests that the user wants to query historical data. Therefore, I have selected the 'query_element_data' intent."
+            },
+            "source_subrequest": null,
+            "tool_spec": {
+              "name": "select_pf_object_attributes_llm",
+              "description": "Select the best matching attribute handles from the available option list.",
+              "capability_tags": [
+                "powerfactory",
+                "data_query",
+                "attributes",
+                "llm_match",
+                "read_only"
+              ],
+              "mutating": false
+            },
+            "tool_kwargs": {
+              "services": "<omitted:dict>",
+              "instruction": {
+                "query_type": "element_data",
+                "entity_type": "load",
+                "entity_name_raw": "Welche aktive Leistung hatte Last 27 am 09.01.26 zwischen 14 und 15 Uhr?",
+                "entity_name_candidates": [
+                  "<max_depth>"
+                ],
+                "attribute_request_text": "Welche aktive Leistung hatte Last 27 am 09.01.26 zwischen 14 und 15 Uhr?",
+                "available_types": [
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>"
+                ],
+                "requested_attribute_names": [],
+                "requested_attribute_name_extraction": {
+                  "status": "<max_depth>",
+                  "requested_attribute_names": "<max_depth>",
+                  "llm_decision": "<max_depth>",
+                  "chain_mode": "<max_depth>"
+                },
+                "data_source_preference": "result",
+                "data_source_note": "Lastflussergebnisse wurden explizit oder sicher angefordert.",
+                "data_source_decision": {
+                  "status": "<max_depth>",
+                  "selected_data_source": "<max_depth>",
+                  "confidence": "<max_depth>",
+                  "rationale": "<max_depth>",
+                  "should_execute": "<max_depth>",
+                  "decision_mode": "<max_depth>",
+                  "llm_decision": "<max_depth>",
+                  "chain_mode": "<max_depth>",
+                  "attribute_match_mode": "<max_depth>",
+                  "attribute_match_confidence": "<max_depth>",
+                  "attribute_match_rationale": "<max_depth>",
+                  "attribute_cardinality": "<max_depth>",
+                  "attribute_cardinality_rationale": "<max_depth>",
+                  "fallback_applied": "<max_depth>",
+                  "effective_data_source": "<max_depth>",
+                  "data_source_note": "<max_depth>"
+                },
+                "attribute_match_mode": {
+                  "status": "<max_depth>",
+                  "mode": "<max_depth>",
+                  "confidence": "<max_depth>",
+                  "should_execute": "<max_depth>",
+                  "rationale": "<max_depth>",
+                  "source": "<max_depth>"
+                },
+                "attribute_cardinality": "one",
+                "attribute_cardinality_rationale": "single value requested"
+              },
+              "resolution": {
+                "status": "ok",
+                "tool": "resolve_objects_from_inventory_llm",
+                "project": "<omitted:str>",
+                "instruction": {
+                  "query_type": "<max_depth>",
+                  "entity_type": "<max_depth>",
+                  "entity_name_raw": "<max_depth>",
+                  "entity_name_candidates": "<max_depth>",
+                  "attribute_request_text": "<max_depth>",
+                  "available_types": "<max_depth>",
+                  "requested_attribute_names": "<max_depth>",
+                  "requested_attribute_name_extraction": "<max_depth>",
+                  "data_source_preference": "<max_depth>",
+                  "data_source_note": "<max_depth>",
+                  "data_source_decision": "<max_depth>",
+                  "attribute_match_mode": "<max_depth>",
+                  "attribute_cardinality": "<max_depth>",
+                  "attribute_cardinality_rationale": "<max_depth>"
+                },
+                "asset_query": "Load A",
+                "selected_match": {
+                  "node_id": "<max_depth>",
+                  "name": "<max_depth>",
+                  "full_name": "<max_depth>",
+                  "pf_class": "<max_depth>",
+                  "kind": "<max_depth>",
+                  "degree": "<max_depth>",
+                  "inventory_type": "<max_depth>"
+                },
+                "selected_matches": [
+                  "<max_depth>"
+                ],
+                "selected_object_names": [
+                  "<max_depth>"
+                ],
+                "selection_mode": "one",
+                "matches": [
+                  "<max_depth>"
+                ],
+                "llm_decision": {
+                  "selected_object_name": "<max_depth>",
+                  "selected_object_names": "<max_depth>",
+                  "selection_mode": "<max_depth>",
+                  "confidence": "<max_depth>",
+                  "rationale": "<max_depth>",
+                  "alternatives": "<max_depth>",
+                  "should_execute": "<max_depth>"
+                },
+                "entity_type": "load"
+              },
+              "attribute_listing": {
+                "status": "ok",
+                "tool": "list_available_object_attributes",
+                "project": "<omitted:str>",
+                "studycase": "<omitted:str>",
+                "instruction": {
+                  "query_type": "<max_depth>",
+                  "entity_type": "<max_depth>",
+                  "entity_name_raw": "<max_depth>",
+                  "entity_name_candidates": "<max_depth>",
+                  "attribute_request_text": "<max_depth>",
+                  "available_types": "<max_depth>",
+                  "requested_attribute_names": "<max_depth>",
+                  "requested_attribute_name_extraction": "<max_depth>",
+                  "data_source_preference": "<max_depth>",
+                  "data_source_note": "<max_depth>",
+                  "data_source_decision": "<max_depth>",
+                  "attribute_match_mode": "<max_depth>",
+                  "attribute_cardinality": "<max_depth>",
+                  "attribute_cardinality_rationale": "<max_depth>"
+                },
+                "resolution": {
+                  "status": "<max_depth>",
+                  "tool": "<max_depth>",
+                  "project": "<omitted:str>",
+                  "instruction": "<max_depth>",
+                  "asset_query": "<max_depth>",
+                  "selected_match": "<max_depth>",
+                  "selected_matches": "<max_depth>",
+                  "selected_object_names": "<max_depth>",
+                  "selection_mode": "<max_depth>",
+                  "matches": "<max_depth>",
+                  "llm_decision": "<max_depth>",
+                  "entity_type": "<max_depth>"
+                },
+                "object": {
+                  "name": "<max_depth>",
+                  "full_name": "<max_depth>",
+                  "pf_class": "<max_depth>"
+                },
+                "attribute_options": [],
+                "loadflow": {
+                  "executed": "<max_depth>",
+                  "loadflow_command": "<max_depth>",
+                  "loadflow_result": "<max_depth>"
+                },
+                "attribute_search_mode": "result",
+                "debug": {
+                  "project": "<omitted:str>",
+                  "entity_type": "<max_depth>",
+                  "object_name": "<max_depth>",
+                  "request_text": "<max_depth>",
+                  "data_source_decision": "<max_depth>",
+                  "data_source_preference_effective": "<max_depth>",
+                  "attribute_search_mode": "<max_depth>",
+                  "num_attribute_options": "<max_depth>",
+                  "attribute_option_preview": "<max_depth>",
+                  "loadflow": "<max_depth>"
+                }
+              }
+            },
+            "result": {
+              "status": "error",
+              "tool": "select_pf_object_attributes_llm",
+              "project": "<omitted:str>",
+              "instruction": {
+                "query_type": "element_data",
+                "entity_type": "load",
+                "entity_name_raw": "Welche aktive Leistung hatte Last 27 am 09.01.26 zwischen 14 und 15 Uhr?",
+                "entity_name_candidates": [
+                  "<max_depth>"
+                ],
+                "attribute_request_text": "Welche aktive Leistung hatte Last 27 am 09.01.26 zwischen 14 und 15 Uhr?",
+                "available_types": [
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>"
+                ],
+                "requested_attribute_names": [],
+                "requested_attribute_name_extraction": {
+                  "status": "<max_depth>",
+                  "requested_attribute_names": "<max_depth>",
+                  "llm_decision": "<max_depth>",
+                  "chain_mode": "<max_depth>"
+                },
+                "data_source_preference": "result",
+                "data_source_note": "Lastflussergebnisse wurden explizit oder sicher angefordert.",
+                "data_source_decision": {
+                  "status": "<max_depth>",
+                  "selected_data_source": "<max_depth>",
+                  "confidence": "<max_depth>",
+                  "rationale": "<max_depth>",
+                  "should_execute": "<max_depth>",
+                  "decision_mode": "<max_depth>",
+                  "llm_decision": "<max_depth>",
+                  "chain_mode": "<max_depth>",
+                  "attribute_match_mode": "<max_depth>",
+                  "attribute_match_confidence": "<max_depth>",
+                  "attribute_match_rationale": "<max_depth>",
+                  "attribute_cardinality": "<max_depth>",
+                  "attribute_cardinality_rationale": "<max_depth>",
+                  "fallback_applied": "<max_depth>",
+                  "effective_data_source": "<max_depth>",
+                  "data_source_note": "<max_depth>"
+                },
+                "attribute_match_mode": {
+                  "status": "<max_depth>",
+                  "mode": "<max_depth>",
+                  "confidence": "<max_depth>",
+                  "should_execute": "<max_depth>",
+                  "rationale": "<max_depth>",
+                  "source": "<max_depth>"
+                },
+                "attribute_cardinality": "one",
+                "attribute_cardinality_rationale": "single value requested",
+                "selected_attribute_handles": []
+              },
+              "resolution": {
+                "status": "ok",
+                "tool": "resolve_objects_from_inventory_llm",
+                "project": "<omitted:str>",
+                "instruction": {
+                  "query_type": "<max_depth>",
+                  "entity_type": "<max_depth>",
+                  "entity_name_raw": "<max_depth>",
+                  "entity_name_candidates": "<max_depth>",
+                  "attribute_request_text": "<max_depth>",
+                  "available_types": "<max_depth>",
+                  "requested_attribute_names": "<max_depth>",
+                  "requested_attribute_name_extraction": "<max_depth>",
+                  "data_source_preference": "<max_depth>",
+                  "data_source_note": "<max_depth>",
+                  "data_source_decision": "<max_depth>",
+                  "attribute_match_mode": "<max_depth>",
+                  "attribute_cardinality": "<max_depth>",
+                  "attribute_cardinality_rationale": "<max_depth>"
+                },
+                "asset_query": "Load A",
+                "selected_match": {
+                  "node_id": "<max_depth>",
+                  "name": "<max_depth>",
+                  "full_name": "<max_depth>",
+                  "pf_class": "<max_depth>",
+                  "kind": "<max_depth>",
+                  "degree": "<max_depth>",
+                  "inventory_type": "<max_depth>"
+                },
+                "selected_matches": [
+                  "<max_depth>"
+                ],
+                "selected_object_names": [
+                  "<max_depth>"
+                ],
+                "selection_mode": "one",
+                "matches": [
+                  "<max_depth>"
+                ],
+                "llm_decision": {
+                  "selected_object_name": "<max_depth>",
+                  "selected_object_names": "<max_depth>",
+                  "selection_mode": "<max_depth>",
+                  "confidence": "<max_depth>",
+                  "rationale": "<max_depth>",
+                  "alternatives": "<max_depth>",
+                  "should_execute": "<max_depth>"
+                },
+                "entity_type": "load"
+              },
+              "attribute_listing": {
+                "status": "ok",
+                "tool": "list_available_object_attributes",
+                "project": "<omitted:str>",
+                "studycase": "<omitted:str>",
+                "instruction": {
+                  "query_type": "<max_depth>",
+                  "entity_type": "<max_depth>",
+                  "entity_name_raw": "<max_depth>",
+                  "entity_name_candidates": "<max_depth>",
+                  "attribute_request_text": "<max_depth>",
+                  "available_types": "<max_depth>",
+                  "requested_attribute_names": "<max_depth>",
+                  "requested_attribute_name_extraction": "<max_depth>",
+                  "data_source_preference": "<max_depth>",
+                  "data_source_note": "<max_depth>",
+                  "data_source_decision": "<max_depth>",
+                  "attribute_match_mode": "<max_depth>",
+                  "attribute_cardinality": "<max_depth>",
+                  "attribute_cardinality_rationale": "<max_depth>"
+                },
+                "resolution": {
+                  "status": "<max_depth>",
+                  "tool": "<max_depth>",
+                  "project": "<omitted:str>",
+                  "instruction": "<max_depth>",
+                  "asset_query": "<max_depth>",
+                  "selected_match": "<max_depth>",
+                  "selected_matches": "<max_depth>",
+                  "selected_object_names": "<max_depth>",
+                  "selection_mode": "<max_depth>",
+                  "matches": "<max_depth>",
+                  "llm_decision": "<max_depth>",
+                  "entity_type": "<max_depth>"
+                },
+                "object": {
+                  "name": "<max_depth>",
+                  "full_name": "<max_depth>",
+                  "pf_class": "<max_depth>"
+                },
+                "attribute_options": [],
+                "loadflow": {
+                  "executed": "<max_depth>",
+                  "loadflow_command": "<max_depth>",
+                  "loadflow_result": "<max_depth>"
+                },
+                "attribute_search_mode": "result",
+                "debug": {
+                  "project": "<omitted:str>",
+                  "entity_type": "<max_depth>",
+                  "object_name": "<max_depth>",
+                  "request_text": "<max_depth>",
+                  "data_source_decision": "<max_depth>",
+                  "data_source_preference_effective": "<max_depth>",
+                  "attribute_search_mode": "<max_depth>",
+                  "num_attribute_options": "<max_depth>",
+                  "attribute_option_preview": "<max_depth>",
+                  "loadflow": "<max_depth>"
+                }
+              },
+              "error": "result_attribute_selection_not_safe",
+              "details": "Die Resultat-Attributauswahl konnte nicht sicher genug aufgelöst werden.",
+              "selection_debug": {
+                "project": "<omitted:str>",
+                "entity_type": "load",
+                "object_name": "Load A",
+                "request_text": "Welche aktive Leistung hatte Last 27 am 09.01.26 zwischen 14 und 15 Uhr?",
+                "requested_attribute_names": [],
+                "requested_attribute_name_extraction": {
+                  "status": "<max_depth>",
+                  "requested_attribute_names": "<max_depth>",
+                  "llm_decision": "<max_depth>",
+                  "chain_mode": "<max_depth>"
+                },
+                "available_result_attribute_count": 0,
+                "predefined_result_attribute_count": 0,
+                "predefined_result_attribute_handles_preview": [],
+                "predefined_llm_result": {
+                  "status": "<max_depth>",
+                  "selected_attribute_handles": "<max_depth>",
+                  "selected_field_names": "<max_depth>",
+                  "matched_candidates": "<max_depth>",
+                  "should_execute": "<max_depth>",
+                  "confidence": "<max_depth>",
+                  "rationale": "<max_depth>",
+                  "llm_decision": "<max_depth>",
+                  "chain_mode": "<max_depth>"
+                },
+                "exact_match_result": {
+                  "status": "<max_depth>",
+                  "selected_attribute_names": "<max_depth>",
+                  "selected_attribute_handles": "<max_depth>",
+                  "matched_candidates": "<max_depth>",
+                  "should_execute": "<max_depth>",
+                  "confidence": "<max_depth>",
+                  "rationale": "<max_depth>"
+                },
+                "full_option_llm_result": {
+                  "status": "<max_depth>",
+                  "selected_attribute_handles": "<max_depth>",
+                  "matched_candidates": "<max_depth>",
+                  "should_execute": "<max_depth>",
+                  "confidence": "<max_depth>",
+                  "rationale": "<max_depth>",
+                  "llm_decision": "<max_depth>",
+                  "chain_mode": "<max_depth>"
+                },
+                "selection_mode": "no_match",
+                "selection_notes": [],
+                "final_selected_handles": [],
+                "final_rationale": "",
+                "final_should_execute": false,
+                "final_confidence": "low"
+              }
+            }
+          }
+        ]
+      },
+      "raw_answer": "Die Anfrage konnte nicht sauber ausgeführt werden (result_attribute_selection_not_safe). Details: Die Resultat-Attributauswahl konnte nicht sicher genug aufgelöst werden."
+    }
+  }
+}

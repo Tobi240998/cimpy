@@ -1,0 +1,46 @@
+{
+  "run_id": 74,
+  "timestamp": "2026-05-21T16:00:52.655083",
+  "user_input": "Welche Voltage Limits sind für die Busse in Powerfactory hinterlegt?",
+  "duration_seconds": 45.853,
+  "token_usage": {
+    "prompt_tokens": 4476,
+    "completion_tokens": 1366,
+    "total_tokens": 5842,
+    "details": {
+      "qwen3:32b": {
+        "output_tokens": 1366,
+        "input_tokens": 4476,
+        "total_tokens": 5842
+      }
+    }
+  },
+  "decision_trace": {
+    "domain": "ASK_USER",
+    "planning_mode": "",
+    "workflow": "",
+    "confidence": "",
+    "safe_to_execute": "",
+    "num_steps": 0,
+    "steps": "",
+    "planner_reasoning": "",
+    "resolved_object": "<omitted:str>",
+    "resolved_object_confidence": "",
+    "selected_attributes": "",
+    "attribute_confidence": "",
+    "num_tool_calls": 0,
+    "executed_tools": "",
+    "failed_tool": ""
+  },
+  "router_output": {
+    "route": "ASK_USER",
+    "status": "needs_clarification",
+    "question": "Für welche spezifischen Busse möchten Sie die Voltage Limits abfragen? Bitte geben Sie den Namen oder die ID des Busses an.",
+    "missing_fields": [
+      "Specific bus identifier"
+    ],
+    "partial": {
+      "user_input": "Welche Voltage Limits sind für die Busse in Powerfactory hinterlegt?"
+    }
+  }
+}

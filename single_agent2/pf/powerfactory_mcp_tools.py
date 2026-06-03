@@ -251,7 +251,7 @@ def get_powerfactory_context(project_name: str = DEFAULT_PROJECT_NAME) -> Dict[s
         "project_name": project_name,
     }
 
-# Initialisierung PF-Kontext + alte Agenten (Resultagent etc.) -> Refactoring möglich
+# Initialisierung PF-Kontext + alte Agenten (Resultagent etc.) 
 def build_powerfactory_services(project_name: str = DEFAULT_PROJECT_NAME) -> Dict[str, Any]:
     context = get_powerfactory_context(project_name=project_name)
     if context["status"] != "ok":
@@ -343,7 +343,7 @@ def _infer_catalog_type_from_user_input(user_input: str) -> str:
 
     return "load"
 
-# Liefert verfügbaren Lastenkatalog des aktiven Projekts -> Refactoring möglich (aus LLM_interpreterAgent)
+# Liefert verfügbaren Lastenkatalog des aktiven Projekts 
 def _get_load_catalog_from_services(
     services: Dict[str, Any],
     user_input: str = "",
@@ -384,7 +384,7 @@ def _get_load_catalog_from_services(
         "count": len(entries),
     }
 
-# Interpretiert Nutzeranfrage in strukturierte Load-Instruction -> Refactoring möglich 
+# Interpretiert Nutzeranfrage in strukturierte Load-Instruction 
 def _interpret_instruction_with_services(services: Dict[str, Any], user_input: str) -> Dict[str, Any]:
     interpreter = services["interpreter"]
     project_name = services["project_name"]
@@ -411,7 +411,7 @@ def _interpret_instruction_with_services(services: Dict[str, Any], user_input: s
         "instruction": instruction,
     }
 
-# Löst Last auf, Refactoring möglich 
+ 
 def _resolve_load_with_services(services: Dict[str, Any], instruction: dict) -> Dict[str, Any]:
     interpreter = services["interpreter"]
     project_name = services["project_name"]
@@ -2181,7 +2181,7 @@ def _extract_metric_payload_from_result_payload(result_payload: Dict[str, Any]) 
 
     return [], {}, {}, {}, {}
 
-# Ausführen der Laständerung und Sammeln der Metriken, Überschneidung mit Last auflösen etc. prüfen; Refactoring
+# Ausführen der Laständerung und Sammeln der Metriken, Überschneidung mit Last auflösen etc. prüfen
 def _execute_change_load_with_services(services: Dict[str, Any], instruction: dict) -> Dict[str, Any]:
     app = services["app"]
     studycase = services["studycase"]
@@ -2411,7 +2411,7 @@ def _execute_change_load_with_services(services: Dict[str, Any], instruction: di
         "data": data_payload,
     }
 
-# fasst Ergebnisse der Laständerung zusammen; Refactoring
+# fasst Ergebnisse der Laständerung zusammen
 def _summarize_powerfactory_result_with_services(
     services: Dict[str, Any],
     result_payload: dict,
@@ -2452,7 +2452,7 @@ def _summarize_powerfactory_result_with_services(
 
 
 # ------------------------------------------------------------------
-# FIELD LIBRARY FOR DATA QUERY - semantische Feldbibliothek für Data-Query-Pfad; Refactoring: auslagern oder LLM-basierter machen? 
+# FIELD LIBRARY FOR DATA QUERY - semantische Feldbibliothek für Data-Query-Pfad? 
 # ------------------------------------------------------------------
 PF_DATA_FIELD_LIBRARY: Dict[str, Dict[str, Dict[str, Any]]] = {
     'bus': {
@@ -2735,7 +2735,7 @@ PF_RAW_ATTRIBUTE_CATALOG: Dict[str, List[str]] = {
     ],
 }
 # ------------------------------------------------------------------
-# LLM-Bausteine für Data-Query-Pfad - Refactoring: mögliches Auslagern? 
+# LLM-Bausteine für Data-Query-Pfad  
 # ------------------------------------------------------------------
 
 def _build_data_query_type_chain():
@@ -3239,7 +3239,7 @@ def _semantic_request_likely_needs_loadflow(user_input: str, source_preference: 
     return False
 
 # ------------------------------------------------------------------
-# Unterbau für Data-Query-Pfad: Extraktion technische Namen, Einheiten, Datenquelle für Attributnamen, Attribute aus Auswahloptionen aufbauen; Refactoring: teilweise heuristisch
+# Unterbau für Data-Query-Pfad: Extraktion technische Namen, Einheiten, Datenquelle für Attributnamen, Attribute aus Auswahloptionen aufbauen
 # ------------------------------------------------------------------
 
 def _normalize_attr_option_label(attr_name: str) -> str:

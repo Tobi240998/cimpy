@@ -1,0 +1,120 @@
+{
+  "run_id": 9,
+  "timestamp": "2026-05-23T11:11:56.444902",
+  "user_input": "Ziehe 3 MW von Last B ab.",
+  "duration_seconds": 13.365,
+  "token_usage": {
+    "prompt_tokens": 3909,
+    "completion_tokens": 343,
+    "total_tokens": 4252,
+    "details": {
+      "gemma3:27b": {
+        "output_tokens": 343,
+        "total_tokens": 4252,
+        "input_tokens": 3909
+      }
+    }
+  },
+  "decision_trace": {
+    "domain": "HISTORICAL",
+    "planning_mode": "",
+    "workflow": "",
+    "confidence": "medium",
+    "safe_to_execute": "False",
+    "num_steps": 0,
+    "steps": "",
+    "planner_reasoning": "The request involves a state change operation ('abziehen' - reduce) on an asset ('Last B'). This requires a custom execution plan and is not a standard read-only request.  The request lacks a time context and a specific asset ID, making it unsafe to execute without further clarification.",
+    "resolved_object": "<omitted:str>",
+    "resolved_object_confidence": "",
+    "selected_attributes": "",
+    "attribute_confidence": "",
+    "num_tool_calls": 1,
+    "executed_tools": "unsupported_request",
+    "failed_tool": "unsupported_request",
+    "equipment_resolution_mode": "",
+    "attribute_resolution_mode": "",
+    "comparison_resolution_mode": ""
+  },
+  "router_output": {
+    "route": "HISTORICAL",
+    "result": {
+      "status": "error",
+      "tool": "cim_agent",
+      "agent": "CIMDomainAgent",
+      "error": "unsupported_cim_request",
+      "answer": "The request was routed to the CIM side, but is currently not secure or supported for execution. Missing context: Time frame for the load reduction, Specific asset identifier for 'Last B'. The error is: unsupported_cim_request.",
+      "classification": {
+        "intent": "asset_lookup",
+        "confidence": "medium",
+        "target_kind": "asset",
+        "request_mode": "custom_plan",
+        "safe_to_execute": false,
+        "missing_context": [
+          "Time frame for the load reduction",
+          "Specific asset identifier for 'Last B'"
+        ],
+        "required_steps": [],
+        "reasoning": "The request involves a state change operation ('abziehen' - reduce) on an asset ('Last B'). This requires a custom execution plan and is not a standard read-only request.  The request lacks a time context and a specific asset ID, making it unsafe to execute without further clarification.",
+        "status": "ok",
+        "classification_mode": "primary_llm_classifier"
+      },
+      "user_input": "Ziehe 3 MW von Last B ab.",
+      "debug": {
+        "trace": [
+          {
+            "step": "unsupported_request",
+            "effective_user_input": "Ziehe 3 MW von Last B ab.",
+            "source_subrequest": null,
+            "result": "<circular_reference>"
+          }
+        ],
+        "classification": {
+          "intent": "asset_lookup",
+          "confidence": "medium",
+          "target_kind": "asset",
+          "request_mode": "custom_plan",
+          "safe_to_execute": false,
+          "missing_context": [
+            "Time frame for the load reduction",
+            "Specific asset identifier for 'Last B'"
+          ],
+          "required_steps": [],
+          "reasoning": "The request involves a state change operation ('abziehen' - reduce) on an asset ('Last B'). This requires a custom execution plan and is not a standard read-only request.  The request lacks a time context and a specific asset ID, making it unsafe to execute without further clarification.",
+          "status": "ok",
+          "classification_mode": "primary_llm_classifier"
+        },
+        "plan": [
+          {
+            "step": "unsupported_request",
+            "description": "Return a controlled unsupported-workflow message"
+          }
+        ],
+        "run_summary": {
+          "user_input": "Ziehe 3 MW von Last B ab.",
+          "classification_summary": {
+            "intent": "asset_lookup",
+            "request_mode": "custom_plan",
+            "safe_to_execute": false,
+            "target_kind": "asset",
+            "confidence": "medium",
+            "classification_mode": "primary_llm_classifier",
+            "missing_context": [
+              "Time frame for the load reduction",
+              "Specific asset identifier for 'Last B'"
+            ]
+          },
+          "planned_steps": [
+            "unsupported_request"
+          ],
+          "selected_type": null,
+          "selected_equipment_id": null,
+          "selected_equipment_name": null,
+          "parsed_query_summary": null,
+          "final_status": "error",
+          "final_answer": "Die Anfrage wurde zur CIM-Seite geroutet, ist aktuell aber noch nicht sicher oder unterstützt ausführbar. Fehlender Kontext: Time frame for the load reduction, Specific asset identifier for 'Last B'."
+        }
+      },
+      "raw_answer": "Die Anfrage wurde zur CIM-Seite geroutet, ist aktuell aber noch nicht sicher oder unterstützt ausführbar. Fehlender Kontext: Time frame for the load reduction, Specific asset identifier for 'Last B'."
+    }
+  }
+}

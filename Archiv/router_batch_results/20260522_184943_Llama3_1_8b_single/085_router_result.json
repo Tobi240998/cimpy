@@ -1,0 +1,248 @@
+{
+  "run_id": 85,
+  "timestamp": "2026-05-23T19:07:54.660337",
+  "user_input": "Erhöhe Last 3 um 20 MW.",
+  "duration_seconds": 5.262,
+  "token_usage": {
+    "prompt_tokens": 6929,
+    "completion_tokens": 241,
+    "total_tokens": 7170,
+    "details": {
+      "llama3.1:8b": {
+        "total_tokens": 7170,
+        "output_tokens": 241,
+        "input_tokens": 6929
+      }
+    }
+  },
+  "decision_trace": {
+    "domain": "powerfactory",
+    "planning_mode": "standard_workflow",
+    "workflow": "pf.change_load",
+    "confidence": "",
+    "safe_to_execute": "True",
+    "num_steps": 4,
+    "steps": "powerfactory.interpret_instruction | powerfactory.resolve_load | powerfactory.execute_change_load | powerfactory.summarize_powerfactory_result",
+    "planner_reasoning": "",
+    "resolved_object": "<omitted:str>",
+    "resolved_object_confidence": "",
+    "selected_attributes": "",
+    "attribute_confidence": "",
+    "num_tool_calls": 2,
+    "executed_tools": "interpret_instruction | resolve_load",
+    "failed_tool": ""
+  },
+  "router_output": {
+    "route": "POWERFACTORY",
+    "domain": "powerfactory",
+    "plan": {
+      "domain": "powerfactory",
+      "user_input": "Erhöhe Last 3 um 20 MW.",
+      "steps": [
+        {
+          "domain": "powerfactory",
+          "tool": "interpret_instruction",
+          "args": {},
+          "save_as": null,
+          "description": "standard_workflow: pf.change_load",
+          "mutating": false
+        },
+        {
+          "domain": "powerfactory",
+          "tool": "resolve_load",
+          "args": {},
+          "save_as": null,
+          "description": "standard_workflow: pf.change_load",
+          "mutating": false
+        },
+        {
+          "domain": "powerfactory",
+          "tool": "execute_change_load",
+          "args": {},
+          "save_as": null,
+          "description": "standard_workflow: pf.change_load",
+          "mutating": false
+        },
+        {
+          "domain": "powerfactory",
+          "tool": "summarize_powerfactory_result",
+          "args": {},
+          "save_as": null,
+          "description": "standard_workflow: pf.change_load",
+          "mutating": false
+        }
+      ],
+      "classification": {
+        "domain": "powerfactory",
+        "planning_mode": "standard_workflow",
+        "workflow": "pf.change_load",
+        "custom_steps": [],
+        "safe_to_execute": true,
+        "missing_context": [],
+        "clarification_question": "",
+        "reasoning": ""
+      },
+      "reasoning": ""
+    },
+    "planner_decision": {
+      "domain": "powerfactory",
+      "planning_mode": "standard_workflow",
+      "workflow": "pf.change_load",
+      "custom_steps": [],
+      "safe_to_execute": true,
+      "missing_context": [],
+      "clarification_question": "",
+      "reasoning": ""
+    },
+    "result": {
+      "status": "not_found",
+      "tool": "resolve_load",
+      "project": "<omitted:str>",
+      "instruction": {
+        "action": "change_load",
+        "load_name": "Load A (aliases: load a, lasta, last a, loada)",
+        "delta_p_mw": 20.0,
+        "result_requests": [
+          "bus_voltage",
+          "line_loading"
+        ],
+        "result_request_mode": "default_voltage",
+        "result_query_text": "",
+        "result_request_rationale": "No standard metric or delegated result query could be grounded safely.",
+        "result_request_confidence": "medium"
+      },
+      "resolution": {
+        "status": "not_found",
+        "requested_load_name": "Load A (aliases: load a, lasta, last a, loada)",
+        "matches": []
+      },
+      "agent": "SingleAgent",
+      "available_tools": [
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>"
+      ],
+      "answer": "Die Anfrage konnte nicht durchgeführt werden. Fehlergrund: unknown_error.",
+      "debug": {
+        "planning": {},
+        "trace": [
+          {
+            "step": "interpret_instruction",
+            "effective_user_input": "Erhöhe Last 3 um 20 MW.",
+            "source_subrequest": null,
+            "tool_spec": {
+              "name": "interpret_instruction",
+              "description": "Interpret a natural-language user request into a structured load-change instruction.",
+              "capability_tags": [],
+              "mutating": false
+            },
+            "tool_kwargs": {
+              "services": "<omitted:dict>",
+              "user_input": "Erhöhe Last 3 um 20 MW."
+            },
+            "result": {
+              "status": "ok",
+              "tool": "interpret_instruction",
+              "user_input": "Erhöhe Last 3 um 20 MW.",
+              "project": "<omitted:str>",
+              "instruction": {
+                "action": "change_load",
+                "load_name": "Load A (aliases: load a, lasta, last a, loada)",
+                "delta_p_mw": 20.0,
+                "result_requests": [
+                  "<max_depth>",
+                  "<max_depth>"
+                ],
+                "result_request_mode": "default_voltage",
+                "result_query_text": "",
+                "result_request_rationale": "No standard metric or delegated result query could be grounded safely.",
+                "result_request_confidence": "medium"
+              }
+            }
+          },
+          {
+            "step": "resolve_load",
+            "effective_user_input": "Erhöhe Last 3 um 20 MW.",
+            "source_subrequest": null,
+            "tool_spec": {
+              "name": "resolve_load",
+              "description": "Resolve the target load object inside the active PowerFactory project.",
+              "capability_tags": [],
+              "mutating": false
+            },
+            "tool_kwargs": {
+              "services": "<omitted:dict>",
+              "instruction": {
+                "action": "change_load",
+                "load_name": "Load A (aliases: load a, lasta, last a, loada)",
+                "delta_p_mw": 20.0,
+                "result_requests": [
+                  "<max_depth>",
+                  "<max_depth>"
+                ],
+                "result_request_mode": "default_voltage",
+                "result_query_text": "",
+                "result_request_rationale": "No standard metric or delegated result query could be grounded safely.",
+                "result_request_confidence": "medium"
+              }
+            },
+            "result": {
+              "status": "not_found",
+              "tool": "resolve_load",
+              "project": "<omitted:str>",
+              "instruction": {
+                "action": "change_load",
+                "load_name": "Load A (aliases: load a, lasta, last a, loada)",
+                "delta_p_mw": 20.0,
+                "result_requests": [
+                  "<max_depth>",
+                  "<max_depth>"
+                ],
+                "result_request_mode": "default_voltage",
+                "result_query_text": "",
+                "result_request_rationale": "No standard metric or delegated result query could be grounded safely.",
+                "result_request_confidence": "medium"
+              },
+              "resolution": {
+                "status": "not_found",
+                "requested_load_name": "Load A (aliases: load a, lasta, last a, loada)",
+                "matches": []
+              }
+            }
+          }
+        ]
+      },
+      "raw_answer": "Die Anfrage konnte nicht sauber ausgeführt werden (unknown_error)."
+    }
+  }
+}

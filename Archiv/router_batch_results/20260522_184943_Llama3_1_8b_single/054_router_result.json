@@ -1,0 +1,472 @@
+{
+  "run_id": 54,
+  "timestamp": "2026-05-23T18:48:44.382681",
+  "user_input": "Liste alle verfügbaren Attribute von Bus 1 in Powerfactory auf.",
+  "duration_seconds": 13.358,
+  "token_usage": {
+    "prompt_tokens": 6426,
+    "completion_tokens": 760,
+    "total_tokens": 7186,
+    "details": {
+      "llama3.1:8b": {
+        "total_tokens": 7186,
+        "output_tokens": 760,
+        "input_tokens": 6426
+      }
+    }
+  },
+  "decision_trace": {
+    "domain": "powerfactory",
+    "planning_mode": "standard_workflow",
+    "workflow": "pf.list_element_attributes",
+    "confidence": "",
+    "safe_to_execute": "True",
+    "num_steps": 5,
+    "steps": "powerfactory.build_unified_inventory | powerfactory.interpret_data_query_instruction | powerfactory.classify_data_source | powerfactory.resolve_objects_from_inventory_llm | powerfactory.list_available_object_attributes",
+    "planner_reasoning": "",
+    "resolved_object": "<omitted:str>",
+    "resolved_object_confidence": "",
+    "selected_attributes": "",
+    "attribute_confidence": "",
+    "num_tool_calls": 2,
+    "executed_tools": "build_unified_inventory | interpret_data_query_instruction",
+    "failed_tool": "interpret_data_query_instruction"
+  },
+  "router_output": {
+    "route": "POWERFACTORY",
+    "domain": "powerfactory",
+    "plan": {
+      "domain": "powerfactory",
+      "user_input": "Liste alle verfügbaren Attribute von Bus 1 in Powerfactory auf.",
+      "steps": [
+        {
+          "domain": "powerfactory",
+          "tool": "build_unified_inventory",
+          "args": {},
+          "save_as": null,
+          "description": "standard_workflow: pf.list_element_attributes",
+          "mutating": false
+        },
+        {
+          "domain": "powerfactory",
+          "tool": "interpret_data_query_instruction",
+          "args": {},
+          "save_as": null,
+          "description": "standard_workflow: pf.list_element_attributes",
+          "mutating": false
+        },
+        {
+          "domain": "powerfactory",
+          "tool": "classify_data_source",
+          "args": {},
+          "save_as": null,
+          "description": "standard_workflow: pf.list_element_attributes",
+          "mutating": false
+        },
+        {
+          "domain": "powerfactory",
+          "tool": "resolve_objects_from_inventory_llm",
+          "args": {},
+          "save_as": null,
+          "description": "standard_workflow: pf.list_element_attributes",
+          "mutating": false
+        },
+        {
+          "domain": "powerfactory",
+          "tool": "list_available_object_attributes",
+          "args": {},
+          "save_as": null,
+          "description": "standard_workflow: pf.list_element_attributes",
+          "mutating": false
+        }
+      ],
+      "classification": {
+        "domain": "powerfactory",
+        "planning_mode": "standard_workflow",
+        "workflow": "pf.list_element_attributes",
+        "custom_steps": [],
+        "safe_to_execute": true,
+        "missing_context": [],
+        "clarification_question": "",
+        "reasoning": ""
+      },
+      "reasoning": ""
+    },
+    "planner_decision": {
+      "domain": "powerfactory",
+      "planning_mode": "standard_workflow",
+      "workflow": "pf.list_element_attributes",
+      "custom_steps": [],
+      "safe_to_execute": true,
+      "missing_context": [],
+      "clarification_question": "",
+      "reasoning": ""
+    },
+    "result": {
+      "status": "error",
+      "tool": "interpret_data_query_instruction",
+      "project": "<omitted:str>",
+      "user_input": "Liste alle verfügbaren Attribute von Bus 1 in Powerfactory auf.",
+      "error": "data_query_not_safe",
+      "details": "Die Datenabfrage konnte nicht sicher genug auf einen Elementtyp aufgelöst werden.",
+      "instruction": {
+        "query_type": "element_data",
+        "entity_type": null,
+        "entity_name_raw": "Liste alle verfügbaren Attribute von Bus 1 in Powerfactory auf.",
+        "entity_name_candidates": [
+          "Bus 1"
+        ],
+        "attribute_request_text": "Liste alle verfügbaren Attribute von Bus 1 in Powerfactory auf.",
+        "available_types": [
+          "bus",
+          "generator",
+          "line",
+          "load",
+          "switch",
+          "transformer"
+        ],
+        "requested_attribute_names": [
+          "Bus 1"
+        ],
+        "requested_attribute_name_extraction": {
+          "status": "ok",
+          "requested_attribute_names": [
+            "Bus 1"
+          ],
+          "llm_decision": {
+            "requested_attribute_names": [
+              "Bus 1"
+            ],
+            "confidence": "high",
+            "rationale": "valid",
+            "should_execute": true
+          },
+          "chain_mode": "native_structured_output"
+        },
+        "data_source_preference": "base",
+        "data_source_note": "Basisdaten werden verwendet.",
+        "data_source_decision": {
+          "status": "ok",
+          "selected_data_source": "base",
+          "confidence": "high",
+          "rationale": "The user explicitly asks for available attributes of a bus, which is a static object data.",
+          "should_execute": true,
+          "decision_mode": "llm",
+          "llm_decision": {
+            "selected_data_source": "base",
+            "confidence": "high",
+            "rationale": "The user explicitly asks for available attributes of a bus, which is a static object data.",
+            "should_execute": true,
+            "attribute_match_mode": "technical_name",
+            "attribute_match_confidence": "high",
+            "attribute_match_rationale": "The user uses the technical term 'Attribute' and specifies a PowerFactory object (Bus 1).",
+            "attribute_cardinality": "multiple",
+            "attribute_cardinality_rationale": "The user asks for all available attributes, which implies multiple values."
+          },
+          "chain_mode": "native_structured_output",
+          "attribute_match_mode": "technical_name",
+          "attribute_match_confidence": "high",
+          "attribute_match_rationale": "The user uses the technical term 'Attribute' and specifies a PowerFactory object (Bus 1).",
+          "attribute_cardinality": "multiple",
+          "attribute_cardinality_rationale": "The user asks for all available attributes, which implies multiple values.",
+          "fallback_applied": false,
+          "effective_data_source": "base",
+          "data_source_note": "Basisdaten werden verwendet."
+        },
+        "attribute_match_mode": {
+          "status": "ok",
+          "mode": "technical_name",
+          "confidence": "high",
+          "should_execute": true,
+          "rationale": "The user uses the technical term 'Attribute' and specifies a PowerFactory object (Bus 1).",
+          "source": "data_source_decision"
+        },
+        "attribute_cardinality": "multiple",
+        "attribute_cardinality_rationale": "The user asks for all available attributes, which implies multiple values."
+      },
+      "llm_decision": {
+        "selected_entity_type": null,
+        "confidence": "low",
+        "rationale": "Keine ausreichende Information über das Zielobjekt vorhanden.",
+        "missing_context": [
+          "Bus 1",
+          "Powerfactory"
+        ],
+        "should_execute": false
+      },
+      "requested_attribute_name_extraction": {
+        "status": "ok",
+        "requested_attribute_names": [
+          "Bus 1"
+        ],
+        "llm_decision": {
+          "requested_attribute_names": [
+            "Bus 1"
+          ],
+          "confidence": "high",
+          "rationale": "valid",
+          "should_execute": true
+        },
+        "chain_mode": "native_structured_output"
+      },
+      "missing_context": [
+        "Bus 1",
+        "Powerfactory",
+        "entity_type"
+      ],
+      "agent": "SingleAgent",
+      "available_tools": [
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>",
+        "<non_serializable:UnifiedToolSpec>"
+      ],
+      "answer": "Die Anfrage konnte nicht durchgeführt werden. Fehlergrund: Die Datenabfrage konnte nicht sicher genug auf einen Elementtyp aufgelöst werden.",
+      "debug": {
+        "planning": {},
+        "trace": [
+          {
+            "step": "build_unified_inventory",
+            "effective_user_input": "Liste alle verfügbaren Attribute von Bus 1 in Powerfactory auf.",
+            "source_subrequest": null,
+            "tool_spec": {
+              "name": "build_unified_inventory",
+              "description": "Build a unified non-topology PowerFactory inventory for supported object types.",
+              "capability_tags": [],
+              "mutating": false
+            },
+            "tool_kwargs": {
+              "services": "<omitted:dict>",
+              "allowed_types": [
+                "bus",
+                "load",
+                "line",
+                "transformer",
+                "generator",
+                "switch"
+              ]
+            },
+            "result": {
+              "status": "ok",
+              "tool": "build_unified_inventory",
+              "project": "<omitted:str>",
+              "inventory": {
+                "available_types": [
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>"
+                ],
+                "counts_by_type": {
+                  "bus": "<max_depth>",
+                  "load": "<max_depth>",
+                  "line": "<max_depth>",
+                  "transformer": "<max_depth>",
+                  "generator": "<max_depth>",
+                  "switch": "<max_depth>"
+                },
+                "items_by_type": {
+                  "bus": "<max_depth>",
+                  "load": "<max_depth>",
+                  "line": "<max_depth>",
+                  "transformer": "<max_depth>",
+                  "generator": "<max_depth>",
+                  "switch": "<max_depth>"
+                },
+                "samples_by_type": {
+                  "bus": "<max_depth>",
+                  "load": "<max_depth>",
+                  "line": "<max_depth>",
+                  "transformer": "<max_depth>",
+                  "generator": "<max_depth>",
+                  "switch": "<max_depth>"
+                }
+              },
+              "allowed_types": [
+                "bus",
+                "load",
+                "line",
+                "transformer",
+                "generator",
+                "switch"
+              ]
+            }
+          },
+          {
+            "step": "interpret_data_query_instruction",
+            "effective_user_input": "Liste alle verfügbaren Attribute von Bus 1 in Powerfactory auf.",
+            "source_subrequest": null,
+            "tool_spec": {
+              "name": "interpret_data_query_instruction",
+              "description": "Interpret a natural-language data query into a structured PowerFactory data-query instruction.",
+              "capability_tags": [],
+              "mutating": false
+            },
+            "tool_kwargs": {
+              "services": "<omitted:dict>",
+              "user_input": "Liste alle verfügbaren Attribute von Bus 1 in Powerfactory auf.",
+              "inventory": {
+                "available_types": [
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>"
+                ],
+                "counts_by_type": {
+                  "bus": "<max_depth>",
+                  "load": "<max_depth>",
+                  "line": "<max_depth>",
+                  "transformer": "<max_depth>",
+                  "generator": "<max_depth>",
+                  "switch": "<max_depth>"
+                },
+                "items_by_type": {
+                  "bus": "<max_depth>",
+                  "load": "<max_depth>",
+                  "line": "<max_depth>",
+                  "transformer": "<max_depth>",
+                  "generator": "<max_depth>",
+                  "switch": "<max_depth>"
+                },
+                "samples_by_type": {
+                  "bus": "<max_depth>",
+                  "load": "<max_depth>",
+                  "line": "<max_depth>",
+                  "transformer": "<max_depth>",
+                  "generator": "<max_depth>",
+                  "switch": "<max_depth>"
+                }
+              }
+            },
+            "result": {
+              "status": "error",
+              "tool": "interpret_data_query_instruction",
+              "project": "<omitted:str>",
+              "user_input": "Liste alle verfügbaren Attribute von Bus 1 in Powerfactory auf.",
+              "error": "data_query_not_safe",
+              "details": "Die Datenabfrage konnte nicht sicher genug auf einen Elementtyp aufgelöst werden.",
+              "instruction": {
+                "query_type": "element_data",
+                "entity_type": null,
+                "entity_name_raw": "Liste alle verfügbaren Attribute von Bus 1 in Powerfactory auf.",
+                "entity_name_candidates": [
+                  "<max_depth>"
+                ],
+                "attribute_request_text": "Liste alle verfügbaren Attribute von Bus 1 in Powerfactory auf.",
+                "available_types": [
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>",
+                  "<max_depth>"
+                ],
+                "requested_attribute_names": [
+                  "<max_depth>"
+                ],
+                "requested_attribute_name_extraction": {
+                  "status": "<max_depth>",
+                  "requested_attribute_names": "<max_depth>",
+                  "llm_decision": "<max_depth>",
+                  "chain_mode": "<max_depth>"
+                },
+                "data_source_preference": "base",
+                "data_source_note": "Basisdaten werden verwendet.",
+                "data_source_decision": {
+                  "status": "<max_depth>",
+                  "selected_data_source": "<max_depth>",
+                  "confidence": "<max_depth>",
+                  "rationale": "<max_depth>",
+                  "should_execute": "<max_depth>",
+                  "decision_mode": "<max_depth>",
+                  "llm_decision": "<max_depth>",
+                  "chain_mode": "<max_depth>",
+                  "attribute_match_mode": "<max_depth>",
+                  "attribute_match_confidence": "<max_depth>",
+                  "attribute_match_rationale": "<max_depth>",
+                  "attribute_cardinality": "<max_depth>",
+                  "attribute_cardinality_rationale": "<max_depth>",
+                  "fallback_applied": "<max_depth>",
+                  "effective_data_source": "<max_depth>",
+                  "data_source_note": "<max_depth>"
+                },
+                "attribute_match_mode": {
+                  "status": "<max_depth>",
+                  "mode": "<max_depth>",
+                  "confidence": "<max_depth>",
+                  "should_execute": "<max_depth>",
+                  "rationale": "<max_depth>",
+                  "source": "<max_depth>"
+                },
+                "attribute_cardinality": "multiple",
+                "attribute_cardinality_rationale": "The user asks for all available attributes, which implies multiple values."
+              },
+              "llm_decision": {
+                "selected_entity_type": null,
+                "confidence": "low",
+                "rationale": "Keine ausreichende Information über das Zielobjekt vorhanden.",
+                "missing_context": [
+                  "<max_depth>",
+                  "<max_depth>"
+                ],
+                "should_execute": false
+              },
+              "requested_attribute_name_extraction": {
+                "status": "ok",
+                "requested_attribute_names": [
+                  "<max_depth>"
+                ],
+                "llm_decision": {
+                  "requested_attribute_names": "<max_depth>",
+                  "confidence": "<max_depth>",
+                  "rationale": "<max_depth>",
+                  "should_execute": "<max_depth>"
+                },
+                "chain_mode": "native_structured_output"
+              },
+              "missing_context": [
+                "Bus 1",
+                "Powerfactory",
+                "entity_type"
+              ]
+            }
+          }
+        ]
+      },
+      "raw_answer": "Die Anfrage konnte nicht sauber ausgeführt werden (data_query_not_safe). Details: Die Datenabfrage konnte nicht sicher genug auf einen Elementtyp aufgelöst werden."
+    }
+  }
+}

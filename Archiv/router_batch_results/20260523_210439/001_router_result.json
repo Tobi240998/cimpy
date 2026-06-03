@@ -1,0 +1,46 @@
+{
+  "run_id": 1,
+  "timestamp": "2026-05-23T21:04:40.352335",
+  "user_input": "Welche Lasten gibt es in PowerFactory?",
+  "duration_seconds": 0.935,
+  "token_usage": {
+    "prompt_tokens": 841,
+    "completion_tokens": 63,
+    "total_tokens": 904,
+    "details": {
+      "granite3.3:8b": {
+        "input_tokens": 841,
+        "output_tokens": 63,
+        "total_tokens": 904
+      }
+    }
+  },
+  "decision_trace": {
+    "domain": "ASK_USER",
+    "planning_mode": "",
+    "workflow": "",
+    "confidence": "",
+    "safe_to_execute": "",
+    "num_steps": 0,
+    "steps": "",
+    "planner_reasoning": "",
+    "resolved_object": "<omitted:str>",
+    "resolved_object_confidence": "",
+    "selected_attributes": "",
+    "attribute_confidence": "",
+    "num_tool_calls": 0,
+    "executed_tools": "",
+    "failed_tool": "",
+    "equipment_resolution_mode": "",
+    "attribute_resolution_mode": "",
+    "comparison_resolution_mode": ""
+  },
+  "router_output": {
+    "route": "ASK_USER",
+    "question": "To which PowerFactory project do you refer and what specific load types are you interested in?",
+    "missing_fields": [
+      "project_name"
+    ],
+    "partial": {}
+  }
+}
