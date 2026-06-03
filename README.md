@@ -3,3 +3,5 @@ Dieses Repository enthält die im Rahmen einer Masterarbeit entwickelte Implemen
 Multi-Agent-System starten: llm_routing.run_router
 
 Single-Agent-System starten: single_agent2.llm_routing.run_router
+
+Der finale Stand ist in dem Branch "Final-Branch" enthalten.
